@@ -1,0 +1,21 @@
+g95  -c -r8 -ftrace=full -fPIC -fno-second-underscore -ffree-line-length-huge -g -fmod=amd64_g95/ -Iamd64_g95 PF.f90 -o ids_PF_g95.o
+g95  -r8 -ftrace=full -fPIC -fno-second-underscore -ffree-line-length-huge -g -fmod=amd64_g95/ -o libUALFORTRANInterface_g95.so -shared ids_schemas_g95.o ids_Actuator_g95.o ids_Core_Profiles_g95.o ids_Equilibrium_g95.o ids_Magnetics_g95.o ids_PF_g95.o ids_SDN_g95.o ids_TF_g95.o ids_routines_g95.o -L../lowlevel -lUALLowLevel -lm
+ar rvs libUALFORTRANInterface_g95.a ids_schemas_g95.o ids_Actuator_g95.o ids_Core_Profiles_g95.o ids_Equilibrium_g95.o ids_Magnetics_g95.o ids_PF_g95.o ids_SDN_g95.o ids_TF_g95.o ids_routines_g95.o
+cp *.so /home/FI144135/ual/trunk/lib
+cp amd64_g95/*.mod /home/FI144135/ual/trunk/include/amd64_g95 
+
+
+ual_low_level_f77.c : remove the timebasepath argument for scalars and string
+low level: changed all functions names as in the word document (euitm -> imas, ...)
+
+
+1) Added a slash before Timebase when constructing Timebasepath in case of non-homogeneous timebase
+2) mdspath was initialized with a slash at the beginning, this was not correct 
+3) pb de lock --> add end_ids_put_timed after each put of a time-dependent field 
+4) PUT IDS routines: DONE
+----------------------------- 02/12
+5) Correct small bug in the PUT routines (IDSDef2F90Routines), the Timebasepath =  ... line was not generated properly in case of structures without array
+6) IDS_DELETE routines: DONE
+----------------------------- 05/12
+7) GET and GET_SLICE routines up and running !!!
+8) starting the development of PUT_NON_TIMED
