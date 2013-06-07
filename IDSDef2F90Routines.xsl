@@ -3400,7 +3400,7 @@ endif
 ! Get <xsl:value-of select="@path"/>
 <xsl:choose>
 <xsl:when test="$variable_path">
-call get_int(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>/shape_of&quot;,int0d,status)
+call get_int(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>/Shape_of&quot;,int0d,status)
 if (status.EQ.0) then
    allocate(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>(int0d))
    do i<xsl:value-of select = "@name"/> = 1,size(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>)
@@ -3412,7 +3412,7 @@ if (status.EQ.0) then
 endif
 </xsl:when>
 <xsl:otherwise>
-call get_int(idx,path, &quot;<xsl:value-of select="@name"/>/shape_of&quot;,int0d,status)
+call get_int(idx,path, &quot;<xsl:value-of select="@name"/>/Shape_of&quot;,int0d,status)
 if (status.EQ.0) then
    allocate(IDS%<xsl:value-of select = "@name"/>(int0d))
    do i<xsl:value-of select = "@name"/> = 1,size(IDS%<xsl:value-of select = "@name"/>)
@@ -3849,7 +3849,7 @@ endif
 ! Get <xsl:value-of select="@path"/>
 <xsl:choose>
 <xsl:when test="$variable_path">
-call get_int(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>/shape_of&quot;,int0d,status)
+call get_int(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>/Shape_of&quot;,int0d,status)
 if (status.EQ.0) then
    allocate(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>(int0d))
    do i<xsl:value-of select = "@name"/> = 1,size(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>)
@@ -3861,7 +3861,7 @@ if (status.EQ.0) then
 endif
 </xsl:when>
 <xsl:otherwise>
-call get_int(idx,path, &quot;<xsl:value-of select="@name"/>/shape_of&quot;,int0d,status)
+call get_int(idx,path, &quot;<xsl:value-of select="@name"/>/Shape_of&quot;,int0d,status)
 if (status.EQ.0) then
    allocate(IDS%<xsl:value-of select = "@name"/>(int0d))
    do i<xsl:value-of select = "@name"/> = 1,size(IDS%<xsl:value-of select = "@name"/>)
