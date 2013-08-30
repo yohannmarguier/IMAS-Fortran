@@ -63,7 +63,7 @@ install: all
 &#009;cp amd64_ifort/*.mod $(INSTALL)/include/amd64_ifort 2> /dev/null || true
 
 clean:
-&#009;rm -f *.o *.mod  *.so *~ amd64_g95/*.mod amd64_gfortran/*.mod amd64_pgi/*.mod amd64_ifort/*.mod
+&#009;rm -f *.o *.mod  *.so *~ amd64_g95/*.mod amd64_gfortran/*.mod amd64_pgi/*.mod amd64_ifort/*.mod *.a
 
 clean-src: clean
 &#009;rm -f ids_schemas.f90 ids_routines.f90 <xsl:for-each select="IDS"> <xsl:value-of select="@name"/>.f90 </xsl:for-each>
@@ -151,7 +151,7 @@ ids_routines.f90: IDSDef2F90Routines.xsl
 
 ids_schemas.f90: xsd2F90TypeDef.xsl
 &#009;(cd ../xml ; cp ../fortraninterface/xsd2F90TypeDef.xsl . ; \
-&#009;xsltproc xsd2F90TypeDef.xsl DD_TOP.xsd > ids_schemas.f90 ; \
+&#009;xsltproc xsd2F90TypeDef.xsl dd_physics_data_model.xsd > ids_schemas.f90 ; \
 &#009;mv ids_schemas.f90 ../fortraninterface ; rm xsd2F90TypeDef.xsl )
 
 <!-- The old method does not work because the XSDs are now distributed in sub-folders. The XSL transform must be in the same folder as DDTOP to handle the Includes

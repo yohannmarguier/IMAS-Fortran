@@ -58,7 +58,7 @@ interface ids_get_slice
    module procedure  ids_get_slice_<xsl:value-of select="@name"/>
 end interface ids_get_slice
 
-<xsl:if test=".//field[@type='SIGNAL']"> <!-- Procedure put_slice should exist only for time-dependent IDSs -->   
+<xsl:if test=".//field[@type='dynamic']"> <!-- Procedure put_slice should exist only for time-dependent IDSs -->   
 ! Declaration of the generic IDS PUT_SLICE routine 
 interface ids_put_slice    
    module procedure ids_put_slice_<xsl:value-of select="@name"/>
@@ -126,7 +126,7 @@ character(len=3)::ual_debug
 
 character(len=132)::stringans      ! Temporary way of getting short strings
 character(len=100000)::longstring
-character(len=300) :: timebasepath    
+character(len=300) :: timepath    
 character(len=132), dimension(:), pointer ::stringpointer   => null()     
 integer :: obj_all_times,obj1,obj2,obj3,obj4,obj5,obj6,obj7
 integer :: dimObj0,dimObj1,dimObj2,dimObj3,dimObj4,dimObj5,dimObj6,dimObj7
@@ -171,7 +171,7 @@ real(DP), pointer :: vect1DDouble(:), time(:), vect2DDouble(:,:), vect3DDouble(:
 real(DP), pointer :: vect5DDouble(:,:,:,:,:), vect6DDouble(:,:,:,:,:,:) => null()
 character(len=132), dimension(:), pointer :: stringans => null()
 character(len=100000)::longstring
-character(len=300) :: timebasepath    
+character(len=300) :: timepath    
 integer :: obj_single_time,obj1,obj2,obj3,obj4,obj5,obj6,obj7
 integer :: dimObj1,dimObj2,dimObj3,dimObj4,dimObj5,dimObj6,dimObj7
 integer :: i1,i2,i3,i4,i5,i6,i7
@@ -219,7 +219,7 @@ real(DP), pointer :: vect1DDouble(:), time(:), vect2DDouble(:,:), vect3DDouble(:
 real(DP), pointer :: vect5DDouble(:,:,:,:,:), vect6DDouble(:,:,:,:,:,:) => null()
 character(len=132), dimension(:), pointer :: stri => null()
 character(len=100000)::longstring
-character(len=300) :: timebasepath    
+character(len=300) :: timepath    
 integer :: obj_all_times,obj1,obj2,obj3,obj4,obj5,obj6,obj7
 integer :: i1,i2,i3,i4,i5,i6,i7
 <xsl:for-each select=".//field[@data_type='struct_array']">
@@ -245,7 +245,7 @@ return
 end subroutine ids_put_<xsl:value-of select="@name"/>
 
 
-<xsl:if test=".//field[@type='SIGNAL']"> <!-- Procedure put_slice should exist only for time-dependent IDSs -->   
+<xsl:if test=".//field[@type='dynamic']"> <!-- Procedure put_slice should exist only for time-dependent IDSs -->   
 !!!!!! Routines to PUT_SLICE one time slice of a time-dependent IDS (affects only time-dependent fields)
 
 subroutine ids_put_slice_<xsl:value-of select="@name"/>(idx,path,IDS)
@@ -270,7 +270,7 @@ real(DP), pointer :: vect1DDouble(:), time(:), vect2DDouble(:,:), vect3DDouble(:
 real(DP), pointer :: vect5DDouble(:,:,:,:,:), vect6DDouble(:,:,:,:,:,:) => null()
 character(len=132), dimension(:), pointer :: stri => null()
 character(len=100000)::longstring 
-character(len=300)::timebasepath   
+character(len=300)::timepath   
 integer :: obj_single_time,obj1,obj2,obj3,obj4,obj5,obj6,obj7
 integer :: i1,i2,i3,i4,i5,i6,i7
 <xsl:for-each select=".//field[@data_type='struct_array']">
@@ -279,12 +279,12 @@ integer :: i<xsl:value-of select="@name"/>
 
 call getenv('ual_debug',ual_debug) ! Debug flag
 
-if (IDS%IDS_Properties%homogeneous_Timebase.NE.1) then
-   write(*,*) "ERROR : the PUT_SLICE routine works only for homogeneous timebase IDS"
+if (IDS%IDS_Properties%homogeneous_time.NE.1) then
+   write(*,*) "ERROR : the PUT_SLICE routine works only for homogeneous time IDS"
    return
 endif
 
-timebasepath = "timebase"
+timepath = "time"
 call begin_IDS_put_slice(idx, path)
 <xsl:apply-templates select="field" mode="PUT_SLICE"/>
 call end_IDS_put_slice(idx, path)
@@ -307,7 +307,7 @@ integer :: i,dim1,dim2,dim3,dim4,dim5,dim6,dim7, lenstring, istring
 integer, pointer :: dimtab(:) => null()
 character(len=100000)::longstring    
 character(len=3)::ual_debug
-character(len=300) :: timebasepath    
+character(len=300) :: timepath    
 integer :: obj1,obj2,obj3,obj4,obj5,obj6,obj7
 integer :: i1,i2,i3,i4,i5,i6,i7
 <xsl:for-each select=".//field[@data_type='struct_array']">
@@ -709,7 +709,7 @@ endif
 	<xsl:template match="field" mode="GET_FULL">
 		<xsl:choose>
 			<xsl:when test="@timed = 'yes'">
-				<!-- Time dependent signals in time-dependent IDS : copy the time-dependent value in the proper index of the array of IDS structure -->
+				<!-- Time dependent dynamics in time-dependent IDS : copy the time-dependent value in the proper index of the array of IDS structure -->
 				<xsl:choose>
 					<xsl:when test="@data_type='int_type' or @data_type='INT_0D'">
 ! Get <xsl:value-of select="@path"/>
@@ -948,7 +948,7 @@ endif
 				</xsl:choose>
 			</xsl:when>
 			<xsl:otherwise>
-				<!-- Time independent signals in time-dependent IDS : copy value to all time indices -->
+				<!-- Time independent dynamics in time-dependent IDS : copy value to all time indices -->
 				<xsl:choose>
 					<xsl:when test="@data_type='str_type' or @data_type='STR_0D'">
 ! Get <xsl:value-of select="@path"/>
@@ -995,7 +995,7 @@ endif
 					<xsl:when test="@data_type='int_type' or @data_type='INT_0D'">
 ! Get <xsl:value-of select="@path"/>
 						<!-- for comment only -->        
-call get_Int(idx,path, "<xsl:value-of select="@path"/>",Int0D, status)           <!--reads the MDS signal, which has one more dimension (time)-->
+call get_Int(idx,path, "<xsl:value-of select="@path"/>",Int0D, status)           <!--reads the MDS dynamic, which has one more dimension (time)-->
 if (status.EQ.0) then
    IDSs(1:lentime)%<xsl:value-of select="translate(@path,'/','%')"/> = Int0D   <!-- assign the value to the IDS structure -->
    if (ual_debug =='yes') write(*,*) &amp; 
@@ -1006,7 +1006,7 @@ endif
 					<xsl:when test="@data_type='flt_type' or @data_type='FLT_0D'">
 ! Get <xsl:value-of select="@path"/>
 						<!-- for comment only -->   
-call get_Double(idx,path, "<xsl:value-of select="@path"/>",double0D, status)           <!--reads the MDS signal, which has one more dimension (time)-->
+call get_Double(idx,path, "<xsl:value-of select="@path"/>",double0D, status)           <!--reads the MDS dynamic, which has one more dimension (time)-->
 if (status.EQ.0) then
    IDSs(1:lentime)%<xsl:value-of select="translate(@path,'/','%')"/> = double0D   <!-- assign the value to the IDS structure -->
    if (ual_debug =='yes') write(*,*) &amp; 
@@ -1039,7 +1039,7 @@ call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,di
 if (dim1.GT.0) then
    allocate(vect1Dint(dim1))        
    call get_vect1D_int(idx,path, "<xsl:value-of select="@path"/>", &amp;
-   vect1Dint,dim1,dum1, status)           <!--reads the MDS signal, which has one more dimension (time)-->
+   vect1Dint,dim1,dum1, status)           <!--reads the MDS dynamic, which has one more dimension (time)-->
    do itime=1,lentime
       allocate(IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(dim1))
       IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/> = vect1Dint   <!-- assign the value to the IDS structure -->
@@ -1165,7 +1165,7 @@ call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,di
 if (dim1.GT.0) then
    allocate(vect6dDouble(dim1,dim2,dim3,dim4,dim5,dim6))        
    call get_vect6d_Double(idx,path, "<xsl:value-of select="@path"/>", &amp;
-   vect6dDouble,dim1,dim2,dim3,dim4,dim5,dim6,dum1,dum2,dum3,dum4,dum5,dum6,status)           <!--reads the MDS signal, which has one more dimension (time)-->
+   vect6dDouble,dim1,dim2,dim3,dim4,dim5,dim6,dum1,dum2,dum3,dum4,dum5,dum6,status)           <!--reads the MDS dynamic, which has one more dimension (time)-->
    do itime=1,lentime
       allocate(IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3,dim4,dim5,dim6))
       IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/> = vect6dDouble   <!-- assign the value to the IDS structure -->
@@ -1691,7 +1691,7 @@ endif
 	<xsl:template match="field" mode="PUT_TIMED">
 		<xsl:choose>
 			<xsl:when test="@timed = 'yes'">
-				<!-- Time dependent signals in time-dependent IDS : copy the time-dependent value from the proper index of the array of IDS structure -->
+				<!-- Time dependent dynamics in time-dependent IDS : copy the time-dependent value from the proper index of the array of IDS structure -->
 				<xsl:choose>
 					<xsl:when test="@data_type='int_type' or @data_type='INT_0D'">
 ! Put <xsl:value-of select="@path"/>
@@ -1870,7 +1870,7 @@ call put_object(idx,path,"<xsl:value-of select = "@path"/>",obj1,0)
 			</xsl:when>
          
 			<xsl:otherwise>
-				<!-- Time independent signals in time-dependent IDS : the first index IDSs(1) defines the value of the time-independent data -->
+				<!-- Time independent dynamics in time-dependent IDS : the first index IDSs(1) defines the value of the time-independent data -->
 				<xsl:choose>
                <xsl:when test="@name='struct_array'">
 ! Put <xsl:value-of select="@path"/>
@@ -2079,7 +2079,7 @@ endif
 <xsl:param name="variable_path"/>
 <xsl:param name="mds_path"/>
 <xsl:param name="non_timed"/>
-<xsl:if test="$non_timed !='yes' or @type !='SIGNAL' or not(@type) or @data_type='structure' or @data_type='struct_array'"> <!-- This skips the routine for timed fields when using this template in PUT_NON_TIMED mode -->
+<xsl:if test="$non_timed !='yes' or @type !='dynamic' or not(@type) or @data_type='structure' or @data_type='struct_array'"> <!-- This skips the routine for timed fields when using this template in PUT_NON_TIMED mode -->
 		<xsl:choose>
 			<xsl:when test="@data_type='structure'">
 <xsl:choose>
@@ -2199,26 +2199,26 @@ endif
 <xsl:when test="$variable_path">
 if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then
    <xsl:choose>
-   <xsl:when test="@type='SIGNAL'">
-   if (IDS%IDS_Properties%Homogeneous_Timebase.EQ.0) then 
-       <!--XSLtest whether this is a Data/Timebase structure, otherwise assume that the Timebasepath attribute from IDSDef is correct-->
+   <xsl:when test="@type='dynamic'">
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+       <!--XSLtest whether this is a data/time structure, otherwise assume that the timepath attribute from IDSDef is correct-->
        <xsl:choose>
-       <xsl:when test="(@name='Data' and ../field[@name='Timebase']) or (@name='Timebase' and ../field[@name='Data'])">
-       timebasepath=<xsl:value-of select="$mds_path"/>//&quot;/Timebase&quot;
-       call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%Timebase')"/>),IDS%<xsl:value-of select="concat($variable_path,'%Timebase')"/>)
+       <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data'])">
+       timepath=<xsl:value-of select="$mds_path"/>//&quot;/time&quot;
+       call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%time')"/>),IDS%<xsl:value-of select="concat($variable_path,'%time')"/>)
        </xsl:when>
        <xsl:otherwise>
-       timebasepath=&quot;<xsl:call-template name="printTimebasepath"/>&quot;
-       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printTimebasevariable"/>),<xsl:call-template name="printTimebasevariable"/>)
+       timepath=&quot;<xsl:call-template name="printtimepath"/>&quot;
+       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
        </xsl:otherwise>
        </xsl:choose>
    else       
-       timebasepath="Timebase"
-       call begin_IDS_put_timed(idx, path,size(IDS%Timebase),IDS%Timebase)
+       timepath="time"
+       call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
    endif   
    </xsl:when>
    <xsl:otherwise>
-   timebasepath = ''
+   timepath = ''
    </xsl:otherwise>
    </xsl:choose>   
    dim1 = size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)
@@ -2227,9 +2227,9 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
       dimtab(i) = len_trim(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(i))
    enddo
    call put_Vect1d_String(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;, &amp;
-          trim(timebasepath),IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,dim1,dimtab,<xsl:call-template name="printIsTimed"/>)
+          trim(timepath),IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,dim1,dimtab,<xsl:call-template name="printIsTimed"/>)
    deallocate(dimtab)
-   <xsl:if test="@type='SIGNAL'">
+   <xsl:if test="@type='dynamic'">
    call end_IDS_put_timed(idx, path)
    </xsl:if>
    if (ual_debug =='yes') write(*,*) &amp; 
@@ -2240,17 +2240,17 @@ endif
 <xsl:otherwise>
 if (associated(IDS%<xsl:value-of select="@name"/>)) then
    <xsl:choose>
-   <xsl:when test="@type='SIGNAL'">
-   if (IDS%IDS_Properties%Homogeneous_Timebase.EQ.0) then 
-       timebasepath="<xsl:call-template name="printTimebasepath"/>"
-       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printTimebasevariable"/>),<xsl:call-template name="printTimebasevariable"/>)
+   <xsl:when test="@type='dynamic'">
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+       timepath="<xsl:call-template name="printtimepath"/>"
+       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
    else
-       timebasepath="Timebase"
-       call begin_IDS_put_timed(idx, path,size(IDS%Timebase),IDS%Timebase)
+       timepath="time"
+       call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
    endif   
    </xsl:when>
    <xsl:otherwise>
-   timebasepath = ''
+   timepath = ''
    </xsl:otherwise>
    </xsl:choose>
    dim1 = size(IDS%<xsl:value-of select="@name"/>)
@@ -2259,9 +2259,9 @@ if (associated(IDS%<xsl:value-of select="@name"/>)) then
       dimtab(i) = len_trim(IDS%<xsl:value-of select="@name"/>(i))
    enddo
    call put_Vect1d_String(idx,path, "<xsl:value-of select="@name"/>", &amp;
-          trim(timebasepath),IDS%<xsl:value-of select="@name"/>,dim1,dimtab,<xsl:call-template name="printIsTimed"/>)
+          trim(timepath),IDS%<xsl:value-of select="@name"/>,dim1,dimtab,<xsl:call-template name="printIsTimed"/>)
    deallocate(dimtab)
-   <xsl:if test="@type='SIGNAL'">
+   <xsl:if test="@type='dynamic'">
    call end_IDS_put_timed(idx, path)
    </xsl:if>
    if (ual_debug =='yes') write(*,*) &amp; 
@@ -2322,33 +2322,33 @@ endif
 <xsl:when test="$variable_path">
 if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then
    <xsl:choose>
-   <xsl:when test="@type='SIGNAL'">
-   if (IDS%IDS_Properties%Homogeneous_Timebase.EQ.0) then 
-       <!--XSLtest whether this is a Data/Timebase structure, otherwise assume that the Timebasepath attribute from IDSDef is correct-->
+   <xsl:when test="@type='dynamic'">
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+       <!--XSLtest whether this is a data/time structure, otherwise assume that the timepath attribute from IDSDef is correct-->
        <xsl:choose>
-       <xsl:when test="(@name='Data' and ../field[@name='Timebase']) or (@name='Timebase' and ../field[@name='Data'])">
-       timebasepath=<xsl:value-of select="$mds_path"/>//&quot;/Timebase&quot;
-       call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%Timebase')"/>),IDS%<xsl:value-of select="concat($variable_path,'%Timebase')"/>)
+       <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data'])">
+       timepath=<xsl:value-of select="$mds_path"/>//&quot;/time&quot;
+       call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%time')"/>),IDS%<xsl:value-of select="concat($variable_path,'%time')"/>)
        </xsl:when>
        <xsl:otherwise>
-       timebasepath=&quot;<xsl:call-template name="printTimebasepath"/>&quot;
-       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printTimebasevariable"/>),<xsl:call-template name="printTimebasevariable"/>)
+       timepath=&quot;<xsl:call-template name="printtimepath"/>&quot;
+       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
        </xsl:otherwise>
        </xsl:choose>
    else
-        timebasepath="Timebase"
-        call begin_IDS_put_timed(idx, path,size(IDS%Timebase),IDS%Timebase)
+        timepath="time"
+        call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
    endif   
    </xsl:when>
    <xsl:otherwise>
-   timebasepath = ''
+   timepath = ''
    </xsl:otherwise>
    </xsl:choose>   
    call put_vect1d_double(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
-   trim(timebasepath),&amp;
+   trim(timepath),&amp;
    IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>),<xsl:call-template name="printIsTimed"/>)
-   <xsl:if test="@type='SIGNAL'">
+   <xsl:if test="@type='dynamic'">
    call end_IDS_put_timed(idx, path)
    </xsl:if>
    if (ual_debug =='yes') write(*,*) &amp; 
@@ -2358,24 +2358,24 @@ endif
 <xsl:otherwise>
 if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    <xsl:choose>
-   <xsl:when test="@type='SIGNAL'">
-   if (IDS%IDS_Properties%Homogeneous_Timebase.EQ.0) then 
-       timebasepath="<xsl:call-template name="printTimebasepath"/>"
-       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printTimebasevariable"/>),<xsl:call-template name="printTimebasevariable"/>)
+   <xsl:when test="@type='dynamic'">
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+       timepath="<xsl:call-template name="printtimepath"/>"
+       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
    else
-       timebasepath="Timebase"
-       call begin_IDS_put_timed(idx, path,size(IDS%Timebase),IDS%Timebase)
+       timepath="time"
+       call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
    endif   
    </xsl:when>
    <xsl:otherwise>
-   timebasepath = ''
+   timepath = ''
    </xsl:otherwise>
    </xsl:choose>
    call put_vect1d_double(idx,path, "<xsl:value-of select="@path"/>",&amp;
-   trim(timebasepath),&amp;
+   trim(timepath),&amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>,&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>),<xsl:call-template name="printIsTimed"/>)
-   <xsl:if test="@type='SIGNAL'">
+   <xsl:if test="@type='dynamic'">
    call end_IDS_put_timed(idx, path)
    </xsl:if>
    if (ual_debug =='yes') write(*,*) &amp; 
@@ -2391,33 +2391,33 @@ endif
 <xsl:when test="$variable_path">
 if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then         
    <xsl:choose>
-   <xsl:when test="@type='SIGNAL'">
-   if (IDS%IDS_Properties%Homogeneous_Timebase.EQ.0) then 
-       <!--XSLtest whether this is a Data/Timebase structure, otherwise assume that the Timebasepath attribute from IDSDef is correct-->
+   <xsl:when test="@type='dynamic'">
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+       <!--XSLtest whether this is a data/time structure, otherwise assume that the timepath attribute from IDSDef is correct-->
        <xsl:choose>
-       <xsl:when test="(@name='Data' and ../field[@name='Timebase']) or (@name='Timebase' and ../field[@name='Data'])">
-       timebasepath=<xsl:value-of select="$mds_path"/>//&quot;/Timebase&quot;
-       call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%Timebase')"/>),IDS%<xsl:value-of select="concat($variable_path,'%Timebase')"/>)
+       <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data'])">
+       timepath=<xsl:value-of select="$mds_path"/>//&quot;/time&quot;
+       call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%time')"/>),IDS%<xsl:value-of select="concat($variable_path,'%time')"/>)
        </xsl:when>
        <xsl:otherwise>
-       timebasepath=&quot;<xsl:call-template name="printTimebasepath"/>&quot;
-       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printTimebasevariable"/>),<xsl:call-template name="printTimebasevariable"/>)
+       timepath=&quot;<xsl:call-template name="printtimepath"/>&quot;
+       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
        </xsl:otherwise>
        </xsl:choose>
    else
-       timebasepath="Timebase"
-       call begin_IDS_put_timed(idx, path,size(IDS%Timebase),IDS%Timebase)
+       timepath="time"
+       call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
    endif   
    </xsl:when>
    <xsl:otherwise>
-   timebasepath = ''
+   timepath = ''
    </xsl:otherwise>
    </xsl:choose>   
    call put_vect1d_int(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
-   trim(timebasepath), &amp;
+   trim(timepath), &amp;
    IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>),<xsl:call-template name="printIsTimed"/>) 
-   <xsl:if test="@type='SIGNAL'">
+   <xsl:if test="@type='dynamic'">
    call end_IDS_put_timed(idx, path)
    </xsl:if>
    if (ual_debug =='yes') write(*,*) &amp; 
@@ -2427,24 +2427,24 @@ endif
 <xsl:otherwise>
 if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    <xsl:choose>
-   <xsl:when test="@type='SIGNAL'">
-   if (IDS%IDS_Properties%Homogeneous_Timebase.EQ.0) then 
-       timebasepath="<xsl:call-template name="printTimebasepath"/>"
-       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printTimebasevariable"/>),<xsl:call-template name="printTimebasevariable"/>)
+   <xsl:when test="@type='dynamic'">
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+       timepath="<xsl:call-template name="printtimepath"/>"
+       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
    else
-       timebasepath="Timebase"
-       call begin_IDS_put_timed(idx, path,size(IDS%Timebase),IDS%Timebase)
+       timepath="time"
+       call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
    endif   
    </xsl:when>
    <xsl:otherwise>
-   timebasepath = ''
+   timepath = ''
    </xsl:otherwise>
    </xsl:choose>        
    call put_vect1d_int(idx,path, "<xsl:value-of select="@path"/>",&amp;
-   trim(timebasepath),&amp;
+   trim(timepath),&amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>,&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>),<xsl:call-template name="printIsTimed"/>) 
-   <xsl:if test="@type='SIGNAL'">
+   <xsl:if test="@type='dynamic'">
    call end_IDS_put_timed(idx, path)
    </xsl:if>
    if (ual_debug =='yes') write(*,*) &amp; 
@@ -2461,34 +2461,34 @@ endif
 <xsl:when test="$variable_path">
 if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then   
    <xsl:choose>
-   <xsl:when test="@type='SIGNAL'">
-   if (IDS%IDS_Properties%Homogeneous_Timebase.EQ.0) then 
-       <!--XSLtest whether this is a Data/Timebase structure, otherwise assume that the Timebasepath attribute from IDSDef is correct-->
+   <xsl:when test="@type='dynamic'">
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+       <!--XSLtest whether this is a data/time structure, otherwise assume that the timepath attribute from IDSDef is correct-->
        <xsl:choose>
-       <xsl:when test="(@name='Data' and ../field[@name='Timebase']) or (@name='Timebase' and ../field[@name='Data'])">
-       timebasepath=<xsl:value-of select="$mds_path"/>//&quot;/Timebase&quot;
-       call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%Timebase')"/>),IDS%<xsl:value-of select="concat($variable_path,'%Timebase')"/>)
+       <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data'])">
+       timepath=<xsl:value-of select="$mds_path"/>//&quot;/time&quot;
+       call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%time')"/>),IDS%<xsl:value-of select="concat($variable_path,'%time')"/>)
        </xsl:when>
        <xsl:otherwise>
-       timebasepath=&quot;<xsl:call-template name="printTimebasepath"/>&quot;
-       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printTimebasevariable"/>),<xsl:call-template name="printTimebasevariable"/>)
+       timepath=&quot;<xsl:call-template name="printtimepath"/>&quot;
+       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
        </xsl:otherwise>
        </xsl:choose>
    else
-       timebasepath="Timebase"
-       call begin_IDS_put_timed(idx, path,size(IDS%Timebase),IDS%Timebase)
+       timepath="time"
+       call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
    endif   
    </xsl:when>
    <xsl:otherwise>
-   timebasepath = ''
+   timepath = ''
    </xsl:otherwise>
    </xsl:choose>   
    call put_vect2d_double(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
-   trim(timebasepath),&amp;
+   trim(timepath),&amp;
    IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>, &amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,1),&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,2),<xsl:call-template name="printIsTimed"/>)  
-   <xsl:if test="@type='SIGNAL'">
+   <xsl:if test="@type='dynamic'">
    call end_IDS_put_timed(idx, path)
    </xsl:if>
    if (ual_debug =='yes') write(*,*) &amp; 
@@ -2498,25 +2498,25 @@ endif
 <xsl:otherwise>
 if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    <xsl:choose>
-   <xsl:when test="@type='SIGNAL'">
-   if (IDS%IDS_Properties%Homogeneous_Timebase.EQ.0) then 
-       timebasepath="<xsl:call-template name="printTimebasepath"/>"
-       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printTimebasevariable"/>),<xsl:call-template name="printTimebasevariable"/>)
+   <xsl:when test="@type='dynamic'">
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+       timepath="<xsl:call-template name="printtimepath"/>"
+       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
    else
-       timebasepath="Timebase"
-       call begin_IDS_put_timed(idx, path,size(IDS%Timebase),IDS%Timebase)
+       timepath="time"
+       call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
    endif   
    </xsl:when>
    <xsl:otherwise>
-   timebasepath = ''
+   timepath = ''
    </xsl:otherwise>
    </xsl:choose>           
    call put_vect2d_double(idx,path, "<xsl:value-of select="@path"/>",&amp;
-   trim(timebasepath),&amp;
+   trim(timepath),&amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,2),<xsl:call-template name="printIsTimed"/>)  
-   <xsl:if test="@type='SIGNAL'">
+   <xsl:if test="@type='dynamic'">
    call end_IDS_put_timed(idx, path)
    </xsl:if>
    if (ual_debug =='yes') write(*,*) &amp; 
@@ -2533,34 +2533,34 @@ endif
 <xsl:when test="$variable_path">
 if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then
    <xsl:choose>
-   <xsl:when test="@type='SIGNAL'">
-   if (IDS%IDS_Properties%Homogeneous_Timebase.EQ.0) then 
-       <!--XSLtest whether this is a Data/Timebase structure, otherwise assume that the Timebasepath attribute from IDSDef is correct-->
+   <xsl:when test="@type='dynamic'">
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+       <!--XSLtest whether this is a data/time structure, otherwise assume that the timepath attribute from IDSDef is correct-->
        <xsl:choose>
-       <xsl:when test="(@name='Data' and ../field[@name='Timebase']) or (@name='Timebase' and ../field[@name='Data'])">
-       timebasepath=<xsl:value-of select="$mds_path"/>//&quot;/Timebase&quot;
-       call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%Timebase')"/>),IDS%<xsl:value-of select="concat($variable_path,'%Timebase')"/>)
+       <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data'])">
+       timepath=<xsl:value-of select="$mds_path"/>//&quot;/time&quot;
+       call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%time')"/>),IDS%<xsl:value-of select="concat($variable_path,'%time')"/>)
        </xsl:when>
        <xsl:otherwise>
-       timebasepath=&quot;<xsl:call-template name="printTimebasepath"/>&quot;
-       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printTimebasevariable"/>),<xsl:call-template name="printTimebasevariable"/>)
+       timepath=&quot;<xsl:call-template name="printtimepath"/>&quot;
+       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
        </xsl:otherwise>
        </xsl:choose>
    else
-       timebasepath="Timebase"
-       call begin_IDS_put_timed(idx, path,size(IDS%Timebase),IDS%Timebase)
+       timepath="time"
+       call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
    endif   
    </xsl:when>
    <xsl:otherwise>
-   timebasepath = ''
+   timepath = ''
    </xsl:otherwise>
    </xsl:choose>      
    call put_vect2d_int(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
-   trim(timebasepath),&amp;
+   trim(timepath),&amp;
    IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>, &amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,1),&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,2),<xsl:call-template name="printIsTimed"/>)  
-   <xsl:if test="@type='SIGNAL'">
+   <xsl:if test="@type='dynamic'">
    call end_IDS_put_timed(idx, path)
    </xsl:if>
    if (ual_debug =='yes') write(*,*) &amp; 
@@ -2570,25 +2570,25 @@ endif
 <xsl:otherwise>
 if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    <xsl:choose>
-   <xsl:when test="@type='SIGNAL'">
-   if (IDS%IDS_Properties%Homogeneous_Timebase.EQ.0) then 
-       timebasepath="<xsl:call-template name="printTimebasepath"/>"
-       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printTimebasevariable"/>),<xsl:call-template name="printTimebasevariable"/>)
+   <xsl:when test="@type='dynamic'">
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+       timepath="<xsl:call-template name="printtimepath"/>"
+       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
    else
-       timebasepath="Timebase"
-       call begin_IDS_put_timed(idx, path,size(IDS%Timebase),IDS%Timebase)
+       timepath="time"
+       call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
    endif   
    </xsl:when>
    <xsl:otherwise>
-   timebasepath = ''
+   timepath = ''
    </xsl:otherwise>
    </xsl:choose>          
    call put_vect2d_int(idx,path, "<xsl:value-of select="@path"/>",&amp;
-   trim(timebasepath),&amp;
+   trim(timepath),&amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,2),<xsl:call-template name="printIsTimed"/>)  
-   <xsl:if test="@type='SIGNAL'">
+   <xsl:if test="@type='dynamic'">
    call end_IDS_put_timed(idx, path)
    </xsl:if>
    if (ual_debug =='yes') write(*,*) &amp; 
@@ -2605,36 +2605,36 @@ endif
 <xsl:when test="$variable_path">
 if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then  
    <xsl:choose>
-   <xsl:when test="@type='SIGNAL'">
-   if (IDS%IDS_Properties%Homogeneous_Timebase.EQ.0) then 
-       <!--XSLtest whether this is a Data/Timebase structure, otherwise assume that the Timebasepath attribute from IDSDef is correct-->
+   <xsl:when test="@type='dynamic'">
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+       <!--XSLtest whether this is a data/time structure, otherwise assume that the timepath attribute from IDSDef is correct-->
        <xsl:choose>
-       <xsl:when test="(@name='Data' and ../field[@name='Timebase']) or (@name='Timebase' and ../field[@name='Data'])">
-       timebasepath=<xsl:value-of select="$mds_path"/>//&quot;/Timebase&quot;
-       call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%Timebase')"/>),IDS%<xsl:value-of select="concat($variable_path,'%Timebase')"/>)
+       <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data'])">
+       timepath=<xsl:value-of select="$mds_path"/>//&quot;/time&quot;
+       call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%time')"/>),IDS%<xsl:value-of select="concat($variable_path,'%time')"/>)
        </xsl:when>
        <xsl:otherwise>
-       timebasepath=&quot;<xsl:call-template name="printTimebasepath"/>&quot;
-       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printTimebasevariable"/>),<xsl:call-template name="printTimebasevariable"/>)
+       timepath=&quot;<xsl:call-template name="printtimepath"/>&quot;
+       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
        </xsl:otherwise>
        </xsl:choose>
    else
-       timebasepath="Timebase"
-       call begin_IDS_put_timed(idx, path,size(IDS%Timebase),IDS%Timebase)
+       timepath="time"
+       call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
    endif   
    </xsl:when>
    <xsl:otherwise>
-   timebasepath = ''
+   timepath = ''
    </xsl:otherwise>
    </xsl:choose>    
    call put_vect3d_double(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
-   trim(timebasepath),&amp;
+   trim(timepath),&amp;
    IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>, &amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,1),&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,2),&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,3),&amp;
    <xsl:call-template name="printIsTimed"/>)  
-   <xsl:if test="@type='SIGNAL'">
+   <xsl:if test="@type='dynamic'">
    call end_IDS_put_timed(idx, path)
    </xsl:if>
    if (ual_debug =='yes') write(*,*) &amp; 
@@ -2644,27 +2644,27 @@ endif
 <xsl:otherwise>
 if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then 
    <xsl:choose>
-   <xsl:when test="@type='SIGNAL'">
-   if (IDS%IDS_Properties%Homogeneous_Timebase.EQ.0) then 
-       timebasepath="<xsl:call-template name="printTimebasepath"/>"
-       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printTimebasevariable"/>),<xsl:call-template name="printTimebasevariable"/>)
+   <xsl:when test="@type='dynamic'">
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+       timepath="<xsl:call-template name="printtimepath"/>"
+       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
    else
-       timebasepath="Timebase"
-       call begin_IDS_put_timed(idx, path,size(IDS%Timebase),IDS%Timebase)
+       timepath="time"
+       call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
    endif   
    </xsl:when>
    <xsl:otherwise>
-   timebasepath = ''
+   timepath = ''
    </xsl:otherwise>
    </xsl:choose>        
    call put_vect3d_double(idx,path, "<xsl:value-of select="@path"/>",&amp;
-   trim(timebasepath),&amp;
+   trim(timepath),&amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,2),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,3),&amp;
    <xsl:call-template name="printIsTimed"/>)  
-   <xsl:if test="@type='SIGNAL'">
+   <xsl:if test="@type='dynamic'">
    call end_IDS_put_timed(idx, path)
    </xsl:if>
    if (ual_debug =='yes') write(*,*) &amp; 
@@ -2680,36 +2680,36 @@ endif
 <xsl:when test="$variable_path">
 if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then
    <xsl:choose>
-   <xsl:when test="@type='SIGNAL'">
-   if (IDS%IDS_Properties%Homogeneous_Timebase.EQ.0) then 
-       <!--XSLtest whether this is a Data/Timebase structure, otherwise assume that the Timebasepath attribute from IDSDef is correct-->
+   <xsl:when test="@type='dynamic'">
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+       <!--XSLtest whether this is a data/time structure, otherwise assume that the timepath attribute from IDSDef is correct-->
        <xsl:choose>
-       <xsl:when test="(@name='Data' and ../field[@name='Timebase']) or (@name='Timebase' and ../field[@name='Data'])">
-       timebasepath=<xsl:value-of select="$mds_path"/>//&quot;/Timebase&quot;
-       call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%Timebase')"/>),IDS%<xsl:value-of select="concat($variable_path,'%Timebase')"/>)
+       <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data'])">
+       timepath=<xsl:value-of select="$mds_path"/>//&quot;/time&quot;
+       call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%time')"/>),IDS%<xsl:value-of select="concat($variable_path,'%time')"/>)
        </xsl:when>
        <xsl:otherwise>
-       timebasepath=&quot;<xsl:call-template name="printTimebasepath"/>&quot;
-       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printTimebasevariable"/>),<xsl:call-template name="printTimebasevariable"/>)
+       timepath=&quot;<xsl:call-template name="printtimepath"/>&quot;
+       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
        </xsl:otherwise>
        </xsl:choose>
    else
-       timebasepath="Timebase"
-       call begin_IDS_put_timed(idx, path,size(IDS%Timebase),IDS%Timebase)
+       timepath="time"
+       call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
    endif   
    </xsl:when>
    <xsl:otherwise>
-   timebasepath = ''
+   timepath = ''
    </xsl:otherwise>
    </xsl:choose>      
    call put_vect3d_int(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
-   trim(timebasepath),&amp;
+   trim(timepath),&amp;
    IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>, &amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,1),&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,2),&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,3),&amp;
    <xsl:call-template name="printIsTimed"/>)  
-   <xsl:if test="@type='SIGNAL'">
+   <xsl:if test="@type='dynamic'">
    call end_IDS_put_timed(idx, path)
    </xsl:if>
    if (ual_debug =='yes') write(*,*) &amp; 
@@ -2719,27 +2719,27 @@ endif
 <xsl:otherwise>
 if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    <xsl:choose>
-   <xsl:when test="@type='SIGNAL'">
-   if (IDS%IDS_Properties%Homogeneous_Timebase.EQ.0) then 
-       timebasepath="<xsl:call-template name="printTimebasepath"/>"
-       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printTimebasevariable"/>),<xsl:call-template name="printTimebasevariable"/>)
+   <xsl:when test="@type='dynamic'">
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+       timepath="<xsl:call-template name="printtimepath"/>"
+       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
    else
-       timebasepath="Timebase"
-       call begin_IDS_put_timed(idx, path,size(IDS%Timebase),IDS%Timebase)
+       timepath="time"
+       call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
    endif   
    </xsl:when>
    <xsl:otherwise>
-   timebasepath = ''
+   timepath = ''
    </xsl:otherwise>
    </xsl:choose>           
    call put_vect3d_int(idx,path, "<xsl:value-of select="@path"/>",&amp;
-   trim(timebasepath),&amp;
+   trim(timepath),&amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,2),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,3),&amp;
    <xsl:call-template name="printIsTimed"/>)  
-   <xsl:if test="@type='SIGNAL'">
+   <xsl:if test="@type='dynamic'">
    call end_IDS_put_timed(idx, path)
    </xsl:if>
    if (ual_debug =='yes') write(*,*) &amp; 
@@ -2755,37 +2755,37 @@ endif
 <xsl:when test="$variable_path">
 if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then
    <xsl:choose>
-   <xsl:when test="@type='SIGNAL'">
-   if (IDS%IDS_Properties%Homogeneous_Timebase.EQ.0) then 
-       <!--XSLtest whether this is a Data/Timebase structure, otherwise assume that the Timebasepath attribute from IDSDef is correct-->
+   <xsl:when test="@type='dynamic'">
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+       <!--XSLtest whether this is a data/time structure, otherwise assume that the timepath attribute from IDSDef is correct-->
        <xsl:choose>
-       <xsl:when test="(@name='Data' and ../field[@name='Timebase']) or (@name='Timebase' and ../field[@name='Data'])">
-       timebasepath=<xsl:value-of select="$mds_path"/>//&quot;/Timebase&quot;
-       call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%Timebase')"/>),IDS%<xsl:value-of select="concat($variable_path,'%Timebase')"/>)
+       <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data'])">
+       timepath=<xsl:value-of select="$mds_path"/>//&quot;/time&quot;
+       call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%time')"/>),IDS%<xsl:value-of select="concat($variable_path,'%time')"/>)
        </xsl:when>
        <xsl:otherwise>
-       timebasepath=&quot;<xsl:call-template name="printTimebasepath"/>&quot;
-       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printTimebasevariable"/>),<xsl:call-template name="printTimebasevariable"/>)
+       timepath=&quot;<xsl:call-template name="printtimepath"/>&quot;
+       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
        </xsl:otherwise>
        </xsl:choose>
    else
-       timebasepath="Timebase"
-       call begin_IDS_put_timed(idx, path,size(IDS%Timebase),IDS%Timebase)
+       timepath="time"
+       call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
    endif   
    </xsl:when>
    <xsl:otherwise>
-   timebasepath = ''
+   timepath = ''
    </xsl:otherwise>
    </xsl:choose>      
    call put_vect4d_double(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
-   trim(timebasepath),&amp;
+   trim(timepath),&amp;
    IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>, &amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,1),&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,2),&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,3),&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,4),&amp;
    <xsl:call-template name="printIsTimed"/>)  
-   <xsl:if test="@type='SIGNAL'">
+   <xsl:if test="@type='dynamic'">
    call end_IDS_put_timed(idx, path)
    </xsl:if>
    if (ual_debug =='yes') write(*,*) &amp; 
@@ -2795,28 +2795,28 @@ endif
 <xsl:otherwise>
 if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    <xsl:choose>
-   <xsl:when test="@type='SIGNAL'">
-   if (IDS%IDS_Properties%Homogeneous_Timebase.EQ.0) then 
-       timebasepath="<xsl:call-template name="printTimebasepath"/>"
-       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printTimebasevariable"/>),<xsl:call-template name="printTimebasevariable"/>)
+   <xsl:when test="@type='dynamic'">
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+       timepath="<xsl:call-template name="printtimepath"/>"
+       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
    else
-       timebasepath="Timebase"
-       call begin_IDS_put_timed(idx, path,size(IDS%Timebase),IDS%Timebase)
+       timepath="time"
+       call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
    endif   
    </xsl:when>
    <xsl:otherwise>
-   timebasepath = ''
+   timepath = ''
    </xsl:otherwise>
    </xsl:choose>          
    call put_vect4d_double(idx,path, "<xsl:value-of select="@path"/>",&amp;
-   trim(timebasepath),&amp;
+   trim(timepath),&amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,2),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,3),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,4),&amp;
    <xsl:call-template name="printIsTimed"/>)  
-   <xsl:if test="@type='SIGNAL'">
+   <xsl:if test="@type='dynamic'">
    call end_IDS_put_timed(idx, path)
    </xsl:if>
    if (ual_debug =='yes') write(*,*) &amp; 
@@ -2832,30 +2832,30 @@ endif
 <xsl:when test="$variable_path">
 if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then  
    <xsl:choose>
-   <xsl:when test="@type='SIGNAL'">
-   if (IDS%IDS_Properties%Homogeneous_Timebase.EQ.0) then 
-       <!--XSLtest whether this is a Data/Timebase structure, otherwise assume that the Timebasepath attribute from IDSDef is correct-->
+   <xsl:when test="@type='dynamic'">
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+       <!--XSLtest whether this is a data/time structure, otherwise assume that the timepath attribute from IDSDef is correct-->
        <xsl:choose>
-       <xsl:when test="(@name='Data' and ../field[@name='Timebase']) or (@name='Timebase' and ../field[@name='Data'])">
-       timebasepath=<xsl:value-of select="$mds_path"/>//&quot;/Timebase&quot;
-       call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%Timebase')"/>),IDS%<xsl:value-of select="concat($variable_path,'%Timebase')"/>)
+       <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data'])">
+       timepath=<xsl:value-of select="$mds_path"/>//&quot;/time&quot;
+       call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%time')"/>),IDS%<xsl:value-of select="concat($variable_path,'%time')"/>)
        </xsl:when>
        <xsl:otherwise>
-       timebasepath=&quot;<xsl:call-template name="printTimebasepath"/>&quot;
-       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printTimebasevariable"/>),<xsl:call-template name="printTimebasevariable"/>)
+       timepath=&quot;<xsl:call-template name="printtimepath"/>&quot;
+       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
        </xsl:otherwise>
        </xsl:choose>
    else
-       timebasepath="Timebase"
-       call begin_IDS_put_timed(idx, path,size(IDS%Timebase),IDS%Timebase)
+       timepath="time"
+       call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
    endif   
    </xsl:when>
    <xsl:otherwise>
-   timebasepath = ''
+   timepath = ''
    </xsl:otherwise>
    </xsl:choose>    
    call put_vect5d_double(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
-   trim(timebasepath),&amp;
+   trim(timepath),&amp;
    IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>, &amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,1),&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,2),&amp;
@@ -2863,7 +2863,7 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,4),&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,5),&amp;
    <xsl:call-template name="printIsTimed"/>)  
-   <xsl:if test="@type='SIGNAL'">
+   <xsl:if test="@type='dynamic'">
    call end_IDS_put_timed(idx, path)
    </xsl:if>
    if (ual_debug =='yes') write(*,*) &amp; 
@@ -2873,21 +2873,21 @@ endif
 <xsl:otherwise>
 if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then 
    <xsl:choose>
-   <xsl:when test="@type='SIGNAL'">
-   if (IDS%IDS_Properties%Homogeneous_Timebase.EQ.0) then 
-       timebasepath="<xsl:call-template name="printTimebasepath"/>"
-       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printTimebasevariable"/>),<xsl:call-template name="printTimebasevariable"/>)
+   <xsl:when test="@type='dynamic'">
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+       timepath="<xsl:call-template name="printtimepath"/>"
+       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
    else
-       timebasepath="Timebase"
-       call begin_IDS_put_timed(idx, path,size(IDS%Timebase),IDS%Timebase)
+       timepath="time"
+       call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
    endif   
    </xsl:when>
    <xsl:otherwise>
-   timebasepath = ''
+   timepath = ''
    </xsl:otherwise>
    </xsl:choose>          
    call put_vect5d_double(idx,path, "<xsl:value-of select="@path"/>",&amp;
-   trim(timebasepath),&amp;
+   trim(timepath),&amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,2),&amp;
@@ -2895,7 +2895,7 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,4),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,5),&amp;
    <xsl:call-template name="printIsTimed"/>)  
-   <xsl:if test="@type='SIGNAL'">
+   <xsl:if test="@type='dynamic'">
    call end_IDS_put_timed(idx, path)
    </xsl:if>
    if (ual_debug =='yes') write(*,*) &amp; 
@@ -2911,30 +2911,30 @@ endif
 <xsl:when test="$variable_path">
 if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then
    <xsl:choose>
-   <xsl:when test="@type='SIGNAL'">
-   if (IDS%IDS_Properties%Homogeneous_Timebase.EQ.0) then 
-       <!--XSLtest whether this is a Data/Timebase structure, otherwise assume that the Timebasepath attribute from IDSDef is correct-->
+   <xsl:when test="@type='dynamic'">
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+       <!--XSLtest whether this is a data/time structure, otherwise assume that the timepath attribute from IDSDef is correct-->
        <xsl:choose>
-       <xsl:when test="(@name='Data' and ../field[@name='Timebase']) or (@name='Timebase' and ../field[@name='Data'])">
-       timebasepath=<xsl:value-of select="$mds_path"/>//&quot;/Timebase&quot;
-       call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%Timebase')"/>),IDS%<xsl:value-of select="concat($variable_path,'%Timebase')"/>)
+       <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data'])">
+       timepath=<xsl:value-of select="$mds_path"/>//&quot;/time&quot;
+       call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%time')"/>),IDS%<xsl:value-of select="concat($variable_path,'%time')"/>)
        </xsl:when>
        <xsl:otherwise>
-       timebasepath=&quot;<xsl:call-template name="printTimebasepath"/>&quot;
-       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printTimebasevariable"/>),<xsl:call-template name="printTimebasevariable"/>)
+       timepath=&quot;<xsl:call-template name="printtimepath"/>&quot;
+       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
        </xsl:otherwise>
        </xsl:choose>
    else
-       timebasepath="Timebase"
-       call begin_IDS_put_timed(idx, path,size(IDS%Timebase),IDS%Timebase)
+       timepath="time"
+       call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
    endif   
    </xsl:when>
    <xsl:otherwise>
-   timebasepath = ''
+   timepath = ''
    </xsl:otherwise>
    </xsl:choose>     
    call put_vect6d_double(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
-   trim(timebasepath),&amp;
+   trim(timepath),&amp;
    IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>, &amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,1),&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,2),&amp;
@@ -2943,7 +2943,7 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,5),&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,6),&amp;
    <xsl:call-template name="printIsTimed"/>)  
-   <xsl:if test="@type='SIGNAL'">
+   <xsl:if test="@type='dynamic'">
    call end_IDS_put_timed(idx, path)
    </xsl:if>
    if (ual_debug =='yes') write(*,*) &amp; 
@@ -2953,21 +2953,21 @@ endif
 <xsl:otherwise>
 if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    <xsl:choose>
-   <xsl:when test="@type='SIGNAL'">
-   if (IDS%IDS_Properties%Homogeneous_Timebase.EQ.0) then 
-       timebasepath="<xsl:call-template name="printTimebasepath"/>"
-       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printTimebasevariable"/>),<xsl:call-template name="printTimebasevariable"/>)
+   <xsl:when test="@type='dynamic'">
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+       timepath="<xsl:call-template name="printtimepath"/>"
+       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
    else
-       timebasepath="Timebase"
-       call begin_IDS_put_timed(idx, path,size(IDS%Timebase),IDS%Timebase)
+       timepath="time"
+       call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
    endif   
    </xsl:when>
    <xsl:otherwise>
-   timebasepath = ''
+   timepath = ''
    </xsl:otherwise>
    </xsl:choose>           
    call put_vect6d_double(idx,path, "<xsl:value-of select="@path"/>",&amp;
-   trim(timebasepath),&amp;
+   trim(timepath),&amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,2),&amp;
@@ -2976,7 +2976,7 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,5),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,6),&amp;
    <xsl:call-template name="printIsTimed"/>)  
-   <xsl:if test="@type='SIGNAL'">
+   <xsl:if test="@type='dynamic'">
    call end_IDS_put_timed(idx, path)
    </xsl:if>
    if (ual_debug =='yes') write(*,*) &amp; 
@@ -3000,7 +3000,7 @@ endif
 <xsl:template match="field" mode="PUT_SLICE">
 <xsl:param name="variable_path"/>
 <xsl:param name="mds_path"/>
-<xsl:if test="@type ='SIGNAL' or @data_type='structure' or @data_type='struct_array'"> <!-- This skips the routine for non timed fields -->
+<xsl:if test="@type ='dynamic' or @data_type='structure' or @data_type='struct_array'"> <!-- This skips the routine for non timed fields -->
 		<xsl:choose>
 			<xsl:when test="@data_type='structure'">
 <xsl:choose>
@@ -3072,7 +3072,7 @@ call put_object(idx,path,"<xsl:value-of select = "@path"/>",obj1,0) -->
 <xsl:when test="$variable_path">
 if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then
    call put_string_slice(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;, &amp;
-          trim(timebasepath),IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(1),IDS%Timebase(1))
+          trim(timepath),IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(1),IDS%time(1))
    if (ual_debug =='yes') write(*,*) &amp; 
       'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>'
 endif
@@ -3081,7 +3081,7 @@ endif
 <xsl:otherwise>
 if (associated(IDS%<xsl:value-of select="@name"/>)) then
    call put_String_slice(idx,path, "<xsl:value-of select="@name"/>", &amp;
-          trim(timebasepath),IDS%<xsl:value-of select="@name"/>,(1),IDS%Timebase(1))
+          trim(timepath),IDS%<xsl:value-of select="@name"/>,(1),IDS%time(1))
    if (ual_debug =='yes') write(*,*) &amp; 
       'Put IDS%<xsl:value-of select="@name"/>'
 endif
@@ -3098,9 +3098,9 @@ endif
 <xsl:when test="$variable_path">
 if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then
    call put_double_slice(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
-   trim(timebasepath),&amp;
+   trim(timepath),&amp;
    IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(1),&amp;
-   IDS%timebase(1))
+   IDS%time(1))
    if (ual_debug =='yes') write(*,*) &amp; 
       'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
 endif
@@ -3108,9 +3108,9 @@ endif
 <xsl:otherwise>
 if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_double_slice(idx,path, "<xsl:value-of select="@path"/>",&amp;
-   trim(timebasepath),&amp;
+   trim(timepath),&amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>(1),&amp;
-   IDS%timebase(1))
+   IDS%time(1))
    if (ual_debug =='yes') write(*,*) &amp; 
       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
 endif
@@ -3124,9 +3124,9 @@ endif
 <xsl:when test="$variable_path">
 if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then         
    call put_int_slice(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
-   trim(timebasepath), &amp;
+   trim(timepath), &amp;
    IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(1),&amp;
-   IDS%Timebase(1)) 
+   IDS%time(1)) 
    if (ual_debug =='yes') write(*,*) &amp; 
       'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
 endif
@@ -3134,9 +3134,9 @@ endif
 <xsl:otherwise>
 if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_int_slice(idx,path, "<xsl:value-of select="@path"/>",&amp;
-   trim(timebasepath),&amp;
+   trim(timepath),&amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>(1),&amp;
-   IDS%Timebase(1)) 
+   IDS%time(1)) 
    if (ual_debug =='yes') write(*,*) &amp; 
       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
 endif
@@ -3151,10 +3151,10 @@ endif
 <xsl:when test="$variable_path">
 if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then   
    call put_vect1d_double_slice(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
-   trim(timebasepath),&amp;
+   trim(timepath),&amp;
    IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(:,1), &amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,1),&amp;
-   IDS%Timebase(1))  
+   IDS%time(1))  
    if (ual_debug =='yes') write(*,*) &amp; 
       'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
 endif
@@ -3162,10 +3162,10 @@ endif
 <xsl:otherwise>
 if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect1d_double_slice(idx,path, "<xsl:value-of select="@path"/>",&amp;
-   trim(timebasepath),&amp;
+   trim(timepath),&amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>(:,1), &amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
-   IDS%Timebase(1))  
+   IDS%time(1))  
    if (ual_debug =='yes') write(*,*) &amp; 
       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
 endif
@@ -3180,10 +3180,10 @@ endif
 <xsl:when test="$variable_path">
 if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then
    call put_vect1d_int_slice(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
-   trim(timebasepath),&amp;
+   trim(timepath),&amp;
    IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(:,1), &amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,1),&amp;
-   IDS%Timebase(1))  
+   IDS%time(1))  
    if (ual_debug =='yes') write(*,*) &amp; 
       'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
 endif
@@ -3191,10 +3191,10 @@ endif
 <xsl:otherwise>
 if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then    
    call put_vect1d_int_slice(idx,path, "<xsl:value-of select="@path"/>",&amp;
-   trim(timebasepath),&amp;
+   trim(timepath),&amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>(:,1), &amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
-   IDS%Timebase(1))  
+   IDS%time(1))  
    if (ual_debug =='yes') write(*,*) &amp; 
       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
 endif
@@ -3209,11 +3209,11 @@ endif
 <xsl:when test="$variable_path">
 if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then  
    call put_vect2d_double_slice(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
-   trim(timebasepath),&amp;
+   trim(timepath),&amp;
    IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(:,:,1), &amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,1),&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,2),&amp;
-   IDS%Timebase(1))  
+   IDS%time(1))  
    if (ual_debug =='yes') write(*,*) &amp; 
       'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
 endif
@@ -3221,11 +3221,11 @@ endif
 <xsl:otherwise>
 if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then 
    call put_vect2d_double_slice(idx,path, "<xsl:value-of select="@path"/>",&amp;
-   trim(timebasepath),&amp;
+   trim(timepath),&amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>(:,:,1), &amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,2),&amp;
-   IDS%Timebase(1))  
+   IDS%time(1))  
    if (ual_debug =='yes') write(*,*) &amp; 
       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
 endif
@@ -3239,11 +3239,11 @@ endif
 <xsl:when test="$variable_path">
 if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then  
    call put_vect2d_int_slice(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
-   trim(timebasepath),&amp;
+   trim(timepath),&amp;
    IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(:,:,1), &amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,1),&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,2),&amp;
-   IDS%Timebase(1))  
+   IDS%time(1))  
    if (ual_debug =='yes') write(*,*) &amp; 
       'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
 endif
@@ -3251,11 +3251,11 @@ endif
 <xsl:otherwise>
 if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then 
    call put_vect2d_int_slice(idx,path, "<xsl:value-of select="@path"/>",&amp;
-   trim(timebasepath),&amp;
+   trim(timepath),&amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>(:,:,1), &amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,2),&amp;
-   IDS%Timebase(1))  
+   IDS%time(1))  
    if (ual_debug =='yes') write(*,*) &amp; 
       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
 endif
@@ -3269,12 +3269,12 @@ endif
 <xsl:when test="$variable_path">
 if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then    
    call put_vect3d_double_slice(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
-   trim(timebasepath),&amp;
+   trim(timepath),&amp;
    IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(:,:,:,1), &amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,1),&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,2),&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,3),&amp;
-   IDS%TImebase(1))  
+   IDS%time(1))  
    if (ual_debug =='yes') write(*,*) &amp; 
       'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
 endif
@@ -3282,12 +3282,12 @@ endif
 <xsl:otherwise>
 if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect3d_double_slice(idx,path, "<xsl:value-of select="@path"/>",&amp;
-   trim(timebasepath),&amp;
+   trim(timepath),&amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>(:,:,:,1), &amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,2),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,3),&amp;
-   IDS%Timebase(1))  
+   IDS%time(1))  
    if (ual_debug =='yes') write(*,*) &amp; 
       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
 endif
@@ -3301,13 +3301,13 @@ endif
 <xsl:when test="$variable_path">
 if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then  
    call put_vect4d_double_slice(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
-   trim(timebasepath),&amp;
+   trim(timepath),&amp;
    IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(:,:,:,:,1), &amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,1),&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,2),&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,3),&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,4),&amp;
-   IDS%Timebase(1))  
+   IDS%time(1))  
    if (ual_debug =='yes') write(*,*) &amp; 
       'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
 endif
@@ -3315,13 +3315,13 @@ endif
 <xsl:otherwise>
 if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then       
    call put_vect4d_double_slice(idx,path, "<xsl:value-of select="@path"/>",&amp;
-   trim(timebasepath),&amp;
+   trim(timepath),&amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>(:,:,:,:,1), &amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,2),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,3),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,4),&amp;
-   IDS%Timebase(1))  
+   IDS%time(1))  
    if (ual_debug =='yes') write(*,*) &amp; 
       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
 endif
@@ -3335,14 +3335,14 @@ endif
 <xsl:when test="$variable_path">
 if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then
    call put_vect5d_double_slice(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
-   trim(timebasepath),&amp;
+   trim(timepath),&amp;
    IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(:,:,:,:,:,1), &amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,1),&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,2),&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,3),&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,4),&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,5),&amp;
-   IDS%Timebase(1))  
+   IDS%time(1))  
    if (ual_debug =='yes') write(*,*) &amp; 
       'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
 endif
@@ -3350,14 +3350,14 @@ endif
 <xsl:otherwise>
 if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect5d_double_slice(idx,path, "<xsl:value-of select="@path"/>",&amp;
-   trim(timebasepath),&amp;
+   trim(timepath),&amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>(:,:,:,:,:,1), &amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,2),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,3),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,4),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,5),&amp;
-   IDS%Timebase(1))  
+   IDS%time(1))  
    if (ual_debug =='yes') write(*,*) &amp; 
       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
 endif
@@ -3877,30 +3877,30 @@ endif
          </xsl:when>
 
   
-   <xsl:when test="@type='SIGNAL'">
-<!-- Get slice is specific only for SIGNALS -->
+   <xsl:when test="@type='dynamic'">
+<!-- Get slice is specific only for dynamicS -->
 ! Get <xsl:value-of select="@path"/>
 <xsl:choose>
 <xsl:when test="$variable_path">
-   if (IDS%IDS_Properties%Homogeneous_Timebase.EQ.0) then 
-       <!--XSLtest whether this is a Data/Timebase structure, otherwise assume that the Timebasepath attribute from IDSDef is correct-->
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+       <!--XSLtest whether this is a data/time structure, otherwise assume that the timepath attribute from IDSDef is correct-->
        <xsl:choose>
-       <xsl:when test="(@name='Data' and ../field[@name='Timebase']) or (@name='Timebase' and ../field[@name='Data'])">
-       timebasepath=<xsl:value-of select="$mds_path"/>//&quot;/Timebase&quot;
+       <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data'])">
+       timepath=<xsl:value-of select="$mds_path"/>//&quot;/time&quot;
        </xsl:when>
        <xsl:otherwise>
-       timebasepath=&quot;<xsl:call-template name="printTimebasepath"/>&quot;
+       timepath=&quot;<xsl:call-template name="printtimepath"/>&quot;
        </xsl:otherwise>
        </xsl:choose>
    else       
-       timebasepath="Timebase"
+       timepath="time"
    endif   
 </xsl:when>
 <xsl:otherwise>
-   if (IDS%IDS_Properties%Homogeneous_Timebase.EQ.0) then 
-       timebasepath="<xsl:call-template name="printTimebasepath"/>"
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+       timepath="<xsl:call-template name="printtimepath"/>"
    else
-       timebasepath="Timebase"
+       timepath="time"
    endif   
 </xsl:otherwise>
 </xsl:choose>
@@ -3913,7 +3913,7 @@ endif
    if (dim1.GT.0) then
       allocate(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(1))
       call get_string_slice(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;, &amp;
-          trim(timebasepath),&amp;
+          trim(timepath),&amp;
           IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,twant,tret,interpol,status)
       if (ual_debug =='yes') write(*,*) &amp; 
       'Get IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>'
@@ -3925,7 +3925,7 @@ endif
    if (dim1.GT.0) then
       allocate(IDS%<xsl:value-of select="@name"/>(1))
       call get_string_slice(idx,path, "<xsl:value-of select="@name"/>", &amp;
-          trim(timebasepath),&amp;
+          trim(timepath),&amp;
           IDS%<xsl:value-of select="@name"/>,twant,tret,interpol,status)
       if (ual_debug =='yes') write(*,*) &amp; 
       'Get IDS%<xsl:value-of select="@name"/>'
@@ -3944,7 +3944,7 @@ endif
    if (dim1.GT.0) then
       allocate(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(1))
       call get_double_slice(idx,path,<xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;, &amp;
-      trim(timebasepath),&amp;
+      trim(timepath),&amp;
       IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/> &amp;
       ,twant,tret,interpol,status)
       if (ual_debug =='yes') write(*,*) &amp;  
@@ -3956,7 +3956,7 @@ endif
    if (dim1.GT.0) then
       allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(1))
       call get_double_slice(idx,path,"<xsl:value-of select="@path"/>", &amp;
-      trim(timebasepath),&amp;
+      trim(timepath),&amp;
       IDS%<xsl:value-of select="translate(@path,'/','%')"/> &amp;
       ,twant,tret,interpol,status)
       if (ual_debug =='yes') write(*,*) &amp;  
@@ -3973,7 +3973,7 @@ endif
    if (dim1.GT.0) then
       allocate(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(1))
       call get_int_slice(idx,path,<xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;, &amp;
-      trim(timebasepath),&amp;
+      trim(timepath),&amp;
       IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/> &amp;
       ,twant,tret,interpol,status)
       if (ual_debug =='yes') write(*,*) &amp;  
@@ -3985,7 +3985,7 @@ endif
    if (dim1.GT.0) then
       allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(1))
       call get_int_slice(idx,path,"<xsl:value-of select="@path"/>", &amp;
-      trim(timebasepath),&amp;
+      trim(timepath),&amp;
       IDS%<xsl:value-of select="translate(@path,'/','%')"/> &amp;
       ,twant,tret,interpol,status)
       if (ual_debug =='yes') write(*,*) &amp;  
@@ -4003,7 +4003,7 @@ endif
    if (dim1.GT.0) then
       allocate(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(dim1,1))
       call get_vect1d_double_slice(idx,path,<xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;, &amp;
-      trim(timebasepath),&amp;
+      trim(timepath),&amp;
       IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/> &amp;
       ,dim1, dum1,twant,tret,interpol,status)
       if (ual_debug =='yes') write(*,*) &amp;  
@@ -4015,7 +4015,7 @@ endif
    if (dim1.GT.0) then
       allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,1))
       call get_vect1d_double_slice(idx,path,"<xsl:value-of select="@path"/>", &amp;
-      trim(timebasepath),&amp;
+      trim(timepath),&amp;
       IDS%<xsl:value-of select="translate(@path,'/','%')"/> &amp;
       ,dim1, dum1, twant,tret,interpol,status)
       if (ual_debug =='yes') write(*,*) &amp;  
@@ -4032,7 +4032,7 @@ endif
    if (dim1.GT.0) then
       allocate(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(dim1,1))
       call get_vect1d_int_slice(idx,path,<xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;, &amp;
-      trim(timebasepath),&amp;
+      trim(timepath),&amp;
       IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/> &amp;
       ,dim1,dum1,twant,tret,interpol,status)
       if (ual_debug =='yes') write(*,*) &amp;  
@@ -4044,7 +4044,7 @@ endif
    if (dim1.GT.0) then
       allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,1))
       call get_vect1d_int_slice(idx,path,"<xsl:value-of select="@path"/>", &amp;
-      trim(timebasepath),&amp;
+      trim(timepath),&amp;
       IDS%<xsl:value-of select="translate(@path,'/','%')"/> &amp;
       ,dim1,dum1, twant,tret,interpol,status)
       if (ual_debug =='yes') write(*,*) &amp;  
@@ -4062,7 +4062,7 @@ endif
    if (dim1.GT.0) then
       allocate(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(dim1,dim2,1))
       call get_vect2d_double_slice(idx,path,<xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;, &amp;
-      trim(timebasepath),&amp;
+      trim(timepath),&amp;
       IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/> &amp;
       ,dim1,dim2, dum1,dum2, twant,tret,interpol,status)
       if (ual_debug =='yes') write(*,*) &amp;  
@@ -4074,7 +4074,7 @@ endif
    if (dim1.GT.0) then
       allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,1))
       call get_vect2d_double_slice(idx,path,"<xsl:value-of select="@path"/>", &amp;
-      trim(timebasepath),&amp;
+      trim(timepath),&amp;
       IDS%<xsl:value-of select="translate(@path,'/','%')"/> &amp;
       ,dim1,dim2, dum1, dum2, twant,tret,interpol, status)
       if (ual_debug =='yes') write(*,*) &amp;  
@@ -4092,7 +4092,7 @@ endif
    if (dim1.GT.0) then
       allocate(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(dim1,dim2,1))
       call get_vect2d_int_slice(idx,path,<xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;, &amp;
-      trim(timebasepath),&amp;
+      trim(timepath),&amp;
       IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/> &amp;
       ,dim1,dim2, dum1, dum2, twant,tret,interpol, status)
       if (ual_debug =='yes') write(*,*) &amp;  
@@ -4104,7 +4104,7 @@ endif
    if (dim1.GT.0) then
       allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,1))
       call get_vect2d_int_slice(idx,path,"<xsl:value-of select="@path"/>", &amp;
-      trim(timebasepath),&amp;
+      trim(timepath),&amp;
       IDS%<xsl:value-of select="translate(@path,'/','%')"/> &amp;
       ,dim1,dim2, dum1, dum2, twant,tret,interpol,  status)
       if (ual_debug =='yes') write(*,*) &amp;  
@@ -4121,7 +4121,7 @@ endif
    if (dim1.GT.0) then
       allocate(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(dim1,dim2,dim3, 1))
       call get_vect3d_double_slice(idx,path,<xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;, &amp;
-      trim(timebasepath),&amp;
+      trim(timepath),&amp;
       IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/> &amp;
       ,dim1,dim2, dim3, dum1, dum2, dum3, status)
       if (ual_debug =='yes') write(*,*) &amp;  
@@ -4133,7 +4133,7 @@ endif
    if (dim1.GT.0) then
       allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3, 1))
       call get_vect3d_double_slice(idx,path,"<xsl:value-of select="@path"/>", &amp;
-      trim(timebasepath),&amp;
+      trim(timepath),&amp;
       IDS%<xsl:value-of select="translate(@path,'/','%')"/> &amp;
       ,dim1,dim2, dim3, dum1, dum2, dum3, twant,tret,interpol, status)
       if (ual_debug =='yes') write(*,*) &amp;  
@@ -4151,7 +4151,7 @@ endif
    if (dim1.GT.0) then
       allocate(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(dim1,dim2,dim3,dim4,1))
       call get_vect4d_double_slice(idx,path,<xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;, &amp;
-      trim(timebasepath),&amp;
+      trim(timepath),&amp;
       IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/> &amp;
       ,dim1,dim2, dim3, dim4, dum1, dum2, dum3, dum4, twant,tret,interpol,  status)
       if (ual_debug =='yes') write(*,*) &amp;  
@@ -4163,7 +4163,7 @@ endif
    if (dim1.GT.0) then
       allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3,dim4,1))
       call get_vect4d_double_slice(idx,path,"<xsl:value-of select="@path"/>", &amp;
-      trim(timebasepath),&amp;
+      trim(timepath),&amp;
       IDS%<xsl:value-of select="translate(@path,'/','%')"/> &amp;
       ,dim1,dim2, dim3, dim4, dum1, dum2, dum3, dum4, twant,tret,interpol, status)
       if (ual_debug =='yes') write(*,*) &amp;  
@@ -4181,7 +4181,7 @@ endif
    if (dim1.GT.0) then
       allocate(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(dim1,dim2,dim3,dim4,dim5,dim6))
       call get_vect5d_double_slice(idx,path,<xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;, &amp;
-      trim(timebasepath),&amp;
+      trim(timepath),&amp;
       IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/> &amp;
       ,dim1,dim2, dim3, dim4, dim5, dum1, dum2, dum3, dum4, dum5, twant,tret,interpol,  status)
       if (ual_debug =='yes') write(*,*) &amp;  
@@ -4193,7 +4193,7 @@ endif
    if (dim1.GT.0) then
       allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3,dim4,dim5,1))
       call get_vect5d_double_slice(idx,path,"<xsl:value-of select="@path"/>", &amp;
-      trim(timebasepath),&amp;
+      trim(timepath),&amp;
       IDS%<xsl:value-of select="translate(@path,'/','%')"/> &amp;
       ,dim1,dim2, dim3, dim4, dim5, dum1, dum2, dum3, dum4, dum5, twant,tret,interpol, status)
       if (ual_debug =='yes') write(*,*) &amp;  
@@ -4264,11 +4264,11 @@ call put_object_in_object(idx,obj_single_time,"ALLTIMES",1,obj1);
 call put_object_slice(idx,path,"<xsl:value-of select="@path"/>",IDS%time,obj_single_time);
          </xsl:when>
 			<xsl:when test="@name='xs:string' and @timed='yes'">
-! Put <xsl:value-of select="@path"/>  ERROR : NO TIME DEPENDENT STRING EXPECTED IN THE DATA STRUCTURE
+! Put <xsl:value-of select="@path"/>  ERROR : NO TIME DEPENDENT STRING EXPECTED IN THE data STRUCTURE
 <!-- -->
 			</xsl:when>
 			<xsl:when test="@name='vecstring_type'  and @timed='yes'">
-! Put <xsl:value-of select="@path"/>  ERROR : NO TIME DEPENDENT VECSTRING EXPECTED IN THE DATA STRUCTURE
+! Put <xsl:value-of select="@path"/>  ERROR : NO TIME DEPENDENT VECSTRING EXPECTED IN THE data STRUCTURE
 <!-- -->
 			</xsl:when>
 			<xsl:when test="@name='xs:integer'  and @timed='yes'">
@@ -4788,7 +4788,7 @@ call delete_data(idx,IDSpath,"<xsl:value-of select="@path"/>")         <!-- call
       
 		<xsl:choose>
 			<xsl:when test="@timed = 'yes'">
-				<!-- Time dependent signals in time-dependent IDS : copy the time-dependent value from the proper index of the array of IDS structure -->
+				<!-- Time dependent dynamics in time-dependent IDS : copy the time-dependent value from the proper index of the array of IDS structure -->
 				<xsl:choose>
 					<xsl:when test="@data_type='int_type' or @data_type='INT_0D'">
 ! Copy <xsl:value-of select="@path"/>
@@ -4907,7 +4907,7 @@ endif
 				</xsl:choose>
 			</xsl:when>
 			<xsl:otherwise>
-				<!-- Time independent signals in time-dependent IDS : the first index IDSs(1) defines the value of the time-independent data -->
+				<!-- Time independent dynamics in time-dependent IDS : the first index IDSs(1) defines the value of the time-independent data -->
 				<xsl:choose>
                <xsl:when test="@name='struct_array'">
 ! Copy <xsl:value-of select="@path"/>
@@ -5471,38 +5471,38 @@ call ids_discard_cache(idx,IDSpath,"<xsl:value-of select="@path"/>")         <!-
 </xsl:template>
 
 
-<xsl:template name ="printTimebasepath">
-<xsl:if test="@type = 'SIGNAL'">
+<xsl:template name ="printtimepath">
+<xsl:if test="@type = 'dynamic'">
 <xsl:choose>
-<xsl:when test="contains(@axis7,'Timebase')"> <xsl:value-of select="@axis7"/></xsl:when>
-<xsl:when test="contains(@axis6,'Timebase')"> <xsl:value-of select="@axis6"/></xsl:when>
-<xsl:when test="contains(@axis5,'Timebase')"> <xsl:value-of select="@axis5"/></xsl:when>
-<xsl:when test="contains(@axis4,'Timebase')"> <xsl:value-of select="@axis4"/></xsl:when>
-<xsl:when test="contains(@axis3,'Timebase')"> <xsl:value-of select="@axis3"/></xsl:when>
-<xsl:when test="contains(@axis2,'Timebase')"> <xsl:value-of select="@axis2"/></xsl:when>
-<xsl:when test="contains(@axis1,'Timebase')"> <xsl:value-of select="@axis1"/></xsl:when>
+<xsl:when test="contains(@coordinate7,'time')"> <xsl:value-of select="@coordinate7"/></xsl:when>
+<xsl:when test="contains(@coordinate6,'time')"> <xsl:value-of select="@coordinate6"/></xsl:when>
+<xsl:when test="contains(@coordinate5,'time')"> <xsl:value-of select="@coordinate5"/></xsl:when>
+<xsl:when test="contains(@coordinate4,'time')"> <xsl:value-of select="@coordinate4"/></xsl:when>
+<xsl:when test="contains(@coordinate3,'time')"> <xsl:value-of select="@coordinate3"/></xsl:when>
+<xsl:when test="contains(@coordinate2,'time')"> <xsl:value-of select="@coordinate2"/></xsl:when>
+<xsl:when test="contains(@coordinate1,'time')"> <xsl:value-of select="@coordinate1"/></xsl:when>
 </xsl:choose>
 </xsl:if>
-<xsl:if test="@name='Timebase'"><xsl:value-of select="@path"/></xsl:if>  <!-- If the field itself IS Timebase, then it is its own time axis -->
+<xsl:if test="@name='time'"><xsl:value-of select="@path"/></xsl:if>  <!-- If the field itself IS time, then it is its own time coordinate -->
 </xsl:template>
 
-<xsl:template name ="printTimebasevariable">
-<xsl:if test="@type = 'SIGNAL'">
+<xsl:template name ="printtimevariable">
+<xsl:if test="@type = 'dynamic'">
 <xsl:choose>
-<xsl:when test="contains(@axis7,'Timebase')"> IDS%<xsl:value-of select="translate(@axis7,'/','%')"/></xsl:when>
-<xsl:when test="contains(@axis6,'Timebase')"> IDS%<xsl:value-of select="translate(@axis6,'/','%')"/></xsl:when>
-<xsl:when test="contains(@axis5,'Timebase')"> IDS%<xsl:value-of select="translate(@axis5,'/','%')"/></xsl:when>
-<xsl:when test="contains(@axis4,'Timebase')"> IDS%<xsl:value-of select="translate(@axis4,'/','%')"/></xsl:when>
-<xsl:when test="contains(@axis3,'Timebase')"> IDS%<xsl:value-of select="translate(@axis3,'/','%')"/></xsl:when>
-<xsl:when test="contains(@axis2,'Timebase')"> IDS%<xsl:value-of select="translate(@axis2,'/','%')"/></xsl:when>
-<xsl:when test="contains(@axis1,'Timebase')"> IDS%<xsl:value-of select="translate(@axis1,'/','%')"/></xsl:when>
+<xsl:when test="contains(@coordinate7,'time')"> IDS%<xsl:value-of select="translate(@coordinate7,'/','%')"/></xsl:when>
+<xsl:when test="contains(@coordinate6,'time')"> IDS%<xsl:value-of select="translate(@coordinate6,'/','%')"/></xsl:when>
+<xsl:when test="contains(@coordinate5,'time')"> IDS%<xsl:value-of select="translate(@coordinate5,'/','%')"/></xsl:when>
+<xsl:when test="contains(@coordinate4,'time')"> IDS%<xsl:value-of select="translate(@coordinate4,'/','%')"/></xsl:when>
+<xsl:when test="contains(@coordinate3,'time')"> IDS%<xsl:value-of select="translate(@coordinate3,'/','%')"/></xsl:when>
+<xsl:when test="contains(@coordinate2,'time')"> IDS%<xsl:value-of select="translate(@coordinate2,'/','%')"/></xsl:when>
+<xsl:when test="contains(@coordinate1,'time')"> IDS%<xsl:value-of select="translate(@coordinate1,'/','%')"/></xsl:when>
 </xsl:choose>
 </xsl:if>
-<xsl:if test="@name='Timebase'">IDS%<xsl:value-of select="translate(@path,'/','%')"/></xsl:if>  <!-- If the field itself IS Timebase, then it is its own time axis -->
+<xsl:if test="@name='time'">IDS%<xsl:value-of select="translate(@path,'/','%')"/></xsl:if>  <!-- If the field itself IS time, then it is its own time coordinate -->
 </xsl:template>
 
 <xsl:template name ="printIsTimed">
-<xsl:choose><xsl:when test="@type = 'SIGNAL'"> <xsl:value-of select="1"/> </xsl:when> <xsl:otherwise> <xsl:value-of select="0"/> </xsl:otherwise> </xsl:choose>
+<xsl:choose><xsl:when test="@type = 'dynamic'"> <xsl:value-of select="1"/> </xsl:when> <xsl:otherwise> <xsl:value-of select="0"/> </xsl:otherwise> </xsl:choose>
 </xsl:template>
 	
 </xsl:stylesheet>

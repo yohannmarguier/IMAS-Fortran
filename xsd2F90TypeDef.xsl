@@ -16,41 +16,41 @@ module ids_utilities    ! declare the set of types common to all sub-trees
 integer, parameter, public :: DP = kind(1.0d0)
 <!-- This method to find all elements and Complex types in Utilities is not clean at all !!! Check when adding additional levels in utilities !-->
 <!--
-<xsl:apply-templates select="document('Utilities/DD_Support.xsd')/*/*/xs:complexType/*/*/xs:complexType/*/*/xs:complexType/*/*/xs:complexType"/> --><!-- Original IDS structure -->
-<!-- Redo it with Mask option <xsl:apply-templates select="document('Utilities/DD_Support.xsd')/*/*/xs:complexType/*/*/xs:complexType/*/*/xs:complexType/*/*/xs:complexType">  
+<xsl:apply-templates select="document('utilities/dd_support.xsd')/*/*/xs:complexType/*/*/xs:complexType/*/*/xs:complexType/*/*/xs:complexType"/> --><!-- Original IDS structure -->
+<!-- Redo it with Mask option <xsl:apply-templates select="document('utilities/dd_support.xsd')/*/*/xs:complexType/*/*/xs:complexType/*/*/xs:complexType/*/*/xs:complexType">  
 <xsl:with-param name="mask" select="1"/>
 </xsl:apply-templates> -->
 
 <!--
-<xsl:apply-templates select="document('Utilities/DD_Support.xsd')/*/*/xs:complexType/*/*/xs:complexType/*/*/xs:complexType"/> --><!-- Original IDS structure -->
-<!-- Redo it with Mask option <xsl:apply-templates select="document('Utilities/DD_Support.xsd')/*/*/xs:complexType/*/*/xs:complexType/*/*/xs:complexType"> 
+<xsl:apply-templates select="document('utilities/dd_support.xsd')/*/*/xs:complexType/*/*/xs:complexType/*/*/xs:complexType"/> --><!-- Original IDS structure -->
+<!-- Redo it with Mask option <xsl:apply-templates select="document('utilities/dd_support.xsd')/*/*/xs:complexType/*/*/xs:complexType/*/*/xs:complexType"> 
 <xsl:with-param name="mask" select="1"/>
 </xsl:apply-templates> -->
 <!--
-<xsl:apply-templates select="document('Utilities/DD_Support.xsd')/*/*/xs:complexType/*/*/xs:complexType"/> --><!-- Original IDS structure -->
-<!-- Redo it with Mask option <xsl:apply-templates select="document('Utilities/DD_Support.xsd')/*/*/xs:complexType/*/*/xs:complexType"> 
+<xsl:apply-templates select="document('utilities/dd_support.xsd')/*/*/xs:complexType/*/*/xs:complexType"/> --><!-- Original IDS structure -->
+<!-- Redo it with Mask option <xsl:apply-templates select="document('utilities/dd_support.xsd')/*/*/xs:complexType/*/*/xs:complexType"> 
 <xsl:with-param name="mask" select="1"/>
 </xsl:apply-templates> -->
 
 
-<!--<xsl:apply-templates select="document('Utilities/DD_Support.xsd')/*/*/xs:complexType"/>--> <!-- Original IDS structure -->
-<!-- Redo it with Mask option <xsl:apply-templates select="document('Utilities/DD_Support.xsd')/*/*/xs:complexType"> 
+<!--<xsl:apply-templates select="document('utilities/dd_support.xsd')/*/*/xs:complexType"/>--> <!-- Original IDS structure -->
+<!-- Redo it with Mask option <xsl:apply-templates select="document('utilities/dd_support.xsd')/*/*/xs:complexType"> 
 <xsl:with-param name="mask" select="1"/>
 </xsl:apply-templates> -->
 <!--
-<xsl:apply-templates select="document('Utilities/DD_Support.xsd')/*/xs:complexType/*/*/xs:complexType"/> --><!-- Original IDS structure -->
-<!-- Redo it with Mask option <xsl:apply-templates select="document('Utilities/DD_Support.xsd')/*/xs:complexType/*/*/xs:complexType"> 
+<xsl:apply-templates select="document('utilities/dd_support.xsd')/*/xs:complexType/*/*/xs:complexType"/> --><!-- Original IDS structure -->
+<!-- Redo it with Mask option <xsl:apply-templates select="document('utilities/dd_support.xsd')/*/xs:complexType/*/*/xs:complexType"> 
 <xsl:with-param name="mask" select="1"/>
 </xsl:apply-templates> -->
 
 <!-- Declare complex types -->
-<xsl:apply-templates select="document('Utilities/DD_Support.xsd')/*/xs:complexType"/> <!-- Original IDS structure -->
-<!-- Redo it with Mask option <xsl:apply-templates select="document('Utilities/DD_Support.xsd')/*/xs:complexType">
+<xsl:apply-templates select="document('utilities/dd_support.xsd')/*/xs:complexType"/> <!-- Original IDS structure -->
+<!-- Redo it with Mask option <xsl:apply-templates select="document('utilities/dd_support.xsd')/*/xs:complexType">
 <xsl:with-param name="mask" select="1"/>
 </xsl:apply-templates> -->
 
 <!-- Declare Elements -->
-<xsl:apply-templates select="document('Utilities/DD_Support.xsd')/*/xs:element"/> <!-- INDUCES SPURIOUS TEXT IF A SPECIFIC ELEMENT TEMPLATE IS NOT DECLARED ! -->
+<xsl:apply-templates select="document('utilities/dd_support.xsd')/*/xs:element"/> <!-- INDUCES SPURIOUS TEXT IF A SPECIFIC ELEMENT TEMPLATE IS NOT DECLARED ! -->
 
 end module ! end of the utilities module
 <!-- ======================= ====   End :Common Types definition ==== =====================-->
@@ -128,8 +128,8 @@ end module
     <xsl:with-param name="mask" select="1"/>
 </xsl:apply-templates>    -->
 
-<!-- Prior the declaration of the top level element, declare any special structure it may contain at its top level  (e.g. a Data/Timebase couple) --> 
-<xsl:apply-templates mode="special_structure" select="document($thisschema)/*/xs:element/xs:complexType/xs:sequence/xs:element[xs:complexType/xs:sequence/xs:element[@ref='Timebase']]">
+<!-- Prior the declaration of the top level element, declare any special structure it may contain at its top level  (e.g. a data/time couple) --> 
+<xsl:apply-templates mode="special_structure" select="document($thisschema)/*/xs:element/xs:complexType/xs:sequence/xs:element[xs:complexType/xs:sequence/xs:element[@ref='time']]">
 <xsl:with-param name="level" select="'ids'"/></xsl:apply-templates>
 
 
@@ -150,18 +150,18 @@ end module
 <!-- -->
   <xsl:template match="xs:include">
     <xsl:variable name="myschema"><xsl:value-of select="@schemaLocation"/></xsl:variable>
-    <xsl:if test="$myschema != 'Utilities/DD_Support.xsd'">
+    <xsl:if test="$myschema != 'utilities/dd_support.xsd'">
 ! ***********  Include <xsl:value-of select="@schemaLocation"/>
 <xsl:call-template name="dofile"><xsl:with-param name="thisschema" select="$myschema"/></xsl:call-template>
 </xsl:if>
   </xsl:template>
   
   <!-- ===================== Begin Template : Special structure  =======================================-->
-<!-- Handles special structures not explicitly declared in the DD, e.g. a Data/Timebase couple when a Timebase is introduced directly below an element -->
+<!-- Handles special structures not explicitly declared in the DD, e.g. a data/time couple when a time is introduced directly below an element -->
 <!-- -->
   <xsl:template match="xs:element" mode="special_structure">
   <xsl:param name="level"/>
-! SPECIAL STRUCTURE Data / Timebase<xsl:choose>
+! SPECIAL STRUCTURE data / time<xsl:choose>
 	<xsl:when test="$level='complexType'">
 type ids_<xsl:for-each select="ancestor::xs:complexType"><xsl:value-of select="@name"/>_</xsl:for-each><xsl:value-of select="@name"/>  !    <xsl:value-of select="substring(./xs:annotation/xs:documentation,1,130)"/> <!-- some compilers do not like too long lines, thus limit the documentation to 130 characters -->
 	</xsl:when>
@@ -171,37 +171,37 @@ type ids_<xsl:for-each select="ancestor::xs:element"><xsl:value-of select="@name
 </xsl:choose>
 <xsl:choose>
 <xsl:when test="@type='str_type' or @type='str_1d_type' or ./xs:complexType/xs:sequence/xs:group[@ref='STR_0D'] or ./xs:complexType/xs:sequence/xs:group[@ref='STR_1D']" >
-  character(len=132), dimension(:), pointer ::Data => null()     <xsl:call-template name="printnode"/> 
+  character(len=132), dimension(:), pointer ::data => null()     <xsl:call-template name="printnode"/> 
 </xsl:when>
       <xsl:when test="@type='int_1d_type' or ./xs:complexType/xs:sequence/xs:group[@ref='INT_1D']">
-  integer, pointer  :: Data(:) => null()    <xsl:call-template name="printnode"/> 
+  integer, pointer  :: data(:) => null()    <xsl:call-template name="printnode"/> 
 </xsl:when>
       <xsl:when test="@type='flt_1d_type' or ./xs:complexType/xs:sequence/xs:group[@ref='FLT_1D']">
-  real(DP), pointer  :: Data(:) => null()   <xsl:call-template name="printnode"/> 
+  real(DP), pointer  :: data(:) => null()   <xsl:call-template name="printnode"/> 
 </xsl:when>
       <xsl:when test="@type='int_2d_type' or ./xs:complexType/xs:sequence/xs:group[@ref='INT_2D']">
-  integer, pointer  :: Data(:,:) => null()   <xsl:call-template name="printnode"/> 
+  integer, pointer  :: data(:,:) => null()   <xsl:call-template name="printnode"/> 
 </xsl:when>
       <xsl:when test="@type='flt_2d_type' or ./xs:complexType/xs:sequence/xs:group[@ref='FLT_2D']">
-  real(DP), pointer  :: Data(:,:) => null()   <xsl:call-template name="printnode"/> 
+  real(DP), pointer  :: data(:,:) => null()   <xsl:call-template name="printnode"/> 
   </xsl:when>
   <xsl:when test="./xs:complexType/xs:sequence/xs:group[@ref='FLT_3D']">
-  real(DP), pointer  :: Data(:,:,:) => null()   <xsl:call-template name="printnode"/> 
+  real(DP), pointer  :: data(:,:,:) => null()   <xsl:call-template name="printnode"/> 
 </xsl:when>
   <xsl:when test="./xs:complexType/xs:sequence/xs:group[@ref='INT_3D'] ">
-  integer, pointer  :: Data(:,:,:) => null()   <xsl:call-template name="printnode"/> 
+  integer, pointer  :: data(:,:,:) => null()   <xsl:call-template name="printnode"/> 
 </xsl:when>
 <xsl:when test="./xs:complexType/xs:sequence/xs:group[@ref='FLT_4D'] ">
-  real(DP), pointer  :: Data(:,:,:,:) => null()   <xsl:call-template name="printnode"/> 
+  real(DP), pointer  :: data(:,:,:,:) => null()   <xsl:call-template name="printnode"/> 
   </xsl:when>
   <xsl:when test="./xs:complexType/xs:sequence/xs:group[@ref='FLT_5D']">
-  real(DP), pointer  :: Data(:,:,:,:,:) => null()   <xsl:call-template name="printnode"/> 
+  real(DP), pointer  :: data(:,:,:,:,:) => null()   <xsl:call-template name="printnode"/> 
   </xsl:when>
   <xsl:when test="./xs:complexType/xs:sequence/xs:group[@ref='FLT_6D'] ">
-  real(DP), pointer  :: Data(:,:,:,:,:,:) => null()   <xsl:call-template name="printnode"/> 
+  real(DP), pointer  :: data(:,:,:,:,:,:) => null()   <xsl:call-template name="printnode"/> 
   </xsl:when>
 <xsl:when test="./xs:complexType/xs:sequence/xs:group[@ref='FLT_7D'] ">
-  real(DP), pointer  :: Data(:,:,:,:,:,:,:) => null()   <xsl:call-template name="printnode"/> 
+  real(DP), pointer  :: data(:,:,:,:,:,:,:) => null()   <xsl:call-template name="printnode"/> 
   </xsl:when>
 </xsl:choose>
 <xsl:for-each select="xs:complexType/xs:sequence/xs:element"><xsl:call-template name="declare"/></xsl:for-each>
@@ -217,8 +217,8 @@ endtype
   <xsl:param name="mask"/>
   <xsl:if test="not(./xs:group)">  <!-- if there is a group below, means this is a leaf, do not declare it as a structure, so skip all the template-->
 
-<!-- Prior the declaration of the Complex Type, declare any special structure it may contain at its top level  (e.g. a Data/Timebase couple) --> 
-<xsl:apply-templates mode="special_structure" select="./xs:sequence/xs:element[xs:complexType/xs:sequence/xs:element[@ref='Timebase']]">
+<!-- Prior the declaration of the Complex Type, declare any special structure it may contain at its top level  (e.g. a data/time couple) --> 
+<xsl:apply-templates mode="special_structure" select="./xs:sequence/xs:element[xs:complexType/xs:sequence/xs:element[@ref='time']]">
 <xsl:with-param name="level" select="'complexType'"/></xsl:apply-templates>
 
 
@@ -240,7 +240,7 @@ endtype
 <!-- -->
   <xsl:template name="declare_element" match="xs:element">
   <xsl:param name="mask"/>
-  <xsl:if test="not(./xs:group) and not(@name='Timebase')">  <!-- if there is a group below, means this is a leaf, do not declare it as a structure, so skip all the template. Skip also the Timebase, which is a reserved name-->
+  <xsl:if test="not(./xs:group) and not(@name='time')">  <!-- if there is a group below, means this is a leaf, do not declare it as a structure, so skip all the template. Skip also the time, which is a reserved name-->
   <xsl:choose>
 	<xsl:when test="$mask">  
 type ids_<xsl:value-of select="../@name"/><xsl:value-of select="@name"/>_mask  !    <xsl:value-of select="substring(./xs:annotation/xs:documentation,1,130)"/> <!-- some compilers do not like too long lines, thus limit the documentation to 130 characters -->	
@@ -288,8 +288,8 @@ endtype
     <xsl:choose>
       <xsl:when test="@ref">
       <xsl:choose>
-<xsl:when test="@ref='Timebase'">  <!-- Timebase is a reserved name and case-->
-  real(DP), pointer  :: Timebase(:) => null()  ! Timebase</xsl:when>							
+<xsl:when test="@ref='time'">  <!-- time is a reserved name and case-->
+  real(DP), pointer  :: time(:) => null()  ! time</xsl:when>							
 <xsl:otherwise>
   type (ids_<xsl:value-of select="@ref"/>)<xsl:if test="@maxOccurs &gt; 1or @maxOccurs ='unbounded'">,pointer</xsl:if> :: <xsl:value-of select="@ref"/> <xsl:if test="@maxOccurs &gt; 1or @maxOccurs ='unbounded'">(:) => null()</xsl:if>       <xsl:call-template name="printnode"/>
 </xsl:otherwise>							
@@ -346,7 +346,7 @@ endtype
    </xsl:call-template>-->
    <!--endtype-->
 <!--</xsl:when>-->
-<xsl:when test="xs:complexType/xs:sequence/xs:element[@ref='Timebase']">  <!-- special structure Data / Timebase -->
+<xsl:when test="xs:complexType/xs:sequence/xs:element[@ref='time']">  <!-- special structure data / time -->
 
 <xsl:choose>
 	<xsl:when test="$level='complexType'">
@@ -382,10 +382,10 @@ end type
 
 
 
-<!-- =================================== Begin Macro : declare_specialids_IDS : for a IDS of generic type defined in utilities, e.g. lineintegraldiag, copies explicitely all elements from the definition in Utilities/DD_Support.xsd. NB : only the first level is copied, the deeper level have been declared before during the work on Utilities/DD_Support.xsd ===========================-->
+<!-- =================================== Begin Macro : declare_specialids_IDS : for a IDS of generic type defined in utilities, e.g. lineintegraldiag, copies explicitely all elements from the definition in utilities/dd_support.xsd. NB : only the first level is copied, the deeper level have been declared before during the work on utilities/dd_support.xsd ===========================-->
 <!--<xsl:template name="declare_specialids_IDS">
 <xsl:param name="IDS_specialtype"/>
-   <xsl:for-each select="document('Utilities/DD_Support.xsd')/*/xs:complexType[@name=$IDS_specialtype]/*/xs:element"><xsl:call-template name="declare"/></xsl:for-each>
+   <xsl:for-each select="document('utilities/dd_support.xsd')/*/xs:complexType[@name=$IDS_specialtype]/*/xs:element"><xsl:call-template name="declare"/></xsl:for-each>
 </xsl:template>  -->
 <!-- =================================== End Macro : declare_specialids_IDS IDS of generic type defined in utilities, e.g. lineintegraldiag ===========================-->
 
