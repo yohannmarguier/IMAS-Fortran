@@ -70,10 +70,10 @@ interface ids_put
    module procedure ids_put_<xsl:value-of select="@name"/>		
 end interface ids_put
 
-! Declaration of the generic IDS PUT_NON_TIMED routine 
+<!--! Declaration of the generic IDS PUT_NON_TIMED routine 
 interface ids_put_non_timed
    module procedure ids_put_non_timed_<xsl:value-of select="@name"/> 		 
-end interface ids_put_non_timed
+end interface ids_put_non_timed   -->
 
 ! Declaration of the generic IDS DELETE routine 
 interface ids_delete        
@@ -294,6 +294,7 @@ return
 end subroutine ids_put_slice_<xsl:value-of select="@name"/>
 </xsl:if>
 
+<!--
 !!!!!! Routines to PUT_NON_TIMED the time INdependent data of time dependent IDSs 
 
 subroutine ids_put_non_timed_<xsl:value-of select="@name"/>(idx, path,  IDS)
@@ -334,7 +335,7 @@ call end_IDS_put_non_timed(idx, path)
 
 return
 end subroutine ids_put_non_timed_<xsl:value-of select="@name"/>
-
+-->
 !!!!!! Routine to DELETE the IDS 
 
 subroutine ids_delete_<xsl:value-of select="@name"/>(idx,IDSpath,IDS)  <!-- systematic calls to the low level delete_data routine. The IDS input argument is added just for the interface to identify the relevant IDS type -->
@@ -2100,7 +2101,8 @@ endif
 </xsl:choose>
 
 			</xsl:when>
-         <xsl:when test="@data_type='struct_array'">
+         <xsl:when test="@data_type='struct_array' and @maxoccur!='unbounded'">
+<!-- Type 1 arrays of structure, with potentially multiple time bases -->
 ! Put <xsl:value-of select="@path"/>
 <xsl:choose>
 <xsl:when test="$variable_path">
@@ -2131,11 +2133,67 @@ if (associated(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)) then
 endif
 </xsl:otherwise>
 </xsl:choose>
+</xsl:when>
+          <xsl:when test="@data_type='struct_array' and @maxoccur='unbounded' and @type='dynamic'">
+<!-- Type 3 arrays of structure, with a unique time base -->
+<xsl:choose>
+<xsl:when test="$variable_path">
+To be completed: type 2/3 nested below a Type 1
+</xsl:when>
+<xsl:otherwise>
+! Structure array of type 3 : <xsl:value-of select = "@path"/>
+! Write timed fields    
+call begin_object(idx,-1,1,path//"/<xsl:value-of select = "@path"/>",TIMED_CLEAR,obj_all_times)
+do i1 = 1,size(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)
+   call begin_object(idx,obj_all_times,itime,"ALLTIMES",TIMED,obj1)
+         <xsl:apply-templates select = "field" mode = "PUT_IN_OBJECT">
+               <xsl:with-param name="level" select="1"/>
+               <xsl:with-param name="objpath" select="@name"/>
+               <xsl:with-param name="idxpath" select="concat('IDS%',translate(@path,'/','%'),'(i1)')"/>
+               <xsl:with-param name="timed" select="'yes'"/>
+         </xsl:apply-templates>
+   call put_object_in_object(idx,obj_all_times,"ALLTIMES",i1,obj1)
+enddo
+! Store time of the array of structure only if IDS is not Homogeneous (not useful otherwise)
+if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+    allocate(time(size(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)))
+    do i1 = 1,size(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)
+       time(i1) = IDS%<xsl:value-of select = "translate(@path,'/','%')"/>(i1)%time
+    enddo
+    timepath=&quot;<xsl:call-template name="printtimepath"/>&quot;
+    call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
+    call put_vect1d_double(idx,path, trim(timepath),&amp;
+        trim(timepath),&amp;
+        <xsl:call-template name="printtimevariable"/>,&amp;
+        size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printIsTimed"/>)
+    call end_IDS_put_timed(idx, path)
+    deallocate(time)
+endif
+
+call put_object(idx,path,"<xsl:value-of select = "@path"/>",obj_all_times,1)
+call release_object(idx,obj1)
+call release_object(idx,obj_all_times)  
 
 
 
+<!-- Type 2 structure arrays not handled yet, I put here a copy of the ITM treatment for recall 
 
-<!-- old comment from ITM MDS object
+do itime = 1,lentime
+   call begin_object(idx,obj_all_times,itime,"ALLTIMES",TIMED,obj1)
+   if (associated(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)) then
+      do i1 = 1,size(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)
+         <xsl:apply-templates select = "field" mode = "PUT_IN_OBJECT">
+               <xsl:with-param name="level" select="1"/>
+               <xsl:with-param name="objpath" select="@name"/>
+               <xsl:with-param name="idxpath" select="concat('IDSs(itime)%',translate(@path,'/','%'),'(i1)')"/>
+               <xsl:with-param name="timed" select="'yes'"/>
+         </xsl:apply-templates>
+      enddo
+   endif
+   call put_object_in_object(idx,obj_all_times,"ALLTIMES",itime,obj1)
+enddo
+call put_object(idx,path,"<xsl:value-of select = "@path"/>",obj_all_times,1)
+  
 ! Write non-timed fields    */
 call begin_object(idx,-1,1,path//"/<xsl:value-of select = "@path"/>",NON_TIMED,obj1)
 if (associated(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)) then
@@ -2143,12 +2201,17 @@ if (associated(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)) then
       <xsl:apply-templates select = "field" mode = "PUT_IN_OBJECT">
          <xsl:with-param name="level" select="1"/>
          <xsl:with-param name="objpath" select="@name"/>
-         <xsl:with-param name="idxpath" select="concat('IDS%',translate(@path,'/','%'),'(i1)')"/>
+         <xsl:with-param name="idxpath" select="concat('IDSs(1)%',translate(@path,'/','%'),'(i1)')"/>
          <xsl:with-param name="timed" select="'no'"/>
       </xsl:apply-templates>
    enddo
 endif
-call put_object(idx,path,"<xsl:value-of select = "@path"/>",obj1,0) -->
+call put_object(idx,path,"<xsl:value-of select = "@path"/>",obj1,0)
+-->
+
+
+</xsl:otherwise>
+</xsl:choose>
          </xsl:when>
 			<xsl:when test="@data_type='str_type' or @data_type='STR_0D'">
 ! Put <xsl:value-of select="@path"/>
@@ -4441,13 +4504,11 @@ endif
   
   <xsl:choose>
     <!--========== Arrays of structures ==========-->
-    <xsl:when test="@name='struct_array'">
+    <xsl:when test="@data_type='struct_array'">
 
-      <xsl:if test="@timed='yes' or $timed='no'">  <!-- Non-timed struct_array must not appear in the timed section -->
+   <!--   <xsl:if test="@timed='yes' or $timed='no'"> --> <!-- Non-timed struct_array must not appear in the timed section -->
 ! Put <xsl:value-of select="@path"/>
-                        <!-- for comment only -->
-
-      <!-- OH fix -->
+                        
       <xsl:choose>
         <xsl:when test="$timed='yes'">
 call begin_object(idx,obj<xsl:value-of select="$level"/>,i<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",TIMED,obj<xsl:value-of select="$level + 1"/>)
@@ -4479,12 +4540,12 @@ call put_object_in_object(idx,obj<xsl:value-of select="$level"/>, "<xsl:value-of
         </xsl:otherwise>
       </xsl:choose>
 
-      </xsl:if>
+     <!-- </xsl:if> -->
 
     </xsl:when>
     
     <!--========== Regular structure ==========-->
-    <xsl:when test="@name='structure'">
+    <xsl:when test="@data_type='structure'">
       <xsl:apply-templates select = "field" mode = "PUT_IN_OBJECT">
         <xsl:with-param name="level" select="$level"/>
         <xsl:with-param name="objpath" select="$currentobjpath"/>
@@ -4495,7 +4556,7 @@ call put_object_in_object(idx,obj<xsl:value-of select="$level"/>, "<xsl:value-of
 
     <!--========== select either timed or non-timed fields ==========-->
     <xsl:otherwise>
-      <xsl:if test="@timed=$timed">
+      <xsl:if test="(@type='dynamic' and $timed='yes') or (@type!='dynamic' and $timed='no')">
         <xsl:choose>
          <xsl:when test="@data_type='str_type' or @data_type='STR_0D'">
 ! Put <xsl:value-of select="@path"/>
@@ -4702,7 +4763,7 @@ endif
    </xsl:otherwise>
    </xsl:choose>
 </xsl:when>
-<xsl:when test="@data_type='struct_array'">
+<xsl:when test="@data_type='struct_array' and @maxoccur!='unbounded'">
    <xsl:choose>
    <xsl:when test="$mds_path">
 do i<xsl:value-of select = "@name"/> = 1,<xsl:value-of select = "@maxoccur"/>

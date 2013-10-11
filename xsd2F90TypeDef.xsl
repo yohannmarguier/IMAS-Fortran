@@ -62,6 +62,10 @@ module ids_schemas       ! declaration of all IDSs
 <!-- declare that utilities is an external  module -->
 use ids_utilities
 
+integer, parameter :: NON_TIMED=0
+integer, parameter :: TIMED=1
+integer, parameter :: TIMED_CLEAR=2
+
 <!-- -->
 <!-- do the work on the entry file includes -->
 <!-- -->
