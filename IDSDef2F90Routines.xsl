@@ -120,7 +120,7 @@ use ids_schemas
 implicit none
 
 character*(*) :: path
-integer :: idx, status, lenstring, istring
+integer :: idx, status, lenstring, istring, itime, lentime
 integer :: ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7,dum1,dum2,dum3,dum4,dum5,dum6,dum7
 character(len=3)::ual_debug
 
@@ -1454,7 +1454,7 @@ endif
   <xsl:choose>
     <!--========== Arrays of structures ==========-->
     <xsl:when test="@name='struct_array'">
-      <xsl:if test="@timed='yes' or $timed='no'">  <!-- Non-timed struct_array must not appear in the timed section -->
+ <!--     <xsl:if test="@timed='yes' or $timed='no'">  --><!-- Non-timed struct_array must not appear in the timed section -->
 ! Get <xsl:value-of select="@path"/>
                         <!-- for comment only -->
 call get_object_from_object(idx, obj<xsl:value-of select="$level"/>, "<xsl:value-of select = "$currentobjpath"/>", i<xsl:value-of select="$level"/>, obj<xsl:value-of select="$level + 1"/>,status)
@@ -1481,7 +1481,7 @@ if (status.EQ.0) then
       endif
    endif
 endif
-      </xsl:if>
+  <!--    </xsl:if> -->
     </xsl:when>
         
     <!--========== Regular structure ==========-->
@@ -2145,7 +2145,7 @@ To be completed: type 2/3 nested below a Type 1
 ! Write timed fields    
 call begin_object(idx,-1,1,path//"/<xsl:value-of select = "@path"/>",TIMED_CLEAR,obj_all_times)
 do i1 = 1,size(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)
-   call begin_object(idx,obj_all_times,itime,"ALLTIMES",TIMED,obj1)
+   call begin_object(idx,obj_all_times,i1,"ALLTIMES",TIMED,obj1)
          <xsl:apply-templates select = "field" mode = "PUT_IN_OBJECT">
                <xsl:with-param name="level" select="1"/>
                <xsl:with-param name="objpath" select="@name"/>
@@ -2167,12 +2167,12 @@ if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
         <xsl:call-template name="printtimevariable"/>,&amp;
         size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printIsTimed"/>)
     call end_IDS_put_timed(idx, path)
+    if (ual_debug =='yes') write(*,*) &amp; 
+      'Put <xsl:call-template name="printtimevariable"/>',<xsl:call-template name="printtimevariable"/>
     deallocate(time)
 endif
 
 call put_object(idx,path,"<xsl:value-of select = "@path"/>",obj_all_times,1)
-call release_object(idx,obj1)
-call release_object(idx,obj_all_times)  
 
 
 
@@ -3459,7 +3459,8 @@ endif
 </xsl:choose>
 
 			</xsl:when>
-         <xsl:when test="@data_type='struct_array'">
+         <xsl:when test="@data_type='struct_array' and @maxoccur!='unbounded'">
+<!-- Type 1 arrays of structure, with potentially multiple time bases -->
 ! Get <xsl:value-of select="@path"/>
 <xsl:choose>
 <xsl:when test="$variable_path">
@@ -3487,25 +3488,80 @@ if (status.EQ.0) then
 endif
 </xsl:otherwise>
 </xsl:choose>
-
-
-
-
-<!-- old comment from ITM MDS object
-! Write non-timed fields    */
-call begin_object(idx,-1,1,path//"/<xsl:value-of select = "@path"/>",NON_TIMED,obj1)
-if (associated(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)) then
-   do i1 = 1,size(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)
-      <xsl:apply-templates select = "field" mode = "GET_IN_OBJECT">
-         <xsl:with-param name="level" select="1"/>
-         <xsl:with-param name="objpath" select="@name"/>
-         <xsl:with-param name="idxpath" select="concat('IDS%',translate(@path,'/','%'),'(i1)')"/>
-         <xsl:with-param name="timed" select="'no'"/>
-      </xsl:apply-templates>
+</xsl:when>
+<xsl:when test="@data_type='struct_array' and @maxoccur='unbounded' and @type='dynamic'">
+<!-- Type 3 arrays of structure, with a unique time base -->
+<xsl:choose>
+<xsl:when test="$variable_path">
+To be completed: type 2/3 nested below a Type 1
+</xsl:when>
+<xsl:otherwise>
+! Structure array of type 3 : <xsl:value-of select = "@path"/>
+call get_object(idx,path,"<xsl:value-of select = "@path"/>",obj_all_times,TIMED,status) ! read the whole timed block
+if (status.EQ.0) then
+   call get_object_dim(idx,obj_all_times,lentime)  ! the size of this top object is the number of time slices
+   allocate(ids%<xsl:value-of select = "translate(@path,'/','%')"/>(lentime))
+   if (ual_debug =='yes') write(*,*) &amp;
+      'Get ids%<xsl:value-of select="translate(@path,'/','%')"/>'
+   do itime = 1,lentime     ! fill every time slice
+      call get_object_from_object(idx,obj_all_times,"ALLTIMES",itime,obj1,status)
+      if (status.EQ.0) then
+         call get_object_dim(idx,obj1,dimObj1)
+         if (dimObj1.GT.0) then
+            allocate(ids%<xsl:value-of select = "translate(@path,'/','%')"/>(dimObj1))
+            do i1 = 1,dimObj1     ! process array elements
+               <xsl:apply-templates select = "field" mode = "GET_FROM_OBJECT">
+                  <xsl:with-param name="level" select="1"/>
+                  <xsl:with-param name="objpath" select="@name"/>
+                  <xsl:with-param name="idxpath" select="concat('ids%',translate(@path,'/','%'),'(i1)')"/>
+                  <xsl:with-param name="timed" select="'yes'"/>
+               </xsl:apply-templates>
+            enddo
+         else
+            if (associated(ids%<xsl:value-of select = "translate(@path,'/','%')"/>)) then
+               deallocate(ids%<xsl:value-of select = "translate(@path,'/','%')"/>)
+            endif
+         endif
+      endif
    enddo
+   call release_object(idx,obj_all_times)
 endif
-call get_object(idx,path,"<xsl:value-of select = "@path"/>",obj1,0) -->
-         </xsl:when>
+</xsl:otherwise>
+</xsl:choose>
+
+
+</xsl:when>
+
+
+<!-- old comment from ITM MDS object tobe implemented for AoS type 2
+! Read non-timed content
+call get_object(idx,path,"<xsl:value-of select = "@path"/>",obj1,0,status); ! read the whole non-timed block
+if (status.EQ.0) then
+   call get_object_dim(idx,obj1,dimObj1)
+   if (dimObj1.NE.0) then
+      do itime = 1,lentime     ! fill every time slice
+         ! does not exist yet (there was no timed content)
+         if (.NOT.associated(cpos(itime)%<xsl:value-of select = "translate(@path,'/','%')"/>)) then
+            allocate(cpos(itime)%<xsl:value-of select = "translate(@path,'/','%')"/>(dimObj1))
+         endif
+         ! must have same number of non-timed elements and timed elements
+         if (size(cpos(itime)%<xsl:value-of select = "translate(@path,'/','%')"/>).NE.dimObj1) then
+            write(*,*) "Error in get: array of structures has different number of timed and nontimed elements for <xsl:value-of select = "@path"/>"
+         else
+            do i1 = 1,dimObj1     ! process array elements
+               <xsl:apply-templates select = "field" mode = "GET_FROM_OBJECT">
+                  <xsl:with-param name="level" select="1"/>
+                  <xsl:with-param name="objpath" select="@name"/>
+                  <xsl:with-param name="idxpath" select="concat('cpos(itime)%',translate(@path,'/','%'),'(i1)')"/>
+                  <xsl:with-param name="timed" select="'no'"/>
+               </xsl:apply-templates>
+            enddo
+         endif
+      enddo
+   endif
+   call release_object(idx,obj1)
+endif
+ -->
 			<xsl:when test="@data_type='str_type' or @data_type='STR_0D'">
 ! Get <xsl:value-of select="@path"/>
 <xsl:choose>
