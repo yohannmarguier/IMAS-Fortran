@@ -1453,11 +1453,20 @@ endif
   
   <xsl:choose>
     <!--========== Arrays of structures ==========-->
-    <xsl:when test="@name='struct_array'">
- <!--     <xsl:if test="@timed='yes' or $timed='no'">  --><!-- Non-timed struct_array must not appear in the timed section -->
+    <xsl:when test="@data_type='struct_array'">
 ! Get <xsl:value-of select="@path"/>
-                        <!-- for comment only -->
+<!-- -->
+<xsl:choose>
+<xsl:when test="$timed = 'yes'">
+<!-- We are scanning the children of a Type 3 AoS, so we extract the child object at index 1 of the parent object -->
+call get_object_from_object(idx, obj<xsl:value-of select="$level"/>, "<xsl:value-of select = "$currentobjpath"/>", 1, obj<xsl:value-of select="$level + 1"/>,status)
+</xsl:when>
+<xsl:otherwise>
+<!-- Otherwise we assume it is a Type 2 AoS, so we extract the child object at index iobject -->
 call get_object_from_object(idx, obj<xsl:value-of select="$level"/>, "<xsl:value-of select = "$currentobjpath"/>", i<xsl:value-of select="$level"/>, obj<xsl:value-of select="$level + 1"/>,status)
+</xsl:otherwise>
+</xsl:choose>
+
 if (status.EQ.0) then
    call get_object_dim(idx,obj<xsl:value-of select="$level + 1"/>,dimObj<xsl:value-of select="$level + 1"/>)
    if (dimObj<xsl:value-of select="$level + 1"/>.GT.0) then
@@ -1475,7 +1484,7 @@ if (status.EQ.0) then
                <xsl:with-param name="level" select="$level + 1"/>
                <xsl:with-param name="objpath" select="@name"/>
                <xsl:with-param name="idxpath" select="concat($currentidxpath,'(i',$level + 1,')')"/>
-               <xsl:with-param name="timed" select="$timed"/>
+               <xsl:with-param name="timed" select="'no'"/>  <!-- We assume the nested children are necessarily Type 2 -->
             </xsl:apply-templates>
          enddo
       endif
@@ -1485,7 +1494,7 @@ endif
     </xsl:when>
         
     <!--========== Regular structure ==========-->
-    <xsl:when test="@name='structure'">
+    <xsl:when test="@data_type='structure'">
       <xsl:apply-templates select = "field" mode = "GET_FROM_OBJECT">
          <xsl:with-param name="level" select="$level"/>
          <xsl:with-param name="objpath" select="$currentobjpath"/>
@@ -1496,13 +1505,13 @@ endif
     
     <xsl:otherwise>
       <!--========== select either timed or non-timed fields ==========-->
-      <xsl:if test="@timed=$timed">
+      <!--<xsl:if test="@timed=$timed">-->
         <xsl:choose>
          <xsl:when test="@data_type='str_type' or @data_type='STR_0D'">
 ! Get <xsl:value-of select="@path"/>
             <!-- for comment only -->  
 longstring = ' '
-call get_string_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,longstring,status)
+call get_string_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>,longstring,status)
 if (status.EQ.0) then
    lenstring = len_trim(longstring)      
    allocate(<xsl:value-of select="$currentidxpath"/>(floor(real(lenstring/132))+1))
@@ -1521,10 +1530,10 @@ endif
          <xsl:when test="@data_type='str_1d_type' or @data_type='STR_1D'">
 ! Get <xsl:value-of select="@path"/>
             <!-- for comment only -->  
-call get_dimension_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(<xsl:value-of select="$currentidxpath"/>(dim1))
-   call get_vect1d_string_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>, &amp;
+   call get_vect1d_string_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>, &amp;
                         <xsl:value-of select="$currentidxpath"/>,dim1,dum1,status)
    if (ual_debug =='yes') write(*,*) &amp; 
       'Get <xsl:value-of select="$currentidxpath"/>'
@@ -1534,7 +1543,7 @@ endif
          <xsl:when test="@data_type='int_type' or @data_type='INT_0D'">
 ! Get <xsl:value-of select="@path"/>
             <!-- for comment only --> 
-call get_int_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,int0d,status)
+call get_int_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>,int0d,status)
 if (status.EQ.0) then
    <xsl:value-of select="$currentidxpath"/> = int0d
    if (ual_debug =='yes') write(*,*) &amp; 
@@ -1545,7 +1554,7 @@ endif
          <xsl:when test="@data_type='flt_type' or @data_type='FLT_0D'">
 ! Get <xsl:value-of select="@path"/>
             <!-- for comment only --> 
-call get_double_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,double0d,status)
+call get_double_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose> ,double0d,status)
 if (status.EQ.0) then
    <xsl:value-of select="$currentidxpath"/> = double0d
    if (ual_debug =='yes') write(*,*) &amp; 
@@ -1556,10 +1565,10 @@ endif
          <xsl:when test="@data_type='flt_1d_type' or @data_type='FLT_1D'">
 ! Get <xsl:value-of select="@path"/>
             <!-- for comment only -->
-call get_dimension_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(<xsl:value-of select="$currentidxpath"/>(dim1))
-   call get_vect1d_double_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>, &amp;
+   call get_vect1d_double_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>, &amp;
    <xsl:value-of select="$currentidxpath"/>,dim1,dum1,status)
    if (ual_debug =='yes') write(*,*) &amp;  
       'Get <xsl:value-of select="$currentidxpath"/>'
@@ -1569,10 +1578,10 @@ endif
          <xsl:when test="@data_type='int_1d_type' or @data_type='INT_1D'">
 ! Get <xsl:value-of select="@path"/>
             <!-- for comment only -->        
-call get_dimension_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(<xsl:value-of select="$currentidxpath"/>(dim1))
-   call get_vect1d_int_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>, &amp;
+   call get_vect1d_int_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>, &amp;
    <xsl:value-of select="$currentidxpath"/>,dim1,dum1,status)
    if (ual_debug =='yes') write(*,*) &amp; 
       'Get <xsl:value-of select="$currentidxpath"/>'
@@ -1582,10 +1591,10 @@ endif
          <xsl:when test=" @data_type='FLT_2D'">
 ! Get <xsl:value-of select="@path"/>
             <!-- for comment only -->        
-call get_dimension_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(<xsl:value-of select="$currentidxpath"/>(dim1,dim2))
-   call get_vect2d_double_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>, &amp;
+   call get_vect2d_double_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>, &amp;
    <xsl:value-of select="$currentidxpath"/>, &amp;
    dim1,dim2,dum1,dum2,status)
    if (ual_debug =='yes') write(*,*) &amp; 
@@ -1596,10 +1605,10 @@ endif
          <xsl:when test=" @data_type='INT_2D'">
 ! Get <xsl:value-of select="@path"/>
             <!-- for comment only -->        
-call get_dimension_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(<xsl:value-of select="$currentidxpath"/>(dim1,dim2))
-   call get_vect2d_int_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>, &amp;
+   call get_vect2d_int_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>, &amp;
    <xsl:value-of select="$currentidxpath"/>, &amp;
    dim1,dim2,dum1,dum2,status)
    if (ual_debug =='yes') write(*,*) &amp; 
@@ -1610,10 +1619,10 @@ endif
          <xsl:when test="@data_type='FLT_3D'">
 ! Get <xsl:value-of select="@path"/>
             <!-- for comment only -->        
-call get_dimension_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(<xsl:value-of select="$currentidxpath"/>(dim1,dim2,dim3))
-   call get_vect3d_double_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,&amp;
+   call get_vect3d_double_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>,&amp;
    <xsl:value-of select="$currentidxpath"/>, &amp;
    dim1,dim2,dim3,dum1,dum2,dum3,status)
    if (ual_debug =='yes') write(*,*) &amp; 
@@ -1624,10 +1633,10 @@ endif
          <xsl:when test="@data_type='INT_3D'">
 ! Get <xsl:value-of select="@path"/>
             <!-- for comment only -->        
-call get_dimension_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(<xsl:value-of select="$currentidxpath"/>(dim1,dim2,dim3))
-   call get_vect3d_int_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,&amp;
+   call get_vect3d_int_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>,&amp;
    <xsl:value-of select="$currentidxpath"/>, &amp;
    dim1,dim2,dim3,dum1,dum2,dum3,status)
    if (ual_debug =='yes') write(*,*) &amp; 
@@ -1638,10 +1647,10 @@ endif
          <xsl:when test="@data_type='FLT_4D'">
 ! Get <xsl:value-of select="@path"/>
             <!-- for comment only -->        
-call get_dimension_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(<xsl:value-of select="$currentidxpath"/>(dim1,dim2,dim3,dim4))
-   call get_vect4d_double_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>, &amp;
+   call get_vect4d_double_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>, &amp;
    <xsl:value-of select="$currentidxpath"/>, &amp;
    dim1,dim2,dim3,dim4,dum1,dum2,dum3,dum4,status)
    if (ual_debug =='yes') write(*,*) &amp; 
@@ -1653,10 +1662,10 @@ endif
          <xsl:when test="@data_type='FLT_5D'">
 ! Get <xsl:value-of select="@path"/>
             <!-- for comment only -->        
-call get_dimension_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(<xsl:value-of select="$currentidxpath"/>(dim1,dim2,dim3,dim4,dim5))
-   call get_vect5d_double_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>, &amp;
+   call get_vect5d_double_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>, &amp;
    <xsl:value-of select="$currentidxpath"/>, &amp;
    dim1,dim2,dim3,dim4,dim5,dum1,dum2,dum3,dum4,dum5,status)
    if (ual_debug =='yes') write(*,*) &amp; 
@@ -1667,10 +1676,10 @@ endif
                   <xsl:when test="@data_type='FLT_6D'">
 ! Get <xsl:value-of select="@path"/>
             <!-- for comment only -->        
-call get_dimension_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(<xsl:value-of select="$currentidxpath"/>(dim1,dim2,dim3,dim4,dim5,dim6))
-   call get_vect6d_double_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>, &amp;
+   call get_vect6d_double_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>, &amp;
    <xsl:value-of select="$currentidxpath"/>, &amp;
    dim1,dim2,dim3,dim4,dim5,dim6,dum1,dum2,dum3,dum4,dum5,dum6,status)
    if (ual_debug =='yes') write(*,*) &amp; 
@@ -1678,7 +1687,7 @@ if (dim1.GT.0) then
 endif
          </xsl:when>
         </xsl:choose>
-      </xsl:if>
+      <!--</xsl:if>-->
     </xsl:otherwise>
   </xsl:choose>
 </xsl:template>
@@ -1838,7 +1847,7 @@ do itime = 1,lentime
                <xsl:with-param name="level" select="1"/>
                <xsl:with-param name="objpath" select="@name"/>
                <xsl:with-param name="idxpath" select="concat('IDSs(itime)%',translate(@path,'/','%'),'(i1)')"/>
-               <xsl:with-param name="timed" select="'yes'"/>
+               <xsl:with-param name="child_index" select="1"/>
          </xsl:apply-templates>
       enddo
    endif
@@ -2142,7 +2151,6 @@ To be completed: type 2/3 nested below a Type 1
 </xsl:when>
 <xsl:otherwise>
 ! Structure array of type 3 : <xsl:value-of select = "@path"/>
-! Write timed fields    
 call begin_object(idx,-1,1,path//"/<xsl:value-of select = "@path"/>",TIMED_CLEAR,obj_all_times)
 do i1 = 1,size(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)
    call begin_object(idx,obj_all_times,i1,"ALLTIMES",TIMED,obj1)
@@ -2150,7 +2158,7 @@ do i1 = 1,size(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)
                <xsl:with-param name="level" select="1"/>
                <xsl:with-param name="objpath" select="@name"/>
                <xsl:with-param name="idxpath" select="concat('IDS%',translate(@path,'/','%'),'(i1)')"/>
-               <xsl:with-param name="timed" select="'yes'"/>
+               <xsl:with-param name="child_index" select="1"/>
          </xsl:apply-templates>
    call put_object_in_object(idx,obj_all_times,"ALLTIMES",i1,obj1)
 enddo
@@ -3502,26 +3510,17 @@ if (status.EQ.0) then
    call get_object_dim(idx,obj_all_times,lentime)  ! the size of this top object is the number of time slices
    allocate(ids%<xsl:value-of select = "translate(@path,'/','%')"/>(lentime))
    if (ual_debug =='yes') write(*,*) &amp;
-      'Get ids%<xsl:value-of select="translate(@path,'/','%')"/>'
-   do itime = 1,lentime     ! fill every time slice
-      call get_object_from_object(idx,obj_all_times,"ALLTIMES",itime,obj1,status)
+      'Get ids%<xsl:value-of select="translate(@path,'/','%')"/>, lentime =', lentime
+   do i1 = 1,lentime     ! fill every time slice
+      call get_object_from_object(idx,obj_all_times,"ALLTIMES",i1,obj1,status)
       if (status.EQ.0) then
-         call get_object_dim(idx,obj1,dimObj1)
-         if (dimObj1.GT.0) then
-            allocate(ids%<xsl:value-of select = "translate(@path,'/','%')"/>(dimObj1))
-            do i1 = 1,dimObj1     ! process array elements
+         !call get_object_dim(idx,obj1,dimObj1)
                <xsl:apply-templates select = "field" mode = "GET_FROM_OBJECT">
                   <xsl:with-param name="level" select="1"/>
                   <xsl:with-param name="objpath" select="@name"/>
                   <xsl:with-param name="idxpath" select="concat('ids%',translate(@path,'/','%'),'(i1)')"/>
                   <xsl:with-param name="timed" select="'yes'"/>
                </xsl:apply-templates>
-            enddo
-         else
-            if (associated(ids%<xsl:value-of select = "translate(@path,'/','%')"/>)) then
-               deallocate(ids%<xsl:value-of select = "translate(@path,'/','%')"/>)
-            endif
-         endif
       endif
    enddo
    call release_object(idx,obj_all_times)
@@ -4551,68 +4550,48 @@ endif
   <xsl:param name="level"/>     <!-- recursion level -->
   <xsl:param name="objpath"/>   <!-- path inside the object -->
   <xsl:param name="idxpath"/>   <!-- full C++ path including indices -->
-  <xsl:param name="timed"/>     <!-- are we looking for timed or non-timed fields? -->
-  
+  <xsl:param name="child_index"/>     <!-- Index to use to add a child in the current object -->
+
   <!-- build the path of the current field inside the object -->
   <xsl:param name="currentobjpath" select="concat($objpath,'/',@name)"/>
   <!-- build the complete path of the current field -->
   <xsl:param name="currentidxpath" select="concat($idxpath,'%',@name)"/>
-  
+
+
   <xsl:choose>
     <!--========== Arrays of structures ==========-->
     <xsl:when test="@data_type='struct_array'">
-
-   <!--   <xsl:if test="@timed='yes' or $timed='no'"> --> <!-- Non-timed struct_array must not appear in the timed section -->
 ! Put <xsl:value-of select="@path"/>
-                        
-      <xsl:choose>
-        <xsl:when test="$timed='yes'">
-call begin_object(idx,obj<xsl:value-of select="$level"/>,i<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",TIMED,obj<xsl:value-of select="$level + 1"/>)
+<!-- Present implementation assumes that nested AoS are necessarily of level 2, this may need to be upgraded for other cases later (?) -->
 if (associated(<xsl:value-of select="$currentidxpath"/>)) then
+call begin_object(idx,obj<xsl:value-of select="$level"/>,1,"<xsl:value-of select="$currentobjpath"/>",NON_TIMED,obj<xsl:value-of select="$level + 1"/>)
+! Start to declare a nested Type 2 Aos 
    do i<xsl:value-of select="$level + 1"/> = 1,size(<xsl:value-of select="$currentidxpath"/>)
-      <xsl:apply-templates select = "field" mode = "PUT_IN_OBJECT">
-         <xsl:with-param name="level" select="$level + 1"/>
-         <xsl:with-param name="objpath" select="@name"/>
-         <xsl:with-param name="idxpath" select="concat($currentidxpath,'(i',$level + 1,')')"/>
-         <xsl:with-param name="timed" select="$timed"/>
-      </xsl:apply-templates>
+         <xsl:apply-templates select = "field" mode = "PUT_IN_OBJECT">
+            <xsl:with-param name="level" select="$level + 1"/>
+            <xsl:with-param name="objpath" select="@name"/>
+            <xsl:with-param name="idxpath" select="concat($currentidxpath,'(i',$level + 1,')')"/>
+            <xsl:with-param name="child_index" select="concat('i',$level+1)"/>
+         </xsl:apply-templates>
    enddo
+call put_object_in_object(idx,obj<xsl:value-of select="$level"/>, "<xsl:value-of select="$currentobjpath"/>",<xsl:value-of select="$child_index"/>, obj<xsl:value-of select="$level + 1"/>)
 endif
-call put_object_in_object(idx,obj<xsl:value-of select="$level"/>, "<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>, obj<xsl:value-of select="$level + 1"/>);          
-        </xsl:when>
-        <xsl:otherwise>
-call begin_object(idx,obj<xsl:value-of select="$level"/>,i<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",NON_TIMED,obj<xsl:value-of select="$level + 1"/>)
-if (associated(<xsl:value-of select="$currentidxpath"/>)) then
-   do i<xsl:value-of select="$level + 1"/> = 1,size(<xsl:value-of select="$currentidxpath"/>)
-      <xsl:apply-templates select = "field" mode = "PUT_IN_OBJECT">
-         <xsl:with-param name="level" select="$level + 1"/>
-         <xsl:with-param name="objpath" select="@name"/>
-         <xsl:with-param name="idxpath" select="concat($currentidxpath,'(i',$level + 1,')')"/>
-         <xsl:with-param name="timed" select="$timed"/>
-      </xsl:apply-templates>
-   enddo
-endif
-call put_object_in_object(idx,obj<xsl:value-of select="$level"/>, "<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>, obj<xsl:value-of select="$level + 1"/>);
-        </xsl:otherwise>
-      </xsl:choose>
-
-     <!-- </xsl:if> -->
-
     </xsl:when>
     
     <!--========== Regular structure ==========-->
     <xsl:when test="@data_type='structure'">
-      <xsl:apply-templates select = "field" mode = "PUT_IN_OBJECT">
+! WARNING: This case is not tested for IMAS AoS yet !!!
+     <xsl:apply-templates select = "field" mode = "PUT_IN_OBJECT">
         <xsl:with-param name="level" select="$level"/>
         <xsl:with-param name="objpath" select="$currentobjpath"/>
         <xsl:with-param name="idxpath" select="$currentidxpath"/>
-        <xsl:with-param name="timed" select="$timed"/>
-      </xsl:apply-templates>
+        <xsl:with-param name="child_index" select="$child_index"/>
+      </xsl:apply-templates> 
     </xsl:when>
 
     <!--========== select either timed or non-timed fields ==========-->
     <xsl:otherwise>
-      <xsl:if test="(@type='dynamic' and $timed='yes') or (@type!='dynamic' and $timed='no')">
+ <!--     <xsl:if test="(@type='dynamic' and $timed='yes') or (@type!='dynamic' and $timed='no')"> -->
         <xsl:choose>
          <xsl:when test="@data_type='str_type' or @data_type='STR_0D'">
 ! Put <xsl:value-of select="@path"/>
@@ -4627,7 +4606,7 @@ if (associated(<xsl:value-of select="$currentidxpath"/>)) then
           longstring(1+(istring-1)*132 : istring*132) = <xsl:value-of select="$currentidxpath"/>(istring)
       enddo
    endif
-   call put_string_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,trim(longstring))       ! should clean up longstring after that, or send to the put only the right length, which has been updated
+   call put_string_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:value-of select="$child_index"/>,trim(longstring))       ! should clean up longstring after that, or send to the put only the right length, which has been updated
    if (ual_debug =='yes') write(*,*) &amp; 
       'Put <xsl:value-of select="$currentidxpath"/>',<xsl:value-of select="$currentidxpath"/>
 endif
@@ -4642,7 +4621,7 @@ if (associated(<xsl:value-of select="$currentidxpath"/>)) then
    do i=1,dim1
       dimtab(i) = len_trim(<xsl:value-of select="$currentidxpath"/>(i))
    enddo
-   call put_vect1d_string_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>, &amp;
+   call put_vect1d_string_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:value-of select="$child_index"/>, &amp;
          <xsl:value-of select="$currentidxpath"/>,dim1,dimtab)
    deallocate(dimtab)
    if (ual_debug =='yes') write(*,*) &amp; 
@@ -4654,7 +4633,7 @@ endif
 ! Put <xsl:value-of select="@path"/>
             <!-- for comment only -->        
 if (<xsl:value-of select="$currentidxpath"/>.NE.-999999999) then
-   call put_int_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,<xsl:value-of select="$currentidxpath"/>)
+   call put_int_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:value-of select="$child_index"/>,<xsl:value-of select="$currentidxpath"/>)
    if (ual_debug =='yes') write(*,*) &amp; 
       'Put <xsl:value-of select="$currentidxpath"/>',<xsl:value-of select="$currentidxpath"/>
 endif
@@ -4664,7 +4643,7 @@ endif
 ! Put <xsl:value-of select="@path"/>
             <!-- for comment only -->
 if (<xsl:value-of select="$currentidxpath"/>.NE.-9.D40) then
-   call put_double_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,<xsl:value-of select="$currentidxpath"/>)
+   call put_double_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:value-of select="$child_index"/>,<xsl:value-of select="$currentidxpath"/>)
    if (ual_debug =='yes') write(*,*) &amp; 
       'Put <xsl:value-of select="$currentidxpath"/>',<xsl:value-of select="$currentidxpath"/>
 endif
@@ -4672,9 +4651,9 @@ endif
          </xsl:when>
          <xsl:when test="@data_type='flt_1d_type' or @data_type='FLT_1D'">
 ! Put <xsl:value-of select="@path"/>
-            <!-- for comment only -->
+
 if (associated(<xsl:value-of select="$currentidxpath"/>)) then
-   call put_vect1d_double_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,&amp;
+   call put_vect1d_double_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:value-of select="$child_index"/>,&amp;
    <xsl:value-of select="$currentidxpath"/>,&amp;
    size(<xsl:value-of select="$currentidxpath"/>))
    if (ual_debug =='yes') write(*,*) &amp; 
@@ -4686,7 +4665,7 @@ endif
 ! Put <xsl:value-of select="@path"/>
             <!-- for comment only --> 
 if (associated(<xsl:value-of select="$currentidxpath"/>)) then
-   call put_vect1d_int_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,&amp;
+   call put_vect1d_int_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:value-of select="$child_index"/>,&amp;
    <xsl:value-of select="$currentidxpath"/>,&amp;
    size(<xsl:value-of select="$currentidxpath"/>))
    if (ual_debug =='yes') write(*,*) &amp; 
@@ -4698,7 +4677,7 @@ endif
 ! Put <xsl:value-of select="@path"/>
             <!-- for comment only -->        
 if (associated(<xsl:value-of select="$currentidxpath"/>)) then
-   call put_vect2d_double_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,&amp;
+   call put_vect2d_double_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:value-of select="$child_index"/>,&amp;
    <xsl:value-of select="$currentidxpath"/>, &amp;
    size(<xsl:value-of select="$currentidxpath"/>,1),&amp;
    size(<xsl:value-of select="$currentidxpath"/>,2))
@@ -4711,7 +4690,7 @@ endif
 ! Put <xsl:value-of select="@path"/>
             <!-- for comment only -->        
 if (associated(<xsl:value-of select="$currentidxpath"/>)) then
-   call put_vect2d_int_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,&amp;
+   call put_vect2d_int_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:value-of select="$child_index"/>,&amp;
    <xsl:value-of select="$currentidxpath"/>, &amp;
    size(<xsl:value-of select="$currentidxpath"/>,1), &amp;
    size(<xsl:value-of select="$currentidxpath"/>,2))
@@ -4724,7 +4703,7 @@ endif
 ! Put <xsl:value-of select="@path"/>
             <!-- for comment only -->        
 if (associated(<xsl:value-of select="$currentidxpath"/>)) then
-   call put_vect3d_double_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>, &amp;
+   call put_vect3d_double_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:value-of select="$child_index"/>, &amp;
    <xsl:value-of select="$currentidxpath"/>, &amp;
    size(<xsl:value-of select="$currentidxpath"/>,1),&amp;
    size(<xsl:value-of select="$currentidxpath"/>,2), &amp;
@@ -4738,7 +4717,7 @@ endif
 ! Put <xsl:value-of select="@path"/>
             <!-- for comment only -->        
 if (associated(<xsl:value-of select="$currentidxpath"/>)) then
-   call put_vect3d_int_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>, &amp;
+   call put_vect3d_int_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:value-of select="$child_index"/>, &amp;
    <xsl:value-of select="$currentidxpath"/>, &amp;
    size(<xsl:value-of select="$currentidxpath"/>,1),&amp;
    size(<xsl:value-of select="$currentidxpath"/>,2),&amp;
@@ -4752,7 +4731,7 @@ endif
 ! Put <xsl:value-of select="@path"/>
             <!-- for comment only -->        
 if (associated(<xsl:value-of select="$currentidxpath"/>)) then
-   call put_vect4d_double_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,<xsl:value-of select="$currentidxpath"/>, &amp;
+   call put_vect4d_double_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:value-of select="$child_index"/>,<xsl:value-of select="$currentidxpath"/>, &amp;
    size(<xsl:value-of select="$currentidxpath"/>,1),size(<xsl:value-of select="$currentidxpath"/>,2),&amp;
    size(<xsl:value-of select="$currentidxpath"/>,3),size(<xsl:value-of select="$currentidxpath"/>,4))
    if (ual_debug =='yes') write(*,*) &amp; 
@@ -4764,7 +4743,7 @@ endif
 ! Put <xsl:value-of select="@path"/>
             <!-- for comment only -->        
 if (associated(<xsl:value-of select="$currentidxpath"/>)) then
-   call put_vect5d_double_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,<xsl:value-of select="$currentidxpath"/>, &amp;
+   call put_vect5d_double_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:value-of select="$child_index"/>,<xsl:value-of select="$currentidxpath"/>, &amp;
    size(<xsl:value-of select="$currentidxpath"/>,1),size(<xsl:value-of select="$currentidxpath"/>,2),&amp;
    size(<xsl:value-of select="$currentidxpath"/>,3),size(<xsl:value-of select="$currentidxpath"/>,4),&amp;
    size(<xsl:value-of select="$currentidxpath"/>,5))
@@ -4779,7 +4758,7 @@ endif
 ! Put <xsl:value-of select="@path"/>
             <!-- for comment only -->        
 if (associated(<xsl:value-of select="$currentidxpath"/>)) then
-   call put_vect6d_double_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,<xsl:value-of select="$currentidxpath"/>, &amp;
+   call put_vect6d_double_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:value-of select="$child_index"/>,<xsl:value-of select="$currentidxpath"/>, &amp;
    size(<xsl:value-of select="$currentidxpath"/>,1),size(<xsl:value-of select="$currentidxpath"/>,2),&amp;
    size(<xsl:value-of select="$currentidxpath"/>,3),size(<xsl:value-of select="$currentidxpath"/>,4),&amp;
    size(<xsl:value-of select="$currentidxpath"/>,5),size(<xsl:value-of select="$currentidxpath"/>,6))
@@ -4793,7 +4772,7 @@ endif
  ! Put <xsl:value-of select="@path"/> : PROBLEM : UNIDENTIFIED TYPE !!! <!-- for comment only -->
          </xsl:otherwise>
       </xsl:choose>
-    </xsl:if>
+   <!-- </xsl:if> -->
    </xsl:otherwise>
  </xsl:choose>
 </xsl:template>
