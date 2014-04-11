@@ -463,7 +463,7 @@ end module <xsl:value-of select="@name"/>_ids_module
   <!--<xsl:template match="IDS" mode="GET_SLICE_OLD">
 
 </xsl:template>-->
-	<xsl:template match="field" mode="GET_SLICE">
+	<xsl:template match="field" mode="GET_SLICE_OLD">
 		<xsl:choose>
 			<xsl:when test="@name='structure'">
 				<xsl:apply-templates select="field" mode="GET_SLICE"/>
@@ -2147,7 +2147,7 @@ endif
 <!-- Type 3 arrays of structure, with a unique time base -->
 <xsl:choose>
 <xsl:when test="$variable_path">
-To be completed: type 2/3 nested below a Type 1
+!!!!!!!!!!!!!!!!! ERROR To be completed: type 2/3 nested below a Type 1
 </xsl:when>
 <xsl:otherwise>
 ! Structure array of type 3 : <xsl:value-of select = "@path"/>
@@ -3501,7 +3501,7 @@ endif
 <!-- Type 3 arrays of structure, with a unique time base -->
 <xsl:choose>
 <xsl:when test="$variable_path">
-To be completed: type 2/3 nested below a Type 1
+!! ERROR To be completed: type 2/3 nested below a Type 1
 </xsl:when>
 <xsl:otherwise>
 ! Structure array of type 3 : <xsl:value-of select = "@path"/>
@@ -3963,8 +3963,8 @@ endif
 </xsl:choose>
 
 			</xsl:when>
-         <xsl:when test="@data_type='struct_array'">
-! Get <xsl:value-of select="@path"/>
+         <xsl:when test="@data_type='struct_array' and @maxoccur!='unbounded'">
+<!-- Type 1 arrays of structure, with potentially multiple time bases -->! Get_slice <xsl:value-of select="@path"/>
 <xsl:choose>
 <xsl:when test="$variable_path">
 call get_int(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>/Shape_of&quot;,int0d,status)
@@ -3993,6 +3993,37 @@ endif
 </xsl:choose>
 
          </xsl:when>
+
+<xsl:when test="@data_type='struct_array' and @maxoccur='unbounded' and @type='dynamic'">
+<!-- Type 3 arrays of structure, with a unique time base -->
+<xsl:choose>
+<xsl:when test="$variable_path">
+!!!!!!!!!!! ERROR: To be completed: type 2/3 nested below a Type 1
+</xsl:when>
+<xsl:otherwise>
+! Structure array of type 3 : <xsl:value-of select = "@path"/>
+call get_object_slice(idx,path,"<xsl:value-of select = "@path"/>",twant,obj_single_time,status) ! read the whole timed block
+if (status.EQ.0) then
+   allocate(ids%<xsl:value-of select = "translate(@path,'/','%')"/>(1))
+   if (ual_debug =='yes') write(*,*) &amp;
+      'Get_slice ids%<xsl:value-of select="translate(@path,'/','%')"/>'
+<!--   do i1 = 1,lentime     ! fill every time slice
+      call get_object_from_object(idx,obj_all_times,"ALLTIMES",i1,obj1,status)
+      if (status.EQ.0) then
+         !call get_object_dim(idx,obj1,dimObj1)-->
+               <xsl:apply-templates select = "field" mode = "GET_FROM_OBJECT">
+                  <xsl:with-param name="level" select="1"/>
+                  <xsl:with-param name="objpath" select="@name"/>
+                  <xsl:with-param name="idxpath" select="concat('ids%',translate(@path,'/','%'),'(1)')"/>
+                  <xsl:with-param name="timed" select="'yes'"/>
+               </xsl:apply-templates>
+      !endif
+   !enddo
+   call release_object(idx,obj_single_time)
+endif
+</xsl:otherwise>
+</xsl:choose>
+</xsl:when>
 
   
    <xsl:when test="@type='dynamic'">
