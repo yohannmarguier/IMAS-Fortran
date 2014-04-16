@@ -2162,8 +2162,8 @@ do i1 = 1,size(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)
          </xsl:apply-templates>
    call put_object_in_object(idx,obj_all_times,"ALLTIMES",i1,obj1)
 enddo
-! Store time of the array of structure only if IDS is not Homogeneous (not useful otherwise)
-if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+! Store time of the array of structure (hidden variable for the user, but used by the UAL for future get_slice operations)
+!!if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
     allocate(time(size(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)))
     do i1 = 1,size(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)
        time(i1) = IDS%<xsl:value-of select = "translate(@path,'/','%')"/>(i1)%time
@@ -2178,7 +2178,7 @@ if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
     if (ual_debug =='yes') write(*,*) &amp; 
       'Put <xsl:call-template name="printtimevariable"/>',<xsl:call-template name="printtimevariable"/>
     deallocate(time)
-endif
+!!endif
 
 call put_object(idx,path,"<xsl:value-of select = "@path"/>",obj_all_times,1)
 
@@ -4002,23 +4002,27 @@ endif
 </xsl:when>
 <xsl:otherwise>
 ! Structure array of type 3 : <xsl:value-of select = "@path"/>
-call get_object_slice(idx,path,"<xsl:value-of select = "@path"/>",twant,obj_single_time,status) ! read the whole timed block
+call get_object_slice(idx,path,"<xsl:value-of select = "@path"/>",twant,obj_single_time,status) ! read the timed block containing a single slice
 if (status.EQ.0) then
-   allocate(ids%<xsl:value-of select = "translate(@path,'/','%')"/>(1))
-   if (ual_debug =='yes') write(*,*) &amp;
-      'Get_slice ids%<xsl:value-of select="translate(@path,'/','%')"/>'
-<!--   do i1 = 1,lentime     ! fill every time slice
-      call get_object_from_object(idx,obj_all_times,"ALLTIMES",i1,obj1,status)
-      if (status.EQ.0) then
-         !call get_object_dim(idx,obj1,dimObj1)-->
+   call get_object_from_object(idx,obj_single_time,"ALLTIMES",1,obj1,status)   ! Even if obj_single_time contains a single slice, the slice has to be extracted like this as obj1
+   if (status.EQ.0) then
+      call get_object_dim(idx,obj1,dimObj1)
+      if (dimObj1.GT.0) then
+         allocate(ids%<xsl:value-of select = "translate(@path,'/','%')"/>(1))
+         if (ual_debug =='yes') write(*,*) &amp;
+            'Get_slice ids%<xsl:value-of select="translate(@path,'/','%')"/>'
                <xsl:apply-templates select = "field" mode = "GET_FROM_OBJECT">
                   <xsl:with-param name="level" select="1"/>
                   <xsl:with-param name="objpath" select="@name"/>
                   <xsl:with-param name="idxpath" select="concat('ids%',translate(@path,'/','%'),'(1)')"/>
                   <xsl:with-param name="timed" select="'yes'"/>
                </xsl:apply-templates>
-      !endif
-   !enddo
+      else
+         if (associated(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)) then
+            deallocate(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>);
+         endif
+      endif
+   endif
    call release_object(idx,obj_single_time)
 endif
 </xsl:otherwise>
@@ -5601,13 +5605,13 @@ call ids_discard_cache(idx,IDSpath,"<xsl:value-of select="@path"/>")         <!-
 <xsl:template name ="printtimepath">
 <xsl:if test="@type = 'dynamic'">
 <xsl:choose>
-<xsl:when test="contains(@coordinate7,'time')"> <xsl:value-of select="@coordinate7"/></xsl:when>
-<xsl:when test="contains(@coordinate6,'time')"> <xsl:value-of select="@coordinate6"/></xsl:when>
-<xsl:when test="contains(@coordinate5,'time')"> <xsl:value-of select="@coordinate5"/></xsl:when>
-<xsl:when test="contains(@coordinate4,'time')"> <xsl:value-of select="@coordinate4"/></xsl:when>
-<xsl:when test="contains(@coordinate3,'time')"> <xsl:value-of select="@coordinate3"/></xsl:when>
-<xsl:when test="contains(@coordinate2,'time')"> <xsl:value-of select="@coordinate2"/></xsl:when>
-<xsl:when test="contains(@coordinate1,'time')"> <xsl:value-of select="@coordinate1"/></xsl:when>
+<xsl:when test="contains(@coordinate7,'time')"> <xsl:value-of select="translate(@coordinate7,'(:)','')"/></xsl:when> <!-- We removed the (:) character since the coordinate attribute in IDSDef is documentation-oriented -->
+<xsl:when test="contains(@coordinate6,'time')"> <xsl:value-of select="translate(@coordinate6,'(:)','')"/></xsl:when>
+<xsl:when test="contains(@coordinate5,'time')"> <xsl:value-of select="translate(@coordinate5,'(:)','')"/></xsl:when>
+<xsl:when test="contains(@coordinate4,'time')"> <xsl:value-of select="translate(@coordinate4,'(:)','')"/></xsl:when>
+<xsl:when test="contains(@coordinate3,'time')"> <xsl:value-of select="translate(@coordinate3,'(:)','')"/></xsl:when>
+<xsl:when test="contains(@coordinate2,'time')"> <xsl:value-of select="translate(@coordinate2,'(:)','')"/></xsl:when>
+<xsl:when test="contains(@coordinate1,'time')"> <xsl:value-of select="translate(@coordinate1,'(:)','')"/></xsl:when>
 </xsl:choose>
 </xsl:if>
 <xsl:if test="@name='time'"><xsl:value-of select="@path"/></xsl:if>  <!-- If the field itself IS time, then it is its own time coordinate -->
