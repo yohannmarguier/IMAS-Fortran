@@ -70,10 +70,10 @@ interface ids_put
    module procedure ids_put_<xsl:value-of select="@name"/>		
 end interface ids_put
 
-<!--! Declaration of the generic IDS PUT_NON_TIMED routine 
+! Declaration of the generic IDS PUT_NON_TIMED routine 
 interface ids_put_non_timed
    module procedure ids_put_non_timed_<xsl:value-of select="@name"/> 		 
-end interface ids_put_non_timed   -->
+end interface ids_put_non_timed
 
 ! Declaration of the generic IDS DELETE routine 
 interface ids_delete        
@@ -294,7 +294,7 @@ return
 end subroutine ids_put_slice_<xsl:value-of select="@name"/>
 </xsl:if>
 
-<!--
+
 !!!!!! Routines to PUT_NON_TIMED the time INdependent data of time dependent IDSs 
 
 subroutine ids_put_non_timed_<xsl:value-of select="@name"/>(idx, path,  IDS)
@@ -335,7 +335,7 @@ call end_IDS_put_non_timed(idx, path)
 
 return
 end subroutine ids_put_non_timed_<xsl:value-of select="@name"/>
--->
+
 !!!!!! Routine to DELETE the IDS 
 
 subroutine ids_delete_<xsl:value-of select="@name"/>(idx,IDSpath,IDS)  <!-- systematic calls to the low level delete_data routine. The IDS input argument is added just for the interface to identify the relevant IDS type -->
@@ -2089,7 +2089,8 @@ endif
 <xsl:param name="variable_path"/>
 <xsl:param name="mds_path"/>
 <xsl:param name="non_timed"/>
-<xsl:if test="$non_timed !='yes' or @type !='dynamic' or not(@type) or @data_type='structure' or @data_type='struct_array'"> <!-- This skips the routine for timed fields when using this template in PUT_NON_TIMED mode -->
+<!--<xsl:if test="$non_timed !='yes' or @type !='dynamic' or not(@type) or @data_type='structure' or @data_type='struct_array'"> --> <!-- This skips the routine for timed fields when using this template in PUT_NON_TIMED mode -->
+<xsl:if test="$non_timed !='yes' or @type !='dynamic' or not(@type) or @data_type='structure' or (@data_type='struct_array' and @type !='dynamic')"> <!-- This skips the routine for timed fields when using this template in PUT_NON_TIMED mode -->
 		<xsl:choose>
 			<xsl:when test="@data_type='structure'">
 <xsl:choose>
@@ -3090,8 +3091,9 @@ endif
 </xsl:choose>
 
 			</xsl:when>
-         <xsl:when test="@data_type='struct_array'">
-! Put <xsl:value-of select="@path"/>
+         <xsl:when test="@data_type='struct_array' and @maxoccur!='unbounded'">
+<!-- Type 1 arrays of structure, with potentially multiple time bases -->
+! Put_slice <xsl:value-of select="@path"/>
 <xsl:choose>
 <xsl:when test="$variable_path">
 if (associated(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>)) then
@@ -3118,24 +3120,42 @@ if (associated(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)) then
 endif
 </xsl:otherwise>
 </xsl:choose>
-
-
-
-
-<!-- old comment from ITM MDS object
-! Write non-timed fields    */
-call begin_object(idx,-1,1,path//"/<xsl:value-of select = "@path"/>",NON_TIMED,obj1)
+</xsl:when>
+          <xsl:when test="@data_type='struct_array' and @maxoccur='unbounded' and @type='dynamic'">
+<!-- Type 3 arrays of structure, with a unique time base -->
+<xsl:choose>
+<xsl:when test="$variable_path">
+!!!!!!!!!!!!!!!!! ERROR To be completed: type 2/3 nested below a Type 1
+</xsl:when>
+<xsl:otherwise>
+! Structure array of type 3 : <xsl:value-of select = "@path"/>
+! timed arrays of structures must be put inside a time container, even if there is a single time */
 if (associated(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)) then
-   do i1 = 1,size(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)
+   call begin_object(idx,-1,1,path//"/<xsl:value-of select = "@path"/>",TIMED,obj_single_time);
+   call begin_object(idx,obj_single_time,1,"ALLTIMES",TIMED,obj1)
+
       <xsl:apply-templates select = "field" mode = "PUT_IN_OBJECT">
          <xsl:with-param name="level" select="1"/>
          <xsl:with-param name="objpath" select="@name"/>
-         <xsl:with-param name="idxpath" select="concat('IDS%',translate(@path,'/','%'),'(i1)')"/>
-         <xsl:with-param name="timed" select="'no'"/>
+         <xsl:with-param name="idxpath" select="concat('IDS%',translate(@path,'/','%'),'(1)')"/>
+         <xsl:with-param name="child_index" select="1"/>
       </xsl:apply-templates>
-   enddo
+
+   call put_object_in_object(idx,obj_single_time,"ALLTIMES",1,obj1);
+   call put_object_slice(idx,path,"<xsl:value-of select="@path"/>",IDS%time,obj_single_time);
+
+   ! Store time of the array of structure (hidden variable for the user, but used by the UAL for future get_slice operations)
+   timepath=&quot;<xsl:call-template name="printtimepath"/>&quot;
+   call put_double_slice(idx,path, "<xsl:call-template name="printtimepath"/>",&amp;
+      trim(timepath),&amp;
+      IDS%time(1),&amp;
+      IDS%time(1))
+   if (ual_debug =='yes') write(*,*) &amp; 
+      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>%time',IDS%<xsl:value-of select="translate(@path,'/','%')"/>%time
+
 endif
-call put_object(idx,path,"<xsl:value-of select = "@path"/>",obj1,0) -->
+</xsl:otherwise>
+</xsl:choose>
          </xsl:when>
 			<xsl:when test="@data_type='str_1d_type' or @data_type='STR_1D'">
 ! Put <xsl:value-of select="@path"/>
