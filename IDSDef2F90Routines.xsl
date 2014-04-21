@@ -235,6 +235,13 @@ call ids_delete(idx,path,IDS)
 ! The ids_discard routines are obsolete, do not call them anymore
 ! call ids_discard(idx,path,IDS)
 
+<xsl:if test=".//field[@type='dynamic']"> <!-- if there is dynamic data in the IDS, check that the the IDS%time vector of an homogeneous_time IDS is associated -->
+if ((IDS%IDS_Properties%homogeneous_time.EQ.1).AND.(.NOT.(associated(IDS%time)))) then
+   write(*,*) "ERROR : the IDS%time vector of an homogeneous_time IDS must be associated"
+   return
+endif
+</xsl:if>
+
 call begin_ids_put(idx, path)
 
 <xsl:apply-templates select="field" mode="PUT_SINGLE"/>
@@ -280,9 +287,15 @@ integer :: i<xsl:value-of select="@name"/>
 call getenv('ual_debug',ual_debug) ! Debug flag
 
 if (IDS%IDS_Properties%homogeneous_time.NE.1) then
-   write(*,*) "ERROR : the PUT_SLICE routine works only for homogeneous time IDS"
+   write(*,*) "ERROR : the PUT_SLICE routine works only for homogeneous time IDS: check ids_properties%homogeneous_time"
    return
 endif
+
+if (.NOT.(associated(IDS%time))) then
+   write(*,*) "ERROR : the ids%time vector of an homogeneous_time IDS must be associated"
+   return
+endif
+
 
 timepath = "time"
 call begin_IDS_put_slice(idx, path)
@@ -2148,41 +2161,100 @@ endif
 <!-- Type 3 arrays of structure, with a unique time base -->
 <xsl:choose>
 <xsl:when test="$variable_path">
-!!!!!!!!!!!!!!!!! ERROR To be completed: type 2/3 nested below a Type 1
+! Structure array of type 3 nested below a Type 1 : <xsl:value-of select = "concat($variable_path,'%',@name)"/>
+if (associated(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>)) then
+
+   call begin_object(idx,-1,1,path//<xsl:value-of select = "concat('&quot;','/',substring($mds_path,2),'//&quot;/',@name,'&quot;')"/>,TIMED_CLEAR,obj_all_times)
+   do i1 = 1,size(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>)
+      call begin_object(idx,obj_all_times,i1,"ALLTIMES",TIMED,obj1)
+         <xsl:apply-templates select = "field" mode = "PUT_IN_OBJECT">
+               <xsl:with-param name="level" select="1"/>
+               <xsl:with-param name="objpath" select="@name"/>
+               <xsl:with-param name="idxpath" select="concat('IDS%',$variable_path,'%',@name,'(i1)')"/>
+               <xsl:with-param name="child_index" select="1"/>
+         </xsl:apply-templates>
+      call put_object_in_object(idx,obj_all_times,"ALLTIMES",i1,obj1)
+   enddo
+
+   ! Store time of the array of structure (hidden variable for the user, but used by the UAL for future get_slice operations)
+   ! A temporary "time" vector is filled then put as a regular variable (outside of the object) as AoS%time
+   allocate(time(size(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>)))
+
+   if (IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>(1)%time.EQ.-9.D40) then ! Check the presence of a time vector at the root of the AoS (on the first index only)
+      if (IDS%IDS_Properties%homogeneous_time.EQ.1) then
+         time = ids%time ! Use the general time vector of the IDS to fill time
+<!--then  ! For an homogeneous IDS, force the time of the AoS to be equal to the general one
+         do i1 = 1,size(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>)
+            IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>(i1)%time = ids%time(i1)
+            time(
+         enddo -->
+      else
+         write(*,*) "ERROR : the time vector of the type 3 array of structure <xsl:value-of select = "concat($variable_path,'%',@name)"/> must be filled"
+         return
+      endif
+   else 
+      do i1 = 1,size(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>) ! the AoS time vector is there, fill time with it
+         time(i1) = IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>(i1)%time
+      enddo
+   endif
+
+   timepath=<xsl:value-of select="concat($mds_path,'//&quot;/',@name,'/time')"/>" ! Start to put time
+   call begin_IDS_put_timed(idx, path,size(time),time)
+   call put_vect1d_double(idx,path, trim(timepath),&amp;
+        trim(timepath),&amp;
+        time,&amp;
+        size(time),1)
+   call end_IDS_put_timed(idx, path)
+   if (ual_debug =='yes') write(*,*) &amp; 
+   'Put <xsl:value-of select="concat($mds_path,'//&quot;/',@name,'/time')"/>', time
+   deallocate(time)
+
+   call put_object(idx,path,<xsl:value-of select = "concat($mds_path,'//&quot;/',@name)"/>",obj_all_times,1)
+endif
 </xsl:when>
 <xsl:otherwise>
 ! Structure array of type 3 : <xsl:value-of select = "@path"/>
-call begin_object(idx,-1,1,path//"/<xsl:value-of select = "@path"/>",TIMED_CLEAR,obj_all_times)
-do i1 = 1,size(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)
-   call begin_object(idx,obj_all_times,i1,"ALLTIMES",TIMED,obj1)
+if (associated(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)) then
+   call begin_object(idx,-1,1,path//"/<xsl:value-of select = "@path"/>",TIMED_CLEAR,obj_all_times)
+   do i1 = 1,size(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)
+      call begin_object(idx,obj_all_times,i1,"ALLTIMES",TIMED,obj1)
          <xsl:apply-templates select = "field" mode = "PUT_IN_OBJECT">
                <xsl:with-param name="level" select="1"/>
                <xsl:with-param name="objpath" select="@name"/>
                <xsl:with-param name="idxpath" select="concat('IDS%',translate(@path,'/','%'),'(i1)')"/>
                <xsl:with-param name="child_index" select="1"/>
          </xsl:apply-templates>
-   call put_object_in_object(idx,obj_all_times,"ALLTIMES",i1,obj1)
-enddo
-! Store time of the array of structure (hidden variable for the user, but used by the UAL for future get_slice operations)
-!!if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+      call put_object_in_object(idx,obj_all_times,"ALLTIMES",i1,obj1)
+   enddo
+   ! Store time of the array of structure (hidden variable for the user, but used by the UAL for future get_slice operations)
     allocate(time(size(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)))
-    do i1 = 1,size(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)
-       time(i1) = IDS%<xsl:value-of select = "translate(@path,'/','%')"/>(i1)%time
-    enddo
+
+   if (IDS%<xsl:value-of select = "translate(@path,'/','%')"/>(1)%time.EQ.-9.D40) then ! Check the presence of a time vector at the root of the AoS (on the first index only)
+      if (IDS%IDS_Properties%homogeneous_time.EQ.1) then
+         time = ids%time ! Use the general time vector of the IDS to fill time
+      else
+         write(*,*) "ERROR : the time vector of the type 3 array of structure <xsl:value-of select = "translate(@path,'/','%')"/> must be filled"
+         return
+      endif
+   else 
+      do i1 = 1,size(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>) ! the AoS time vector is there, fill time with it
+         time(i1) = IDS%<xsl:value-of select = "translate(@path,'/','%')"/>(i1)%time
+      enddo
+   endif
+
     timepath=&quot;<xsl:call-template name="printtimepath"/>&quot;
-    call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
+    call begin_IDS_put_timed(idx, path,size(time),time)
     call put_vect1d_double(idx,path, trim(timepath),&amp;
         trim(timepath),&amp;
-        <xsl:call-template name="printtimevariable"/>,&amp;
-        size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printIsTimed"/>)
+        time,&amp;
+        size(time),1)
     call end_IDS_put_timed(idx, path)
     if (ual_debug =='yes') write(*,*) &amp; 
-      'Put <xsl:call-template name="printtimevariable"/>',<xsl:call-template name="printtimevariable"/>
+      'Put <xsl:call-template name="printtimevariable"/>',time
     deallocate(time)
-!!endif
 
-call put_object(idx,path,"<xsl:value-of select = "@path"/>",obj_all_times,1)
-
+    call put_object(idx,path,"<xsl:value-of select = "@path"/>",obj_all_times,1)
+endif
 
 
 <!-- Type 2 structure arrays not handled yet, I put here a copy of the ITM treatment for recall 
@@ -3125,7 +3197,50 @@ endif
 <!-- Type 3 arrays of structure, with a unique time base -->
 <xsl:choose>
 <xsl:when test="$variable_path">
-!!!!!!!!!!!!!!!!! ERROR To be completed: type 2/3 nested below a Type 1
+! Structure array of type 3 nested below a Type 1 : <xsl:value-of select = "concat($variable_path,'%',@name)"/>
+if (associated(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>)) then
+   call begin_object(idx,-1,1,path//<xsl:value-of select = "concat('&quot;','/',substring($mds_path,2),'//&quot;/',@name,'&quot;')"/>,TIMED,obj_single_time);
+   call begin_object(idx,obj_single_time,1,"ALLTIMES",TIMED,obj1)
+
+      <xsl:apply-templates select = "field" mode = "PUT_IN_OBJECT">
+         <xsl:with-param name="level" select="1"/>
+         <xsl:with-param name="objpath" select="@name"/>
+         <xsl:with-param name="idxpath" select="concat('IDS%',$variable_path,'%',@name,'(1)')"/>
+         <xsl:with-param name="child_index" select="1"/>
+      </xsl:apply-templates>
+
+   call put_object_in_object(idx,obj_single_time,"ALLTIMES",1,obj1);
+   call put_object_slice(idx,path,<xsl:value-of select = "concat($mds_path,'//&quot;/',@name)"/>",IDS%time,obj_single_time);
+
+   ! Store time of the array of structure (hidden variable for the user, but used by the UAL for future get_slice operations)
+   allocate(time(1))
+   if (IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>(1)%time.EQ.-9.D40) then ! Check the presence of a time vector at the root of the AoS (on the first index only)
+      if (IDS%IDS_Properties%homogeneous_time.EQ.1) then
+         time = ids%time ! Use the general time vector of the IDS to fill time
+<!--then  ! For an homogeneous IDS, force the time of the AoS to be equal to the general one
+         do i1 = 1,size(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>)
+            IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>(i1)%time = ids%time(i1)
+            time(
+         enddo -->
+      else
+         write(*,*) "ERROR : the time vector of the type 3 array of structure <xsl:value-of select = "concat($variable_path,'%',@name)"/> must be filled"
+         return
+      endif
+   else 
+      do i1 = 1,size(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>) ! the AoS time vector is there, fill time with it
+         time(i1) = IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>(i1)%time
+      enddo
+   endif
+
+   timepath=<xsl:value-of select="concat($mds_path,'//&quot;/',@name,'/time')"/>" ! Start to put time
+   call put_double_slice(idx,path, trim(timepath),&amp;
+      trim(timepath),&amp;
+      time,&amp;
+      time)
+   if (ual_debug =='yes') write(*,*) &amp; 
+      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>%time', time
+
+endif
 </xsl:when>
 <xsl:otherwise>
 ! Structure array of type 3 : <xsl:value-of select = "@path"/>
@@ -3145,13 +3260,27 @@ if (associated(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)) then
    call put_object_slice(idx,path,"<xsl:value-of select="@path"/>",IDS%time,obj_single_time);
 
    ! Store time of the array of structure (hidden variable for the user, but used by the UAL for future get_slice operations)
+   allocate(time(1))
+   if (IDS%<xsl:value-of select = "translate(@path,'/','%')"/>(1)%time.EQ.-9.D40) then ! Check the presence of a time vector at the root of the AoS (on the first index only)
+      if (IDS%IDS_Properties%homogeneous_time.EQ.1) then
+         time = ids%time ! Use the general time vector of the IDS to fill time
+      else
+         write(*,*) "ERROR : the time vector of the type 3 array of structure <xsl:value-of select = "translate(@path,'/','%')"/> must be filled"
+         return
+      endif
+   else 
+      do i1 = 1,size(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>) ! the AoS time vector is there, fill time with it
+         time(i1) = IDS%<xsl:value-of select = "translate(@path,'/','%')"/>(i1)%time
+      enddo
+   endif
+
    timepath=&quot;<xsl:call-template name="printtimepath"/>&quot;
-   call put_double_slice(idx,path, "<xsl:call-template name="printtimepath"/>",&amp;
+   call put_double_slice(idx,path,trim(timepath),&amp;
       trim(timepath),&amp;
-      IDS%time(1),&amp;
-      IDS%time(1))
+      time,&amp;
+      time)
    if (ual_debug =='yes') write(*,*) &amp; 
-      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>%time',IDS%<xsl:value-of select="translate(@path,'/','%')"/>%time
+      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>%time',time
 
 endif
 </xsl:otherwise>
@@ -3521,7 +3650,27 @@ endif
 <!-- Type 3 arrays of structure, with a unique time base -->
 <xsl:choose>
 <xsl:when test="$variable_path">
-!! ERROR To be completed: type 2/3 nested below a Type 1
+! Structure array of type 3 nested below a Type 1 : <xsl:value-of select = "concat($variable_path,'%',@name)"/>
+call get_object(idx,path,<xsl:value-of select = "concat($mds_path,'//&quot;/',@name,'&quot;')"/>,obj_all_times,TIMED,status) ! read the whole timed block
+if (status.EQ.0) then
+   call get_object_dim(idx,obj_all_times,lentime)  ! the size of this top object is the number of time slices
+   allocate(ids%<xsl:value-of select = "concat($variable_path,'%',@name)"/>(lentime))
+   if (ual_debug =='yes') write(*,*) &amp;
+      'Get ids%<xsl:value-of select = "concat($variable_path,'%',@name)"/>, lentime =', lentime
+   do i1 = 1,lentime     ! fill every time slice
+      call get_object_from_object(idx,obj_all_times,"ALLTIMES",i1,obj1,status)
+      if (status.EQ.0) then
+         !call get_object_dim(idx,obj1,dimObj1)
+               <xsl:apply-templates select = "field" mode = "GET_FROM_OBJECT">
+                  <xsl:with-param name="level" select="1"/>
+                  <xsl:with-param name="objpath" select="@name"/>
+                  <xsl:with-param name="idxpath" select="concat('IDS%',$variable_path,'%',@name,'(i1)')"/>
+                  <xsl:with-param name="timed" select="'yes'"/>
+               </xsl:apply-templates>
+      endif
+   enddo
+   call release_object(idx,obj_all_times)
+endif
 </xsl:when>
 <xsl:otherwise>
 ! Structure array of type 3 : <xsl:value-of select = "@path"/>
@@ -4018,7 +4167,30 @@ endif
 <!-- Type 3 arrays of structure, with a unique time base -->
 <xsl:choose>
 <xsl:when test="$variable_path">
-!!!!!!!!!!! ERROR: To be completed: type 2/3 nested below a Type 1
+! Structure array of type 3 nested below a Type 1 : <xsl:value-of select = "concat($variable_path,'%',@name)"/>
+call get_object_slice(idx,path,<xsl:value-of select = "concat($mds_path,'//&quot;/',@name,'&quot;')"/>,twant,obj_single_time,status) ! read the timed block containing a single slice
+if (status.EQ.0) then
+   call get_object_from_object(idx,obj_single_time,"ALLTIMES",1,obj1,status)   ! Even if obj_single_time contains a single slice, the slice has to be extracted like this as obj1
+   if (status.EQ.0) then
+      call get_object_dim(idx,obj1,dimObj1)
+      if (dimObj1.GT.0) then
+         allocate(ids%<xsl:value-of select = "concat($variable_path,'%',@name)"/>(1))
+         if (ual_debug =='yes') write(*,*) &amp;
+            'Get_slice ids%<xsl:value-of select = "concat($variable_path,'%',@name)"/>'
+               <xsl:apply-templates select = "field" mode = "GET_FROM_OBJECT">
+                  <xsl:with-param name="level" select="1"/>
+                  <xsl:with-param name="objpath" select="@name"/>
+                  <xsl:with-param name="idxpath" select="concat('IDS%',$variable_path,'%',@name,'(1)')"/>
+                  <xsl:with-param name="timed" select="'yes'"/>
+               </xsl:apply-templates>
+      else
+         if (associated(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>)) then
+            deallocate(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>);
+         endif
+      endif
+   endif
+   call release_object(idx,obj_single_time)
+endif
 </xsl:when>
 <xsl:otherwise>
 ! Structure array of type 3 : <xsl:value-of select = "@path"/>
@@ -4635,7 +4807,6 @@ endif
     
     <!--========== Regular structure ==========-->
     <xsl:when test="@data_type='structure'">
-! WARNING: This case is not tested for IMAS AoS yet !!!
      <xsl:apply-templates select = "field" mode = "PUT_IN_OBJECT">
         <xsl:with-param name="level" select="$level"/>
         <xsl:with-param name="objpath" select="$currentobjpath"/>
