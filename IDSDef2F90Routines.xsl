@@ -2102,7 +2102,7 @@ endif
 <xsl:param name="variable_path"/>
 <xsl:param name="mds_path"/>
 <xsl:param name="non_timed"/>
-<!--<xsl:if test="$non_timed !='yes' or @type !='dynamic' or not(@type) or @data_type='structure' or @data_type='struct_array'"> --> <!-- This skips the routine for timed fields when using this template in PUT_NON_TIMED mode -->
+
 <xsl:if test="$non_timed !='yes' or @type !='dynamic' or not(@type) or @data_type='structure' or (@data_type='struct_array' and @type !='dynamic')"> <!-- This skips the routine for timed fields when using this template in PUT_NON_TIMED mode -->
 		<xsl:choose>
 			<xsl:when test="@data_type='structure'">
@@ -2255,41 +2255,32 @@ if (associated(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)) then
 
     call put_object(idx,path,"<xsl:value-of select = "@path"/>",obj_all_times,1)
 endif
-
-
-<!-- Type 2 structure arrays not handled yet, I put here a copy of the ITM treatment for recall 
-
-do itime = 1,lentime
-   call begin_object(idx,obj_all_times,itime,"ALLTIMES",TIMED,obj1)
-   if (associated(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)) then
-      do i1 = 1,size(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)
-         <xsl:apply-templates select = "field" mode = "PUT_IN_OBJECT">
-               <xsl:with-param name="level" select="1"/>
-               <xsl:with-param name="objpath" select="@name"/>
-               <xsl:with-param name="idxpath" select="concat('IDSs(itime)%',translate(@path,'/','%'),'(i1)')"/>
-               <xsl:with-param name="timed" select="'yes'"/>
-         </xsl:apply-templates>
-      enddo
-   endif
-   call put_object_in_object(idx,obj_all_times,"ALLTIMES",itime,obj1)
-enddo
-call put_object(idx,path,"<xsl:value-of select = "@path"/>",obj_all_times,1)
-  
+</xsl:otherwise>
+</xsl:choose>
+         </xsl:when>
+          <xsl:when test="@data_type='struct_array' and @maxoccur='unbounded' and @type!='dynamic'">
+<!-- Type 2 arrays of structure-->
+<xsl:choose>
+<xsl:when test="$variable_path">
+! Structure array of type 2 nested below a Type 1 : ERROR: NOT HANDLED YET <xsl:value-of select = "concat($variable_path,'%',@name)"/>
+</xsl:when>
+<xsl:otherwise>
+! Structure array of type 2 : <xsl:value-of select = "@path"/>
+<!-- Handle only non-timed descendants of type 2 AoS for the moment -->
+<!-- Type 2 structure arrays not handled yet, I put here a copy of the ITM treatment for recall -->
 ! Write non-timed fields    */
 call begin_object(idx,-1,1,path//"/<xsl:value-of select = "@path"/>",NON_TIMED,obj1)
 if (associated(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)) then
    do i1 = 1,size(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)
-      <xsl:apply-templates select = "field" mode = "PUT_IN_OBJECT">
+      <xsl:apply-templates select = "field" mode = "PUT_IN_OBJECT">  <!-- Select at this level dynamic fields only ? (how does it behave in time-dependent structures ? -->
          <xsl:with-param name="level" select="1"/>
          <xsl:with-param name="objpath" select="@name"/>
-         <xsl:with-param name="idxpath" select="concat('IDSs(1)%',translate(@path,'/','%'),'(i1)')"/>
-         <xsl:with-param name="timed" select="'no'"/>
+         <xsl:with-param name="idxpath" select="concat('IDS%',translate(@path,'/','%'),'(i1)')"/>
+         <xsl:with-param name="child_index" select="1"/> <!--Not sure here, maybe i1 is the correct way... -->
       </xsl:apply-templates>
    enddo
 endif
 call put_object(idx,path,"<xsl:value-of select = "@path"/>",obj1,0)
--->
-
 
 </xsl:otherwise>
 </xsl:choose>
