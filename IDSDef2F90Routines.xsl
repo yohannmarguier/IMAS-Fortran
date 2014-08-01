@@ -4067,7 +4067,7 @@ endif
    call get_dimension(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
    if (dim1.GT.0) then
       allocate(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(dim1,dim2,dim3,dim4,dim5,dim6))
-      call get_vect5d_double(idx,path,<xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;, &amp;
+      call get_vect6d_double(idx,path,<xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;, &amp;
       IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/> &amp;
       ,dim1,dim2, dim3, dim4, dim5, dim6, dum1, dum2, dum3, dum4, dum5, dum6, status)
       if (ual_debug =='yes') write(*,*) &amp;  
@@ -4078,7 +4078,7 @@ endif
    call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
    if (dim1.GT.0) then
       allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3,dim4,dim5,dim6))
-      call get_vect5d_double(idx,path,"<xsl:value-of select="@path"/>", &amp;
+      call get_vect6d_double(idx,path,"<xsl:value-of select="@path"/>", &amp;
       IDS%<xsl:value-of select="translate(@path,'/','%')"/> &amp;
       ,dim1,dim2, dim3, dim4, dim5, dim6, dum1, dum2, dum3, dum4, dum5, dum6, status)
       if (ual_debug =='yes') write(*,*) &amp;  
