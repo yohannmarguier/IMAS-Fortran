@@ -1,0 +1,931 @@
+
+
+
+MODULE comparator
+
+use euITM_schemas
+use euITM_routines
+
+implicit none
+
+       INTERFACE assertField
+              MODULE PROCEDURE &
+	      		assertField_INT, assertField_INT1DArray, assertField_INT2DArray, assertField_INT3DArray, assertField_INT4DArray, assertField_INT5DArray, assertField_INT6DArray,&
+			assertField_DBL, assertField_DBL1DArray, assertField_DBL2DArray, assertField_DBL3DArray, assertField_DBL4DArray, assertField_DBL5DArray, assertField_DBL6DArray,&
+			assertField_CPLX, assertField_CPLX1DArray, assertField_CPLX2DArray, assertField_CPLX3DArray, assertField_CPLX4DArray, assertField_CPLX5DArray, assertField_CPLX6DArray,&
+			assertField_STR
+       END INTERFACE
+CONTAINS
+
+! =================================================================
+! 		INTEGER 
+! =================================================================
+       SUBROUTINE assertField_INT(observed, expected, fieldName)
+       IMPLICIT NONE
+       
+       INTEGER, INTENT (IN)      :: observed, expected
+       CHARACTER*(*),INTENT(IN) :: fieldName
+	
+	if(observed == expected) then
+	write(*,*) fieldName, " : OK "
+	  
+	  else
+	write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+	
+	end if
+	
+       END SUBROUTINE assertField_INT
+! =================================================================
+       SUBROUTINE assertField_INT1DArray(observed, expected, fieldName)
+       IMPLICIT NONE
+       
+       INTEGER, DIMENSION(:), POINTER, INTENT (IN)      :: observed, expected
+       CHARACTER*(*),INTENT(IN) :: fieldName
+	
+	
+	IF(.not. associated(observed)) then
+		write(*,*) fieldName, " : ERROR, field is not associated!!!"
+		return
+	END IF
+	
+	IF(ALL(observed.EQ.expected)) then
+
+	write(*,*) fieldName, " : OK "
+	  
+	  else
+	write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+	
+	end if
+	
+       END SUBROUTINE assertField_INT1DArray
+       ! =================================================================
+       SUBROUTINE assertField_INT2DArray(observed, expected, fieldName)
+       IMPLICIT NONE
+       
+       INTEGER, DIMENSION(:,:), POINTER, INTENT (IN)      :: observed, expected
+       CHARACTER*(*),INTENT(IN) :: fieldName
+	
+	IF(.not. associated(observed)) then
+		write(*,*) fieldName, " : ERROR, field is not associated!!!"
+		return
+	END IF
+	
+	
+	IF(ALL(observed.EQ.expected)) then
+
+	write(*,*) fieldName, " : OK "
+	  
+	  else
+	write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+	
+	end if
+	
+       END SUBROUTINE assertField_INT2DArray
+       ! =================================================================
+       SUBROUTINE assertField_INT3DArray(observed, expected, fieldName)
+       IMPLICIT NONE
+       
+       INTEGER, DIMENSION(:,:,:), POINTER, INTENT (IN)      :: observed, expected
+       CHARACTER*(*),INTENT(IN) :: fieldName
+	
+	IF(.not. associated(observed)) then
+		write(*,*) fieldName, " : ERROR, field is not associated!!!"
+		return
+	END IF
+	
+	IF(ALL(observed.EQ.expected)) then
+
+	write(*,*) fieldName, " : OK "
+	  
+	  else
+	write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+	
+	end if
+	
+       END SUBROUTINE assertField_INT3DArray
+       ! =================================================================
+       SUBROUTINE assertField_INT4DArray(observed, expected, fieldName)
+       IMPLICIT NONE
+       
+       INTEGER, DIMENSION(:,:,:,:), POINTER, INTENT (IN)      :: observed, expected
+       CHARACTER*(*),INTENT(IN) :: fieldName
+	
+	IF(.not. associated(observed)) then
+		write(*,*) fieldName, " : ERROR, field is not associated!!!"
+		return
+	END IF
+	
+	IF(ALL(observed.EQ.expected)) then
+
+	write(*,*) fieldName, " : OK "
+	  
+	  else
+	write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+	
+	end if
+	
+       END SUBROUTINE assertField_INT4DArray
+       ! =================================================================
+           SUBROUTINE assertField_INT5DArray(observed, expected, fieldName)
+       IMPLICIT NONE
+       
+       INTEGER, DIMENSION(:,:,:,:,:), POINTER, INTENT (IN)      :: observed, expected
+       CHARACTER*(*),INTENT(IN) :: fieldName
+	
+	IF(.not. associated(observed)) then
+		write(*,*) fieldName, " : ERROR, field is not associated!!!"
+		return
+	END IF
+	
+	IF(ALL(observed.EQ.expected)) then
+
+	write(*,*) fieldName, " : OK "
+	  
+	  else
+	write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+	
+	end if
+	
+       END SUBROUTINE assertField_INT5DArray
+       ! =================================================================
+       SUBROUTINE assertField_INT6DArray(observed, expected, fieldName)
+       IMPLICIT NONE
+       
+       INTEGER, DIMENSION(:,:,:,:,:,:), POINTER, INTENT (IN)      :: observed, expected
+       CHARACTER*(*),INTENT(IN) :: fieldName
+	
+	IF(.not. associated(observed)) then
+		write(*,*) fieldName, " : ERROR, field is not associated!!!"
+		return
+	END IF
+	
+	IF(ALL(observed.EQ.expected)) then
+
+	write(*,*) fieldName, " : OK "
+	  
+	  else
+	write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+	
+	end if
+	
+       END SUBROUTINE assertField_INT6DArray
+       
+! =================================================================
+! 		DOUBLE 
+! =================================================================
+       SUBROUTINE assertField_DBL(observed, expected, fieldName)
+       IMPLICIT NONE
+       
+       REAL(EUITM_R8), INTENT (IN)      :: observed, expected
+       CHARACTER*(*),INTENT(IN) :: fieldName
+	
+		if(observed == expected) then
+	write(*,*) fieldName, " : OK "
+	  
+	  else
+	write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+	
+	end if
+	
+       END SUBROUTINE assertField_DBL
+       
+       SUBROUTINE assertField_DBL1DArray(observed, expected, fieldName)
+       IMPLICIT NONE
+       
+       REAL(EUITM_R8), DIMENSION(:), POINTER, INTENT (IN)      :: observed, expected
+       CHARACTER*(*),INTENT(IN) :: fieldName
+       
+        IF(.NOT. associated(observed)) then
+		write(*,*) "Error! ", fieldName, " is not associated!"
+		return
+	end if
+	
+	
+	IF(ALL(observed.EQ.expected)) then
+
+	write(*,*) fieldName, " : OK "
+	  
+	  else
+	write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+	
+	end if
+	
+       END SUBROUTINE assertField_DBL1DArray
+       
+         SUBROUTINE assertField_DBL2DArray(observed, expected, fieldName)
+       IMPLICIT NONE
+              REAL(EUITM_R8), DIMENSION(:,:), POINTER, INTENT (IN)      :: observed, expected
+       CHARACTER*(*),INTENT(IN) :: fieldName
+	
+	IF(.not. associated(observed)) then
+		write(*,*) fieldName, " : ERROR, field is not associated!!!"
+		return
+	END IF
+	
+	IF(ALL(observed.EQ.expected)) then
+
+	write(*,*) fieldName, " : OK "
+	  
+	  else
+	write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+	
+	end if
+	
+       END SUBROUTINE assertField_DBL2DArray
+       
+       
+         SUBROUTINE assertField_DBL3DArray(observed, expected, fieldName)
+       IMPLICIT NONE
+              REAL(EUITM_R8), DIMENSION(:,:,:), POINTER, INTENT (IN)      :: observed, expected
+       CHARACTER*(*),INTENT(IN) :: fieldName
+	
+	IF(.not. associated(observed)) then
+		write(*,*) fieldName, " : ERROR, field is not associated!!!"
+		return
+	END IF
+	
+	IF(ALL(observed.EQ.expected)) then
+
+	write(*,*) fieldName, " : OK "
+	  
+	  else
+	write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+	
+	end if
+	
+       END SUBROUTINE assertField_DBL3DArray
+       
+        
+         SUBROUTINE assertField_DBL4DArray(observed, expected, fieldName)
+       IMPLICIT NONE
+              REAL(EUITM_R8), DIMENSION(:,:,:,:), POINTER, INTENT (IN)      :: observed, expected
+       CHARACTER*(*),INTENT(IN) :: fieldName
+	
+	IF(.not. associated(observed)) then
+		write(*,*) fieldName, " : ERROR, field is not associated!!!"
+		return
+	END IF
+	
+	IF(ALL(observed.EQ.expected)) then
+
+	write(*,*) fieldName, " : OK "
+	  
+	  else
+	write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+	
+	end if
+	
+       END SUBROUTINE assertField_DBL4DArray
+        
+         SUBROUTINE assertField_DBL5DArray(observed, expected, fieldName)
+       IMPLICIT NONE
+              REAL(EUITM_R8), DIMENSION(:,:,:, :,:), POINTER, INTENT (IN)      :: observed, expected
+       CHARACTER*(*),INTENT(IN) :: fieldName
+	
+	IF(.not. associated(observed)) then
+		write(*,*) fieldName, " : ERROR, field is not associated!!!"
+		return
+	END IF
+	
+	IF(ALL(observed.EQ.expected)) then
+
+	write(*,*) fieldName, " : OK "
+	  
+	  else
+	write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+	
+	end if
+	
+       END SUBROUTINE assertField_DBL5DArray
+        
+         SUBROUTINE assertField_DBL6DArray(observed, expected, fieldName)
+       IMPLICIT NONE
+              REAL(EUITM_R8), DIMENSION(:,:,:, :,:,:), POINTER, INTENT (IN)      :: observed, expected
+       CHARACTER*(*),INTENT(IN) :: fieldName
+	
+	IF(.not. associated(observed)) then
+		write(*,*) fieldName, " : ERROR, field is not associated!!!"
+		return
+	END IF
+	
+	IF(ALL(observed.EQ.expected)) then
+
+	write(*,*) fieldName, " : OK "
+	  
+	  else
+	write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+	
+	end if
+	
+       END SUBROUTINE assertField_DBL6DArray
+
+! =================================================================
+! 		COMPLEX 
+! =================================================================
+       SUBROUTINE assertField_CPLX(observed, expected, fieldName)
+       IMPLICIT NONE
+       
+       COMPLEX(2*EUITM_R8), INTENT (IN)      :: observed, expected
+       CHARACTER*(*),INTENT(IN) :: fieldName
+       	
+
+	if(observed == expected) then
+	write(*,*) fieldName, " : OK"
+	  
+	  else
+	write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+	
+	end if
+	
+       END SUBROUTINE assertField_CPLX
+       
+       ! =================================================================
+       SUBROUTINE assertField_CPLX1DArray(observed, expected, fieldName)
+       IMPLICIT NONE
+       
+       COMPLEX(2*EUITM_R8), DIMENSION(:), POINTER, INTENT (IN)      :: observed, expected
+       CHARACTER*(*),INTENT(IN) :: fieldName
+	
+	IF(.not. associated(observed)) then
+		write(*,*) fieldName, " : ERROR, field is not associated!!!"
+		return
+	END IF
+	
+	IF(ALL(observed.EQ.expected)) then
+
+	write(*,*) fieldName, " : OK "
+	  
+	  else
+	write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+	
+	end if
+	
+       END SUBROUTINE assertField_CPLX1DArray
+       ! =================================================================
+       SUBROUTINE assertField_CPLX2DArray(observed, expected, fieldName)
+       IMPLICIT NONE
+       
+       COMPLEX(2*EUITM_R8), DIMENSION(:,:), POINTER, INTENT (IN)      :: observed, expected
+       CHARACTER*(*),INTENT(IN) :: fieldName
+	
+	IF(.not. associated(observed)) then
+		write(*,*) fieldName, " : ERROR, field is not associated!!!"
+		return
+	END IF
+	IF(ALL(observed.EQ.expected)) then
+
+	write(*,*) fieldName, " : OK "
+	  
+	  else
+	write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+	
+	end if
+	
+       END SUBROUTINE assertField_CPLX2DArray
+       ! =================================================================
+       
+       SUBROUTINE assertField_CPLX3DArray(observed, expected, fieldName)
+       IMPLICIT NONE
+       
+       COMPLEX(2*EUITM_R8), DIMENSION(:,:,:), POINTER, INTENT (IN)      :: observed, expected
+       CHARACTER*(*),INTENT(IN) :: fieldName
+	
+	IF(.not. associated(observed)) then
+		write(*,*) fieldName, " : ERROR, field is not associated!!!"
+		return
+	END IF
+	
+	IF(ALL(observed.EQ.expected)) then
+
+	write(*,*) fieldName, " : OK "
+	  
+	  else
+	write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+	
+	end if
+	
+       END SUBROUTINE assertField_CPLX3DArray
+       
+        
+       SUBROUTINE assertField_CPLX4DArray(observed, expected, fieldName)
+       IMPLICIT NONE
+       ! =================================================================
+       COMPLEX(2*EUITM_R8), DIMENSION(:,:,:,:), POINTER, INTENT (IN)      :: observed, expected
+       CHARACTER*(*),INTENT(IN) :: fieldName
+	
+	IF(.not. associated(observed)) then
+		write(*,*) fieldName, " : ERROR, field is not associated!!!"
+		return
+	END IF
+	
+	IF(ALL(observed.EQ.expected)) then
+
+	write(*,*) fieldName, " : OK "
+	  
+	  else
+	write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+	
+	end if
+	
+       END SUBROUTINE assertField_CPLX4DArray
+        
+       SUBROUTINE assertField_CPLX5DArray(observed, expected, fieldName)
+       IMPLICIT NONE
+       ! =================================================================
+       COMPLEX(2*EUITM_R8), DIMENSION(:,:,:, :,:), POINTER, INTENT (IN)      :: observed, expected
+       CHARACTER*(*),INTENT(IN) :: fieldName
+	
+	IF(.not. associated(observed)) then
+		write(*,*) fieldName, " : ERROR, field is not associated!!!"
+		return
+	END IF
+	
+	IF(ALL(observed.EQ.expected)) then
+
+	write(*,*) fieldName, " : OK "
+	  
+	  else
+	write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+	
+	end if
+	
+       END SUBROUTINE assertField_CPLX5DArray
+        ! =================================================================
+       SUBROUTINE assertField_CPLX6DArray(observed, expected, fieldName)
+       IMPLICIT NONE
+       
+       COMPLEX(2*EUITM_R8), DIMENSION(:,:,:, :,:,:), POINTER,  INTENT (IN)      :: observed, expected
+       CHARACTER*(*),INTENT(IN) :: fieldName
+	
+	IF(.not. associated(observed)) then
+		write(*,*) fieldName, " : ERROR, field is not associated!!!"
+		return
+	END IF
+	
+	IF(ALL(observed.EQ.expected)) then
+
+	write(*,*) fieldName, " : OK "
+	  
+	  else
+	write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+	
+	end if
+	
+       END SUBROUTINE assertField_CPLX6DArray
+       
+! =================================================================
+! 		STRING 
+! =================================================================
+       SUBROUTINE assertField_STR(observed, expected, fieldName)
+       IMPLICIT NONE
+       
+       CHARACTER(LEN=132), DIMENSION(:), POINTER, INTENT (IN)      :: observed, expected
+       CHARACTER*(*),INTENT(IN) :: fieldName
+       	
+	if(observed(1) == expected(1)) then
+	write(*,*) fieldName, " : OK"
+	  
+	  else
+	write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+	
+	end if
+	
+       END SUBROUTINE assertField_STR
+       
+END MODULE comparator
+
+
+MODULE testSuite
+use euITM_schemas
+use euITM_routines
+
+implicit none
+
+
+
+integer, parameter :: DP=kind(1.0D0)
+INTEGER, PARAMETER :: seed = 0
+INTEGER, PARAMETER :: DIM_SIZE = 2
+INTEGER, PARAMETER :: TESTSHOT = 9998
+INTEGER, PARAMETER :: TESTRUN = 9998	
+
+
+
+
+
+CHARACTER (LEN=*), PARAMETER ::PRINTABLE = '0123456789abcdef'
+!CHARACTER(LEN=*), PARAMETER :: PRINTABLE = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!\\"#$%&amp;\'()*+,-./:;&lt;=&gt;?@[\\]^_`{|}~\t\n\r"
+	
+CONTAINS
+    FUNCTION getTime() RESULT (outValue)
+        REAL(EUITM_R8):: outValue
+
+        outValue = 1.0
+        RETURN
+    END FUNCTION getTime
+    
+    FUNCTION getString() RESULT (outValue)
+        CHARACTER(LEN=132), dimension(:), POINTER :: outValue
+
+        allocate(outValue(1))
+        outValue(1) = PRINTABLE
+        RETURN
+    END FUNCTION getString
+
+ subroutine setString_(cpoField) 
+character(len=132), dimension(:), pointer :: cpoField
+
+allocate(cpoField(1))
+cpoField(1) = PRINTABLE        
+        RETURN
+    END subroutine setString_
+
+    FUNCTION getStringArray(sizeOfArray) RESULT (outArray)
+    INTEGER, INTENT(in)::sizeOfArray
+    CHARACTER(len=132),DIMENSION(:), POINTER :: outArray
+    INTEGER::I
+    
+    ALLOCATE(outArray(sizeofArray))
+    do I = 1, sizeOfArray
+        outArray(I) = PRINTABLE 
+    end do     
+    RETURN
+	END FUNCTION getStringArray
+	
+    FUNCTION getDouble() RESULT (outValue)
+        REAL(EUITM_R8):: outValue
+
+        outValue=rand() *1000.00
+        RETURN
+    END FUNCTION getDouble
+    
+    FUNCTION getDoubleArray(sizeOfArray) RESULT (outArray)
+    INTEGER, INTENT(in)::sizeOfArray
+    REAL(EUITM_R8),DIMENSION(:), POINTER :: outArray
+    INTEGER::I
+    
+    ALLOCATE(outArray(sizeofArray))
+    do I = 1, sizeOfArray
+        outArray(I) = getDouble() 
+    end do     
+    RETURN
+    
+END FUNCTION getDoubleArray
+
+
+   FUNCTION getComplex() RESULT (outValue)
+        COMPLEX(2*EUITM_R8):: outValue
+
+        outValue=DCMPLX(getDouble(), getDouble())
+        RETURN
+    END FUNCTION getComplex
+	
+	
+
+    FUNCTION getInteger() RESULT (outValue)
+        INTEGER:: outValue
+
+        outValue=rand() * 1000.0
+    
+        RETURN
+    END FUNCTION getInteger
+    
+    
+FUNCTION getComplexArray(sizeOfArray) RESULT (outArray)
+    INTEGER, INTENT(in), OPTIONAL ::sizeOfArray
+
+    COMPLEX(2*EUITM_R8),DIMENSION(:),POINTER :: outArray
+    INTEGER::I
+    
+   ALLOCATE(outArray(sizeofArray))
+    do I = 1, sizeOfArray
+        outArray(I) = DCMPLX(getDouble(), getDouble()) 
+    end do     
+
+    RETURN
+END FUNCTION getComplexArray
+
+
+
+FUNCTION getIntegerArray(sizeOfArray) RESULT (outArray)
+    INTEGER, INTENT(in) ::sizeOfArray
+    INTEGER,DIMENSION(:), POINTER :: outArray
+    INTEGER::I
+    
+   
+    ALLOCATE(outArray(sizeofArray))
+    do I = 1, sizeOfArray
+        outArray(I) = getInteger() 
+    end do     
+    RETURN
+END FUNCTION getIntegerArray
+
+
+! =================================================================
+! 		STRING ARRAYS
+! =================================================================
+FUNCTION getString1DArray() RESULT (outArray)
+    INTEGER  ::sizeOfArray
+    CHARACTER(len=132),DIMENSION(:), ALLOCATABLE :: outArray
+    INTEGER::I
+    
+    sizeOfArray = DIM_SIZE**1
+    
+    ALLOCATE(outArray(sizeofArray))
+
+    outArray = getStringArray(sizeOfArray) 
+    RETURN
+END FUNCTION getString1DArray
+
+! =================================================================
+! 		INTEGER ARRAYS
+! =================================================================
+FUNCTION getInteger1DArray() RESULT (outArray)
+    INTEGER  ::sizeOfArray
+    INTEGER,DIMENSION(:), POINTER :: outArray
+    INTEGER::I
+    
+    sizeOfArray = DIM_SIZE**1
+    
+    ALLOCATE(outArray(sizeofArray))
+
+    outArray = getIntegerArray(sizeOfArray) 
+    RETURN
+END FUNCTION getInteger1DArray
+
+FUNCTION getInteger2DArray() RESULT (outArray)
+    INTEGER ::sizeOfArray
+    INTEGER,DIMENSION(:,:), POINTER :: outArray
+    INTEGER::I
+    
+    
+    sizeOfArray = DIM_SIZE**2
+    ALLOCATE(outArray(DIM_SIZE, DIM_SIZE))
+    
+    outArray =  RESHAPE(getIntegerArray(sizeOfArray), (/DIM_SIZE, DIM_SIZE/))
+    
+RETURN
+    
+END FUNCTION getInteger2DArray
+
+FUNCTION getInteger3DArray() RESULT (outArray)
+    INTEGER ::sizeOfArray
+    INTEGER,DIMENSION(:,:,:), POINTER :: outArray
+    INTEGER::I
+    
+    
+    sizeOfArray = DIM_SIZE**3
+    ALLOCATE(outArray(DIM_SIZE, DIM_SIZE, DIM_SIZE))
+    
+    outArray =  RESHAPE(getIntegerArray(sizeOfArray), (/DIM_SIZE, DIM_SIZE, DIM_SIZE/))
+    
+RETURN
+    
+END FUNCTION getInteger3DArray
+
+
+
+! =================================================================
+! 		DOUBLE ARRAYS
+! =================================================================
+FUNCTION getDouble1DArray() RESULT (outArray)
+    INTEGER ::sizeOfArray
+    REAL(EUITM_R8),DIMENSION(:), POINTER :: outArray
+    INTEGER::I
+   
+    sizeOfArray = DIM_SIZE**1
+        
+    ALLOCATE(outArray(DIM_SIZE))
+    
+    outArray =  getDoubleArray(sizeOfArray)
+    
+    RETURN
+END FUNCTION getDouble1DArray
+
+
+FUNCTION getDouble2DArray() RESULT (outArray)
+    INTEGER ::sizeOfArray
+    REAL(EUITM_R8),DIMENSION(:,:), POINTER :: outArray
+    INTEGER::I
+   
+    sizeOfArray = DIM_SIZE**2
+        
+    ALLOCATE(outArray(DIM_SIZE, DIM_SIZE))
+    
+    outArray =  RESHAPE(getDoubleArray(sizeOfArray), (/DIM_SIZE, DIM_SIZE/))
+    
+    RETURN
+END FUNCTION getDouble2DArray
+
+FUNCTION getDouble3DArray() RESULT (outArray)
+    INTEGER ::sizeOfArray
+    REAL(EUITM_R8),DIMENSION(:,:,:), POINTER :: outArray
+    INTEGER::I
+   
+    sizeOfArray = DIM_SIZE**3
+        
+    ALLOCATE(outArray(DIM_SIZE, DIM_SIZE, DIM_SIZE))
+    
+    outArray =  RESHAPE(getDoubleArray(sizeOfArray), (/DIM_SIZE, DIM_SIZE, DIM_SIZE/))
+    
+    RETURN
+END FUNCTION getDouble3DArray
+
+FUNCTION getDouble4DArray() RESULT (outArray)
+    INTEGER ::sizeOfArray
+    REAL(EUITM_R8),DIMENSION(:,:,:, :), POINTER :: outArray
+    INTEGER::I
+   
+    sizeOfArray = DIM_SIZE**4
+        
+    ALLOCATE(outArray(DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE))
+    
+    outArray =  RESHAPE(getDoubleArray(sizeOfArray), (/DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE/))
+    
+    RETURN
+END FUNCTION getDouble4DArray
+
+FUNCTION getDouble5DArray() RESULT (outArray)
+    INTEGER ::sizeOfArray
+    REAL(EUITM_R8),DIMENSION(:,:,:,:,:), POINTER :: outArray
+    INTEGER::I
+   
+    sizeOfArray = DIM_SIZE**5
+        
+    ALLOCATE(outArray(DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE))
+    
+    outArray =  RESHAPE(getDoubleArray(sizeOfArray), (/DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE/))
+    
+    RETURN
+END FUNCTION getDouble5DArray
+
+FUNCTION getDouble6DArray() RESULT (outArray)
+    INTEGER ::sizeOfArray
+    REAL(EUITM_R8),DIMENSION(:,:,:,:,:,:), POINTER :: outArray
+    INTEGER::I
+   
+    sizeOfArray = DIM_SIZE**6
+        
+    ALLOCATE(outArray(DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE))
+    
+    outArray =  RESHAPE(getDoubleArray(sizeOfArray), (/DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE/))
+    
+    RETURN
+END FUNCTION getDouble6DArray
+
+
+FUNCTION getComplex1DArray(inSizeOfArray) RESULT (outArray)
+    INTEGER, INTENT(in), OPTIONAL ::inSizeOfArray
+    INTEGER  ::sizeOfArray
+    COMPLEX(2*EUITM_R8),DIMENSION(:),POINTER :: outArray
+    
+     sizeOfArray = DIM_SIZE**1
+     
+     ALLOCATE(outArray(DIM_SIZE))
+     outArray =  RESHAPE(getComplexArray(sizeOfArray), (/DIM_SIZE/))      
+   
+    RETURN
+END FUNCTION getComplex1DArray
+
+
+FUNCTION getComplex2DArray(inSizeOfArray) RESULT (outArray)
+    INTEGER, INTENT(in), OPTIONAL ::inSizeOfArray
+    INTEGER  ::sizeOfArray
+    COMPLEX(2*EUITM_R8),DIMENSION(:,:),ALLOCATABLE :: outArray
+    
+    sizeOfArray = DIM_SIZE**2
+     
+    ALLOCATE(outArray(DIM_SIZE, DIM_SIZE))
+ 
+    outArray =  RESHAPE(getComplexArray(sizeOfArray), (/DIM_SIZE, DIM_SIZE/))   
+   
+    RETURN
+END FUNCTION getComplex2DArray
+
+FUNCTION getComplex3DArray(inSizeOfArray) RESULT (outArray)
+    INTEGER, INTENT(in), OPTIONAL ::inSizeOfArray
+    INTEGER  ::sizeOfArray
+    COMPLEX(2*EUITM_R8),DIMENSION(:,:,:),POINTER :: outArray
+    
+    sizeOfArray = DIM_SIZE**3
+     
+    ALLOCATE(outArray(DIM_SIZE, DIM_SIZE, DIM_SIZE))
+    
+    outArray =  RESHAPE(getComplexArray(sizeOfArray), (/DIM_SIZE, DIM_SIZE, DIM_SIZE/))   
+   
+    RETURN
+END FUNCTION getComplex3DArray
+
+FUNCTION getComplex4DArray(inSizeOfArray) RESULT (outArray)
+    INTEGER, INTENT(in), OPTIONAL ::inSizeOfArray
+    INTEGER  ::sizeOfArray
+!    COMPLEX,DIMENSION(sizeOfArray):: outArray
+    COMPLEX(2*EUITM_R8),DIMENSION(:,:,:,:),POINTER :: outArray
+    INTEGER::I
+    
+       sizeOfArray = DIM_SIZE**4
+     
+    ALLOCATE(outArray(DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE))
+    
+    outArray =  RESHAPE(getComplexArray(sizeOfArray), (/DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE/))   
+   
+    RETURN
+END FUNCTION getComplex4DArray
+
+FUNCTION getComplex5DArray(inSizeOfArray) RESULT (outArray)
+    INTEGER, INTENT(in), OPTIONAL ::inSizeOfArray
+    INTEGER  ::sizeOfArray
+    COMPLEX(2*EUITM_R8),DIMENSION(:,:,:,:,:),POINTER :: outArray
+    
+       sizeOfArray = DIM_SIZE**5
+       
+    ALLOCATE(outArray(DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE))
+    
+    outArray =  RESHAPE(getComplexArray(sizeOfArray), (/DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE/))     
+   
+    RETURN
+END FUNCTION getComplex5DArray
+
+FUNCTION getComplex6DArray(inSizeOfArray) RESULT (outArray)
+    INTEGER, INTENT(in), OPTIONAL ::inSizeOfArray
+    INTEGER  ::sizeOfArray
+    COMPLEX(2*EUITM_R8),DIMENSION(:,:,:,:,:,:),POINTER :: outArray
+    
+       sizeOfArray = DIM_SIZE**6
+       
+    ALLOCATE(outArray(DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE))
+    
+    outArray =  RESHAPE(getComplexArray(sizeOfArray), (/DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE/))   
+   
+    RETURN
+END FUNCTION getComplex6DArray
+
+!IF(ALL(ARRAY1.EQ.ARRAY1)) THENCALL DOEQUALELSECALL DOUNEQUALENDIFwhich works for all types of array1 and array2 as long as they have the same type and length,but I think it isslow because an array of logicals is created first. So much faster would beDO I=1,SIZE(ARRAY1)IF(ARRAY1(1).EQ.ARRAY2(I)) EXITENDDOIF(I.GT.N) THENCALL DOEQUALELSECALL DOUNEQUALENDIF
+
+!!  SUBROUTINE f(N)   IMPLICIT NONE   INTEGER N   REAL, DIMENSION(N) :: A	!! You can define arrays using                                !! VARIABLES in Fortran 90.... like Ada       INTEGER i   DO i = 1, N      A(i) = i   END DO   print *, A			!! Print an entire array  END SUBROUTINE  PROGRAM main   IMPLICIT NONE   CALL f(2)			!! Create array of size 2   CALL f(3)			!! Create array of size 3  END
+
+!     private static void assertField(Object observed, Object expected, String fieldname) {
+!        assert observed != null : fieldname + " is NULL!";
+!        String className = observed.getClass().toString();
+!        if (className.contains("Vect")) {
+!        Object oarray = null, earray = null;
+!        try {
+!        oarray = observed.getClass().getMethod("getArray").invoke(observed);
+!        earray = expected.getClass().getMethod("getArray").invoke(expected);
+!        } catch (Exception e) {
+!        System.out.println(fieldname + " : error, observed=" + observed + ", expected=" + expected);
+!        e.printStackTrace();
+!        }
+!        if (className.contains("Boolean"))
+!        assert Arrays.equals((boolean[]) oarray, (boolean[]) earray) : fieldname + " : different values, observed=" + Arrays.toString((boolean[]) oarray) + ", expected=" + Arrays.toString((boolean[]) earray);
+!        if (className.contains("Double"))
+!        assert Arrays.equals((double[]) oarray, (double[]) earray) : fieldname + " : different values, observed=" + Arrays.toString((double[]) oarray) + ", expected=" + Arrays.toString((double[]) earray);
+!        if (className.contains("Float"))
+!        assert Arrays.equals((float[]) oarray, (float[]) earray) : fieldname + " : different values, observed=" + Arrays.toString((float[]) oarray) + ", expected=" + Arrays.toString((float[]) earray);
+!        if (className.contains("Int"))
+!        assert Arrays.equals((int[]) oarray, (int[]) earray) : fieldname + " : different values, observed=" + Arrays.toString((int[]) oarray) + ", expected=" + Arrays.toString((int[]) earray);
+!        if (className.contains("String"))
+!        assert Arrays.equals((String[]) oarray, (String[]) earray) : fieldname + " : different values, observed=" + Arrays.toString((String[]) oarray) + ", expected=" + Arrays.toString((String[]) earray);
+!        if (className.contains("Complex"))
+!        assert Arrays.equals((UALComplexNumber[]) oarray, (UALComplexNumber[]) earray) : fieldname + " : different values, observed=" + Arrays.toString((UALComplexNumber[]) oarray) + ", expected=" + Arrays.toString((UALComplexNumber[]) earray);
+!   
+!        } else
+!        assert observed.hashCode() == expected.hashCode() : fieldname + " : different values, observed=" + observed + ", expected=" + expected;
+!        }
+        
+	
+	
+	SUBROUTINE init(idx2)
+	INTEGER, INTENT(OUT) :: idx2
+
+  	CALL euitm_create('euitm',TESTSHOT,TESTRUN, TESTSHOT,TESTRUN,idx2)
+	print *, "IDX:", idx2
+!	if (cmd.hasOption("seed"))
+!        seed = Long.valueOf(cmd.getOptionValue("seed"));
+        
+!	if (cmd.hasOption("remote"))
+!        UALAccess.connect(cmd.getOptionValue("remote"));
+!        if (cmd.hasOption("method") &amp;&amp; cmd.getOptionValue("method").equals("get")) {
+!        if (cmd.hasOption("hdf5"))
+!        idx = UALAccess.openHdf5("euitm", TESTSHOT, TESTRUN);
+!        else
+!        idx = UALAccess.open("euitm", TESTSHOT, TESTRUN);
+!        } else {
+!        if (cmd.hasOption("hdf5"))
+!        idx = UALAccess.createHdf5("euitm", TESTSHOT, TESTRUN, -1, -1);
+!        else
+!        idx = UALAccess.create("euitm", TESTSHOT, TESTRUN, -1, -1);
+!        }
+        END SUBROUTINE init
+        
+
+        SUBROUTINE finish
+	 !       UALAccess.close(idx);
+ !       if (cmd.hasOption("remote"))
+ !       UALAccess.disconnect();
+        END SUBROUTINE finish 
+        
+END MODULE testSuite
+
+
+

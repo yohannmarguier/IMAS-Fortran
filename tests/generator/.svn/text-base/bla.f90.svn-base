@@ -1,0 +1,2008 @@
+PROGRAM test
+	use euITM_schemas 
+	!use euITM_ual_defs 
+	use testSuite
+	implicit none
+	INTEGER :: idx = -1;
+
+	call init(idx);
+
+	! --- CPO: topinfo ---
+	call topinfo_put()
+
+	! --- CPO: summary ---
+	call summary_put()
+
+	! --- CPO: amns ---
+	call amns_put()
+
+	! --- CPO: antennas ---
+	call antennas_put()
+
+	! --- CPO: compositionc ---
+	call compositionc_put()
+
+	! --- CPO: coredelta ---
+	call coredelta_put()
+
+	! --- CPO: coreneutrals ---
+	call coreneutrals_put()
+
+	! --- CPO: coreimpur ---
+	call coreimpur_put()
+
+	! --- CPO: coreprof ---
+	call coreprof_put()
+
+	! --- CPO: coresource ---
+	call coresource_put()
+
+	! --- CPO: coretransp ---
+	call coretransp_put()
+
+	! --- CPO: cxdiag ---
+	call cxdiag_put()
+
+	! --- CPO: distribution ---
+	call distribution_put()
+
+	! --- CPO: distsource ---
+	call distsource_put()
+
+	! --- CPO: ecediag ---
+	call ecediag_put()
+
+	! --- CPO: edge ---
+	call edge_put()
+
+	! --- CPO: efcc ---
+	call efcc_put()
+
+	! --- CPO: equilibrium ---
+	call equilibrium_put()
+
+	! --- CPO: fusiondiag ---
+	call fusiondiag_put()
+
+	! --- CPO: halphadiag ---
+	call halphadiag_put()
+
+	! --- CPO: interfdiag ---
+	call interfdiag_put()
+
+	! --- CPO: ironmodel ---
+	call ironmodel_put()
+
+	! --- CPO: langmuirdiag ---
+	call langmuirdiag_put()
+
+	! --- CPO: launchs ---
+	call launchs_put()
+
+	! --- CPO: limiter ---
+	call limiter_put()
+
+	! --- CPO: lithiumdiag ---
+	call lithiumdiag_put()
+
+	! --- CPO: mhd ---
+	call mhd_put()
+
+	! --- CPO: magdiag ---
+	call magdiag_put()
+
+	! --- CPO: msediag ---
+	call msediag_put()
+
+	! --- CPO: nbi ---
+	call nbi_put()
+
+	! --- CPO: neoclassic ---
+	call neoclassic_put()
+
+	! --- CPO: orbit ---
+	call orbit_put()
+
+	! --- CPO: pellets ---
+	call pellets_put()
+
+	! --- CPO: pfsystems ---
+	call pfsystems_put()
+
+	! --- CPO: polardiag ---
+	call polardiag_put()
+
+	! --- CPO: reference ---
+	call reference_put()
+
+	! --- CPO: reflectomet ---
+	call reflectomet_put()
+
+	! --- CPO: rfadiag ---
+	call rfadiag_put()
+
+	! --- CPO: sawteeth ---
+	call sawteeth_put()
+
+	! --- CPO: scenario ---
+	call scenario_put()
+
+	! --- CPO: toroidfield ---
+	call toroidfield_put()
+
+	! --- CPO: tsdiag ---
+	call tsdiag_put()
+
+	! --- CPO: turbulence ---
+	call turbulence_put()
+
+	! --- CPO: vessel ---
+	call vessel_put()
+
+	! --- CPO: wall ---
+	call wall_put()
+
+	! --- CPO: waves ---
+	call waves_put()
+	call finish();
+CONTAINS
+!==================================================================
+!		 PUT topinfo 
+!==================================================================
+SUBROUTINE topinfo_put
+	TYPE (type_topinfo) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "topinfo"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on topinfo"
+	CALL srand(seed)
+	do i = 0, 1 + 1
+
+		!!!dataprovider : dataprovider : xs:string
+
+		!!!description : description : xs:string
+
+		!!!firstputdate : firstputdate : xs:string
+
+		!!!lastupdate : lastupdate : xs:string
+
+		!!!source : source : xs:string
+
+		!!!comment : comment : xs:string
+
+		!!!dataversion : dataversion : xs:string
+
+		!!!workflow : workflow : xs:string
+
+		!!!entry :  : structure
+
+		!!!parent_entry :  : structure
+
+		!!!mdinfo :  : structure
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put(idx, cpopath, cpo);
+	end do 
+
+END SUBROUTINE topinfo_put 
+
+!==================================================================
+!		 PUT summary 
+!==================================================================
+SUBROUTINE summary_put
+	TYPE (type_summary) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "summary"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on summary"
+	CALL srand(seed)
+	do i = 0, 1 + 1
+
+		!!!datainfo :  : structure
+
+		!!!ip :  : structure
+
+		!!!bvac_r :  : structure
+
+		!!!geom_axis_r :  : structure
+
+		!!!a_minor :  : structure
+
+		!!!elongation :  : structure
+
+		!!!tria_lower :  : structure
+
+		!!!tria_upper :  : structure
+
+		!!!tev :  : structure
+
+		!!!tiv :  : structure
+
+		!!!nev :  : structure
+
+		!!!zeffv :  : structure
+
+		!!!beta_pol :  : structure
+
+		!!!beta_tor :  : structure
+
+		!!!beta_normal :  : structure
+
+		!!!li :  : structure
+
+		!!!volume :  : structure
+
+		!!!area :  : structure
+
+		!!!main_ion1_z :  : structure
+
+		!!!main_ion1_a :  : structure
+
+		!!!main_ion2_z :  : structure
+
+		!!!main_ion2_a :  : structure
+
+		!!!impur1_z :  : structure
+
+		!!!impur1_a :  : structure
+
+		!!!time : time : xs:float
+		cpo%time =  getTime()
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put(idx, cpopath, cpo);
+	end do 
+
+END SUBROUTINE summary_put 
+
+!==================================================================
+!		 PUT amns 
+!==================================================================
+SUBROUTINE amns_put
+	TYPE (type_amns) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "amns"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on amns"
+	CALL srand(seed)
+	do i = 0, 20 + 1
+
+		!!!datainfo :  : structure
+
+		!!!version : version : xs:string
+
+		!!!source : source : xs:string
+
+		!!!zn : zn : xs:integer
+		cpo%zn = getInteger()
+		!!!amn : amn : xs:float
+		cpo%amn =  getDouble()
+
+		!!!zion : zion : vecint_type
+
+		!!!state_label : state_label : vecstring_type
+
+		!!!bundled : bundled : xs:integer
+		cpo%bundled = getInteger()
+		!!!proc_label : proc_label : vecstring_type
+
+		!!!tables : tables : struct_array
+
+		!!!tables_coord : tables_coord : struct_array
+
+		!!!version_ind : version_ind : struct_array
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put(idx, cpopath, cpo);
+	end do 
+
+END SUBROUTINE amns_put 
+
+!==================================================================
+!		 PUT antennas 
+!==================================================================
+SUBROUTINE antennas_put
+	TYPE (type_antennas) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "antennas"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on antennas"
+	CALL srand(seed)
+	do i = 0, 5 + 1
+
+		!!!datainfo :  : structure
+
+		!!!antenna_ec : antenna_ec : struct_array
+
+		!!!antenna_ic : antenna_ic : struct_array
+
+		!!!antenna_lh : antenna_lh : struct_array
+
+		!!!codeparam :  : structure
+
+		!!!time : time : xs:float
+		cpo%time =  getTime()
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put_non_timed(idx ,cpopath, cpo);
+		call euitm_put_slice(idx ,cpopath, cpo);
+	end do 
+
+END SUBROUTINE antennas_put 
+
+!==================================================================
+!		 PUT compositionc 
+!==================================================================
+SUBROUTINE compositionc_put
+	TYPE (type_compositionc) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "compositionc"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on compositionc"
+	CALL srand(seed)
+	do i = 0, 5 + 1
+
+		!!!datainfo :  : structure
+
+		!!!compositions :  : structure
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put(idx, cpopath, cpo);
+	end do 
+
+END SUBROUTINE compositionc_put 
+
+!==================================================================
+!		 PUT coredelta 
+!==================================================================
+SUBROUTINE coredelta_put
+	TYPE (type_coredelta) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "coredelta"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on coredelta"
+	CALL srand(seed)
+	do i = 0, 5 + 1
+
+		!!!datainfo :  : structure
+
+		!!!composition :  : structure
+
+		!!!desc_impur :  : structure
+
+		!!!compositions :  : structure
+
+		!!!values : values : struct_array
+
+		!!!codeparam :  : structure
+
+		!!!time : time : xs:float
+		cpo%time =  getTime()
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put_non_timed(idx ,cpopath, cpo);
+		call euitm_put_slice(idx ,cpopath, cpo);
+	end do 
+
+END SUBROUTINE coredelta_put 
+
+!==================================================================
+!		 PUT coreneutrals 
+!==================================================================
+SUBROUTINE coreneutrals_put
+	TYPE (type_coreneutrals) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "coreneutrals"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on coreneutrals"
+	CALL srand(seed)
+	do i = 0, 5 + 1
+
+		!!!datainfo :  : structure
+
+		!!!rho_tor : rho_tor : vecflt_type
+
+		!!!rho_tor_norm : rho_tor_norm : vecflt_type
+
+		!!!neutcompo :  : structure
+
+		!!!composition :  : structure
+
+		!!!desc_impur :  : structure
+
+		!!!compositions :  : structure
+
+		!!!profiles : profiles : struct_array
+
+		!!!ioncoeff : ioncoeff : struct_array
+
+		!!!impcoeff : impcoeff : struct_array
+
+		!!!codeparam :  : structure
+
+		!!!time : time : xs:float
+		cpo%time =  getTime()
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put_non_timed(idx ,cpopath, cpo);
+		call euitm_put_slice(idx ,cpopath, cpo);
+	end do 
+
+END SUBROUTINE coreneutrals_put 
+
+!==================================================================
+!		 PUT coreimpur 
+!==================================================================
+SUBROUTINE coreimpur_put
+	TYPE (type_coreimpur) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "coreimpur"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on coreimpur"
+	CALL srand(seed)
+	do i = 0, 5 + 1
+
+		!!!datainfo :  : structure
+
+		!!!rho_tor_norm : rho_tor_norm : vecflt_type
+
+		!!!rho_tor : rho_tor : vecflt_type
+
+		!!!source : source : vecstring_type
+
+		!!!flag : flag : vecint_type
+
+		!!!desc_impur :  : structure
+
+		!!!compositions :  : structure
+
+		!!!atomic_data : atomic_data : vecstring_type
+
+		!!!impurity : impurity : struct_array
+
+		!!!diagnostic :  : structure
+
+		!!!diagnosticsum :  : structure
+
+		!!!codeparam :  : structure
+
+		!!!time : time : xs:float
+		cpo%time =  getTime()
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put_non_timed(idx ,cpopath, cpo);
+		call euitm_put_slice(idx ,cpopath, cpo);
+	end do 
+
+END SUBROUTINE coreimpur_put 
+
+!==================================================================
+!		 PUT coreprof 
+!==================================================================
+SUBROUTINE coreprof_put
+	TYPE (type_coreprof) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "coreprof"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on coreprof"
+	CALL srand(seed)
+	do i = 0, 10 + 1
+
+		!!!datainfo :  : structure
+
+		!!!rho_tor_norm : rho_tor_norm : vecflt_type
+
+		!!!rho_tor : rho_tor : vecflt_type
+
+		!!!drho_dt : drho_dt : vecflt_type
+
+		!!!toroid_field :  : structure
+
+		!!!composition :  : structure
+
+		!!!desc_impur :  : structure
+
+		!!!compositions :  : structure
+
+		!!!psi :  : structure
+
+		!!!te :  : structure
+
+		!!!ti :  : structure
+
+		!!!ne :  : structure
+
+		!!!ni :  : structure
+
+		!!!vtor :  : structure
+
+		!!!profiles1d :  : structure
+
+		!!!globalparam :  : structure
+
+		!!!codeparam :  : structure
+
+		!!!time : time : xs:float
+		cpo%time =  getTime()
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put_non_timed(idx ,cpopath, cpo);
+		call euitm_put_slice(idx ,cpopath, cpo);
+	end do 
+
+END SUBROUTINE coreprof_put 
+
+!==================================================================
+!		 PUT coresource 
+!==================================================================
+SUBROUTINE coresource_put
+	TYPE (type_coresource) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "coresource"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on coresource"
+	CALL srand(seed)
+	do i = 0, 15 + 1
+
+		!!!datainfo :  : structure
+
+		!!!composition :  : structure
+
+		!!!desc_impur :  : structure
+
+		!!!compositions :  : structure
+
+		!!!toroid_field :  : structure
+
+		!!!values : values : struct_array
+
+		!!!codeparam :  : structure
+
+		!!!time : time : xs:float
+		cpo%time =  getTime()
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put_non_timed(idx ,cpopath, cpo);
+		call euitm_put_slice(idx ,cpopath, cpo);
+	end do 
+
+END SUBROUTINE coresource_put 
+
+!==================================================================
+!		 PUT coretransp 
+!==================================================================
+SUBROUTINE coretransp_put
+	TYPE (type_coretransp) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "coretransp"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on coretransp"
+	CALL srand(seed)
+	do i = 0, 10 + 1
+
+		!!!datainfo :  : structure
+
+		!!!composition :  : structure
+
+		!!!desc_impur :  : structure
+
+		!!!compositions :  : structure
+
+		!!!values : values : struct_array
+
+		!!!codeparam :  : structure
+
+		!!!time : time : xs:float
+		cpo%time =  getTime()
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put_non_timed(idx ,cpopath, cpo);
+		call euitm_put_slice(idx ,cpopath, cpo);
+	end do 
+
+END SUBROUTINE coretransp_put 
+
+!==================================================================
+!		 PUT cxdiag 
+!==================================================================
+SUBROUTINE cxdiag_put
+	TYPE (type_cxdiag) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "cxdiag"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on cxdiag"
+	CALL srand(seed)
+	do i = 0, 3 + 1
+
+		!!!datainfo :  : structure
+
+		!!!setup :  : structure
+
+		!!!measure :  : structure
+
+		!!!time : time : xs:float
+		cpo%time =  getTime()
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put_non_timed(idx ,cpopath, cpo);
+		call euitm_put_slice(idx ,cpopath, cpo);
+	end do 
+
+END SUBROUTINE cxdiag_put 
+
+!==================================================================
+!		 PUT distribution 
+!==================================================================
+SUBROUTINE distribution_put
+	TYPE (type_distribution) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "distribution"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on distribution"
+	CALL srand(seed)
+	do i = 0, 8 + 1
+
+		!!!datainfo :  : structure
+
+		!!!composition :  : structure
+
+		!!!compositions :  : structure
+
+		!!!distri_vec : distri_vec : struct_array
+
+		!!!codeparam :  : structure
+
+		!!!time : time : xs:float
+		cpo%time =  getTime()
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put_non_timed(idx ,cpopath, cpo);
+		call euitm_put_slice(idx ,cpopath, cpo);
+	end do 
+
+END SUBROUTINE distribution_put 
+
+!==================================================================
+!		 PUT distsource 
+!==================================================================
+SUBROUTINE distsource_put
+	TYPE (type_distsource) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "distsource"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on distsource"
+	CALL srand(seed)
+	do i = 0, 4 + 1
+
+		!!!datainfo :  : structure
+
+		!!!composition :  : structure
+
+		!!!compositions :  : structure
+
+		!!!source : source : struct_array
+
+		!!!codeparam :  : structure
+
+		!!!time : time : xs:float
+		cpo%time =  getTime()
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put_non_timed(idx ,cpopath, cpo);
+		call euitm_put_slice(idx ,cpopath, cpo);
+	end do 
+
+END SUBROUTINE distsource_put 
+
+!==================================================================
+!		 PUT ecediag 
+!==================================================================
+SUBROUTINE ecediag_put
+	TYPE (type_ecediag) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "ecediag"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on ecediag"
+	CALL srand(seed)
+	do i = 0, 3 + 1
+
+		!!!datainfo :  : structure
+
+		!!!setup :  : structure
+
+		!!!measure :  : structure
+
+		!!!time : time : xs:float
+		cpo%time =  getTime()
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put_non_timed(idx ,cpopath, cpo);
+		call euitm_put_slice(idx ,cpopath, cpo);
+	end do 
+
+END SUBROUTINE ecediag_put 
+
+!==================================================================
+!		 PUT edge 
+!==================================================================
+SUBROUTINE edge_put
+	TYPE (type_edge) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "edge"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on edge"
+	CALL srand(seed)
+	do i = 0, 1 + 1
+
+		!!!datainfo :  : structure
+
+		!!!grid :  : structure
+
+		!!!species : species : struct_array
+
+		!!!compositions :  : structure
+
+		!!!fluid :  : structure
+
+		!!!kinetic :  : structure
+
+		!!!codeparam :  : structure
+
+		!!!time : time : xs:float
+		cpo%time =  getTime()
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put_non_timed(idx ,cpopath, cpo);
+		call euitm_put_slice(idx ,cpopath, cpo);
+	end do 
+
+END SUBROUTINE edge_put 
+
+!==================================================================
+!		 PUT efcc 
+!==================================================================
+SUBROUTINE efcc_put
+	TYPE (type_efcc) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "efcc"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on efcc"
+	CALL srand(seed)
+	do i = 0, 1 + 1
+
+		!!!datainfo :  : structure
+
+		!!!coil : coil : struct_array
+
+		!!!time : time : xs:float
+		cpo%time =  getTime()
+
+		!!!codeparam :  : structure
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put_non_timed(idx ,cpopath, cpo);
+		call euitm_put_slice(idx ,cpopath, cpo);
+	end do 
+
+END SUBROUTINE efcc_put 
+
+!==================================================================
+!		 PUT equilibrium 
+!==================================================================
+SUBROUTINE equilibrium_put
+	TYPE (type_equilibrium) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "equilibrium"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on equilibrium"
+	CALL srand(seed)
+	do i = 0, 5 + 1
+
+		!!!datainfo :  : structure
+
+		!!!eqconstraint :  : structure
+
+		!!!eqgeometry :  : structure
+
+		!!!flush :  : structure
+
+		!!!global_param :  : structure
+
+		!!!profiles_1d :  : structure
+
+		!!!profiles_2d : profiles_2d : struct_array
+
+		!!!coord_sys :  : structure
+
+		!!!time : time : xs:float
+		cpo%time =  getTime()
+
+		!!!codeparam :  : structure
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put_non_timed(idx ,cpopath, cpo);
+		call euitm_put_slice(idx ,cpopath, cpo);
+	end do 
+
+END SUBROUTINE equilibrium_put 
+
+!==================================================================
+!		 PUT fusiondiag 
+!==================================================================
+SUBROUTINE fusiondiag_put
+	TYPE (type_fusiondiag) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "fusiondiag"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on fusiondiag"
+	CALL srand(seed)
+	do i = 0, 8 + 1
+
+		!!!datainfo :  : structure
+
+		!!!fus_product : fus_product : struct_array
+
+		!!!codeparam :  : structure
+
+		!!!time : time : xs:float
+		cpo%time =  getTime()
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put_non_timed(idx ,cpopath, cpo);
+		call euitm_put_slice(idx ,cpopath, cpo);
+	end do 
+
+END SUBROUTINE fusiondiag_put 
+
+!==================================================================
+!		 PUT halphadiag 
+!==================================================================
+SUBROUTINE halphadiag_put
+	TYPE (type_halphadiag) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "halphadiag"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on halphadiag"
+	CALL srand(seed)
+	do i = 0, 1 + 1
+
+		!!!datainfo :  : structure
+
+		!!!setup :  : structure
+
+		!!!intensity :  : structure
+
+		!!!time : time : xs:float
+		cpo%time =  getTime()
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put_non_timed(idx ,cpopath, cpo);
+		call euitm_put_slice(idx ,cpopath, cpo);
+	end do 
+
+END SUBROUTINE halphadiag_put 
+
+!==================================================================
+!		 PUT interfdiag 
+!==================================================================
+SUBROUTINE interfdiag_put
+	TYPE (type_interfdiag) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "interfdiag"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on interfdiag"
+	CALL srand(seed)
+	do i = 0, 3 + 1
+
+		!!!datainfo :  : structure
+
+		!!!expression : expression : xs:string
+
+		!!!setup_line :  : structure
+
+		!!!measure :  : structure
+
+		!!!time : time : xs:float
+		cpo%time =  getTime()
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put_non_timed(idx ,cpopath, cpo);
+		call euitm_put_slice(idx ,cpopath, cpo);
+	end do 
+
+END SUBROUTINE interfdiag_put 
+
+!==================================================================
+!		 PUT ironmodel 
+!==================================================================
+SUBROUTINE ironmodel_put
+	TYPE (type_ironmodel) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "ironmodel"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on ironmodel"
+	CALL srand(seed)
+	do i = 0, 1 + 1
+
+		!!!datainfo :  : structure
+
+		!!!desc_iron :  : structure
+
+		!!!magnetise :  : structure
+
+		!!!time : time : xs:float
+		cpo%time =  getTime()
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put_non_timed(idx ,cpopath, cpo);
+		call euitm_put_slice(idx ,cpopath, cpo);
+	end do 
+
+END SUBROUTINE ironmodel_put 
+
+!==================================================================
+!		 PUT langmuirdiag 
+!==================================================================
+SUBROUTINE langmuirdiag_put
+	TYPE (type_langmuirdiag) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "langmuirdiag"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on langmuirdiag"
+	CALL srand(seed)
+	do i = 0, 3 + 1
+
+		!!!datainfo :  : structure
+
+		!!!potential :  : structure
+
+		!!!bias :  : structure
+
+		!!!jsat :  : structure
+
+		!!!ne :  : structure
+
+		!!!te :  : structure
+
+		!!!machpar :  : structure
+
+		!!!codeparam :  : structure
+
+		!!!time : time : xs:float
+		cpo%time =  getTime()
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put_non_timed(idx ,cpopath, cpo);
+		call euitm_put_slice(idx ,cpopath, cpo);
+	end do 
+
+END SUBROUTINE langmuirdiag_put 
+
+!==================================================================
+!		 PUT launchs 
+!==================================================================
+SUBROUTINE launchs_put
+	TYPE (type_launchs) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "launchs"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on launchs"
+	CALL srand(seed)
+	do i = 0, 5 + 1
+
+		!!!datainfo :  : structure
+
+		!!!name : name : vecstring_type
+
+		!!!type : type : vecstring_type
+
+		!!!frequency : frequency : vecflt_type
+
+		!!!mode : mode : vecint_type
+
+		!!!position :  : structure
+
+		!!!spectrum :  : structure
+
+		!!!beam :  : structure
+
+		!!!codeparam :  : structure
+
+		!!!time : time : xs:float
+		cpo%time =  getTime()
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put_non_timed(idx ,cpopath, cpo);
+		call euitm_put_slice(idx ,cpopath, cpo);
+	end do 
+
+END SUBROUTINE launchs_put 
+
+!==================================================================
+!		 PUT limiter 
+!==================================================================
+SUBROUTINE limiter_put
+	TYPE (type_limiter) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "limiter"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on limiter"
+	CALL srand(seed)
+	do i = 0, 1 + 1
+
+		!!!datainfo :  : structure
+
+		!!!limiter_unit : limiter_unit : struct_array
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put(idx, cpopath, cpo);
+	end do 
+
+END SUBROUTINE limiter_put 
+
+!==================================================================
+!		 PUT lithiumdiag 
+!==================================================================
+SUBROUTINE lithiumdiag_put
+	TYPE (type_lithiumdiag) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "lithiumdiag"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on lithiumdiag"
+	CALL srand(seed)
+	do i = 0, 1 + 1
+
+		!!!datainfo :  : structure
+
+		!!!setup :  : structure
+
+		!!!measure :  : structure
+
+		!!!time : time : xs:float
+		cpo%time =  getTime()
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put_non_timed(idx ,cpopath, cpo);
+		call euitm_put_slice(idx ,cpopath, cpo);
+	end do 
+
+END SUBROUTINE lithiumdiag_put 
+
+!==================================================================
+!		 PUT mhd 
+!==================================================================
+SUBROUTINE mhd_put
+	TYPE (type_mhd) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "mhd"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on mhd"
+	CALL srand(seed)
+	do i = 0, 10 + 1
+
+		!!!datainfo :  : structure
+
+		!!!n : n : vecint_type
+
+		!!!frequency : frequency : vecflt_type
+
+		!!!growthrate : growthrate : vecflt_type
+
+		!!!plasma :  : structure
+
+		!!!vacuum :  : structure
+
+		!!!time : time : xs:float
+		cpo%time =  getTime()
+
+		!!!codeparam :  : structure
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put_non_timed(idx ,cpopath, cpo);
+		call euitm_put_slice(idx ,cpopath, cpo);
+	end do 
+
+END SUBROUTINE mhd_put 
+
+!==================================================================
+!		 PUT magdiag 
+!==================================================================
+SUBROUTINE magdiag_put
+	TYPE (type_magdiag) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "magdiag"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on magdiag"
+	CALL srand(seed)
+	do i = 0, 1 + 1
+
+		!!!datainfo :  : structure
+
+		!!!ip :  : structure
+
+		!!!diamagflux :  : structure
+
+		!!!flux_loops :  : structure
+
+		!!!bpol_probes :  : structure
+
+		!!!time : time : xs:float
+		cpo%time =  getTime()
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put_non_timed(idx ,cpopath, cpo);
+		call euitm_put_slice(idx ,cpopath, cpo);
+	end do 
+
+END SUBROUTINE magdiag_put 
+
+!==================================================================
+!		 PUT msediag 
+!==================================================================
+SUBROUTINE msediag_put
+	TYPE (type_msediag) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "msediag"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on msediag"
+	CALL srand(seed)
+	do i = 0, 2 + 1
+
+		!!!datainfo :  : structure
+
+		!!!polarimetry :  : structure
+
+		!!!spectral :  : structure
+
+		!!!time : time : xs:float
+		cpo%time =  getTime()
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put_non_timed(idx ,cpopath, cpo);
+		call euitm_put_slice(idx ,cpopath, cpo);
+	end do 
+
+END SUBROUTINE msediag_put 
+
+!==================================================================
+!		 PUT nbi 
+!==================================================================
+SUBROUTINE nbi_put
+	TYPE (type_nbi) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "nbi"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on nbi"
+	CALL srand(seed)
+	do i = 0, 1 + 1
+
+		!!!datainfo :  : structure
+
+		!!!nbi_unit : nbi_unit : struct_array
+
+		!!!codeparam :  : structure
+
+		!!!time : time : xs:float
+		cpo%time =  getTime()
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put_non_timed(idx ,cpopath, cpo);
+		call euitm_put_slice(idx ,cpopath, cpo);
+	end do 
+
+END SUBROUTINE nbi_put 
+
+!==================================================================
+!		 PUT neoclassic 
+!==================================================================
+SUBROUTINE neoclassic_put
+	TYPE (type_neoclassic) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "neoclassic"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on neoclassic"
+	CALL srand(seed)
+	do i = 0, 5 + 1
+
+		!!!datainfo :  : structure
+
+		!!!rho_tor_norm : rho_tor_norm : vecflt_type
+
+		!!!rho_tor : rho_tor : vecflt_type
+
+		!!!composition :  : structure
+
+		!!!desc_impur :  : structure
+
+		!!!compositions :  : structure
+
+		!!!ni_neo :  : structure
+
+		!!!ne_neo :  : structure
+
+		!!!nz_neo : nz_neo : struct_array
+
+		!!!ti_neo :  : structure
+
+		!!!te_neo :  : structure
+
+		!!!tz_neo : tz_neo : struct_array
+
+		!!!mtor_neo :  : structure
+
+		!!!sigma : sigma : vecflt_type
+
+		!!!jboot : jboot : vecflt_type
+
+		!!!er : er : vecflt_type
+
+		!!!vpol : vpol : matflt_type
+
+		!!!fext : fext : array3dflt_type
+
+		!!!jext : jext : vecflt_type
+
+		!!!time : time : xs:float
+		cpo%time =  getTime()
+
+		!!!codeparam :  : structure
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put_non_timed(idx ,cpopath, cpo);
+		call euitm_put_slice(idx ,cpopath, cpo);
+	end do 
+
+END SUBROUTINE neoclassic_put 
+
+!==================================================================
+!		 PUT orbit 
+!==================================================================
+SUBROUTINE orbit_put
+	TYPE (type_orbit) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "orbit"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on orbit"
+	CALL srand(seed)
+	do i = 0, 5 + 1
+
+		!!!datainfo :  : structure
+
+		!!!com :  : structure
+
+		!!!trace :  : structure
+
+		!!!global_param :  : structure
+
+		!!!codeparam :  : structure
+
+		!!!time : time : xs:float
+		cpo%time =  getTime()
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put_non_timed(idx ,cpopath, cpo);
+		call euitm_put_slice(idx ,cpopath, cpo);
+	end do 
+
+END SUBROUTINE orbit_put 
+
+!==================================================================
+!		 PUT pellets 
+!==================================================================
+SUBROUTINE pellets_put
+	TYPE (type_pellets) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "pellets"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on pellets"
+	CALL srand(seed)
+	do i = 0, 2 + 1
+
+		!!!datainfo :  : structure
+
+		!!!toroid_field :  : structure
+
+		!!!species :  : structure
+
+		!!!shape :  : structure
+
+		!!!pelletpath :  : structure
+
+		!!!velocity : velocity : xs:float
+		cpo%velocity =  getDouble()
+
+		!!!ablationrate :  : structure
+
+		!!!deposprofile :  : structure
+
+		!!!codeparam :  : structure
+
+		!!!time : time : xs:float
+		cpo%time =  getTime()
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put_non_timed(idx ,cpopath, cpo);
+		call euitm_put_slice(idx ,cpopath, cpo);
+	end do 
+
+END SUBROUTINE pellets_put 
+
+!==================================================================
+!		 PUT pfsystems 
+!==================================================================
+SUBROUTINE pfsystems_put
+	TYPE (type_pfsystems) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "pfsystems"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on pfsystems"
+	CALL srand(seed)
+	do i = 0, 3 + 1
+
+		!!!datainfo :  : structure
+
+		!!!pfcoils :  : structure
+
+		!!!pfpassive :  : structure
+
+		!!!pfcircuits :  : structure
+
+		!!!pfsupplies :  : structure
+
+		!!!time : time : xs:float
+		cpo%time =  getTime()
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put_non_timed(idx ,cpopath, cpo);
+		call euitm_put_slice(idx ,cpopath, cpo);
+	end do 
+
+END SUBROUTINE pfsystems_put 
+
+!==================================================================
+!		 PUT polardiag 
+!==================================================================
+SUBROUTINE polardiag_put
+	TYPE (type_polardiag) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "polardiag"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on polardiag"
+	CALL srand(seed)
+	do i = 0, 3 + 1
+
+		!!!datainfo :  : structure
+
+		!!!expression : expression : xs:string
+
+		!!!setup_line :  : structure
+
+		!!!measure :  : structure
+
+		!!!time : time : xs:float
+		cpo%time =  getTime()
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put_non_timed(idx ,cpopath, cpo);
+		call euitm_put_slice(idx ,cpopath, cpo);
+	end do 
+
+END SUBROUTINE polardiag_put 
+
+!==================================================================
+!		 PUT reference 
+!==================================================================
+SUBROUTINE reference_put
+	TYPE (type_reference) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "reference"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on reference"
+	CALL srand(seed)
+	do i = 0, 4 + 1
+
+		!!!datainfo :  : structure
+
+		!!!non_timed :  : structure
+
+		!!!timed :  : structure
+
+		!!!time : time : xs:float
+		cpo%time =  getTime()
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put_non_timed(idx ,cpopath, cpo);
+		call euitm_put_slice(idx ,cpopath, cpo);
+	end do 
+
+END SUBROUTINE reference_put 
+
+!==================================================================
+!		 PUT reflectomet 
+!==================================================================
+SUBROUTINE reflectomet_put
+	TYPE (type_reflectomet) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "reflectomet"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on reflectomet"
+	CALL srand(seed)
+	do i = 0, 3 + 1
+
+		!!!datainfo :  : structure
+
+		!!!refl_receive : refl_receive : struct_array
+
+		!!!antennas : antennas : struct_array
+
+		!!!time : time : xs:float
+		cpo%time =  getTime()
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put_non_timed(idx ,cpopath, cpo);
+		call euitm_put_slice(idx ,cpopath, cpo);
+	end do 
+
+END SUBROUTINE reflectomet_put 
+
+!==================================================================
+!		 PUT rfadiag 
+!==================================================================
+SUBROUTINE rfadiag_put
+	TYPE (type_rfadiag) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "rfadiag"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on rfadiag"
+	CALL srand(seed)
+	do i = 0, 1 + 1
+
+		!!!datainfo :  : structure
+
+		!!!setup :  : structure
+
+		!!!measure :  : structure
+
+		!!!time : time : xs:float
+		cpo%time =  getTime()
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put_non_timed(idx ,cpopath, cpo);
+		call euitm_put_slice(idx ,cpopath, cpo);
+	end do 
+
+END SUBROUTINE rfadiag_put 
+
+!==================================================================
+!		 PUT sawteeth 
+!==================================================================
+SUBROUTINE sawteeth_put
+	TYPE (type_sawteeth) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "sawteeth"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on sawteeth"
+	CALL srand(seed)
+	do i = 0, 5 + 1
+
+		!!!datainfo :  : structure
+
+		!!!crash_trig : crash_trig : xs:integer
+		cpo%crash_trig = getInteger()
+		!!!composition :  : structure
+
+		!!!rho_tor_norm : rho_tor_norm : vecflt_type
+
+		!!!rho_tor : rho_tor : vecflt_type
+
+		!!!profiles1d :  : structure
+
+		!!!diags :  : structure
+
+		!!!codeparam :  : structure
+
+		!!!time : time : xs:float
+		cpo%time =  getTime()
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put_non_timed(idx ,cpopath, cpo);
+		call euitm_put_slice(idx ,cpopath, cpo);
+	end do 
+
+END SUBROUTINE sawteeth_put 
+
+!==================================================================
+!		 PUT scenario 
+!==================================================================
+SUBROUTINE scenario_put
+	TYPE (type_scenario) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "scenario"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on scenario"
+	CALL srand(seed)
+	do i = 0, 3 + 1
+
+		!!!datainfo :  : structure
+
+		!!!centre :  : structure
+
+		!!!composition :  : structure
+
+		!!!configs :  : structure
+
+		!!!confinement :  : structure
+
+		!!!currents :  : structure
+
+		!!!edge :  : structure
+
+		!!!energy :  : structure
+
+		!!!eqgeometry :  : structure
+
+		!!!global_param :  : structure
+
+		!!!heat_power :  : structure
+
+		!!!itb :  : structure
+
+		!!!lim_div_wall :  : structure
+
+		!!!line_ave :  : structure
+
+		!!!neutron :  : structure
+
+		!!!ninety_five :  : structure
+
+		!!!pedestal :  : structure
+
+		!!!references :  : structure
+
+		!!!reactor :  : structure
+
+		!!!sol :  : structure
+
+		!!!vol_ave :  : structure
+
+		!!!codeparam :  : structure
+
+		!!!time : time : xs:float
+		cpo%time =  getTime()
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put_non_timed(idx ,cpopath, cpo);
+		call euitm_put_slice(idx ,cpopath, cpo);
+	end do 
+
+END SUBROUTINE scenario_put 
+
+!==================================================================
+!		 PUT toroidfield 
+!==================================================================
+SUBROUTINE toroidfield_put
+	TYPE (type_toroidfield) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "toroidfield"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on toroidfield"
+	CALL srand(seed)
+	do i = 0, 3 + 1
+
+		!!!datainfo :  : structure
+
+		!!!desc_tfcoils :  : structure
+
+		!!!nturns : nturns : xs:integer
+		cpo%nturns = getInteger()
+		!!!ncoils : ncoils : xs:integer
+		cpo%ncoils = getInteger()
+		!!!current :  : structure
+
+		!!!bvac_r :  : structure
+
+		!!!r0 : r0 : xs:float
+		cpo%r0 =  getDouble()
+
+		!!!time : time : xs:float
+		cpo%time =  getTime()
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put_non_timed(idx ,cpopath, cpo);
+		call euitm_put_slice(idx ,cpopath, cpo);
+	end do 
+
+END SUBROUTINE toroidfield_put 
+
+!==================================================================
+!		 PUT tsdiag 
+!==================================================================
+SUBROUTINE tsdiag_put
+	TYPE (type_tsdiag) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "tsdiag"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on tsdiag"
+	CALL srand(seed)
+	do i = 0, 1 + 1
+
+		!!!datainfo :  : structure
+
+		!!!setup :  : structure
+
+		!!!measure :  : structure
+
+		!!!time : time : xs:float
+		cpo%time =  getTime()
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put_non_timed(idx ,cpopath, cpo);
+		call euitm_put_slice(idx ,cpopath, cpo);
+	end do 
+
+END SUBROUTINE tsdiag_put 
+
+!==================================================================
+!		 PUT turbulence 
+!==================================================================
+SUBROUTINE turbulence_put
+	TYPE (type_turbulence) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "turbulence"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on turbulence"
+	CALL srand(seed)
+	do i = 0, 1 + 1
+
+		!!!datainfo :  : structure
+
+		!!!composition :  : structure
+
+		!!!coordsys :  : structure
+
+		!!!var0d :  : structure
+
+		!!!var1d :  : structure
+
+		!!!var2d :  : structure
+
+		!!!var3d :  : structure
+
+		!!!var4d :  : structure
+
+		!!!var5d :  : structure
+
+		!!!spec1d :  : structure
+
+		!!!env1d :  : structure
+
+		!!!codeparam :  : structure
+
+		!!!time : time : xs:float
+		cpo%time =  getTime()
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put_non_timed(idx ,cpopath, cpo);
+		call euitm_put_slice(idx ,cpopath, cpo);
+	end do 
+
+END SUBROUTINE turbulence_put 
+
+!==================================================================
+!		 PUT vessel 
+!==================================================================
+SUBROUTINE vessel_put
+	TYPE (type_vessel) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "vessel"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on vessel"
+	CALL srand(seed)
+	do i = 0, 1 + 1
+
+		!!!datainfo :  : structure
+
+		!!!position :  : structure
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put(idx, cpopath, cpo);
+	end do 
+
+END SUBROUTINE vessel_put 
+
+!==================================================================
+!		 PUT wall 
+!==================================================================
+SUBROUTINE wall_put
+	TYPE (type_wall) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "wall"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on wall"
+	CALL srand(seed)
+	do i = 0, 5 + 1
+
+		!!!datainfo :  : structure
+
+		!!!wall2d_mhd :  : structure
+
+		!!!wall0d :  : structure
+
+		!!!wall2d : wall2d : struct_array
+
+		!!!wall3d : wall3d : struct_array
+
+		!!!plasma :  : structure
+
+		!!!surface :  : structure
+
+		!!!time : time : xs:float
+		cpo%time =  getTime()
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put_non_timed(idx ,cpopath, cpo);
+		call euitm_put_slice(idx ,cpopath, cpo);
+	end do 
+
+END SUBROUTINE wall_put 
+
+!==================================================================
+!		 PUT waves 
+!==================================================================
+SUBROUTINE waves_put
+	TYPE (type_waves) :: cpo 
+	CHARACTER (LEN=20) :: cpopath = "waves"
+	CHARACTER (LEN=2) :: occurence = "" 
+	INTEGER :: i 
+	WRITE(*,*) "Testing put() on waves"
+	CALL srand(seed)
+	do i = 0, 8 + 1
+
+		!!!datainfo :  : structure
+
+		!!!coherentwave : coherentwave : struct_array
+
+		!!!codeparam :  : structure
+
+		!!!time : time : xs:float
+		cpo%time =  getTime()
+		!------------
+		if (i > 0) then 
+			WRITE( occurence, '(i2)' )  i 
+			cpopath = cpopath//"\"//occurence
+		end if 
+  
+		cpopath = TRIM(ADJUSTL(cpopath)) 
+		call euitm_put_non_timed(idx ,cpopath, cpo);
+		call euitm_put_slice(idx ,cpopath, cpo);
+	end do 
+
+END SUBROUTINE waves_put 
+
+END PROGRAM test
+
