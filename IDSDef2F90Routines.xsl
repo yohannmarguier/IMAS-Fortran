@@ -4459,7 +4459,7 @@ endif
       call get_vect3d_double_slice(idx,path,<xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;, &amp;
       trim(timepath),&amp;
       IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/> &amp;
-      ,dim1,dim2, dim3, dum1, dum2, dum3, status)
+      ,dim1,dim2, dim3, dum1, dum2, dum3, twant,tret,interpol, status)
       if (ual_debug =='yes') write(*,*) &amp;  
       'Get IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>'
    endif        
