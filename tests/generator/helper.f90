@@ -103,14 +103,15 @@ END FUNCTION getIntegerArray
 ! =================================================================
 ! 		STRING ARRAYS
 ! =================================================================
-FUNCTION getString1DArray() RESULT (outArray)
+FUNCTION getString1DArray(dim1) RESULT (outArray)
+    INTEGER, INTENT(in) :: dim1
     INTEGER  ::sizeOfArray
     CHARACTER(len=132),DIMENSION(:), POINTER :: outArray
     INTEGER::I
     
-    sizeOfArray = DIM_SIZE**1
+    sizeOfArray = dim1
     
-    ALLOCATE(outArray(DIM_SIZE))
+    ALLOCATE(outArray(dim1))
     outArray =  getStringArray(sizeOfArray)
 
     
@@ -121,44 +122,64 @@ END FUNCTION getString1DArray
 ! =================================================================
 ! 		INTEGER ARRAYS
 ! =================================================================
-FUNCTION getInteger1DArray() RESULT (outArray)
+FUNCTION getInteger1DArray(dim1) RESULT (outArray)
+    INTEGER, INTENT(in) :: dim1
     INTEGER  ::sizeOfArray
+    INTEGER, DIMENSION(:), POINTER :: flatArray
     INTEGER,DIMENSION(:), POINTER :: outArray
     INTEGER::I
     
-    sizeOfArray = DIM_SIZE**1
+    !sizeOfArray = dim1
+     sizeOfArray = DIM_SIZE **1
     
-    ALLOCATE(outArray(sizeofArray))
+    flatArray => getIntegerArray(sizeOfArray)
+    ALLOCATE(outArray(dim1))
 
-    outArray = getIntegerArray(sizeOfArray) 
+    outArray =  RESHAPE(flatArray(:dim1), (/dim1/))
+    
     RETURN
 END FUNCTION getInteger1DArray
 
-FUNCTION getInteger2DArray() RESULT (outArray)
+! =================================================================
+
+FUNCTION getInteger2DArray(dim1, dim2) RESULT (outArray)
+    INTEGER, INTENT(in) :: dim1, dim2
     INTEGER ::sizeOfArray
+    
+    INTEGER, DIMENSION(:), POINTER :: flatArray
     INTEGER,DIMENSION(:,:), POINTER :: outArray
     INTEGER::I
     
     
-    sizeOfArray = DIM_SIZE**2
-    ALLOCATE(outArray(DIM_SIZE, DIM_SIZE))
+    !sizeOfArray = dim1 * dim2 
+    sizeOfArray = DIM_SIZE **2
     
-    outArray =  RESHAPE(getIntegerArray(sizeOfArray), (/DIM_SIZE, DIM_SIZE/))
+    flatArray => getIntegerArray(sizeOfArray)
+    ALLOCATE(outArray(dim1, dim2))
+    
+    outArray =  RESHAPE(flatArray(:dim1 * dim2), (/dim1, dim2/))
     
 RETURN
     
 END FUNCTION getInteger2DArray
 
-FUNCTION getInteger3DArray() RESULT (outArray)
+! =================================================================
+
+FUNCTION getInteger3DArray(dim1, dim2, dim3) RESULT (outArray)
+    INTEGER, INTENT(in) :: dim1, dim2, dim3
     INTEGER ::sizeOfArray
-    INTEGER,DIMENSION(:,:,:), POINTER :: outArray
+    INTEGER, DIMENSION(:), POINTER :: flatArray
+    INTEGER, DIMENSION(:,:,:), POINTER :: outArray
     INTEGER::I
     
     
-    sizeOfArray = DIM_SIZE**3
-    ALLOCATE(outArray(DIM_SIZE, DIM_SIZE, DIM_SIZE))
+    !sizeOfArray = dim1 * dim2 * dim3
+    sizeOfArray = DIM_SIZE **3
+   
+    flatArray => getIntegerArray(sizeOfArray)
+    ALLOCATE(outArray(dim1, dim2, dim3))
     
-    outArray =  RESHAPE(getIntegerArray(sizeOfArray), (/DIM_SIZE, DIM_SIZE, DIM_SIZE/))
+    outArray =  RESHAPE(flatArray(:dim1 * dim2 * dim3), (/dim1, dim2, dim3/))
     
 RETURN
     
@@ -169,91 +190,131 @@ END FUNCTION getInteger3DArray
 ! =================================================================
 ! 		DOUBLE ARRAYS
 ! =================================================================
-FUNCTION getDouble1DArray() RESULT (outArray)
+FUNCTION getDouble1DArray(dim1) RESULT (outArray)
+    INTEGER, INTENT(in) :: dim1
     INTEGER ::sizeOfArray
     REAL(DP),DIMENSION(:), POINTER :: outArray
+    REAL(DP),DIMENSION(:), POINTER :: flatArray
     INTEGER::I
    
-    sizeOfArray = DIM_SIZE**1
-        
-    ALLOCATE(outArray(DIM_SIZE))
+    !sizeOfArray = dim1
+    sizeOfArray = DIM_SIZE **1
     
-    outArray =  getDoubleArray(sizeOfArray)
+    flatArray => getDoubleArray(sizeOfArray)
+	
+    ALLOCATE(outArray(dim1))
+        
+    outArray =  RESHAPE(flatArray(:dim1), (/dim1/))
     
     RETURN
 END FUNCTION getDouble1DArray
 
+! =================================================================
 
-FUNCTION getDouble2DArray() RESULT (outArray)
+FUNCTION getDouble2DArray(dim1, dim2) RESULT (outArray)
+    INTEGER, INTENT(in) :: dim1, dim2
     INTEGER ::sizeOfArray
+    REAL(DP),DIMENSION(:), POINTER :: flatArray
     REAL(DP),DIMENSION(:,:), POINTER :: outArray
     INTEGER::I
    
-    sizeOfArray = DIM_SIZE**2
+    !sizeOfArray = dim1 * dim2
+    sizeOfArray = DIM_SIZE **2
         
-    ALLOCATE(outArray(DIM_SIZE, DIM_SIZE))
+    flatArray => getDoubleArray(sizeOfArray)
     
-    outArray =  RESHAPE(getDoubleArray(sizeOfArray), (/DIM_SIZE, DIM_SIZE/))
+    ALLOCATE(outArray(dim1, dim2))
+    
+    outArray =  RESHAPE(flatArray(:dim1 * dim2),(/dim1, dim2/))
     
     RETURN
 END FUNCTION getDouble2DArray
 
-FUNCTION getDouble3DArray() RESULT (outArray)
+! =================================================================
+
+FUNCTION getDouble3DArray(dim1, dim2, dim3) RESULT (outArray)
+    INTEGER, INTENT(in) :: dim1, dim2, dim3
+
     INTEGER ::sizeOfArray
+    REAL(DP),DIMENSION(:), POINTER :: flatArray
     REAL(DP),DIMENSION(:,:,:), POINTER :: outArray
-    INTEGER::I
+    INTEGER :: I
+
    
-    sizeOfArray = DIM_SIZE**3
+   
+   !sizeOfArray = dim1 * dim2 * dim3
+    sizeOfArray = DIM_SIZE **3
         
-    ALLOCATE(outArray(DIM_SIZE, DIM_SIZE, DIM_SIZE))
+    flatArray => getDoubleArray(sizeOfArray)
+    ALLOCATE(outArray(dim1, dim2, dim3))
     
-    outArray =  RESHAPE(getDoubleArray(sizeOfArray), (/DIM_SIZE, DIM_SIZE, DIM_SIZE/))
+    outArray =  RESHAPE(flatArray(:dim1 * dim2 * dim3), (/dim1, dim2, dim3/))
     
     RETURN
 END FUNCTION getDouble3DArray
 
-FUNCTION getDouble4DArray() RESULT (outArray)
+! =================================================================
+
+FUNCTION getDouble4DArray(dim1, dim2, dim3, dim4) RESULT (outArray)
+    INTEGER, INTENT(in) :: dim1, dim2, dim3, dim4
     INTEGER ::sizeOfArray
+        REAL(DP),DIMENSION(:), POINTER :: flatArray
     REAL(DP),DIMENSION(:,:,:, :), POINTER :: outArray
     INTEGER::I
    
-    sizeOfArray = DIM_SIZE**4
+    !sizeOfArray = dim1 * dim2 * dim3 * dim4
+    sizeOfArray = DIM_SIZE **4
         
-    ALLOCATE(outArray(DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE))
+    flatArray => getDoubleArray(sizeOfArray)
+    ALLOCATE(outArray(dim1, dim2, dim3, dim4))
     
-    outArray =  RESHAPE(getDoubleArray(sizeOfArray), (/DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE/))
+    outArray =  RESHAPE(flatArray(:dim1 * dim2 * dim3 * dim4), (/dim1, dim2, dim3, dim4/))
     
     RETURN
 END FUNCTION getDouble4DArray
 
-FUNCTION getDouble5DArray() RESULT (outArray)
+! =================================================================
+FUNCTION getDouble5DArray(dim1, dim2, dim3, dim4, dim5) RESULT (outArray)
+    INTEGER, INTENT(in) :: dim1, dim2, dim3, dim4, dim5
     INTEGER ::sizeOfArray
+        REAL(DP),DIMENSION(:), POINTER :: flatArray
     REAL(DP),DIMENSION(:,:,:,:,:), POINTER :: outArray
     INTEGER::I
    
-    sizeOfArray = DIM_SIZE**5
-        
-    ALLOCATE(outArray(DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE))
+    !sizeOfArray = dim1 * dim2 * dim3 * dim4 * dim5
+    sizeOfArray = DIM_SIZE **5
+	    
+    flatArray => getDoubleArray(sizeOfArray)
+    ALLOCATE(outArray(dim1, dim2, dim3, dim4, dim5))
     
-    outArray =  RESHAPE(getDoubleArray(sizeOfArray), (/DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE/))
+    outArray =  RESHAPE(flatArray(:dim1 * dim2 * dim3 * dim4 * dim5), (/dim1, dim2, dim3, dim4, dim5/))
     
     RETURN
 END FUNCTION getDouble5DArray
 
-FUNCTION getDouble6DArray() RESULT (outArray)
+! =================================================================
+
+FUNCTION getDouble6DArray(dim1, dim2, dim3, dim4, dim5, dim6) RESULT (outArray)
+    INTEGER, INTENT(in) :: dim1, dim2, dim3, dim4, dim5, dim6
+    
     INTEGER ::sizeOfArray
+    REAL(DP),DIMENSION(:), POINTER :: flatArray
     REAL(DP),DIMENSION(:,:,:,:,:,:), POINTER :: outArray
     INTEGER::I
    
-    sizeOfArray = DIM_SIZE**6
-        
-    ALLOCATE(outArray(DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE))
+    !sizeOfArray = dim1 * dim2 * dim3 * dim4 * dim5 * dim6
+    sizeOfArray = DIM_SIZE **6
     
-    outArray =  RESHAPE(getDoubleArray(sizeOfArray), (/DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE/))
+    flatArray => getDoubleArray(sizeOfArray)
+    ALLOCATE(outArray(dim1, dim2, dim3, dim4, dim5, dim6))
+    
+    outArray =  RESHAPE(flatArray(:dim1 * dim2 * dim3 * dim4 * dim5 * dim6), (/dim1, dim2, dim3, dim4, dim5, dim6/))
     
     RETURN
 END FUNCTION getDouble6DArray
 
+! =================================================================
+! =================================================================
 
 !IF(ALL(ARRAY1.EQ.ARRAY1)) THENCALL DOEQUALELSECALL DOUNEQUALENDIFwhich works for all types of array1 and array2 as long as they have the same type and length,but I think it isslow because an array of logicals is created first. So much faster would beDO I=1,SIZE(ARRAY1)IF(ARRAY1(1).EQ.ARRAY2(I)) EXITENDDOIF(I.GT.N) THENCALL DOEQUALELSECALL DOUNEQUALENDIF
 
