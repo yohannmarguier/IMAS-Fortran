@@ -172,7 +172,7 @@
 	<xsl:text>&#9;CHARACTER (LEN=2) :: occurence = "" &#10;</xsl:text>
 	<xsl:text>&#9;INTEGER :: i &#10;</xsl:text>
 	<xsl:text>&#9;INTEGER :: tmpInt = -1 &#10;</xsl:text>
-        <xsl:text>&#9;WRITE(*,*) "Testing put() on </xsl:text><xsl:value-of select="@name"/><xsl:text>"&#10;</xsl:text>
+        <xsl:text>&#9;WRITE(*,*) "Testing putSlice() on </xsl:text><xsl:value-of select="@name"/><xsl:text>"&#10;</xsl:text>
         <xsl:text>&#9;CALL srand(seed)&#10;</xsl:text>
         <xsl:text>&#9;do i = 0, </xsl:text><xsl:value-of select="@maxoccur"/><xsl:text> &#10;</xsl:text>
          <xsl:apply-templates select="field" mode="put"/> 
@@ -248,7 +248,7 @@
 	<xsl:text>&#9;CHARACTER (LEN=20) :: idspath &#10;</xsl:text>
 	<xsl:text>&#9;CHARACTER (LEN=2) :: occurence = "" &#10;</xsl:text>
 	<xsl:text>&#9;INTEGER :: i &#10;</xsl:text>
-        <xsl:text>&#9;WRITE(*,*) "Testing get() on </xsl:text><xsl:value-of select="@name"/><xsl:text>"&#10;</xsl:text>
+        <xsl:text>&#9;WRITE(*,*) "Testing getSlice() on </xsl:text><xsl:value-of select="@name"/><xsl:text>"&#10;</xsl:text>
         <xsl:text>&#9;CALL srand(seed)&#10;</xsl:text>
         <xsl:text>&#9;do i = 0, </xsl:text><xsl:value-of select="@maxoccur"/><xsl:text> &#10;</xsl:text>
 
