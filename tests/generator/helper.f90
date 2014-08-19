@@ -4,11 +4,10 @@ use ids_routines
 
 implicit none
 
-INTEGER, PARAMETER :: seed = 0
 INTEGER, PARAMETER :: DIM_SIZE = 2
 INTEGER, PARAMETER :: TESTSHOT = 9998
 INTEGER, PARAMETER :: TESTRUN = 9998	
-
+INTEGER, PARAMETER :: SEED(9) = (/1,2,3,4,5,6,7,8,9/)
 
 
 
@@ -55,7 +54,10 @@ cpoField(1) = PRINTABLE
     FUNCTION getDouble() RESULT (outValue)
         REAL(DP):: outValue
 
-        outValue=rand() *1000.00
+   !     outValue=rand() *1000.00
+     call random_number(outValue)
+     outValue = outValue * 1000
+       
         RETURN
     END FUNCTION getDouble
     
@@ -76,9 +78,12 @@ END FUNCTION getDoubleArray
 
     FUNCTION getInteger() RESULT (outValue)
         INTEGER:: outValue
+	        REAL(DP):: randValue
 
-        outValue=rand() * 1000.0
-    
+     !   outValue=rand() * 1000.0
+         call random_number(randValue)
+     	outValue = randValue * 1000
+     
         RETURN
     END FUNCTION getInteger
     
