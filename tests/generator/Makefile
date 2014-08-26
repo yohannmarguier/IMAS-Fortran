@@ -1,57 +1,59 @@
-TARGETS=  ifort_testSuite
+#!/bin/bash
+UAL_BUILD_DIR=$(shell cd ../../..; pwd )
 
+include $(UAL_BUILD_DIR)/Makefile.common
 
 #------------------------------- gfortran ----------------------------------
 F90_gfortran      = gfortran
-COPTS_gfortran    = -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none
-INCDIR_gfortran   = -I$(UAL)/fortraninterface/amd64_gfortran
-#LIBS_gfortran    = -L$(UAL)/fortraninterface -lUALFORTRANInterface_gfortran -Wl,-rpath,$(UAL)/itmcatalog/lib -L$(UAL)/lowlevel -lUALLowLevel -lm
-LIBS_gfortran     = -L$(UAL)/fortraninterface -lUALFORTRANInterface_gfortran 
+COPTS_gfortran    = -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none -Jamd64_gfortran
+INCDIR_gfortran   = -I$(UAL_BUILD_DIR)/fortraninterface/amd64_gfortran  -Iamd64_gfortran
+LIBS_gfortran     = -Wl,-rpath,$(UAL_BUILD_DIR)/lib -L$(UAL_BUILD_DIR)/fortraninterface -lUALFORTRANInterface_gfortran 
 
 F90_ifort       = ifort
-COPTS_ifort     = -r8 -O0 -assume no2underscore  -fPIC -module $(UAL)/fortraninterface/amd64_ifort -shared-intel
-INCDIR_ifort    = -I$(UAL)/fortraninterface/amd64_ifort
-LIBS_ifort      = -L$(UAL)/fortraninterface -lUALFORTRANInterface_ifort 
+COPTS_ifort     = -r8 -O0 -assume no2underscore  -fPIC -module amd64_ifort -shared-intel
+INCDIR_ifort    = -I$(UAL_BUILD_DIR)/fortraninterface/amd64_ifort
+LIBS_ifort      = -Wl,-rpath,$(UAL_BUILD_DIR)/lib -L$(UAL_BUILD_DIR)/fortraninterface -lUALFORTRANInterface_ifort 
 
-IDSDEF= $(UAL)/xml/IDSDef.xml
-
-
-ifeq "$(strip $(G95))" "yes"
-    TARGETS += libUALFORTRANInterface_g95.so libUALFORTRANInterface_g95.a 
-endif
+IDSDEF= $(UAL_BUILD_DIR)/xml/IDSDef.xml
+ids_path := $(UAL_BUILD_DIR)/models/mdsplus
 
 ifeq "$(strip $(GFORTRAN))" "yes"
-    TARGETS += libUALFORTRANInterface_gfortran.so libUALFORTRANInterface_gfortran.a
-endif
-
-ifeq "$(strip $(PGI))" "yes"
-    TARGETS += libUALFORTRANInterface_pgi.so libUALFORTRANInterface_pgi.a
+    TARGETS += gfortran_testSuite
 endif
 
 ifeq "$(strip $(IFORT))" "yes"
-    TARGETS += libUALFORTRANInterface_ifort.so libUALFORTRANInterface_ifort.a 
+    TARGETS += ifort_testSuite
 endif
 
 all : setup
 	
-clean:
+clean: ifort_clean gfortran_clean
 	rm -rf build *~ *.o *.mod
 	
 clean-src: clean
-	rm -f *.o
-
-install: all
+	rm -f testSuite.f90
 	
-setup: IDSDef2TestSuite.xsl  
+testSuite.f90: IDSDef2TestSuite.xsl  
 	xsltproc IDSDef2TestSuite.xsl $(IDSDEF)  > testSuite.f90
-
-
-
 
 comp: $(TARGETS)
 
+	
+#test: export ids_path = $(UAL_BUILD_DIR)/models/mdsplus
+test: testSuite.f90 comp 
+	@for i in $(TARGETS); do \
+		echo ===============================================; \
+		echo Running:  $$i; \
+		#echo $(ids_path);\
+		(./$$i);\
+		echo ----------------------------------------------- ; \
+	done
+	
 
-#--------------------- gfortran ------------------------
+#------------------------- gfortran ----------------------------
+
+gfortran_clean: 
+	rm -rf gfortran_testSuite amd64_gfortran/*.mod
 
 gfortran_helper.o: helper.f90
 	$(F90_gfortran) $(COPTS_gfortran) $(INCDIR_gfortran) -c $< -o $@ 
@@ -65,8 +67,10 @@ gfortran_testSuite: testSuite.f90 gfortran_helper.o gfortran_comparator.o
 
 	
 
-#--------------------- ifort ------------------------
-
+#------------------------- ifort ----------------------------
+ifort_clean: 
+	rm -rf ifort_testSuite amd64_ifort/*.mod
+	
 ifort_helper.o: helper.f90
 	$(F90_ifort) $(COPTS_ifort) $(INCDIR_ifort) -c $< -o $@ 
 

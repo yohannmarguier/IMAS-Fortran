@@ -1,9 +1,9 @@
-<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+ <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
     xmlns:fn="http://www.w3.org/2005/xpath-functions">
     <xsl:output method="text"/>
     <xsl:strip-space elements="*"/>
-
-    <!-- Initial code -->
+    
+    <!-- Initial c ode -->
     <xsl:template match="IDSs">
     	
 	 <!-- ================================ MAIN PROGRAM ================================= -->
@@ -12,9 +12,9 @@
 	<xsl:text>&#9;use ids_schemas &#10;</xsl:text>
 
 	<xsl:text>&#9;use helper&#10;</xsl:text>
-        <xsl:text>&#9;implicit none&#10;</xsl:text>
+        <xsl:text>&#9;implicit none&#10;   </xsl:text>
 
-
+      
 
     <xsl:text>&#9;INTEGER :: idx;&#10;</xsl:text>
     
@@ -35,7 +35,7 @@
 	
     <xsl:text>CONTAINS&#10;</xsl:text>
 	
-<!--        <xsl:call-template name="getArrayGenerator"/> -->
+<!-- sdd       <xsl:call-template name="getArrayGenerator"/> -->
  <!--      <xsl:apply-templates select="child::IDS[@name='temporary' or @name='sdn']" mode="put"/>
         <xsl:apply-templates select="child::IDS[@name='temporary' or @name='sdn']" mode="get"/> 
 -->
