@@ -16,6 +16,7 @@ LIBS_ifort      = -Wl,-rpath,$(UAL_BUILD_DIR)/lib -L$(UAL_BUILD_DIR)/fortraninte
 
 IDSDEF= $(UAL_BUILD_DIR)/xml/IDSDef.xml
 ids_path := $(UAL_BUILD_DIR)/models/mdsplus
+LD_LIBRARY_PATH :=  $(UAL_BUILD_DIR)/lowlevel:$(UAL_BUILD_DIR)/fortraninterface:$(LD_LIBRARY_PATH)
 
 ifeq "$(strip $(GFORTRAN))" "yes"
     TARGETS += gfortran_testSuite
