@@ -14,6 +14,7 @@ use ids_schemas
  <xsl:for-each select="IDS">
 use <xsl:value-of select="@name"/>_ids_module</xsl:for-each>
 
+
 contains
 
 subroutine ids_get_times(idx,path,time)
@@ -101,6 +102,9 @@ interface ids_discard
    module procedure ids_discard_<xsl:value-of select="@name"/>
 end interface ids_discard
 -->
+
+character(len=3)::ual_debug
+
 contains
 
 character(10) function int2str(num) 
@@ -128,9 +132,10 @@ FUNCTION isErrorCritical(status, fieldPath) RESULT (exitRequest)
 		
 	exitRequest = .FALSE.
 	
-	call get_last_errmsg(longstring)
-	
-	write(*,*) "ERROR! FIELD: ", trim(fieldPath), "    STATUS: ", status, "    MSG: ", trim(longstring)
+	if ( (ual_debug == 'yes') .OR. (ual_debug == 'vvv'))then
+		call get_last_errmsg(longstring)
+		write(*,*) "ERROR! FIELD: ", trim(fieldPath), "    STATUS: ", status, "    MSG: ", trim(longstring)
+	endif
 
 END FUNCTION isErrorCritical
 
@@ -145,7 +150,6 @@ implicit none
 character*(*) :: path
 integer :: idx, retStatus, status, lenstring, istring, itime, lentime
 integer :: ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7,dum1,dum2,dum3,dum4,dum5,dum6,dum7
-character(len=3)::ual_debug
 
 character(len=132)::stringans      ! Temporary way of getting short strings
 character(len=100000)::longstring
@@ -184,7 +188,6 @@ implicit none
 character*(*) :: path
 integer :: status, interpol, idx, lenstring, istring
 real(DP) :: twant,tret
-character(len=3)::ual_debug
 
 integer :: int0D
 integer,pointer :: vect1DInt(:), vect2DInt(:,:), vect3DInt(:,:,:) => null()
@@ -231,7 +234,6 @@ integer :: status, retStatus
 
 character*(*) :: path
 integer :: idx, lentime
-character(len=3)::ual_debug
 
 type(ids_<xsl:value-of select="@name"/>) :: IDS       
 
@@ -292,7 +294,6 @@ implicit none
 
 character*(*) :: path
 integer :: idx, lentime
-character(len=3)::ual_debug
 integer :: status, retStatus
 
 type(ids_<xsl:value-of select="@name"/>) :: IDS
@@ -354,7 +355,6 @@ integer :: status, retStatus
 integer :: i,dim1,dim2,dim3,dim4,dim5,dim6,dim7, lenstring, istring
 integer, pointer :: dimtab(:) => null()
 character(len=100000)::longstring    
-character(len=3)::ual_debug
 character(len=300) :: timepath    
 integer :: obj1,obj2,obj3,obj4,obj5,obj6,obj7
 integer :: i1,i2,i3,i4,i5,i6,i7
@@ -393,7 +393,6 @@ use ids_schemas
 implicit none
 character*(*) :: IDSpath
 integer :: idx
-character(len=3)::ual_debug
 
 type(ids_<xsl:value-of select="@name"/>) :: IDS       
 <xsl:for-each select=".//field[@data_type='struct_array']">
@@ -416,7 +415,6 @@ subroutine ids_deallocate_<xsl:value-of select="@name"/>(IDS)
 use ids_schemas
 implicit none
 
-character(len=3)::ual_debug
 integer :: i1,i2,i3,i4,i5,i6,i7
 
 type(ids_<xsl:value-of select="@name"/>) :: IDS       
@@ -436,7 +434,6 @@ subroutine ids_copy_<xsl:value-of select="@name"/>(IDSin,  IDSout)
 use ids_schemas
 implicit none
 !integer, parameter :: DP=kind(1.0D0)
-character(len=3)::ual_debug
 
 integer :: itime, lentime, lenstring, istring
 integer :: i1,i2,i3,i4,i5,i6,i7
@@ -463,7 +460,6 @@ implicit none
 character*(*) :: IDSpath
 integer :: idx
 integer, parameter :: DP=kind(1.0D0)
-character(len=3)::ual_debug
 
   <xsl:choose>
 			<xsl:when test="@timed = 'yes'">
@@ -490,7 +486,6 @@ use ids_schemas
 implicit none
 character*(*) :: IDSpath
 integer :: idx
-character(len=3)::ual_debug
 
 type(ids_<xsl:value-of select="@name"/>) :: IDS       
 <xsl:for-each select=".//field[@data_type='struct_array']">
