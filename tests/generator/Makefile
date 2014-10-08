@@ -1,4 +1,4 @@
-#!/bin/bash
+!/bin/bash
 UAL_BUILD_DIR=$(shell cd ../../..; pwd )
 
 include $(UAL_BUILD_DIR)/Makefile.common
@@ -18,6 +18,7 @@ IDSDEF= $(UAL_BUILD_DIR)/xml/IDSDef.xml
 ids_path := $(UAL_BUILD_DIR)/models/mdsplus
 LD_LIBRARY_PATH :=  $(UAL_BUILD_DIR)/lowlevel:$(UAL_BUILD_DIR)/fortraninterface:$(LD_LIBRARY_PATH)
 
+
 ifeq "$(strip $(GFORTRAN))" "yes"
     TARGETS += gfortran_testSuite
 endif
@@ -26,7 +27,7 @@ ifeq "$(strip $(IFORT))" "yes"
     TARGETS += ifort_testSuite
 endif
 
-all : setup
+all : testSuite.f90 comp 
 	
 clean: ifort_clean gfortran_clean
 	rm -rf build *~ *.o *.mod
