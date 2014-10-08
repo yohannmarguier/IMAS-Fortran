@@ -1,4 +1,4 @@
-!/bin/bash
+#!/bin/bash
 UAL_BUILD_DIR=$(shell cd ../../..; pwd )
 
 include $(UAL_BUILD_DIR)/Makefile.common
