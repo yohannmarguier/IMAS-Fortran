@@ -17,20 +17,24 @@
 include ../Makefile.common
 
 F90_g95         = x86_64-unknown-linux-gnu-g95 
-COPTS_g95       = -r8 -ftrace=full -fPIC -fno-second-underscore -ffree-line-length-huge -g -fmod=amd64_g95/
+MODDIR_g95      = amd64_g95
+COPTS_g95       = -r8 -ftrace=full -fPIC -fno-second-underscore -ffree-line-length-huge -g -fmod=$(MODDIR_g95)/
 INCDIR_g95      = -Iamd64_g95
 
 F90_gfortran    = gfortran 
-COPTS_gfortran  = -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none -g -Jamd64_gfortran/
-INCDIR_gfortran = -Iamd64_gfortran
+MODDIR_gfortran = amd64_gfortran
+COPTS_gfortran  = -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none -g -J$(MODDIR_gfortran)/
+INCDIR_gfortran = -I$(MODDIR_gfortran)
 
-F90_pgi         = pgf90 
-COPTS_pgi       = -r8  -Mnosecond_underscore -fPIC -module=./amd64_pgi -g
-INCDIR_pgi      = -Iamd64_pgi
+F90_pgi         = pgf90
+MODDIR_pgi      = amd64_pgi
+COPTS_pgi       = -r8  -Mnosecond_underscore -fPIC -module=./$(MODDIR_pgi) -g
+INCDIR_pgi      = -I$(MODDIR_pgi)
 
 F90_ifort       = ifort
-COPTS_ifort     = -r8 -O0 -assume no2underscore  -fPIC -module amd64_ifort -shared-intel
-INCDIR_ifort    = -Iamd64_ifort
+MODDIR_ifort    = amd64_ifort
+COPTS_ifort     = -r8 -O0 -assume no2underscore  -fPIC -module $(MODDIR_ifort) -shared-intel
+INCDIR_ifort    = -I$(MODDIR_ifort)
 
 IDSDEF          = ../xml/IDSDef.xml
 <!--XSDDIR          = ../xml
@@ -63,7 +67,7 @@ install: all
 &#009;cp amd64_ifort/*.mod $(INSTALL)/include/amd64_ifort 2> /dev/null || true
 
 clean:
-&#009;rm -f *.o *.mod  *.so *~ amd64_g95/*.mod amd64_gfortran/*.mod amd64_pgi/*.mod amd64_ifort/*.mod *.a
+&#009;rm -rf *.o *.mod  *.so *~ amd64_g95 amd64_gfortran amd64_pgi amd64_ifort *.a
 
 clean-src: clean
 &#009;rm -f ids_schemas.f90 ids_routines.f90 <xsl:for-each select="IDS"> <xsl:value-of select="@name"/>.f90 </xsl:for-each>
@@ -80,6 +84,7 @@ ids_routines_g95.o: ids_routines.f90 <xsl:for-each select="IDS">ids_<xsl:value-o
 &#009;$(F90_g95) -c $(COPTS_g95) $(INCDIR_g95) ids_routines.f90 -o $@
 
 ids_schemas_g95.o: ids_schemas.f90
+&#009;mkdir -p $(MODDIR_g95)
 &#009;$(F90_g95) -c $(COPTS_g95) $(INCDIR_g95) $&lt; -o $@
 
 <xsl:for-each select="IDS">
@@ -99,6 +104,7 @@ ids_routines_gfortran.o: ids_routines.f90 <xsl:for-each select="IDS">ids_<xsl:va
 &#009;$(F90_gfortran) -c $(COPTS_gfortran) $(INCDIR_gfortran) ids_routines.f90 -o $@
 
 ids_schemas_gfortran.o: ids_schemas.f90
+&#009;mkdir -p $(MODDIR_gfortran)
 &#009;$(F90_gfortran) -c $(COPTS_gfortran) $(INCDIR_gfortran) $&lt; -o $@
 
 <xsl:for-each select="IDS">
@@ -118,6 +124,7 @@ ids_routines_pgi.o: ids_routines.f90 <xsl:for-each select="IDS">ids_<xsl:value-o
 &#009;$(F90_pgi) -c $(COPTS_pgi) ids_routines.f90 -o $@
 
 ids_schemas_pgi.o: ids_schemas.f90
+&#009;mkdir -p $(MODDIR_pgi)
 &#009;$(F90_pgi) -c $(COPTS_pgi) $&lt; -o $@
 
 <xsl:for-each select="IDS">
@@ -137,6 +144,7 @@ ids_routines_ifort.o: ids_routines.f90 <xsl:for-each select="IDS">ids_<xsl:value
 &#009;$(F90_ifort) -c $(COPTS_ifort) $(INCDIR_ifort) ids_routines.f90 -o $@
 
 ids_schemas_ifort.o: ids_schemas.f90
+&#009;mkdir -p $(MODDIR_ifort)
 &#009;$(F90_ifort) -c $(COPTS_ifort) $(INCDIR_ifort) $&lt; -o $@
 
 <xsl:for-each select="IDS">
@@ -150,15 +158,10 @@ ids_routines.f90: IDSDef2F90Routines.xsl
 &#009;xsltproc IDSDef2F90Routines.xsl $(IDSDEF) 
 
 ids_schemas.f90: xsd2F90TypeDef.xsl
-ifeq ($(wildcard $(UAL)/xml/dd_physics_data_dictionary.xsd),)
-&#009;(cd ../xml ; cp ../fortraninterface/xsd2F90TypeDef.xsl . ; \
-&#009;xsltproc xsd2F90TypeDef.xsl dd_physics_data_model.xsd > ids_schemas.f90 ; \
-&#009;mv ids_schemas.f90 ../fortraninterface ; rm xsd2F90TypeDef.xsl )
-else
-&#009;(cd ../xml ; cp ../fortraninterface/xsd2F90TypeDef.xsl . ; \
-&#009;xsltproc xsd2F90TypeDef.xsl dd_physics_data_dictionary.xsd > ids_schemas.f90 ; \
-&#009;mv ids_schemas.f90 ../fortraninterface ; rm xsd2F90TypeDef.xsl )
-endif
+&#009;(cp xsd2F90TypeDef.xsl ../xml/ ; cd ../xml/ ; \
+&#009;xsltproc xsd2F90TypeDef.xsl dd_physics_data_model.xsd > ids_schemas.f90 ) ; \
+&#009;rm ../xml/xsd2F90TypeDef.xsl ; \
+&#009;mv ../xml/ids_schemas.f90 .
 
 <!-- The old method does not work because the XSDs are now distributed in sub-folders. The XSL transform must be in the same folder as DDTOP to handle the Includes
 &#009;ln -s $(XSDDIR)/*.xsd
