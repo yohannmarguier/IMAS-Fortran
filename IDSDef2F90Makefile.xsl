@@ -150,9 +150,15 @@ ids_routines.f90: IDSDef2F90Routines.xsl
 &#009;xsltproc IDSDef2F90Routines.xsl $(IDSDEF) 
 
 ids_schemas.f90: xsd2F90TypeDef.xsl
+ifeq ($(wildcard $(UAL)/xml/dd_physics_data_dictionary.xsd),)
 &#009;(cd ../xml ; cp ../fortraninterface/xsd2F90TypeDef.xsl . ; \
 &#009;xsltproc xsd2F90TypeDef.xsl dd_physics_data_model.xsd > ids_schemas.f90 ; \
 &#009;mv ids_schemas.f90 ../fortraninterface ; rm xsd2F90TypeDef.xsl )
+else
+&#009;(cd ../xml ; cp ../fortraninterface/xsd2F90TypeDef.xsl . ; \
+&#009;xsltproc xsd2F90TypeDef.xsl dd_physics_data_dictionary.xsd > ids_schemas.f90 ; \
+&#009;mv ids_schemas.f90 ../fortraninterface ; rm xsd2F90TypeDef.xsl )
+endif
 
 <!-- The old method does not work because the XSDs are now distributed in sub-folders. The XSL transform must be in the same folder as DDTOP to handle the Includes
 &#009;ln -s $(XSDDIR)/*.xsd
