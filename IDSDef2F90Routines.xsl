@@ -130,9 +130,11 @@ FUNCTION isErrorCritical(status, fieldPath) RESULT (exitRequest)
 		return
 	endif
 		
-	exitRequest = .FALSE.
+	if(0 .NE. is_critical_error(status) ) then
+		exitRequest = .TRUE.
+	endif	
 	
-	if ( (ual_debug == 'yes') .OR. (ual_debug == 'vvv'))then
+	if ( (ual_debug == 'yes') .OR. (ual_debug == 'vvv') .OR. exitRequest)then
 		call get_last_errmsg(longstring)
 		write(*,*) "ERROR! FIELD: ", trim(fieldPath), "    STATUS: ", status, "    MSG: ", trim(longstring)
 	endif
