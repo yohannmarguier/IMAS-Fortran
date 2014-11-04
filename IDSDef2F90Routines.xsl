@@ -150,7 +150,7 @@ use ids_schemas
 implicit none
 
 character*(*) :: path
-integer :: idx, retStatus, status, lenstring, istring, itime, lentime
+integer :: idx, retStatus = 0, status = 0, lenstring, istring, itime, lentime
 integer :: ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7,dum1,dum2,dum3,dum4,dum5,dum6,dum7
 
 character(len=132)::stringans      ! Temporary way of getting short strings
@@ -188,7 +188,7 @@ use ids_schemas
 implicit none
 
 character*(*) :: path
-integer :: status, interpol, idx, lenstring, istring
+integer :: status = 0, interpol, idx, lenstring, istring
 real(DP) :: twant,tret
 
 integer :: int0D
@@ -232,7 +232,7 @@ subroutine ids_put_<xsl:value-of select="@name"/>(idx, path,  IDS)
 use ids_schemas
 implicit none
 !integer, parameter :: DP=kind(1.0D0)
-integer :: status, retStatus
+integer :: status = 0, retStatus = 0
 
 character*(*) :: path
 integer :: idx, lentime
@@ -296,7 +296,7 @@ implicit none
 
 character*(*) :: path
 integer :: idx, lentime
-integer :: status, retStatus
+integer :: status = 0, retStatus = 0 
 
 type(ids_<xsl:value-of select="@name"/>) :: IDS
 
@@ -353,7 +353,7 @@ implicit none
 
 character*(*) :: path
 integer :: idx
-integer :: status, retStatus
+integer :: status = 0, retStatus = 0
 integer :: i,dim1,dim2,dim3,dim4,dim5,dim6,dim7, lenstring, istring
 integer, pointer :: dimtab(:) => null()
 character(len=100000)::longstring    
