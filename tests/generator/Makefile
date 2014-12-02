@@ -40,30 +40,33 @@ testSuite.f90: IDSDef2TestSuite.xsl
 
 comp: $(TARGETS)
 
+.PHONY: ifort_clean ifort_prep test comp clean
 	
 #test: export ids_path = $(UAL_BUILD_DIR)/models/mdsplus
 test: testSuite.f90 comp 
 	@for i in $(TARGETS); do \
 		echo ===============================================; \
 		echo Running:  $$i; \
-		#echo $(ids_path);\
+		echo $(ids_path);\
 		(./$$i);\
 		echo ----------------------------------------------- ; \
 	done
 	
 
 #------------------------- gfortran ----------------------------
-
 gfortran_clean: 
-	rm -rf gfortran_testSuite amd64_gfortran/*.mod
+	rm -rf gfortran_testSuite amd64_gfortran
 
 gfortran_helper.o: helper.f90
+	mkdir -p amd64_gfortran
 	$(F90_gfortran) $(COPTS_gfortran) $(INCDIR_gfortran) -c $< -o $@ 
 
 gfortran_comparator.o: comparator.f90
+	mkdir -p amd64_gfortran
 	$(F90_gfortran) $(COPTS_gfortran) $(INCDIR_gfortran) -c $< -o $@ 
 
 gfortran_testSuite: testSuite.f90 gfortran_helper.o gfortran_comparator.o
+	mkdir -p amd64_gfortran
 	$(F90_gfortran) $(COPTS_gfortran)  $(INCDIR_gfortran) -o $@ $^ $(LIBS_gfortran)
 
 
@@ -71,13 +74,18 @@ gfortran_testSuite: testSuite.f90 gfortran_helper.o gfortran_comparator.o
 
 #------------------------- ifort ----------------------------
 ifort_clean: 
-	rm -rf ifort_testSuite amd64_ifort/*.mod
-	
+	rm -rf ifort_testSuite amd64_ifort
+
 ifort_helper.o: helper.f90
+	mkdir -p amd64_ifort
 	$(F90_ifort) $(COPTS_ifort) $(INCDIR_ifort) -c $< -o $@ 
 
 ifort_comparator.o: comparator.f90
+	mkdir -p amd64_ifort
 	$(F90_ifort) $(COPTS_ifort) $(INCDIR_ifort) -c $< -o $@ 
 
 ifort_testSuite: testSuite.f90 ifort_helper.o ifort_comparator.o
+	mkdir -p amd64_ifort
 	$(F90_ifort) $(COPTS_ifort)  $(INCDIR_ifort) -o $@ $^ $(LIBS_ifort)
+
+

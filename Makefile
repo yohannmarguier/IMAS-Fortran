@@ -18,12 +18,12 @@ clean-src:
 	
 	
 test: 
-	(cd ./tests/generator/; $(MAKE)  test)
+	$(MAKE) -C tests/generator test
 
 test-clean: 
-	(cd ./tests/generator/; $(MAKE)  clean)
+	$(MAKE) -C tests/generator clean
 
 test-clean-src:
-	(cd ./tests/generator/; $(MAKE)  clean-src)
+	$(MAKE) -C tests/generator clean-src
 
 
