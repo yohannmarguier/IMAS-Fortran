@@ -44,14 +44,8 @@ comp: $(TARGETS)
 	
 #test: export ids_path = $(UAL_BUILD_DIR)/models/mdsplus
 test: testSuite.f90 comp 
-	@for i in $(TARGETS); do \
-		echo ===============================================; \
-		echo Running:  $$i; \
-		echo $(ids_path);\
-		(./$$i);\
-		echo ----------------------------------------------- ; \
-	done
-	
+	ids_path=$(ids_path) ./gfortran_testSuite
+	ids_path=$(ids_path) ./ifort_testSuite
 
 #------------------------- gfortran ----------------------------
 gfortran_clean: 
@@ -69,9 +63,6 @@ gfortran_testSuite: testSuite.f90 gfortran_helper.o gfortran_comparator.o
 	mkdir -p amd64_gfortran
 	$(F90_gfortran) $(COPTS_gfortran)  $(INCDIR_gfortran) -o $@ $^ $(LIBS_gfortran)
 
-
-	
-
 #------------------------- ifort ----------------------------
 ifort_clean: 
 	rm -rf ifort_testSuite amd64_ifort
@@ -87,5 +78,4 @@ ifort_comparator.o: comparator.f90
 ifort_testSuite: testSuite.f90 ifort_helper.o ifort_comparator.o
 	mkdir -p amd64_ifort
 	$(F90_ifort) $(COPTS_ifort)  $(INCDIR_ifort) -o $@ $^ $(LIBS_ifort)
-
 
