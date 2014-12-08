@@ -44,8 +44,8 @@ comp: $(TARGETS)
 	
 #test: export ids_path = $(UAL_BUILD_DIR)/models/mdsplus
 test: testSuite.f90 comp 
-	ids_path=$(ids_path) ./gfortran_testSuite
-	ids_path=$(ids_path) ./ifort_testSuite
+	ids_path=$(ids_path) ./gfortran_testSuite | tee gfortran_testSuite.results
+	ids_path=$(ids_path) ./ifort_testSuite | tee ifort_testSuite.results
 
 #------------------------- gfortran ----------------------------
 gfortran_clean: 
