@@ -159,7 +159,7 @@ ids_routines.f90: IDSDef2F90Routines.xsl
 
 ids_schemas.f90: xsd2F90TypeDef.xsl
 &#009;(cp xsd2F90TypeDef.xsl ../xml/ ; cd ../xml/ ; \
-&#009;xsltproc xsd2F90TypeDef.xsl dd_physics_data_model.xsd > ids_schemas.f90 ) ; \
+&#009;xsltproc xsd2F90TypeDef.xsl dd_physics_data_dictionary.xsd > ids_schemas.f90 ) ; \
 &#009;rm ../xml/xsd2F90TypeDef.xsl ; \
 &#009;mv ../xml/ids_schemas.f90 .
 
