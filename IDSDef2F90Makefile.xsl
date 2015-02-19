@@ -155,7 +155,7 @@ ids_<xsl:value-of select="@name"/>_ifort.o: <xsl:value-of select="@name"/>.f90 i
 
 #----------------------- xslt ---------------------
 ids_routines.f90: IDSDef2F90Routines.xsl
-&#009;xsltproc IDSDef2F90Routines.xsl $(IDSDEF) 
+&#009;java -cp /work/imas/projects/saxonica/saxon9he.jar net.sf.saxon.Transform -t -s:$(IDSDEF) -xsl:IDSDef2F90Routines.xsl 
 
 ids_schemas.f90: xsd2F90TypeDef.xsl
 &#009;(cp xsd2F90TypeDef.xsl ../xml/ ; cd ../xml/ ; \

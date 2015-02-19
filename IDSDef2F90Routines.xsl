@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?modxslt-stylesheet type="text/xsl" media="fuffa, screen and $GET[stylesheet]" href="./%24GET%5Bstylesheet%5D" alternate="no" title="Translation using provided stylesheet" charset="ISO-8859-1" ?>
 <?modxslt-stylesheet type="text/xsl" media="screen" alternate="no" title="Show raw source of the XML file" charset="ISO-8859-1" ?>
-<xsl:stylesheet xmlns:yaslt="http://www.mod-xslt2.com/ns/1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-xmlns:exsl="http://exslt.org/common"
-xmlns:xs="http://www.w3.org/2001/XMLSchema" version="1.0" extension-element-prefixes="yaslt exsl" xmlns:fn="http://www.w3.org/2005/02/xpath-functions">
+<xsl:stylesheet xmlns:yaslt="http://www.mod-xslt2.com/ns/2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:xs="http://www.w3.org/2001/XMLSchema" version="2.0" extension-element-prefixes="yaslt" xmlns:fn="http://www.w3.org/2005/02/xpath-functions" xmlns:local="http://www.example.com/functions/local" exclude-result-prefixes="local xs">
 	<xsl:output method="text" version="1.0" encoding="UTF-8" indent="yes"/>
 	<!-- This XSL translates the list of ITM IDSDefs to Fortran 90 GET/PUT Routines for IDSs -->
 	<xsl:template match="/IDSs">
- <exsl:document href="ids_routines.f90" method="text">
+ <xsl:result-document href="ids_routines.f90">
 module ids_routines
 
 use ids_schemas
@@ -37,14 +35,14 @@ call get_vect1d_double(idx,path,"time",time,lentime,dum1,status)
 
 end subroutine
 end module
-</exsl:document>
+</xsl:result-document>
 <xsl:apply-templates select="IDS" mode="main"/>
 
 </xsl:template>
 
  <xsl:template match="IDS" mode="main">
 
-  <exsl:document href="{@name}.f90" method="text">
+  <xsl:result-document href="{@name}.f90">
 module <xsl:value-of select="@name"/>_ids_module
 ! Declaration of the generic IDS GET routine 
 
@@ -501,7 +499,7 @@ if (ual_debug =='yes') write(*,*) 'Discarding IDS ',IDSpath,' done'
 end subroutine ids_discard_<xsl:value-of select="@name"/>-->
 
 end module <xsl:value-of select="@name"/>_ids_module
-</exsl:document> 
+</xsl:result-document> 
  
 </xsl:template>
 
