@@ -158,7 +158,7 @@ character(len=132), dimension(:), pointer ::stringpointer   => null()
 integer :: obj_all_times,obj1,obj2,obj3,obj4,obj5,obj6,obj7
 integer :: dimObj0,dimObj1,dimObj2,dimObj3,dimObj4,dimObj5,dimObj6,dimObj7
 integer :: i1,i2,i3,i4,i5,i6,i7
-<xsl:for-each select=".//field[@data_type='struct_array']">
+<xsl:for-each select=".//field[@data_type='struct_array' and @maxoccur!='unbounded']">
 integer :: i<xsl:value-of select="@name"/>
 </xsl:for-each>
 
@@ -201,7 +201,7 @@ character(len=300) :: timepath
 integer :: obj_single_time,obj1,obj2,obj3,obj4,obj5,obj6,obj7
 integer :: dimObj1,dimObj2,dimObj3,dimObj4,dimObj5,dimObj6,dimObj7
 integer :: i1,i2,i3,i4,i5,i6,i7
-<xsl:for-each select=".//field[@data_type='struct_array']">
+<xsl:for-each select=".//field[@data_type='struct_array' and @maxoccur!='unbounded']">
 integer :: i<xsl:value-of select="@name"/>
 </xsl:for-each>
 
@@ -252,7 +252,7 @@ character(len=100000)::longstring
 character(len=300) :: timepath    
 integer :: obj_all_times,obj1,obj2,obj3,obj4,obj5,obj6,obj7
 integer :: i1,i2,i3,i4,i5,i6,i7
-<xsl:for-each select=".//field[@data_type='struct_array']">
+<xsl:for-each select=".//field[@data_type='struct_array' and @maxoccur!='unbounded']">
 integer :: i<xsl:value-of select="@name"/>
 </xsl:for-each>
 
@@ -312,7 +312,7 @@ character(len=100000)::longstring
 character(len=300)::timepath   
 integer :: obj_single_time,obj1,obj2,obj3,obj4,obj5,obj6,obj7
 integer :: i1,i2,i3,i4,i5,i6,i7
-<xsl:for-each select=".//field[@data_type='struct_array']">
+<xsl:for-each select=".//field[@data_type='struct_array' and @maxoccur!='unbounded']">
 integer :: i<xsl:value-of select="@name"/>
 </xsl:for-each>
 
@@ -358,7 +358,7 @@ character(len=100000)::longstring
 character(len=300) :: timepath    
 integer :: obj1,obj2,obj3,obj4,obj5,obj6,obj7
 integer :: i1,i2,i3,i4,i5,i6,i7
-<xsl:for-each select=".//field[@data_type='struct_array']">
+<xsl:for-each select=".//field[@data_type='struct_array' and @maxoccur!='unbounded']">
 integer :: i<xsl:value-of select="@name"/>
 </xsl:for-each>
 
@@ -395,7 +395,7 @@ character*(*) :: IDSpath
 integer :: idx
 
 type(ids_<xsl:value-of select="@name"/>) :: IDS       
-<xsl:for-each select=".//field[@data_type='struct_array']">
+<xsl:for-each select=".//field[@data_type='struct_array' and @maxoccur!='unbounded']">
 integer :: i<xsl:value-of select="@name"/>
 </xsl:for-each>		
 
@@ -488,7 +488,7 @@ character*(*) :: IDSpath
 integer :: idx
 
 type(ids_<xsl:value-of select="@name"/>) :: IDS       
-<xsl:for-each select=".//field[@data_type='struct_array']">
+<xsl:for-each select=".//field[@data_type='struct_array' and @maxoccur!='unbounded']">
 integer :: i<xsl:value-of select="@name"/>
 </xsl:for-each>		
 
