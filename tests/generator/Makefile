@@ -10,7 +10,7 @@ INCDIR_gfortran   = -I$(UAL_BUILD_DIR)/fortraninterface/amd64_gfortran  -Iamd64_
 LIBS_gfortran     = -Wl,-rpath,$(UAL_BUILD_DIR)/lib -L$(UAL_BUILD_DIR)/fortraninterface -lUALFORTRANInterface_gfortran 
 
 F90_ifort       = ifort
-COPTS_ifort     = -r8 -O0 -assume no2underscore  -fPIC -module amd64_ifort -shared-intel
+COPTS_ifort     = -g -r8 -O0 -assume no2underscore  -fPIC -module amd64_ifort -shared-intel
 INCDIR_ifort    = -I$(UAL_BUILD_DIR)/fortraninterface/amd64_ifort
 LIBS_ifort      = -Wl,-rpath,$(UAL_BUILD_DIR)/lib -L$(UAL_BUILD_DIR)/fortraninterface -lUALFORTRANInterface_ifort 
 
