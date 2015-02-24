@@ -17,6 +17,7 @@
       
 
     <xsl:text>&#9;INTEGER :: idx;&#10;</xsl:text>
+    <xsl:text>&#9;INTEGER, PARAMETER :: IDS_PATH_LEN = 30;&#10;</xsl:text>
     
         <xsl:text>&#10;</xsl:text>
 	
@@ -133,7 +134,7 @@
 	<xsl:text>SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_put&#10;</xsl:text>
 	<xsl:text>&#9;CHARACTER (LEN = *), parameter :: idsName = "</xsl:text><xsl:value-of select="@name"/><xsl:text>"&#10;</xsl:text>
 	<xsl:text>&#9;TYPE (ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>) :: ids &#10;</xsl:text>
-	<xsl:text>&#9;CHARACTER (LEN=20) :: idspath &#10;</xsl:text>
+	<xsl:text>&#9;CHARACTER (LEN=IDS_PATH_LEN) :: idspath &#10;</xsl:text>
 	<xsl:text>&#9;CHARACTER (LEN=2) :: occurence = "" &#10;</xsl:text>
 	<xsl:text>&#9;INTEGER :: i &#10;</xsl:text>
 	<xsl:text>&#9;INTEGER :: tmpInt = -1 &#10;</xsl:text>
@@ -170,7 +171,7 @@
 	<xsl:text>SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_putSlice&#10;</xsl:text>
 	<xsl:text>&#9;CHARACTER (LEN = *), parameter :: idsName = "</xsl:text><xsl:value-of select="@name"/><xsl:text>"&#10;</xsl:text>
 	<xsl:text>&#9;TYPE (ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>) :: ids &#10;</xsl:text>
-	<xsl:text>&#9;CHARACTER (LEN=20) :: idspath &#10;</xsl:text>
+	<xsl:text>&#9;CHARACTER (LEN=IDS_PATH_LEN) :: idspath &#10;</xsl:text>
 	<xsl:text>&#9;CHARACTER (LEN=2) :: occurence = "" &#10;</xsl:text>
 	<xsl:text>&#9;INTEGER :: i &#10;</xsl:text>
 	<xsl:text>&#9;INTEGER :: tmpInt = -1 &#10;</xsl:text>
@@ -209,7 +210,7 @@
 	<xsl:text>&#9;CHARACTER (LEN = *), parameter :: idsName = "</xsl:text><xsl:value-of select="@name"/><xsl:text>"&#10;</xsl:text>
 	<xsl:text>&#9;TYPE (ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>) :: ids &#10;</xsl:text>
 	<xsl:text>&#9;LOGICAL :: isEqual &#10;</xsl:text>
-	<xsl:text>&#9;CHARACTER (LEN=20) :: idspath &#10;</xsl:text>
+	<xsl:text>&#9;CHARACTER (LEN=IDS_PATH_LEN) :: idspath &#10;</xsl:text>
 	<xsl:text>&#9;CHARACTER (LEN=2) :: occurence = "" &#10;</xsl:text>
 	<xsl:text>&#9;INTEGER :: i &#10;</xsl:text>
         <xsl:text>&#9;WRITE(*,*) "Testing get() on </xsl:text><xsl:value-of select="@name"/><xsl:text>"&#10;</xsl:text>
@@ -249,7 +250,7 @@
 	<xsl:text>&#9;LOGICAL :: isEqual &#10;</xsl:text>
 	<xsl:text>&#9;CHARACTER (LEN = *), parameter :: idsName = "</xsl:text><xsl:value-of select="@name"/><xsl:text>"&#10;</xsl:text>
 	<xsl:text>&#9;TYPE (ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>) :: ids &#10;</xsl:text>
-	<xsl:text>&#9;CHARACTER (LEN=20) :: idspath &#10;</xsl:text>
+	<xsl:text>&#9;CHARACTER (LEN=IDS_PATH_LEN) :: idspath &#10;</xsl:text>
 	<xsl:text>&#9;CHARACTER (LEN=2) :: occurence = "" &#10;</xsl:text>
 	<xsl:text>&#9;INTEGER :: i &#10;</xsl:text>
         <xsl:text>&#9;WRITE(*,*) "Testing getSlice() on </xsl:text><xsl:value-of select="@name"/><xsl:text>"&#10;</xsl:text>
