@@ -1,10 +1,12 @@
 IDSDEF	= ../xml/IDSDef.xml
 
-all: IDSDef2F90Makefile.xsl
-	xsltproc IDSDef2F90Makefile.xsl $(IDSDEF)
+all: makefile-gen
 	$(MAKE) -f makefile-gen ids_schemas.f90
 	$(MAKE) -f makefile-gen ids_routines.f90
 	$(MAKE) -f makefile-gen
+
+makefile-gen: IDSDef2F90Makefile.xsl
+	xsltproc IDSDef2F90Makefile.xsl $(IDSDEF)
 
 install:
 	$(MAKE) -f makefile-gen install

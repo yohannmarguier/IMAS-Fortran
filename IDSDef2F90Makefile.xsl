@@ -16,12 +16,12 @@
 # -*- makefile -*- #
 include ../Makefile.common
 
-F90_g95         = x86_64-unknown-linux-gnu-g95 
+F90_g95         = x86_64-unknown-linux-gnu-g95
 MODDIR_g95      = amd64_g95
 COPTS_g95       = -r8 -ftrace=full -fPIC -fno-second-underscore -ffree-line-length-huge -g -fmod=$(MODDIR_g95)/
 INCDIR_g95      = -Iamd64_g95
 
-F90_gfortran    = gfortran 
+F90_gfortran    = gfortran
 MODDIR_gfortran = amd64_gfortran
 COPTS_gfortran  = -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none -g -J$(MODDIR_gfortran)/
 INCDIR_gfortran = -I$(MODDIR_gfortran)
@@ -42,29 +42,42 @@ DDTOP           = DD_TOP.xsd -->
 LIBS            =  -L../lowlevel -lUALLowLevel -lm
 
 ifeq "$(strip $(G95))" "yes"
-    TARGETS += libUALFORTRANInterface_g95.so libUALFORTRANInterface_g95.a 
+TARGETS += libUALFORTRANInterface_g95.so libUALFORTRANInterface_g95.a
+INSTALL_TARGETS += amd64_g95
 endif
 
 ifeq "$(strip $(GFORTRAN))" "yes"
-    TARGETS += libUALFORTRANInterface_gfortran.so libUALFORTRANInterface_gfortran.a
+TARGETS += libUALFORTRANInterface_gfortran.so libUALFORTRANInterface_gfortran.a
+INSTALL_TARGETS += amd64_gfortran
 endif
 
 ifeq "$(strip $(PGI))" "yes"
-    TARGETS += libUALFORTRANInterface_pgi.so libUALFORTRANInterface_pgi.a
+TARGETS += libUALFORTRANInterface_pgi.so libUALFORTRANInterface_pgi.a
+INSTALL_TARGETS += amd64_pgi
 endif
 
 ifeq "$(strip $(IFORT))" "yes"
-    TARGETS += libUALFORTRANInterface_ifort.so libUALFORTRANInterface_ifort.a 
+TARGETS += libUALFORTRANInterface_ifort.so libUALFORTRANInterface_ifort.a
+INSTALL_TARGETS += amd64_ifort
 endif
 
 all: ids_routines.f90 $(TARGETS)
 
-install: all
-&#009;cp *.so $(INSTALL)/lib 2> /dev/null || true
-&#009;cp amd64_pgi/*.mod $(INSTALL)/include/amd64_pgi 2> /dev/null || true
-&#009;cp amd64_g95/*.mod $(INSTALL)/include/amd64_g95 2> /dev/null || true
-&#009;cp amd64_gfortran/*.mod $(INSTALL)/include/amd64_gfortran 2> /dev/null || true
-&#009;cp amd64_ifort/*.mod $(INSTALL)/include/amd64_ifort 2> /dev/null || true
+install: all $(addprefix install_,$(INSTALL_TARGETS))
+&#009;cp *.so $(INSTALL)/lib
+
+install_amd64_pgi:
+&#009;mkdir -p $(INSTALL)/include/amd64_pgi
+&#009;cp amd64_pgi/*.mod $(INSTALL)/include/amd64_pgi
+install_amd64_g95:
+&#009;mkdir -p $(INSTALL)/include/amd64_g95
+&#009;cp amd64_g95/*.mod $(INSTALL)/include/amd64_g95
+install_amd64_ifort:
+&#009;mkdir -p $(INSTALL)/include/amd64_ifort
+&#009;cp amd64_ifort/*.mod $(INSTALL)/include/amd64_ifort
+install_amd64_gfortran:
+&#009;mkdir -p $(INSTALL)/include/amd64_gfortran
+&#009;cp amd64_gfortran/*.mod $(INSTALL)/include/amd64_gfortran
 
 clean:
 &#009;rm -rf *.o *.mod  *.so *~ amd64_g95 amd64_gfortran amd64_pgi amd64_ifort *.a
@@ -155,7 +168,7 @@ ids_<xsl:value-of select="@name"/>_ifort.o: <xsl:value-of select="@name"/>.f90 i
 
 #----------------------- xslt ---------------------
 ids_routines.f90: IDSDef2F90Routines.xsl
-&#009;java -cp /work/imas/projects/saxonica/saxon9he.jar net.sf.saxon.Transform -t -s:$(IDSDEF) -xsl:IDSDef2F90Routines.xsl 
+&#009;java net.sf.saxon.Transform -t -s:$(IDSDEF) -xsl:IDSDef2F90Routines.xsl
 
 ids_schemas.f90: xsd2F90TypeDef.xsl
 &#009;(cp xsd2F90TypeDef.xsl ../xml/ ; cd ../xml/ ; \
