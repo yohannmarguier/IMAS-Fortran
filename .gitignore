@@ -1,10 +1,7 @@
-*.[ao]
 *.mod
-*.so
-*~
+*.f90
 amd64_g95
 amd64_gfortran
 amd64_ifort
 amd64_pgi
-*.f90
 makefile-gen
