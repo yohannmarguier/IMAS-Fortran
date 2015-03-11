@@ -8,13 +8,13 @@ all: makefile-gen
 makefile-gen: IDSDef2F90Makefile.xsl
 	xsltproc IDSDef2F90Makefile.xsl $(IDSDEF)
 
-install:
+install: makefile-gen
 	$(MAKE) -f makefile-gen install
 
-clean: 
+clean: makefile-gen
 	$(MAKE) -f makefile-gen clean
 
-clean-src:
+clean-src: makefile-gen
 	$(MAKE) -f makefile-gen clean-src
 	rm -f makefile-gen
 	

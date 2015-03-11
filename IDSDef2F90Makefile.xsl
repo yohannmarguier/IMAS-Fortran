@@ -64,7 +64,13 @@ endif
 all: ids_routines.f90 $(TARGETS)
 
 install: all $(addprefix install_,$(INSTALL_TARGETS))
-&#009;cp *.so $(INSTALL)/lib
+&#009;mkdir -p $(INSTALL)/lib
+&#009;for OBJECT in *.so ;do \
+&#009;&#009;cp -v $$OBJECT $(INSTALL)/lib/$$OBJECT.$(IMAS_MAJOR).$(IMAS_MINOR).$(IMAS_MICRO); \
+&#009;&#009;ln -svf $$OBJECT.$(IMAS_MAJOR).$(IMAS_MINOR).$(IMAS_MICRO)  $(INSTALL)/lib/$$OBJECT.$(IMAS_MAJOR).$(IMAS_MINOR); \
+&#009;&#009;ln -svf $$OBJECT.$(IMAS_MAJOR).$(IMAS_MINOR).$(IMAS_MICRO)  $(INSTALL)/lib/$$OBJECT.$(IMAS_MAJOR); \
+&#009;&#009;ln -svf $$OBJECT.$(IMAS_MAJOR).$(IMAS_MINOR).$(IMAS_MICRO)  $(INSTALL)/lib/$$OBJECT; \
+&#009;done
 
 install_amd64_pgi:
 &#009;mkdir -p $(INSTALL)/include/amd64_pgi
@@ -88,7 +94,7 @@ clean-src: clean
 
 #--------------------- g95 ------------------------
 libUALFORTRANInterface_g95.so: ids_schemas_g95.o <xsl:for-each select="IDS"> ids_<xsl:value-of select="@name"/>_g95.o </xsl:for-each> ids_routines_g95.o
-&#009;$(F90_g95) $(COPTS_g95) -o $@ -shared $^ $(LIBS)
+&#009;$(F90_g95) $(COPTS_g95) -o $@ -shared -Wl,-soname,$@.$(IMAS_MAJOR).$(IMAS_MINOR) $^ $(LIBS)
 
 libUALFORTRANInterface_g95.a: ids_schemas_g95.o  <xsl:for-each select="IDS"> ids_<xsl:value-of select="@name"/>_g95.o </xsl:for-each> ids_routines_g95.o
 &#009;ar rvs $@ $^
@@ -108,7 +114,7 @@ ids_<xsl:value-of select="@name"/>_g95.o: <xsl:value-of select="@name"/>.f90 ids
 
 #--------------------- gfortran --------------
 libUALFORTRANInterface_gfortran.so: ids_schemas_gfortran.o <xsl:for-each select="IDS"> ids_<xsl:value-of select="@name"/>_gfortran.o </xsl:for-each> ids_routines_gfortran.o
-&#009;$(F90_gfortran) $(COPTS_gfortran) -o $@ -shared $^ $(LIBS)
+&#009;$(F90_gfortran) $(COPTS_gfortran) -o $@ -shared -Wl,-soname,$@.$(IMAS_MAJOR).$(IMAS_MINOR) $^ $(LIBS)
 
 libUALFORTRANInterface_gfortran.a: ids_schemas_gfortran.o <xsl:for-each select="IDS"> ids_<xsl:value-of select="@name"/>_gfortran.o </xsl:for-each> ids_routines_gfortran.o
 &#009;ar rvs $@ $^
@@ -128,7 +134,7 @@ ids_<xsl:value-of select="@name"/>_gfortran.o: <xsl:value-of select="@name"/>.f9
 
 #--------------------- PGI ------------------------
 libUALFORTRANInterface_pgi.so: ids_schemas_pgi.o <xsl:for-each select="IDS"> ids_<xsl:value-of select="@name"/>_pgi.o </xsl:for-each> ids_routines_pgi.o $(DEP_PGI)
-&#009;$(F90_pgi) $(COPTS_pgi) -o $@ -shared $^ $(LIBS)
+&#009;$(F90_pgi) $(COPTS_pgi) -o $@ -shared -Wl,-soname,$@.$(IMAS_MAJOR).$(IMAS_MINOR) $^ $(LIBS)
 
 libUALFORTRANInterface_pgi.a: ids_schemas_pgi.o <xsl:for-each select="IDS"> ids_<xsl:value-of select="@name"/>_pgi.o </xsl:for-each> ids_routines_pgi.o $(DEP_PGI)
 &#009;ar rvs $@ $^
@@ -148,7 +154,7 @@ ids_<xsl:value-of select="@name"/>_pgi.o: <xsl:value-of select="@name"/>.f90 ids
 
 #--------------------- ifort --------------
 libUALFORTRANInterface_ifort.so: ids_schemas_ifort.o <xsl:for-each select="IDS"> ids_<xsl:value-of select="@name"/>_ifort.o </xsl:for-each> ids_routines_ifort.o $(DEP_IFORT)
-&#009;$(F90_ifort) $(COPTS_ifort) -o $@ -shared $^ $(LIBS)
+&#009;$(F90_ifort) $(COPTS_ifort) -o $@ -shared -Wl,-soname,$@.$(IMAS_MAJOR).$(IMAS_MINOR) $^ $(LIBS)
 
 libUALFORTRANInterface_ifort.a: ids_schemas_ifort.o <xsl:for-each select="IDS"> ids_<xsl:value-of select="@name"/>_ifort.o </xsl:for-each> ids_routines_ifort.o $(DEP_IFORT)
 &#009;ar rvs $@ $^
