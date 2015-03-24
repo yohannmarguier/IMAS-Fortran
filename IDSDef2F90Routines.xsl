@@ -9,8 +9,12 @@
 module ids_routines
 
 use ids_schemas
- <xsl:for-each select="IDS">
-use <xsl:value-of select="@name"/>_ids_module</xsl:for-each>
+use utilities_copy_struct
+
+<xsl:for-each select="IDS">
+use <xsl:value-of select="@name"/>_ids_module
+use <xsl:value-of select="@name"/>_copy_struct
+</xsl:for-each>
 
 
 contains
