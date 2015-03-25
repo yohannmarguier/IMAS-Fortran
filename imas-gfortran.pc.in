@@ -1,0 +1,11 @@
+prefix=__PREFIX__
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: imas-gfortran
+Description: IMAS Fortran Libraries (gfortran)
+URL: https://portal.iter.org/departments/POP/Pages/IM-Users-and-Developers.aspx
+Version: __VERSION__
+Libs: -L${libdir}/fortraninterface -lUALFORTRANInterface_gfortran
+Cflags: -I${includedir}/fortraninterface/amd64_gfortran
