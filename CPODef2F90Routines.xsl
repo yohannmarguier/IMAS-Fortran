@@ -59,59 +59,59 @@ end module
 
   <exsl:document href="{@type}.f90" method="text">
 module <xsl:value-of select="@type"/>_euitm_module
-! Declaration of the generic CPO GET routine 
+! Declaration of the generic CPO GET routine
 
-interface euITM_get        
+interface euITM_get
    module procedure euITM_get_<xsl:value-of select="@type"/>
-end interface euITM_get   
+end interface euITM_get
 
-! Declaration of the generic CPO GET_SLICE routine 
-interface euITM_get_slice        
+! Declaration of the generic CPO GET_SLICE routine
+interface euITM_get_slice
    module procedure  euITM_get_slice_<xsl:value-of select="@type"/>
 end interface euITM_get_slice
 <xsl:if test="@timed='yes'">
-! Declaration of the generic CPO PUT_SLICE routine 
-interface euITM_put_slice     
- <!-- Procedure put_slice exists only for time-dependent CPOs -->   
+! Declaration of the generic CPO PUT_SLICE routine
+interface euITM_put_slice
+ <!-- Procedure put_slice exists only for time-dependent CPOs -->
    module procedure euITM_put_slice_<xsl:value-of select="@type"/>
-end interface euITM_put_slice 
+end interface euITM_put_slice
 </xsl:if >
-! Declaration of the generic CPO PUT routine 
+! Declaration of the generic CPO PUT routine
 interface euITM_put        <!-- Declare here all the specialised routines -->
-   module procedure euITM_put_<xsl:value-of select="@type"/>		
+   module procedure euITM_put_<xsl:value-of select="@type"/>
 end interface euITM_put
 
-! Declaration of the generic CPO PUT_NON_TIMED routine 
+! Declaration of the generic CPO PUT_NON_TIMED routine
 interface euITM_put_non_timed        <!-- Declare here all the specialised routines -->
-   module procedure <xsl:choose> <xsl:when test="@timed='yes'"> euITM_put_non_timed_<xsl:value-of select="@type"/> </xsl:when><xsl:otherwise>euITM_put_<xsl:value-of select="@type"/>					
+   module procedure <xsl:choose> <xsl:when test="@timed='yes'"> euITM_put_non_timed_<xsl:value-of select="@type"/> </xsl:when><xsl:otherwise>euITM_put_<xsl:value-of select="@type"/>
 				</xsl:otherwise>
-			</xsl:choose>		 
+			</xsl:choose>
 end interface euITM_put_non_timed
 
-! Declaration of the generic CPO DELETE routine 
+! Declaration of the generic CPO DELETE routine
 interface euITM_delete        <!-- Declare here all the specialised routines -->
-   module procedure euITM_delete_<xsl:value-of select="@type"/>		
+   module procedure euITM_delete_<xsl:value-of select="@type"/>
 end interface euITM_delete
 
-! Declaration of the generic CPO DEALLOCATE routine 
+! Declaration of the generic CPO DEALLOCATE routine
 interface euITM_deallocate        <!-- Declare here all the specialised routines -->
-   module procedure euITM_deallocate_<xsl:value-of select="@type"/>		
+   module procedure euITM_deallocate_<xsl:value-of select="@type"/>
 end interface euITM_deallocate
 
-! Declaration of the generic CPO COPY routine 
-interface euITM_copy        
+! Declaration of the generic CPO COPY routine
+interface euITM_copy
    module procedure <xsl:choose><xsl:when test="@timed='yes'">euITM_copy_<xsl:value-of select="@type"/>, &amp;
    euITM_copy_slice2slice_<xsl:value-of select="@type"/>, &amp;
    euITM_copy_pointer2slice_<xsl:value-of select="@type"/>, &amp;
    euITM_copy_slice2pointer_<xsl:value-of select="@type"/></xsl:when>
-<xsl:otherwise>euITM_copy_<xsl:value-of select="@type"/>				
+<xsl:otherwise>euITM_copy_<xsl:value-of select="@type"/>
 				</xsl:otherwise>
-			</xsl:choose>		
+			</xsl:choose>
 end interface euITM_copy
 
 ! Declaration of the generic CPO FLUSH routine
 interface euitm_flush        <!-- Declare here all the specialised routines -->
-   module procedure euitm_flush_<xsl:value-of select="@type"/>		
+   module procedure euitm_flush_<xsl:value-of select="@type"/>
 end interface euitm_flush
 
 ! Declaration of the generic CPO DISCARD routine
@@ -148,7 +148,7 @@ real(DP) :: double0D
 real(DP), pointer :: vect1DDouble(:), time(:), vect2DDouble(:,:), vect3DDouble(:,:,:), vect4DDouble(:,:,:,:) => null()
 real(DP), pointer :: vect5DDouble(:,:,:,:,:), vect6DDouble(:,:,:,:,:,:) => null()
 character(len=132) :: stringans
-character(len=100000)::longstring    
+character(len=100000)::longstring
 character(len=132), dimension(:), pointer ::stringpointer        => null()
 integer :: obj_all_times,obj1,obj2,obj3,obj4,obj5,obj6,obj7
 integer :: dimObj0,dimObj1,dimObj2,dimObj3,dimObj4,dimObj5,dimObj6,dimObj7
@@ -180,7 +180,7 @@ character(len=3)::ual_debug
 
 character(len=132)::stringans      ! Temporary way of getting short strings
 character(len=100000)::longstring
-character(len=132), dimension(:), pointer ::stringpointer   => null()     
+character(len=132), dimension(:), pointer ::stringpointer   => null()
 integer :: obj_all_times,obj1,obj2,obj3,obj4,obj5,obj6,obj7
 integer :: dimObj0,dimObj1,dimObj2,dimObj3,dimObj4,dimObj5,dimObj6,dimObj7
 integer :: i1,i2,i3,i4,i5,i6,i7
@@ -195,7 +195,7 @@ call getenv('ual_debug',ual_debug) ! Debug flag
 
 call begin_cpo_get(idx, path,0,dum1)
       <xsl:apply-templates select="field" mode="GET_SINGLE"/>
-call end_cpo_get(idx, path)      
+call end_cpo_get(idx, path)
      </xsl:otherwise>
 		</xsl:choose>
 return
@@ -226,7 +226,7 @@ integer :: obj_single_time,obj1,obj2,obj3,obj4,obj5,obj6,obj7
 integer :: dimObj1,dimObj2,dimObj3,dimObj4,dimObj5,dimObj6,dimObj7
 integer :: i1,i2,i3,i4,i5,i6,i7
 
-type(type_<xsl:value-of select="@type"/>) :: cpo      
+type(type_<xsl:value-of select="@type"/>) :: cpo
 
 call getenv('ual_debug',ual_debug)
 <!-- -->
@@ -238,7 +238,7 @@ if (status.EQ.0) then
 else
    write(*,*) 'Get slice impossible, CPO is missing or requested time slice is not within the time interval of the CPO'
 endif
-call end_CPO_Get_Slice(idx,path)	      
+call end_CPO_Get_Slice(idx,path)
 	</xsl:when>
 			<xsl:otherwise>
 				<!-- a get_slice of a time-independent CPO is equivalent to a normal GET -->
@@ -275,7 +275,7 @@ real(DP) :: double0D
 real(DP), pointer :: vect1DDouble(:), time(:), vect2DDouble(:,:), vect3DDouble(:,:,:), vect4DDouble(:,:,:,:) => null()
 real(DP), pointer :: vect5DDouble(:,:,:,:,:), vect6DDouble(:,:,:,:,:,:) => null()
 character(len=132), dimension(:), pointer :: stri => null()
-character(len=100000)::longstring    
+character(len=100000)::longstring
 integer :: obj_all_times,obj1,obj2,obj3,obj4,obj5,obj6,obj7
 integer :: i1,i2,i3,i4,i5,i6,i7
 
@@ -302,8 +302,8 @@ endif
 ! find the length of the time base
 lentime = size(cpos)
 ! find time vector
-allocate(time(lentime))        
-time(1:lentime) = cpos(1:lentime)%time    
+allocate(time(lentime))
+time(1:lentime) = cpos(1:lentime)%time
 <!-- -->
 call begin_cpo_put_timed(idx, path,lentime,time)
 deallocate(time)
@@ -322,7 +322,7 @@ character*(*) :: path
 integer :: idx
 integer :: i,dim1,dim2,dim3,dim4,dim5,dim6,dim7, lenstring, istring
 integer, pointer :: dimtab(:) => null()
-character(len=100000)::longstring    
+character(len=100000)::longstring
 character(len=3)::ual_debug
 integer :: obj_all_times,obj1,obj2,obj3,obj4,obj5,obj6,obj7
 integer :: i1,i2,i3,i4,i5,i6,i7
@@ -372,7 +372,7 @@ real(DP) :: double0D
 real(DP), pointer :: vect1DDouble(:), time(:), vect2DDouble(:,:), vect3DDouble(:,:,:), vect4DDouble(:,:,:,:) => null()
 real(DP), pointer :: vect5DDouble(:,:,:,:,:), vect6DDouble(:,:,:,:,:,:) => null()
 character(len=132), dimension(:), pointer :: stri => null()
-character(len=100000)::longstring    
+character(len=100000)::longstring
 integer :: obj_single_time,obj1,obj2,obj3,obj4,obj5,obj6,obj7
 integer :: i1,i2,i3,i4,i5,i6,i7
 
@@ -384,10 +384,10 @@ call begin_cpo_put_slice(idx, path,cpo%time)
 		<xsl:apply-templates select="field" mode="PUT_SLICE"/>
 call end_cpo_put_slice(idx, path)
 <!-- -->
- 
+
 return
 end subroutine euITM_put_slice_<xsl:value-of select="@type"/>
-!!!!!! Routines to PUT_NON_TIMED the time INdependent data of time dependent CPOs 
+!!!!!! Routines to PUT_NON_TIMED the time INdependent data of time dependent CPOs
 <!--<xsl:apply-templates select="CPO[@timed='yes']" mode="PUT_NON_TIMED"/>-->
 subroutine euITM_put_non_timed_<xsl:value-of select="@type"/>(idx, path,  cpo)
 
@@ -398,7 +398,7 @@ character*(*) :: path
 integer :: idx
 integer :: i,dim1,dim2,dim3,dim4,dim5,dim6,dim7, lenstring, istring
 integer, pointer :: dimtab(:) => null()
-character(len=100000)::longstring    
+character(len=100000)::longstring
 character(len=3)::ual_debug
 integer :: obj1,obj2,obj3,obj4,obj5,obj6,obj7
 integer :: i1,i2,i3,i4,i5,i6,i7
@@ -415,16 +415,16 @@ call euitm_delete(idx,path,cpos)
 call euitm_discard(idx,path,cpos)
 
 <!-- -->
-call begin_cpo_put_non_timed(idx, path) 
+call begin_cpo_put_non_timed(idx, path)
 <!-- -->
 		<xsl:apply-templates select="field" mode="PUT_SINGLE"/>
 		<!-- Applies the PUT_SINGLE method (putting a individual non time dependent signal) to all non time dependent fields of the CPO, whatever their level (child, grand-child, grand-grand-child ... verifying @timed = 'no') -->
 call end_cpo_put_non_timed(idx, path)
-<!-- -->      
+<!-- -->
 return
 end subroutine euITM_put_non_timed_<xsl:value-of select="@type"/>
 </xsl:if >
-!!!!!! Routines to DELETE CPOs 
+!!!!!! Routines to DELETE CPOs
 <!--<xsl:apply-templates select="CPO" mode="DELETE"/>-->
 subroutine euITM_delete_<xsl:value-of select="@type"/>(idx,cpopath,cpo)  <!-- systematic calls to the low level delete_data routine. The cpo input argument is added just for the interface to identify the relevant CPO type -->
 
@@ -451,7 +451,7 @@ if (ual_debug =='yes') write(*,*) 'Deleting CPO ',cpopath
 if (ual_debug =='yes') write(*,*) 'Delete CPO ',cpopath,' done'
 end subroutine euITM_delete_<xsl:value-of select="@type"/>
 
-!!!!!! Routines to DEALLOCATE CPOs 
+!!!!!! Routines to DEALLOCATE CPOs
 <!--<xsl:apply-templates select="CPO" mode="DEALLOCATE"/>-->
 subroutine euITM_deallocate_<xsl:value-of select="@type"/>(cpo)  <!-- Deallocates all allocated fields in the cpo variable sent as argument -->
 
@@ -463,7 +463,7 @@ integer :: i1,i2,i3,i4,i5,i6,i7
 
   <xsl:choose>
 			<xsl:when test="@timed = 'yes'">
-type(type_<xsl:value-of select="@type"/>),pointer :: cpo(:)    
+type(type_<xsl:value-of select="@type"/>),pointer :: cpo(:)
 integer :: itime
 
 call getenv('ual_debug',ual_debug) ! Debug flag
@@ -486,7 +486,7 @@ enddo
 deallocate(cpo)
 </xsl:when>
 			<xsl:otherwise>
-type(type_<xsl:value-of select="@type"/>) :: cpo       
+type(type_<xsl:value-of select="@type"/>) :: cpo
     <xsl:apply-templates select="field" mode="DEALLOCATE">
         <xsl:with-param name="level" select="1"/>
         <xsl:with-param name="idxpath" select="'cpo'"/>
@@ -497,7 +497,7 @@ type(type_<xsl:value-of select="@type"/>) :: cpo
 
 if (ual_debug =='yes') write(*,*) 'Deallocate an <xsl:value-of select="@type"/> CPO : done'
 end subroutine euITM_deallocate_<xsl:value-of select="@type"/>
-!!!!!! Routines to COPY CPOs 
+!!!!!! Routines to COPY CPOs
 <!--<xsl:apply-templates select="CPO" mode="COPY"/>-->
 		<xsl:choose>
 			<xsl:when test="@timed = 'yes'">
@@ -512,7 +512,7 @@ character(len=3)::ual_debug
 integer :: itime, lentime, lenstring, istring
 integer :: i1,i2,i3,i4,i5,i6,i7
 
-type(type_<xsl:value-of select="@type"/>),pointer :: cpoin(:), cpoout(:)      
+type(type_<xsl:value-of select="@type"/>),pointer :: cpoin(:), cpoout(:)
 
 call getenv('ual_debug',ual_debug) ! Debug flag
 
@@ -547,7 +547,7 @@ character(len=3)::ual_debug
 integer :: itime, lentime, lenstring, istring
 integer :: i1,i2,i3,i4,i5,i6,i7
 
-type(type_<xsl:value-of select="@type"/>) :: cpoin, cpoout      
+type(type_<xsl:value-of select="@type"/>) :: cpoin, cpoout
 
 call getenv('ual_debug',ual_debug) ! Debug flag
 
@@ -569,8 +569,8 @@ character(len=3)::ual_debug
 integer :: lenstring, istring
 integer :: i1,i2,i3,i4,i5,i6,i7
 
-type(type_<xsl:value-of select="@type"/>),pointer :: cpoin(:)      
-type(type_<xsl:value-of select="@type"/>) :: cpoout      
+type(type_<xsl:value-of select="@type"/>),pointer :: cpoin(:)
+type(type_<xsl:value-of select="@type"/>) :: cpoout
 
 call getenv('ual_debug',ual_debug) ! Debug flag
 
@@ -599,8 +599,8 @@ character(len=3)::ual_debug
 integer :: lenstring, istring
 integer :: i1,i2,i3,i4,i5,i6,i7
 
-type(type_<xsl:value-of select="@type"/>) :: cpoin      
-type(type_<xsl:value-of select="@type"/>),pointer :: cpoout(:)      
+type(type_<xsl:value-of select="@type"/>) :: cpoin
+type(type_<xsl:value-of select="@type"/>),pointer :: cpoout(:)
 
 call getenv('ual_debug',ual_debug) ! Debug flag
 
@@ -627,7 +627,7 @@ character(len=3)::ual_debug
 integer :: itime, lentime, lenstring, istring
 integer :: i1,i2,i3,i4,i5,i6,i7
 
-type(type_<xsl:value-of select="@type"/>) :: cpoin, cpoout      
+type(type_<xsl:value-of select="@type"/>) :: cpoin, cpoout
 
 call getenv('ual_debug',ual_debug) ! Debug flag
 
@@ -639,7 +639,7 @@ call getenv('ual_debug',ual_debug) ! Debug flag
 return
 end subroutine euITM_copy_<xsl:value-of select="@type"/>
      </xsl:otherwise>
-		</xsl:choose> 
+		</xsl:choose>
 !!!!!! Routines to flush CPOs
 <!--<xsl:apply-templates select="CPO" mode="FLUSH_CACHE"/>-->
 subroutine euitm_flush_<xsl:value-of select="@type"/>(idx,cpopath,cpo)  <!-- systematic calls to the low level euitm_flush_cache routine. The cpo input argument is added just for the interface to identify the relevant CPO type -->
@@ -667,7 +667,7 @@ if (ual_debug =='yes') write(*,*) 'Flushing CPO ',cpopath
 if (ual_debug =='yes') write(*,*) 'Flushing CPO ',cpopath,' done'
 end subroutine euitm_flush_<xsl:value-of select="@type"/>
 
-!!!!!! Routines to discard CPOs 
+!!!!!! Routines to discard CPOs
 <!--<xsl:apply-templates select="CPO" mode="DISCARD_CACHE"/>-->
 subroutine euitm_discard_<xsl:value-of select="@type"/>(idx,cpopath,cpo)  <!-- systematic calls to the low level euitm_discard_cache routine. The cpo input argument is added just for the interface to identify the relevant CPO type -->
 
@@ -694,10 +694,10 @@ if (ual_debug =='yes') write(*,*) 'Discarding CPO ',cpopath
 if (ual_debug =='yes') write(*,*) 'Discarding CPO ',cpopath,' done'
 end subroutine euitm_discard_<xsl:value-of select="@type"/>
 end module <xsl:value-of select="@type"/>_euitm_module
-</exsl:document> 
- 
+</exsl:document>
+
 </xsl:template>
-	<!-- This was a beautiful way to select a unique CPO of a given generic type in the structure, not used anymore, but kept for the esthetics in the comments ! 
+	<!-- This was a beautiful way to select a unique CPO of a given generic type in the structure, not used anymore, but kept for the esthetics in the comments !
 <xsl:template match = "CPO" mode = "getlist">
 <xsl:param name="special_type"/>
 <xsl:param name="cpo_name"/>
@@ -720,7 +720,7 @@ end module <xsl:value-of select="@type"/>_euitm_module
 	<!--
 <xsl:apply-templates select="." mode = "getlist3">
       <xsl:with-param name = "special_type" select = "$special_type"/>
-      <xsl:with-param name = "cpo_name" select = "$cpo_name"/>      
+      <xsl:with-param name = "cpo_name" select = "$cpo_name"/>
       <xsl:with-param name = "function" select = "$function"/>
       </xsl:apply-templates>
 </xsl:if>
@@ -735,7 +735,7 @@ end module <xsl:value-of select="@type"/>_euitm_module
    euITM_<xsl:value-of select="$function"/>_<xsl:value-of select="@type"/>, &amp; </xsl:if>
 </xsl:template>-->
 
-  
+
 <!--!!!!!!!!!!!!!!!!!!!!!!!!!             GET SLICE ROUTINES           !!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
 
   <!--<xsl:template match="CPO" mode="GET_SLICE">
@@ -809,17 +809,17 @@ endif
                      </xsl:when>
                      <xsl:when test="@type='xs:string'">
 ! Get <xsl:value-of select="@path"/>
-                        <!-- for comment only -->        
+                        <!-- for comment only -->
 ! TIME DEPENDENT STRINGS NOT TREATED YET !!!
 <!-- -->
                      </xsl:when>
 							<xsl:when test="@type='xs:integer'">
 ! Get <xsl:value-of select="@path"/>
 								<!-- for comment only -->
-call get_Int_Slice(idx,path, "<xsl:value-of select="@path"/>",int0d, twant,tret,interpol,status)        
+call get_Int_Slice(idx,path, "<xsl:value-of select="@path"/>",int0d, twant,tret,interpol,status)
 if (status.EQ.0) then
    cpo%<xsl:value-of select="translate(@path,'/','%')"/> = int0d
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpo%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
@@ -827,10 +827,10 @@ endif
 							<xsl:when test="@type='xs:float'">
 ! Get <xsl:value-of select="@path"/>
 								<!-- for comment only -->
-call get_double_Slice(idx,path, "<xsl:value-of select="@path"/>",double0d, twant,tret,interpol,status)        
+call get_double_Slice(idx,path, "<xsl:value-of select="@path"/>",double0d, twant,tret,interpol,status)
 if (status.EQ.0) then
    cpo%<xsl:value-of select="translate(@path,'/','%')"/> = double0d
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
        'Get cpo%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
@@ -840,11 +840,11 @@ endif
 								<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
-   allocate(cpo%<xsl:value-of select="translate(@path,'/','%')"/>(dim1))         
+   allocate(cpo%<xsl:value-of select="translate(@path,'/','%')"/>(dim1))
    call get_vect1d_Int_Slice(idx,path, "<xsl:value-of select="@path"/>", &amp;
    cpo%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
-   dim1,dum1,twant,tret,interpol,status)        
-   if (ual_debug =='yes') write(*,*) &amp; 
+   dim1,dum1,twant,tret,interpol,status)
+   if (ual_debug =='yes') write(*,*) &amp;
        'Get cpo%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
@@ -854,11 +854,11 @@ endif
 								<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
-   allocate(cpo%<xsl:value-of select="translate(@path,'/','%')"/>(dim1))         
+   allocate(cpo%<xsl:value-of select="translate(@path,'/','%')"/>(dim1))
    call get_vect1d_double_Slice(idx,path, "<xsl:value-of select="@path"/>", &amp;
    cpo%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
-   dim1,dum1,twant,tret,interpol,status)        
-   if (ual_debug =='yes') write(*,*) &amp; 
+   dim1,dum1,twant,tret,interpol,status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpo%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
@@ -868,11 +868,11 @@ endif
 								<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
-   allocate(cpo%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2))         
+   allocate(cpo%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2))
    call get_vect2d_double_Slice(idx,path, "<xsl:value-of select="@path"/>", &amp;
    cpo%<xsl:value-of select="translate(@path,'/','%')"/>,&amp;
-   dim1,dim2,dum1,dum2,twant,tret,interpol,status)        
-   if (ual_debug =='yes') write(*,*) &amp; 
+   dim1,dim2,dum1,dum2,twant,tret,interpol,status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpo%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
@@ -882,39 +882,39 @@ endif
 								<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
-   allocate(cpo%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2))         
+   allocate(cpo%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2))
    call get_vect2d_int_Slice(idx,path, "<xsl:value-of select="@path"/>", &amp;
    cpo%<xsl:value-of select="translate(@path,'/','%')"/>,&amp;
-   dim1,dim2,dum1,dum2,twant,tret,interpol,status)        
-   if (ual_debug =='yes') write(*,*) &amp; 
+   dim1,dim2,dum1,dum2,twant,tret,interpol,status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpo%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
 							</xsl:when>
 							<xsl:when test="@type='array3dflt_type'">
 ! Get <xsl:value-of select="@path"/>
-								<!-- for comment only -->        
+								<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
-   allocate(cpo%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3))         
+   allocate(cpo%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3))
    call get_vect3d_double_Slice(idx,path, "<xsl:value-of select="@path"/>", &amp;
    cpo%<xsl:value-of select="translate(@path,'/','%')"/>,&amp;
-   dim1,dim2,dim3,dum1,dum2,dum3,twant,tret,interpol,status)        
-   if (ual_debug =='yes') write(*,*) &amp; 
+   dim1,dim2,dim3,dum1,dum2,dum3,twant,tret,interpol,status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpo%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
 							</xsl:when>
 							<xsl:when test="@type='array3dint_type'">
 ! Get <xsl:value-of select="@path"/>
-								<!-- for comment only -->        
+								<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
-   allocate(cpo%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3))         
+   allocate(cpo%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3))
    call get_vect3d_int_Slice(idx,path, "<xsl:value-of select="@path"/>", &amp;
    cpo%<xsl:value-of select="translate(@path,'/','%')"/>,&amp;
-   dim1,dim2,dim3,dum1,dum2,dum3,twant,tret,interpol,status)        
-   if (ual_debug =='yes') write(*,*) &amp; 
+   dim1,dim2,dim3,dum1,dum2,dum3,twant,tret,interpol,status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpo%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
@@ -922,14 +922,14 @@ endif
 
 							<xsl:when test="@type='array4dflt_type'">
 ! Get <xsl:value-of select="@path"/>
-								<!-- for comment only -->        
+								<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
-   allocate(cpo%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3,dim4))         
+   allocate(cpo%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3,dim4))
    call get_vect4d_double_Slice(idx,path, "<xsl:value-of select="@path"/>", &amp;
    cpo%<xsl:value-of select="translate(@path,'/','%')"/>,&amp;
-   dim1,dim2,dim3,dim4,dum1,dum2,dum3,dum4,twant,tret,interpol,status)        
-   if (ual_debug =='yes') write(*,*) &amp; 
+   dim1,dim2,dim3,dim4,dum1,dum2,dum3,dum4,twant,tret,interpol,status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpo%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
@@ -937,28 +937,28 @@ endif
 
 							<xsl:when test="@type='array5dflt_type'">
 ! Get <xsl:value-of select="@path"/>
-								<!-- for comment only -->        
+								<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
-   allocate(cpo%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3,dim4,dim5))         
+   allocate(cpo%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3,dim4,dim5))
    call get_vect5d_double_Slice(idx,path, "<xsl:value-of select="@path"/>", &amp;
    cpo%<xsl:value-of select="translate(@path,'/','%')"/>,&amp;
-   dim1,dim2,dim3,dim4,dim5,dum1,dum2,dum3,dum4,dum5,twant,tret,interpol,status)        
-   if (ual_debug =='yes') write(*,*) &amp; 
+   dim1,dim2,dim3,dim4,dim5,dum1,dum2,dum3,dum4,dum5,twant,tret,interpol,status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpo%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
 							</xsl:when>
 							<xsl:when test="@type='array6dflt_type'">
 ! Get <xsl:value-of select="@path"/>
-								<!-- for comment only -->        
+								<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
-   allocate(cpo%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3,dim4,dim5,dim6))         
+   allocate(cpo%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3,dim4,dim5,dim6))
    call get_vect6d_double_Slice(idx,path, "<xsl:value-of select="@path"/>", &amp;
    cpo%<xsl:value-of select="translate(@path,'/','%')"/>,&amp;
-   dim1,dim2,dim3,dim4,dim5,dim6,dum1,dum2,dum3,dum4,dum5,dum6,twant,tret,interpol,status)        
-   if (ual_debug =='yes') write(*,*) &amp; 
+   dim1,dim2,dim3,dim4,dim5,dim6,dum1,dum2,dum3,dum4,dum5,dum6,twant,tret,interpol,status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpo%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
@@ -981,8 +981,8 @@ endif
 			</xsl:otherwise>
 		</xsl:choose>
 	</xsl:template>
-   
-   
+
+
 	<!--!!!!!!!!!!!!!!!!!!!!!!!!!             GET FULL CPO ROUTINES           !!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
 <!--<xsl:template match="CPO" mode="GET_FULL">
 
@@ -999,7 +999,7 @@ allocate(vect1DInt(lentime))
 call get_vect1d_int(idx,path,"<xsl:value-of select="@path"/>",vect1DInt,lentime,dum1,status)
 if (status.EQ.0) then
    cpos(1:lentime)%<xsl:value-of select="translate(@path,'/','%')"/> = vect1DInt(1:lentime)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpos%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 deallocate(vect1DInt)
@@ -1007,12 +1007,12 @@ deallocate(vect1DInt)
 					</xsl:when>
 					<xsl:when test="@type='xs:float'">
 ! Get <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
+						<!-- for comment only -->
 allocate(vect1Ddouble(lentime))
 call get_vect1d_double(idx,path,"<xsl:value-of select="@path"/>",vect1Ddouble,lentime,dum1,status)
 if (status.EQ.0) then
    cpos(1:lentime)%<xsl:value-of select="translate(@path,'/','%')"/> = vect1Ddouble(1:lentime)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpos%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 deallocate(vect1Ddouble)
@@ -1023,24 +1023,24 @@ enddo -->
 					</xsl:when>
 					<xsl:when test="@type='vecflt_type'">
 ! Get <xsl:value-of select="@path"/>
-						<!-- for comment only -->     
+						<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
-if (dim1.GT.0) then 
+if (dim1.GT.0) then
    allocate(vect2Ddouble(dim1,dim2)) <!-- dim2 contains lentime-->
    call get_vect2d_double(idx,path,"<xsl:value-of select="@path"/>",vect2Ddouble,dim1,dim2,dum1,dum2,status)
    do itime=1,lentime
       allocate(cpos(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(dim1))
       cpos(itime)%<xsl:value-of select="translate(@path,'/','%')"/> = vect2DDouble(:,itime)   <!-- assign the value to the CPO structure -->
    enddo
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpos%<xsl:value-of select="translate(@path,'/','%')"/>'
    deallocate(vect2DDouble)
-endif   
+endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test="@type='vecint_type'">
 ! Get <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
+						<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(vect2Dint(dim1,dim2)) <!-- dim2 contains lentime-->
@@ -1050,28 +1050,28 @@ if (dim1.GT.0) then
       allocate(cpos(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(dim1))
       cpos(itime)%<xsl:value-of select="translate(@path,'/','%')"/> = vect2Dint(:,itime)   <!-- assign the value to the CPO structure -->
    enddo
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpos%<xsl:value-of select="translate(@path,'/','%')"/>'
    deallocate(vect2Dint)
-endif   
+endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test="@type='matflt_type'">
 ! Get <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
+						<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
-   allocate(vect3Ddouble(dim1,dim2,dim3)) <!-- dim3 contains lentime--> 
+   allocate(vect3Ddouble(dim1,dim2,dim3)) <!-- dim3 contains lentime-->
    call get_vect3D_double(idx,path,"<xsl:value-of select="@path"/>",vect3Ddouble,  &amp;
    dim1,dim2,dim3,dum1,dum2,dum3,status)
    do itime=1,lentime
       allocate(cpos(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2))
       cpos(itime)%<xsl:value-of select="translate(@path,'/','%')"/> = vect3DDouble(:,:,itime)   <!-- assign the value to the CPO structure -->
    enddo
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpos%<xsl:value-of select="translate(@path,'/','%')"/>'
    deallocate(vect3DDouble)
-endif   
+endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test="@type='matint_type'">
@@ -1086,15 +1086,15 @@ if (dim1.GT.0) then
       allocate(cpos(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2))
       cpos(itime)%<xsl:value-of select="translate(@path,'/','%')"/> = vect3DInt(:,:,itime)   <!-- assign the value to the CPO structure -->
    enddo
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpos%<xsl:value-of select="translate(@path,'/','%')"/>'
    deallocate(vect3DInt)
-endif   
+endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test="@type='array3dflt_type'">
 ! Get <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
+						<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(vect4Ddouble(dim1,dim2,dim3,dim4)) <!-- dim4 contains lentime-->
@@ -1104,15 +1104,15 @@ if (dim1.GT.0) then
       allocate(cpos(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3))
       cpos(itime)%<xsl:value-of select="translate(@path,'/','%')"/> = vect4DDouble(:,:,:,itime)   <!-- assign the value to the CPO structure -->
    enddo
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpos%<xsl:value-of select="translate(@path,'/','%')"/>'
    deallocate(vect4DDouble)
-endif   
+endif
 <!-- -->
 					</xsl:when>
 										<xsl:when test="@type='array4dflt_type'">
 ! Get <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
+						<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(vect5Ddouble(dim1,dim2,dim3,dim4,dim5)) <!-- dim5 contains lentime-->
@@ -1122,15 +1122,15 @@ if (dim1.GT.0) then
       allocate(cpos(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3,dim4))
       cpos(itime)%<xsl:value-of select="translate(@path,'/','%')"/> = vect5DDouble(:,:,:,:,itime)   <!-- assign the value to the CPO structure -->
    enddo
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpos%<xsl:value-of select="translate(@path,'/','%')"/>'
    deallocate(vect5DDouble)
-endif   
+endif
 <!-- -->
 					</xsl:when>
 										<xsl:when test="@type='array5dflt_type'">
 ! Get <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
+						<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(vect6Ddouble(dim1,dim2,dim3,dim4,dim5,dim6)) <!-- dim6 contains lentime-->
@@ -1140,10 +1140,10 @@ if (dim1.GT.0) then
       allocate(cpos(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3,dim4,dim5))
       cpos(itime)%<xsl:value-of select="translate(@path,'/','%')"/> = vect6DDouble(:,:,:,:,:,itime)   <!-- assign the value to the CPO structure -->
    enddo
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpos%<xsl:value-of select="translate(@path,'/','%')"/>'
    deallocate(vect6DDouble)
-endif   
+endif
 <!-- -->
 					</xsl:when>
 
@@ -1233,29 +1233,29 @@ endif
 				<xsl:choose>
 					<xsl:when test="@type='xs:string'">
 ! Get <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
+						<!-- for comment only -->
 longstring = ' '
-call get_String(idx,path, "<xsl:value-of select="@path"/>",longstring, status)           
+call get_String(idx,path, "<xsl:value-of select="@path"/>",longstring, status)
 if (status.EQ.0) then
    do itime=1,lentime
-      lenstring = len_trim(longstring)      
-      allocate(cpos(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(floor(real(lenstring/132))+1)) 
-      if (lenstring &lt;= 132) then             
+      lenstring = len_trim(longstring)
+      allocate(cpos(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(floor(real(lenstring/132))+1))
+      if (lenstring &lt;= 132) then
          cpos(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(1) = trim(longstring)
       else
          do istring=1,floor(real(lenstring/132))+1
-             cpos(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(istring) = trim(longstring(1+(istring-1)*132 : istring*132))  
+             cpos(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(istring) = trim(longstring(1+(istring-1)*132 : istring*132))
          enddo
       endif
    enddo
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpos%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test="@type='vecstring_type'">
 ! Get <xsl:value-of select="@path"/>
-						<!-- for comment only -->  
+						<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    do itime=1,lentime
@@ -1264,33 +1264,33 @@ if (dim1.GT.0) then
    allocate(stringpointer(dim1))
    call get_Vect1d_string(idx,path, "<xsl:value-of select="@path"/>", &amp;
                         stringpointer,dim1,dum1,status)
-   do itime=1,lentime                     
-      cpos(itime)%<xsl:value-of select="translate(@path,'/','%')"/> = stringpointer                                        
+   do itime=1,lentime
+      cpos(itime)%<xsl:value-of select="translate(@path,'/','%')"/> = stringpointer
    enddo
-   deallocate(stringpointer)   
-   if (ual_debug =='yes') write(*,*) &amp; 
+   deallocate(stringpointer)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpos%<xsl:value-of select="translate(@path,'/','%')"/>'
-endif   
+endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test="@type='xs:integer'">
 ! Get <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
+						<!-- for comment only -->
 call get_Int(idx,path, "<xsl:value-of select="@path"/>",Int0D, status)           <!--reads the MDS signal, which has one more dimension (time)-->
 if (status.EQ.0) then
    cpos(1:lentime)%<xsl:value-of select="translate(@path,'/','%')"/> = Int0D   <!-- assign the value to the CPO structure -->
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpos%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test="@type='xs:float'">
 ! Get <xsl:value-of select="@path"/>
-						<!-- for comment only -->   
+						<!-- for comment only -->
 call get_Double(idx,path, "<xsl:value-of select="@path"/>",double0D, status)           <!--reads the MDS signal, which has one more dimension (time)-->
 if (status.EQ.0) then
    cpos(1:lentime)%<xsl:value-of select="translate(@path,'/','%')"/> = double0D   <!-- assign the value to the CPO structure -->
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpos%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
@@ -1300,151 +1300,151 @@ endif
 						<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
-   allocate(vect1DDouble(dim1))        
+   allocate(vect1DDouble(dim1))
    call get_vect1D_Double(idx,path, "<xsl:value-of select="@path"/>", &amp;
-   vect1DDouble,dim1,dum1, status)           
+   vect1DDouble,dim1,dum1, status)
    do itime=1,lentime
       allocate(cpos(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(dim1))
       cpos(itime)%<xsl:value-of select="translate(@path,'/','%')"/> = vect1DDouble   <!-- assign the value to the CPO structure -->
    enddo
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpos%<xsl:value-of select="translate(@path,'/','%')"/>'
    deallocate(vect1DDouble)
-endif   
+endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test="@type='vecint_type'">
 ! Get <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
+						<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
-   allocate(vect1Dint(dim1))        
+   allocate(vect1Dint(dim1))
    call get_vect1D_int(idx,path, "<xsl:value-of select="@path"/>", &amp;
    vect1Dint,dim1,dum1, status)           <!--reads the MDS signal, which has one more dimension (time)-->
    do itime=1,lentime
       allocate(cpos(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(dim1))
       cpos(itime)%<xsl:value-of select="translate(@path,'/','%')"/> = vect1Dint   <!-- assign the value to the CPO structure -->
    enddo
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpos%<xsl:value-of select="translate(@path,'/','%')"/>'
    deallocate(vect1Dint)
-endif 
+endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test="@type='matflt_type'">
 ! Get <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
+						<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
-   allocate(vect2DDouble(dim1,dim2))        
+   allocate(vect2DDouble(dim1,dim2))
    call get_vect2D_Double(idx,path, "<xsl:value-of select="@path"/>", &amp;
-   vect2DDouble,dim1,dim2,dum1,dum2, status)           
+   vect2DDouble,dim1,dim2,dum1,dum2, status)
    do itime=1,lentime
       allocate(cpos(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2))
       cpos(itime)%<xsl:value-of select="translate(@path,'/','%')"/> = vect2DDouble   <!-- assign the value to the CPO structure -->
    enddo
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpos%<xsl:value-of select="translate(@path,'/','%')"/>'
    deallocate(vect2DDouble)
-endif 
+endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test="@type='matint_type'">
 ! Get <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
+						<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
-   allocate(vect2DInt(dim1,dim2))        
+   allocate(vect2DInt(dim1,dim2))
    call get_vect2D_Int(idx,path, "<xsl:value-of select="@path"/>", &amp;
-   vect2DInt,dim1,dim2,dum1,dum2, status)           
+   vect2DInt,dim1,dim2,dum1,dum2, status)
    do itime=1,lentime
       allocate(cpos(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2))
       cpos(itime)%<xsl:value-of select="translate(@path,'/','%')"/> = vect2DInt   <!-- assign the value to the CPO structure -->
    enddo
    deallocate(vect2DInt)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpos%<xsl:value-of select="translate(@path,'/','%')"/>'
-endif 
+endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test="@type='array3dflt_type'">
 ! Get <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
+						<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
-   allocate(vect3DDouble(dim1,dim2,dim3))        
+   allocate(vect3DDouble(dim1,dim2,dim3))
    call get_vect3D_Double(idx,path, "<xsl:value-of select="@path"/>",vect3DDouble, &amp;
-   dim1,dim2,dim3,dum1,dum2,dum3,status)           
+   dim1,dim2,dim3,dum1,dum2,dum3,status)
    do itime=1,lentime
       allocate(cpos(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3))
       cpos(itime)%<xsl:value-of select="translate(@path,'/','%')"/> = vect3DDouble   <!-- assign the value to the CPO structure -->
    enddo
    deallocate(vect3DDouble)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpos%<xsl:value-of select="translate(@path,'/','%')"/>'
-endif 
+endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test="@type='array3dint_type'">
 ! Get <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
+						<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
-   allocate(vect3DInt(dim1,dim2,dim3))        
+   allocate(vect3DInt(dim1,dim2,dim3))
    call get_vect3D_Int(idx,path, "<xsl:value-of select="@path"/>",vect3DInt, &amp;
-   dim1,dim2,dim3,dum1,dum2,dum3,status)           
+   dim1,dim2,dim3,dum1,dum2,dum3,status)
    do itime=1,lentime
       allocate(cpos(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3))
       cpos(itime)%<xsl:value-of select="translate(@path,'/','%')"/> = vect3DInt   <!-- assign the value to the CPO structure -->
    enddo
    deallocate(vect3DInt)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpos%<xsl:value-of select="translate(@path,'/','%')"/>'
-endif 
+endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test="@type='array4dflt_type'">
 ! Get <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
+						<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
-   allocate(vect4dDouble(dim1,dim2,dim3,dim4))        
+   allocate(vect4dDouble(dim1,dim2,dim3,dim4))
    call get_vect4d_Double(idx,path, "<xsl:value-of select="@path"/>", &amp;
-   vect4dDouble,dim1,dim2,dim3,dim4,dum1,dum2,dum3,dum4,status)           
+   vect4dDouble,dim1,dim2,dim3,dim4,dum1,dum2,dum3,dum4,status)
    do itime=1,lentime
       allocate(cpos(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3,dim4))
       cpos(itime)%<xsl:value-of select="translate(@path,'/','%')"/> = vect4dDouble   <!-- assign the value to the CPO structure -->
    enddo
    deallocate(vect4dDouble)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpos%<xsl:value-of select="translate(@path,'/','%')"/>'
-endif 
+endif
 <!-- -->
 					</xsl:when>
 										<xsl:when test="@type='array5dflt_type'">
 ! Get <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
+						<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
-   allocate(vect5dDouble(dim1,dim2,dim3,dim4,dim5))        
+   allocate(vect5dDouble(dim1,dim2,dim3,dim4,dim5))
    call get_vect5d_Double(idx,path, "<xsl:value-of select="@path"/>", &amp;
-   vect5dDouble,dim1,dim2,dim3,dim4,dim5,dum1,dum2,dum3,dum4,dum5,status)          
+   vect5dDouble,dim1,dim2,dim3,dim4,dim5,dum1,dum2,dum3,dum4,dum5,status)
    do itime=1,lentime
       allocate(cpos(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3,dim4,dim5))
       cpos(itime)%<xsl:value-of select="translate(@path,'/','%')"/> = vect5dDouble   <!-- assign the value to the CPO structure -->
    enddo
    deallocate(vect5dDouble)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpos%<xsl:value-of select="translate(@path,'/','%')"/>'
-endif 
+endif
 <!-- -->
 					</xsl:when>
 										<xsl:when test="@type='array6dflt_type'">
 ! Get <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
+						<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
-   allocate(vect6dDouble(dim1,dim2,dim3,dim4,dim5,dim6))        
+   allocate(vect6dDouble(dim1,dim2,dim3,dim4,dim5,dim6))
    call get_vect6d_Double(idx,path, "<xsl:value-of select="@path"/>", &amp;
    vect6dDouble,dim1,dim2,dim3,dim4,dim5,dim6,dum1,dum2,dum3,dum4,dum5,dum6,status)           <!--reads the MDS signal, which has one more dimension (time)-->
    do itime=1,lentime
@@ -1452,9 +1452,9 @@ if (dim1.GT.0) then
       cpos(itime)%<xsl:value-of select="translate(@path,'/','%')"/> = vect6dDouble   <!-- assign the value to the CPO structure -->
    enddo
    deallocate(vect6dDouble)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpos%<xsl:value-of select="translate(@path,'/','%')"/>'
-endif 
+endif
 <!-- -->
 					</xsl:when>
                <xsl:when test="@type='struct_array'">
@@ -1495,62 +1495,62 @@ endif
 			</xsl:otherwise>
 		</xsl:choose>
 	</xsl:template>
-   
+
 <!--!!!!!!!!!!!!!!!!!!!!!!!!!             GET SINGLE CPO ROUTINES           !!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
 	<xsl:template match="field" mode="GET_SINGLE">
 		<!-- to get an element from a CPO which is NOT time-dependent : easy : elementary GET-->
 		<xsl:choose>
 			<xsl:when test="@type='xs:string'">
 ! Get <xsl:value-of select="@path"/>
-				<!-- for comment only -->  
+				<!-- for comment only -->
 longstring = ' '
 call get_string(idx,path, "<xsl:value-of select="@path"/>",longstring,status)
 if (status.EQ.0) then
-   lenstring = len_trim(longstring)      
-   allocate(cpo%<xsl:value-of select="translate(@path,'/','%')"/>(floor(real(lenstring/132))+1)) 
-   if (lenstring &lt;= 132) then             
+   lenstring = len_trim(longstring)
+   allocate(cpo%<xsl:value-of select="translate(@path,'/','%')"/>(floor(real(lenstring/132))+1))
+   if (lenstring &lt;= 132) then
       cpo%<xsl:value-of select="translate(@path,'/','%')"/> = trim(longstring)
    else
       do istring=1,floor(real(lenstring/132))+1
-          cpo%<xsl:value-of select="translate(@path,'/','%')"/>(istring) = trim(longstring(1+(istring-1)*132 : istring*132)) 
+          cpo%<xsl:value-of select="translate(@path,'/','%')"/>(istring) = trim(longstring(1+(istring-1)*132 : istring*132))
       enddo
    endif
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpo%<xsl:value-of select="translate(@path,'/','%')"/>'
-endif   
+endif
 <!-- -->
 			</xsl:when>
 			<xsl:when test="@type='vecstring_type'">
 ! Get <xsl:value-of select="@path"/>
-				<!-- for comment only -->  
+				<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(cpo%<xsl:value-of select="translate(@path,'/','%')"/>(dim1))
    call get_Vect1d_string(idx,path, "<xsl:value-of select="@path"/>", &amp;
                         cpo%<xsl:value-of select="translate(@path,'/','%')"/>,dim1,dum1,status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpo%<xsl:value-of select="translate(@path,'/','%')"/>'
-endif   
+endif
 <!-- -->
 			</xsl:when>
 			<xsl:when test="@type='xs:integer'">
 ! Get <xsl:value-of select="@path"/>
-				<!-- for comment only --> 
+				<!-- for comment only -->
 call get_int(idx,path, "<xsl:value-of select="@path"/>",int0d,status)
 if (status.EQ.0) then
    cpo%<xsl:value-of select="translate(@path,'/','%')"/> = int0d
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpo%<xsl:value-of select="translate(@path,'/','%')"/>'
-endif                 
+endif
 <!-- -->
 			</xsl:when>
 			<xsl:when test="@type='xs:float'">
 ! Get <xsl:value-of select="@path"/>
-				<!-- for comment only --> 
+				<!-- for comment only -->
 call get_double(idx,path, "<xsl:value-of select="@path"/>",double0d,status)
 if (status.EQ.0) then
    cpo%<xsl:value-of select="translate(@path,'/','%')"/> = double0d
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpo%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
@@ -1563,124 +1563,124 @@ if (dim1.GT.0) then
    allocate(cpo%<xsl:value-of select="translate(@path,'/','%')"/>(dim1))
    call get_vect1d_double(idx,path,"<xsl:value-of select="@path"/>", &amp;
    cpo%<xsl:value-of select="translate(@path,'/','%')"/>,dim1,dum1,status)
-   if (ual_debug =='yes') write(*,*) &amp;  
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpo%<xsl:value-of select="translate(@path,'/','%')"/>'
-endif        
+endif
 <!-- -->
 			</xsl:when>
 			<xsl:when test="@type='vecint_type'">
 ! Get <xsl:value-of select="@path"/>
-				<!-- for comment only -->        
+				<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(cpo%<xsl:value-of select="translate(@path,'/','%')"/>(dim1))
    call get_vect1d_int(idx,path,"<xsl:value-of select="@path"/>", &amp;
    cpo%<xsl:value-of select="translate(@path,'/','%')"/>,dim1,dum1,status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpo%<xsl:value-of select="translate(@path,'/','%')"/>'
-endif 
+endif
 <!-- -->
 			</xsl:when>
 			<xsl:when test="@type='matflt_type'">
 ! Get <xsl:value-of select="@path"/>
-				<!-- for comment only -->        
+				<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(cpo%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2))
    call get_vect2d_double(idx,path,"<xsl:value-of select="@path"/>", &amp;
    cpo%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    dim1,dim2,dum1,dum2,status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpo%<xsl:value-of select="translate(@path,'/','%')"/>'
-endif 
+endif
 <!-- -->
 			</xsl:when>
 			<xsl:when test="@type='matint_type'">
 ! Get <xsl:value-of select="@path"/>
-				<!-- for comment only -->        
+				<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(cpo%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2))
    call get_vect2d_int(idx,path,"<xsl:value-of select="@path"/>", &amp;
    cpo%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    dim1,dim2,dum1,dum2,status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpo%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
 			</xsl:when>
 			<xsl:when test="@type='array3dflt_type'">
 ! Get <xsl:value-of select="@path"/>
-				<!-- for comment only -->        
+				<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(cpo%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3))
    call get_vect3d_double(idx,path,"<xsl:value-of select="@path"/>",&amp;
    cpo%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    dim1,dim2,dim3,dum1,dum2,dum3,status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpo%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
 			</xsl:when>
 			<xsl:when test="@type='array3dint_type'">
 ! Get <xsl:value-of select="@path"/>
-				<!-- for comment only -->        
+				<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(cpo%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3))
    call get_vect3d_int(idx,path,"<xsl:value-of select="@path"/>",&amp;
    cpo%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    dim1,dim2,dim3,dum1,dum2,dum3,status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpo%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
 			</xsl:when>
 			<xsl:when test="@type='array4dflt_type'">
 ! Get <xsl:value-of select="@path"/>
-				<!-- for comment only -->        
+				<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(cpo%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3,dim4))
    call get_vect4d_double(idx,path,"<xsl:value-of select="@path"/>", &amp;
    cpo%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    dim1,dim2,dim3,dim4,dum1,dum2,dum3,dum4,status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpo%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
 			</xsl:when>
-			
+
 			<xsl:when test="@type='array5dflt_type'">
 ! Get <xsl:value-of select="@path"/>
-				<!-- for comment only -->        
+				<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(cpo%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3,dim4,dim5))
    call get_vect5d_double(idx,path,"<xsl:value-of select="@path"/>", &amp;
    cpo%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    dim1,dim2,dim3,dim4,dim5,dum1,dum2,dum3,dum4,dum5,status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpo%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
 			</xsl:when>
 						<xsl:when test="@type='array6dflt_type'">
 ! Get <xsl:value-of select="@path"/>
-				<!-- for comment only -->        
+				<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(cpo%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3,dim4,dim5,dim6))
    call get_vect6d_double(idx,path,"<xsl:value-of select="@path"/>", &amp;
    cpo%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    dim1,dim2,dim3,dim4,dim5,dim6,dum1,dum2,dum3,dum4,dum5,dum6,status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get cpo%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
-			</xsl:when>			
-			
+			</xsl:when>
+
          <xsl:when test="@type='struct_array'">
 ! Get <xsl:value-of select="@path"/>
                         <!-- for comment only -->
@@ -1715,7 +1715,7 @@ endif
 			</xsl:otherwise>
 		</xsl:choose>
 	</xsl:template>
-   
+
 <!--!!!!!!!!!!!!!!!!!!!!!!     GET RESAMPLED routines      !!!!!!!!!!!!!!!!!!!!!!!!!-->
 	<xsl:template match="CPO" mode="GET_RESAMPLED">
   void euitm_get_resampled(char *path, double start, double end, double delta, <xsl:value-of select="@type"/> cpos[], int REFERENCE(maxItems), int REFERENCE(retSamples))
@@ -1823,20 +1823,20 @@ endif
 			</xsl:otherwise>
 		</xsl:choose>
 	</xsl:template>
-   
+
    <!--!!!!!!!!!!!!!!!!!!!!!!!!!             GET FROM OBJECT           !!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
-	
+
 <xsl:template match = "field" mode = "GET_FROM_OBJECT">
   <xsl:param name="level"/>     <!-- recursion level -->
   <xsl:param name="objpath"/>   <!-- path inside the object -->
   <xsl:param name="idxpath"/>   <!-- full C++ path including indices -->
   <xsl:param name="timed"/>     <!-- are we looking for timed or non-timed fields? -->
-  
+
   <!-- build the path of the current field inside the object -->
   <xsl:param name="currentobjpath" select="concat($objpath,'/',@name)"/>
   <!-- build the complete path of the current field -->
   <xsl:param name="currentidxpath" select="concat($idxpath,'%',@name)"/>
-  
+
   <xsl:choose>
     <!--========== Arrays of structures ==========-->
     <xsl:when test="@type='struct_array'">
@@ -1869,7 +1869,7 @@ if (status.EQ.0) then
 endif
       </xsl:if>
     </xsl:when>
-        
+
     <!--========== Regular structure ==========-->
     <xsl:when test="@type='structure'">
       <xsl:apply-templates select = "field" mode = "GET_FROM_OBJECT">
@@ -1879,62 +1879,62 @@ endif
          <xsl:with-param name="timed" select="$timed"/>
       </xsl:apply-templates>
     </xsl:when>
-    
+
     <xsl:otherwise>
       <!--========== select either timed or non-timed fields ==========-->
       <xsl:if test="@timed=$timed">
         <xsl:choose>
          <xsl:when test="@type='xs:string'">
 ! Get <xsl:value-of select="@path"/>
-            <!-- for comment only -->  
+            <!-- for comment only -->
 longstring = ' '
 call get_string_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,longstring,status)
 if (status.EQ.0) then
-   lenstring = len_trim(longstring)      
+   lenstring = len_trim(longstring)
    allocate(<xsl:value-of select="$currentidxpath"/>(floor(real(lenstring/132))+1))
-   if (lenstring &lt;= 132) then             
+   if (lenstring &lt;= 132) then
       <xsl:value-of select="$currentidxpath"/> = trim(longstring)
    else
       do istring=1,floor(real(lenstring/132))+1
           <xsl:value-of select="$currentidxpath"/>(istring) = trim(longstring(1+(istring-1)*132 : istring*132))
       enddo
    endif
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get <xsl:value-of select="$currentidxpath"/>'
-endif   
+endif
 <!-- -->
          </xsl:when>
          <xsl:when test="@type='vecstring_type'">
 ! Get <xsl:value-of select="@path"/>
-            <!-- for comment only -->  
+            <!-- for comment only -->
 call get_dimension_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(<xsl:value-of select="$currentidxpath"/>(dim1))
    call get_vect1d_string_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>, &amp;
                         <xsl:value-of select="$currentidxpath"/>,dim1,dum1,status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get <xsl:value-of select="$currentidxpath"/>'
-endif   
+endif
 <!-- -->
          </xsl:when>
          <xsl:when test="@type='xs:integer'">
 ! Get <xsl:value-of select="@path"/>
-            <!-- for comment only --> 
+            <!-- for comment only -->
 call get_int_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,int0d,status)
 if (status.EQ.0) then
    <xsl:value-of select="$currentidxpath"/> = int0d
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get <xsl:value-of select="$currentidxpath"/>'
-endif                 
+endif
 <!-- -->
          </xsl:when>
          <xsl:when test="@type='xs:float'">
 ! Get <xsl:value-of select="@path"/>
-            <!-- for comment only --> 
+            <!-- for comment only -->
 call get_double_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,double0d,status)
 if (status.EQ.0) then
    <xsl:value-of select="$currentidxpath"/> = double0d
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get <xsl:value-of select="$currentidxpath"/>'
 endif
 <!-- -->
@@ -1947,119 +1947,119 @@ if (dim1.GT.0) then
    allocate(<xsl:value-of select="$currentidxpath"/>(dim1))
    call get_vect1d_double_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>, &amp;
    <xsl:value-of select="$currentidxpath"/>,dim1,dum1,status)
-   if (ual_debug =='yes') write(*,*) &amp;  
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get <xsl:value-of select="$currentidxpath"/>'
-endif        
+endif
 <!-- -->
          </xsl:when>
          <xsl:when test="@type='vecint_type'">
 ! Get <xsl:value-of select="@path"/>
-            <!-- for comment only -->        
+            <!-- for comment only -->
 call get_dimension_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(<xsl:value-of select="$currentidxpath"/>(dim1))
    call get_vect1d_int_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>, &amp;
    <xsl:value-of select="$currentidxpath"/>,dim1,dum1,status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get <xsl:value-of select="$currentidxpath"/>'
-endif 
+endif
 <!-- -->
          </xsl:when>
          <xsl:when test="@type='matflt_type'">
 ! Get <xsl:value-of select="@path"/>
-            <!-- for comment only -->        
+            <!-- for comment only -->
 call get_dimension_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(<xsl:value-of select="$currentidxpath"/>(dim1,dim2))
    call get_vect2d_double_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>, &amp;
    <xsl:value-of select="$currentidxpath"/>, &amp;
    dim1,dim2,dum1,dum2,status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get <xsl:value-of select="$currentidxpath"/>'
-endif 
+endif
 <!-- -->
          </xsl:when>
          <xsl:when test="@type='matint_type'">
 ! Get <xsl:value-of select="@path"/>
-            <!-- for comment only -->        
+            <!-- for comment only -->
 call get_dimension_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(<xsl:value-of select="$currentidxpath"/>(dim1,dim2))
    call get_vect2d_int_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>, &amp;
    <xsl:value-of select="$currentidxpath"/>, &amp;
    dim1,dim2,dum1,dum2,status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get <xsl:value-of select="$currentidxpath"/>'
 endif
 <!-- -->
          </xsl:when>
          <xsl:when test="@type='array3dflt_type'">
 ! Get <xsl:value-of select="@path"/>
-            <!-- for comment only -->        
+            <!-- for comment only -->
 call get_dimension_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(<xsl:value-of select="$currentidxpath"/>(dim1,dim2,dim3))
    call get_vect3d_double_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,&amp;
    <xsl:value-of select="$currentidxpath"/>, &amp;
    dim1,dim2,dim3,dum1,dum2,dum3,status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get <xsl:value-of select="$currentidxpath"/>'
 endif
 <!-- -->
          </xsl:when>
          <xsl:when test="@type='array3dint_type'">
 ! Get <xsl:value-of select="@path"/>
-            <!-- for comment only -->        
+            <!-- for comment only -->
 call get_dimension_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(<xsl:value-of select="$currentidxpath"/>(dim1,dim2,dim3))
    call get_vect3d_int_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,&amp;
    <xsl:value-of select="$currentidxpath"/>, &amp;
    dim1,dim2,dim3,dum1,dum2,dum3,status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get <xsl:value-of select="$currentidxpath"/>'
 endif
 <!-- -->
          </xsl:when>
          <xsl:when test="@type='array4dflt_type'">
 ! Get <xsl:value-of select="@path"/>
-            <!-- for comment only -->        
+            <!-- for comment only -->
 call get_dimension_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(<xsl:value-of select="$currentidxpath"/>(dim1,dim2,dim3,dim4))
    call get_vect4d_double_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>, &amp;
    <xsl:value-of select="$currentidxpath"/>, &amp;
    dim1,dim2,dim3,dim4,dum1,dum2,dum3,dum4,status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get <xsl:value-of select="$currentidxpath"/>'
 endif
 <!-- -->
          </xsl:when>
-         
+
          <xsl:when test="@type='array5dflt_type'">
 ! Get <xsl:value-of select="@path"/>
-            <!-- for comment only -->        
+            <!-- for comment only -->
 call get_dimension_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(<xsl:value-of select="$currentidxpath"/>(dim1,dim2,dim3,dim4,dim5))
    call get_vect5d_double_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>, &amp;
    <xsl:value-of select="$currentidxpath"/>, &amp;
    dim1,dim2,dim3,dim4,dim5,dum1,dum2,dum3,dum4,dum5,status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get <xsl:value-of select="$currentidxpath"/>'
 endif
 <!-- -->
          </xsl:when>
                   <xsl:when test="@type='array6dflt_type'">
 ! Get <xsl:value-of select="@path"/>
-            <!-- for comment only -->        
+            <!-- for comment only -->
 call get_dimension_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(<xsl:value-of select="$currentidxpath"/>(dim1,dim2,dim3,dim4,dim5,dim6))
    call get_vect6d_double_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>, &amp;
    <xsl:value-of select="$currentidxpath"/>, &amp;
    dim1,dim2,dim3,dim4,dim5,dim6,dum1,dum2,dum3,dum4,dum5,dum6,status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get <xsl:value-of select="$currentidxpath"/>'
 endif
          </xsl:when>
@@ -2083,22 +2083,22 @@ endif
 					<xsl:when test="@type='xs:integer'">
 ! Put <xsl:value-of select="@path"/>
 if (any(cpos(1:lentime)%<xsl:value-of select="translate(@path,'/','%')"/>/=-999999999))  then
-   allocate(vect1Dint(lentime))        
-   vect1DInt(1:lentime) = cpos(1:lentime)%<xsl:value-of select="translate(@path,'/','%')"/>    
+   allocate(vect1Dint(lentime))
+   vect1DInt(1:lentime) = cpos(1:lentime)%<xsl:value-of select="translate(@path,'/','%')"/>
    call put_vect1D_int(idx,path, "<xsl:value-of select="@path"/>",&amp;
-   vect1DInt,lentime,1)           
+   vect1DInt,lentime,1)
    deallocate(vect1DInt)
-endif   
+endif
         <!-- -->
 					</xsl:when>
 					<xsl:when test="@type='xs:float'">
-! Put <xsl:value-of select="@path"/>  
+! Put <xsl:value-of select="@path"/>
 if (any(cpos(1:lentime)%<xsl:value-of select="translate(@path,'/','%')"/>/=-9.D40))  then
-   allocate(vect1DDouble(lentime))        
-   vect1DDouble(1:lentime) = cpos(1:lentime)%<xsl:value-of select="translate(@path,'/','%')"/>    
-   call put_vect1D_double(idx,path, "<xsl:value-of select="@path"/>",vect1DDouble,lentime,1)           
+   allocate(vect1DDouble(lentime))
+   vect1DDouble(1:lentime) = cpos(1:lentime)%<xsl:value-of select="translate(@path,'/','%')"/>
+   call put_vect1D_double(idx,path, "<xsl:value-of select="@path"/>",vect1DDouble,lentime,1)
    deallocate(vect1DDouble)
-endif 
+endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test="@type='vecflt_type'">
@@ -2109,7 +2109,7 @@ if (associated(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then 
       vect2DDouble(:,itime) = cpos(itime)%<xsl:value-of select="translate(@path,'/','%')"/>
    enddo
    call put_vect2D_Double(idx,path, "<xsl:value-of select="@path"/>",vect2DDouble, &amp;
-   size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,1),lentime,1)           
+   size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,1),lentime,1)
    deallocate(vect2DDouble)
 endif
 <!-- -->
@@ -2122,7 +2122,7 @@ if (associated(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then 
       vect2DInt(:,itime) = cpos(itime)%<xsl:value-of select="translate(@path,'/','%')"/>
    enddo
    call put_vect2D_Int(idx,path, "<xsl:value-of select="@path"/>",vect2DInt, &amp;
-   size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,1),lentime,1)           
+   size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,1),lentime,1)
    deallocate(vect2DInt)
 endif
 <!-- -->
@@ -2137,13 +2137,13 @@ if (associated(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then 
    enddo
    call put_vect3D_Double(idx,path, "<xsl:value-of select="@path"/>",vect3DDouble, &amp;
    size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
-   size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,2),lentime,1)           
+   size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,2),lentime,1)
    deallocate(vect3DDouble)
 endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test="@type='matint_type'">
-! put <xsl:value-of select="@path"/>  
+! put <xsl:value-of select="@path"/>
 if (associated(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then  <!-- assumes that either all time indices are associated, or none-->
    allocate(vect3Dint(size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
    size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,2),lentime))
@@ -2151,7 +2151,7 @@ if (associated(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then 
       vect3Dint(:,:,itime)  = cpos(itime)%<xsl:value-of select="translate(@path,'/','%')"/>
    enddo
    call put_vect3D_int(idx,path, "<xsl:value-of select="@path"/>",vect3Dint, &amp;
-   size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,1),size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,2),lentime,1)           
+   size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,1),size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,2),lentime,1)
    deallocate(vect3Dint)
 endif
 <!-- -->
@@ -2168,12 +2168,12 @@ if (associated(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then 
    enddo
    call put_vect4d_Double(idx,path, "<xsl:value-of select="@path"/>",vect4dDouble, &amp;
    size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,1),size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,2),&amp;
-   size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,3),lentime,1)           
+   size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,3),lentime,1)
    deallocate(vect4dDouble)
 endif
 <!-- -->
 					</xsl:when>
-					
+
 					<xsl:when test="@type='array4dflt_type'">
 ! put <xsl:value-of select="@path"/>
 						<!-- for comment only -->
@@ -2188,7 +2188,7 @@ if (associated(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then 
    call put_vect5d_Double(idx,path, "<xsl:value-of select="@path"/>",vect5dDouble, &amp;
    size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,1),size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,2),&amp;
    size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,3),size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,4),&amp;
-   lentime,1)           
+   lentime,1)
    deallocate(vect5dDouble)
 endif
 <!-- -->
@@ -2208,7 +2208,7 @@ if (associated(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then 
    call put_vect6d_Double(idx,path, "<xsl:value-of select="@path"/>",vect6dDouble, &amp;
    size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,1),size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,2),&amp;
    size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,3),size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,4),&amp;
-   size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,5),lentime,1)           
+   size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,5),lentime,1)
    deallocate(vect6dDouble)
 endif
 <!-- -->
@@ -2231,7 +2231,7 @@ do itime = 1,lentime
    call put_object_in_object(idx,obj_all_times,"ALLTIMES",itime,obj1)
 enddo
 call put_object(idx,path,"<xsl:value-of select = "@path"/>",obj_all_times,1)
-  
+
 ! Write non-timed fields    */
 call begin_object(idx,-1,1,path//"/<xsl:value-of select = "@path"/>",NON_TIMED,obj1)
 if (associated(cpos(1)%<xsl:value-of select = "translate(@path,'/','%')"/>)) then
@@ -2246,16 +2246,16 @@ if (associated(cpos(1)%<xsl:value-of select = "translate(@path,'/','%')"/>)) the
 endif
 call put_object(idx,path,"<xsl:value-of select = "@path"/>",obj1,0)
                </xsl:when>
-					
+
 					<xsl:when test="@type='structure'">
 						<xsl:apply-templates select="field" mode="PUT_TIMED"/>
 					</xsl:when>
 					<xsl:otherwise>
- ! Get <xsl:value-of select="@path"/> : PROBLEM : UNIDENTIFIED TYPE !!!         
+ ! Get <xsl:value-of select="@path"/> : PROBLEM : UNIDENTIFIED TYPE !!!
         </xsl:otherwise>
 				</xsl:choose>
 			</xsl:when>
-         
+
 			<xsl:otherwise>
 				<!-- Time independent signals in time-dependent CPO : the first index cpos(1) defines the value of the time-independent data -->
 				<xsl:choose>
@@ -2284,8 +2284,8 @@ call put_object(idx,path,"<xsl:value-of select = "@path"/>",obj1,0)
 						<!-- for comment only -->
 if (associated(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    longstring = ' '    <!-- Initialisation of longstring, otherwise strange problems occur !-->
-   lenstring = size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>)      
-   if (lenstring.EQ.1) then             
+   lenstring = size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>)
+   if (lenstring.EQ.1) then
       longstring = trim(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>(1))
    else
       do istring=1,lenstring
@@ -2293,7 +2293,7 @@ if (associated(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then
       enddo
    endif
    call put_string(idx,path, "<xsl:value-of select="@path"/>",trim(longstring))
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put cpos%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
@@ -2310,17 +2310,17 @@ if (associated(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_Vect1d_String(idx,path, "<xsl:value-of select="@path"/>", &amp;
          cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,dim1,dimtab,0)
    deallocate(dimtab)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put cpos%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test="@type='xs:integer'">
 ! Put <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
+						<!-- for comment only -->
 if (cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>.NE.-999999999) then
-   call put_int(idx,path, "<xsl:value-of select="@path"/>",cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>)        
-   if (ual_debug =='yes') write(*,*) &amp; 
+   call put_int(idx,path, "<xsl:value-of select="@path"/>",cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put cpos%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
@@ -2328,9 +2328,9 @@ endif
 					<xsl:when test="@type='xs:float'">
 ! Put <xsl:value-of select="@path"/>
 						<!-- for comment only -->
-if (cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>.NE.-9.D40) then 
-   call put_double(idx,path, "<xsl:value-of select="@path"/>",cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>)  
-   if (ual_debug =='yes') write(*,*) &amp; 
+if (cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>.NE.-9.D40) then
+   call put_double(idx,path, "<xsl:value-of select="@path"/>",cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put cpos%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
@@ -2338,35 +2338,35 @@ endif
 					<xsl:when test="@type='vecflt_type'">
 ! Put <xsl:value-of select="@path"/>
 						<!-- for comment only -->
-if (associated(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then   
+if (associated(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect1d_double(idx,path, "<xsl:value-of select="@path"/>", &amp;
    cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>),0)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put cpos%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test="@type='vecint_type'">
 ! Put <xsl:value-of select="@path"/>
-						<!-- for comment only --> 
-if (associated(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then         
+						<!-- for comment only -->
+if (associated(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect1d_int(idx,path, "<xsl:value-of select="@path"/>",&amp;
    cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
-   size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>),0) 
-   if (ual_debug =='yes') write(*,*) &amp; 
+   size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>),0)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put cpos%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test="@type='matflt_type'">
 ! Put <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
-if (associated(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then   
+						<!-- for comment only -->
+if (associated(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect2d_double(idx,path, "<xsl:value-of select="@path"/>", &amp;
    cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,&amp;
    size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
-   size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,2),0)  
+   size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,2),0)
    if (ual_debug =='yes') write(*,*) &amp;
        'Put cpos%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
@@ -2374,85 +2374,85 @@ endif
 					</xsl:when>
 					<xsl:when test="@type='matint_type'">
 ! Put <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
-if (associated(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then   
+						<!-- for comment only -->
+if (associated(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect2d_int(idx,path, "<xsl:value-of select="@path"/>", &amp;
    cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,1), &amp;
-   size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,2),0)  
-   if (ual_debug =='yes') write(*,*) &amp; 
+   size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,2),0)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put cpos%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test="@type='array3dflt_type'">
 ! Put <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
-if (associated(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then   
+						<!-- for comment only -->
+if (associated(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect3d_double(idx,path, "<xsl:value-of select="@path"/>", &amp;
    cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,1), &amp;
    size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,2),&amp;
-   size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,3),0)    
-   if (ual_debug =='yes') write(*,*) &amp; 
+   size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,3),0)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put cpos%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test="@type='array3dint_type'">
 ! Put <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
-if (associated(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then   
+						<!-- for comment only -->
+if (associated(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect3d_int(idx,path, "<xsl:value-of select="@path"/>", &amp;
    cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,1), &amp;
    size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,2),&amp;
-   size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,3),0)    
-   if (ual_debug =='yes') write(*,*) &amp; 
+   size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,3),0)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put cpos%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test="@type='array4dflt_type'">
 ! Put <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
-if (associated(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then   
+						<!-- for comment only -->
+if (associated(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect4d_double(idx,path, "<xsl:value-of select="@path"/>",cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,1),size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,2),&amp;
    size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,3),size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,4),0)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put cpos%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
 					</xsl:when>
 <xsl:when test="@type='array5dflt_type'">
 ! Put <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
-if (associated(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then   
+						<!-- for comment only -->
+if (associated(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect5d_double(idx,path, "<xsl:value-of select="@path"/>",cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,1),size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,2),&amp;
    size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,3),size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,4),&amp;
    size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,5),0)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put cpos%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
 </xsl:when>
 <xsl:when test="@type='array6dflt_type'">
 ! Put <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
-if (associated(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then   
+						<!-- for comment only -->
+if (associated(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect6d_double(idx,path, "<xsl:value-of select="@path"/>",cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,1),size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,2),&amp;
    size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,3),size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,4),&amp;
    size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,5),size(cpos(1)%<xsl:value-of select="translate(@path,'/','%')"/>,6),0)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put cpos%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
-					</xsl:when>					
-					
-					
+					</xsl:when>
+
+
 					<xsl:otherwise>
  ! Put <xsl:value-of select="@path"/> : PROBLEM : UNIDENTIFIED TYPE !!! <!-- for comment only -->
 					</xsl:otherwise>
@@ -2460,7 +2460,7 @@ endif
 			</xsl:otherwise>
 		</xsl:choose>
 	</xsl:template>
-   
+
 <!--!!!!!!!!!!!!!!!!!!!!!!!!!        PUT SINGLE CPO       !!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
 <xsl:template match="field" mode="PUT_SINGLE">
 		<!-- to put an element from a CPO which is NOT time-dependent : easy : elementary PUT -->
@@ -2491,8 +2491,8 @@ call put_object(idx,path,"<xsl:value-of select = "@path"/>",obj1,0)
 				<!-- for comment only -->
 if (associated(cpo%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    longstring = ' '    <!-- Initialisation of longstring, otherwise strange problems occur !-->
-   lenstring = size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>)      
-   if (lenstring.EQ.1) then             
+   lenstring = size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>)
+   if (lenstring.EQ.1) then
       longstring = trim(cpo%<xsl:value-of select="translate(@path,'/','%')"/>(1))
    else
       do istring=1,lenstring
@@ -2500,7 +2500,7 @@ if (associated(cpo%<xsl:value-of select="translate(@path,'/','%')"/>)) then
       enddo
    endif
    call put_string(idx,path, "<xsl:value-of select="@path"/>",trim(longstring))       ! should clean up longstring after that, or send to the put only the right length, which has been updated
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put cpo%<xsl:value-of select="translate(@path,'/','%')"/>',cpo%<xsl:value-of select="translate(@path,'/','%')"/>
 endif
 <!-- -->
@@ -2517,17 +2517,17 @@ if (associated(cpo%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_Vect1d_String(idx,path, "<xsl:value-of select="@path"/>", &amp;
          cpo%<xsl:value-of select="translate(@path,'/','%')"/>,dim1,dimtab,0)
    deallocate(dimtab)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put cpo%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
 			</xsl:when>
 			<xsl:when test="@type='xs:integer'">
 ! Put <xsl:value-of select="@path"/>
-				<!-- for comment only -->        
+				<!-- for comment only -->
 if (cpo%<xsl:value-of select="translate(@path,'/','%')"/>.NE.-999999999) then
-   call put_int(idx,path, "<xsl:value-of select="@path"/>",cpo%<xsl:value-of select="translate(@path,'/','%')"/>)        
-   if (ual_debug =='yes') write(*,*) &amp; 
+   call put_int(idx,path, "<xsl:value-of select="@path"/>",cpo%<xsl:value-of select="translate(@path,'/','%')"/>)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put cpo%<xsl:value-of select="translate(@path,'/','%')"/>',cpo%<xsl:value-of select="translate(@path,'/','%')"/>
 endif
 <!-- -->
@@ -2535,9 +2535,9 @@ endif
 			<xsl:when test="@type='xs:float'">
 ! Put <xsl:value-of select="@path"/>
 				<!-- for comment only -->
-if (cpo%<xsl:value-of select="translate(@path,'/','%')"/>.NE.-9.D40) then 
-   call put_double(idx,path, "<xsl:value-of select="@path"/>",cpo%<xsl:value-of select="translate(@path,'/','%')"/>)  
-   if (ual_debug =='yes') write(*,*) &amp; 
+if (cpo%<xsl:value-of select="translate(@path,'/','%')"/>.NE.-9.D40) then
+   call put_double(idx,path, "<xsl:value-of select="@path"/>",cpo%<xsl:value-of select="translate(@path,'/','%')"/>)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put cpo%<xsl:value-of select="translate(@path,'/','%')"/>',cpo%<xsl:value-of select="translate(@path,'/','%')"/>
 endif
 <!-- -->
@@ -2545,127 +2545,127 @@ endif
 			<xsl:when test="@type='vecflt_type'">
 ! Put <xsl:value-of select="@path"/>
 				<!-- for comment only -->
-if (associated(cpo%<xsl:value-of select="translate(@path,'/','%')"/>)) then   
+if (associated(cpo%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect1d_double(idx,path, "<xsl:value-of select="@path"/>",&amp;
    cpo%<xsl:value-of select="translate(@path,'/','%')"/>,&amp;
    size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>),0)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put cpo%<xsl:value-of select="translate(@path,'/','%')"/>',cpo%<xsl:value-of select="translate(@path,'/','%')"/>
 endif
 <!-- -->
 			</xsl:when>
 			<xsl:when test="@type='vecint_type'">
 ! Put <xsl:value-of select="@path"/>
-				<!-- for comment only --> 
-if (associated(cpo%<xsl:value-of select="translate(@path,'/','%')"/>)) then         
+				<!-- for comment only -->
+if (associated(cpo%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect1d_int(idx,path, "<xsl:value-of select="@path"/>",&amp;
    cpo%<xsl:value-of select="translate(@path,'/','%')"/>,&amp;
-   size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>),0) 
-   if (ual_debug =='yes') write(*,*) &amp; 
+   size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>),0)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put cpo%<xsl:value-of select="translate(@path,'/','%')"/>',cpo%<xsl:value-of select="translate(@path,'/','%')"/>
 endif
 <!-- -->
 			</xsl:when>
 			<xsl:when test="@type='matflt_type'">
 ! Put <xsl:value-of select="@path"/>
-				<!-- for comment only -->        
-if (associated(cpo%<xsl:value-of select="translate(@path,'/','%')"/>)) then   
+				<!-- for comment only -->
+if (associated(cpo%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect2d_double(idx,path, "<xsl:value-of select="@path"/>",&amp;
    cpo%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
-   size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,2),0)  
-   if (ual_debug =='yes') write(*,*) &amp; 
+   size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,2),0)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put cpo%<xsl:value-of select="translate(@path,'/','%')"/>',cpo%<xsl:value-of select="translate(@path,'/','%')"/>
 endif
 <!-- -->
 			</xsl:when>
 			<xsl:when test="@type='matint_type'">
 ! Put <xsl:value-of select="@path"/>
-				<!-- for comment only -->        
-if (associated(cpo%<xsl:value-of select="translate(@path,'/','%')"/>)) then   
+				<!-- for comment only -->
+if (associated(cpo%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect2d_int(idx,path, "<xsl:value-of select="@path"/>",&amp;
    cpo%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,1), &amp;
-   size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,2),0)  
-   if (ual_debug =='yes') write(*,*) &amp; 
+   size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,2),0)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put cpo%<xsl:value-of select="translate(@path,'/','%')"/>',cpo%<xsl:value-of select="translate(@path,'/','%')"/>
 endif
 <!-- -->
 			</xsl:when>
 			<xsl:when test="@type='array3dflt_type'">
 ! Put <xsl:value-of select="@path"/>
-				<!-- for comment only -->        
-if (associated(cpo%<xsl:value-of select="translate(@path,'/','%')"/>)) then   
+				<!-- for comment only -->
+if (associated(cpo%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect3d_double(idx,path, "<xsl:value-of select="@path"/>", &amp;
    cpo%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
    size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,2), &amp;
-   size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,3),0)    
-   if (ual_debug =='yes') write(*,*) &amp; 
+   size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,3),0)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put cpo%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
 			</xsl:when>
 			<xsl:when test="@type='array3dint_type'">
 ! Put <xsl:value-of select="@path"/>
-				<!-- for comment only -->        
-if (associated(cpo%<xsl:value-of select="translate(@path,'/','%')"/>)) then   
+				<!-- for comment only -->
+if (associated(cpo%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect3d_int(idx,path, "<xsl:value-of select="@path"/>", &amp;
    cpo%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
    size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,2),&amp;
-   size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,3),0)    
-   if (ual_debug =='yes') write(*,*) &amp; 
+   size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,3),0)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put cpo%<xsl:value-of select="translate(@path,'/','%')"/>',cpo%<xsl:value-of select="translate(@path,'/','%')"/>
 endif
 <!-- -->
 			</xsl:when>
 			<xsl:when test="@type='array4dflt_type'">
 ! Put <xsl:value-of select="@path"/>
-				<!-- for comment only -->        
-if (associated(cpo%<xsl:value-of select="translate(@path,'/','%')"/>)) then   
+				<!-- for comment only -->
+if (associated(cpo%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect4d_double(idx,path, "<xsl:value-of select="@path"/>",cpo%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,1),size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,2),&amp;
    size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,3),size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,4),0)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put cpo%<xsl:value-of select="translate(@path,'/','%')"/>',cpo%<xsl:value-of select="translate(@path,'/','%')"/>
 endif
 <!-- -->
 			</xsl:when>
          <xsl:when test="@type='array5dflt_type'">
 ! Put <xsl:value-of select="@path"/>
-				<!-- for comment only -->        
-if (associated(cpo%<xsl:value-of select="translate(@path,'/','%')"/>)) then   
+				<!-- for comment only -->
+if (associated(cpo%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect5d_double(idx,path, "<xsl:value-of select="@path"/>",cpo%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,1),size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,2),&amp;
    size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,3),size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,4),&amp;
    size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,5),0)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put cpo%<xsl:value-of select="translate(@path,'/','%')"/>',cpo%<xsl:value-of select="translate(@path,'/','%')"/>
 endif
 <!-- -->
 			</xsl:when>
          <xsl:when test="@type='array6dflt_type'">
 ! Put <xsl:value-of select="@path"/>
-				<!-- for comment only -->        
-if (associated(cpo%<xsl:value-of select="translate(@path,'/','%')"/>)) then   
+				<!-- for comment only -->
+if (associated(cpo%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect6d_double(idx,path, "<xsl:value-of select="@path"/>",cpo%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,1),size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,2),&amp;
    size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,3),size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,4),&amp;
    size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,5),size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,6),0)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put cpo%<xsl:value-of select="translate(@path,'/','%')"/>',cpo%<xsl:value-of select="translate(@path,'/','%')"/>
 endif
 <!-- -->
-			</xsl:when>			
-			
+			</xsl:when>
+
 			<xsl:otherwise>
  ! Put <xsl:value-of select="@path"/> : PROBLEM : UNIDENTIFIED TYPE !!! <!-- for comment only -->
 			</xsl:otherwise>
 		</xsl:choose>
    </xsl:if>
 </xsl:template>
-   
+
 	<!--!!!!!!!!!!!!!!!!!!!!!!!!!             PUT_SLICE CPO ROUTINES           !!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
 	<!--<xsl:template match="CPO" mode="PUT_SLICE">
 
@@ -2705,11 +2705,11 @@ call put_object_slice(idx,path,"<xsl:value-of select="@path"/>",cpo%time,obj_sin
 			</xsl:when>
 			<xsl:when test="@type='xs:integer'  and @timed='yes'">
 ! Put <xsl:value-of select="@path"/>
-				<!-- for comment only -->        
+				<!-- for comment only -->
 if (cpo%<xsl:value-of select="translate(@path,'/','%')"/>.NE.-999999999) then
    call put_int_slice(idx,path, "<xsl:value-of select="@path"/>",cpo%<xsl:value-of select="translate(@path,'/','%')"/>,&amp;
-   cpo%time)        
-   if (ual_debug =='yes') write(*,*) &amp; 
+   cpo%time)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put cpo%<xsl:value-of select="translate(@path,'/','%')"/>',cpo%<xsl:value-of select="translate(@path,'/','%')"/>
 endif
 <!-- -->
@@ -2717,9 +2717,9 @@ endif
 			<xsl:when test="@type='xs:float'  and @timed='yes'">
 ! Put <xsl:value-of select="@path"/>
 				<!-- for comment only -->
-if (cpo%<xsl:value-of select="translate(@path,'/','%')"/>.NE.-9.D40) then 
+if (cpo%<xsl:value-of select="translate(@path,'/','%')"/>.NE.-9.D40) then
    call put_double_slice(idx,path, "<xsl:value-of select="@path"/>",cpo%<xsl:value-of select="translate(@path,'/','%')"/>,&amp;
-   cpo%time)  
+   cpo%time)
    if (ual_debug =='yes') write(*,*) &amp;
        'Put cpo%<xsl:value-of select="translate(@path,'/','%')"/>',cpo%<xsl:value-of select="translate(@path,'/','%')"/>
 endif
@@ -2728,11 +2728,11 @@ endif
 			<xsl:when test="@type='vecflt_type'  and @timed='yes'">
 ! Put <xsl:value-of select="@path"/>
 				<!-- for comment only -->
-if (associated(cpo%<xsl:value-of select="translate(@path,'/','%')"/>)) then   
+if (associated(cpo%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect1d_double_slice(idx,path, "<xsl:value-of select="@path"/>",&amp;
    cpo%<xsl:value-of select="translate(@path,'/','%')"/>,&amp;
    size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>),cpo%time)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put cpo%<xsl:value-of select="translate(@path,'/','%')"/>',&amp;
    cpo%<xsl:value-of select="translate(@path,'/','%')"/>
 endif
@@ -2740,11 +2740,11 @@ endif
 			</xsl:when>
 			<xsl:when test="@type='vecint_type'  and @timed='yes'">
 ! Put <xsl:value-of select="@path"/>
-				<!-- for comment only --> 
-if (associated(cpo%<xsl:value-of select="translate(@path,'/','%')"/>)) then         
+				<!-- for comment only -->
+if (associated(cpo%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect1d_int_slice(idx,path, "<xsl:value-of select="@path"/>",&amp;
    cpo%<xsl:value-of select="translate(@path,'/','%')"/>,&amp;
-   size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>),cpo%time) 
+   size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>),cpo%time)
    if (ual_debug =='yes') write(*,*) &amp;
       'Put cpo%<xsl:value-of select="translate(@path,'/','%')"/>',cpo%<xsl:value-of select="translate(@path,'/','%')"/>
 endif
@@ -2752,100 +2752,100 @@ endif
 			</xsl:when>
 			<xsl:when test="@type='matflt_type'  and @timed='yes'">
 ! Put <xsl:value-of select="@path"/>
-				<!-- for comment only -->        
-if (associated(cpo%<xsl:value-of select="translate(@path,'/','%')"/>)) then   
+				<!-- for comment only -->
+if (associated(cpo%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect2d_double_slice(idx,path, "<xsl:value-of select="@path"/>", &amp;
    cpo%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
-   size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,2),cpo%time)  
-   if (ual_debug =='yes') write(*,*) &amp; 
+   size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,2),cpo%time)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put cpo%<xsl:value-of select="translate(@path,'/','%')"/>',cpo%<xsl:value-of select="translate(@path,'/','%')"/>
 endif
 <!-- -->
 			</xsl:when>
 			<xsl:when test="@type='matint_type'  and @timed='yes'">
 ! Put <xsl:value-of select="@path"/>
-				<!-- for comment only -->        
-if (associated(cpo%<xsl:value-of select="translate(@path,'/','%')"/>)) then   
+				<!-- for comment only -->
+if (associated(cpo%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect2d_int_slice(idx,path, "<xsl:value-of select="@path"/>",&amp;
    cpo%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,1), &amp;
-   size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,2),cpo%time)  
-   if (ual_debug =='yes') write(*,*) &amp; 
+   size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,2),cpo%time)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put cpo%<xsl:value-of select="translate(@path,'/','%')"/>',cpo%<xsl:value-of select="translate(@path,'/','%')"/>
 endif
 <!-- -->
 			</xsl:when>
 			<xsl:when test="@type='array3dflt_type'  and @timed='yes'">
 ! Put <xsl:value-of select="@path"/>
-				<!-- for comment only -->        
-if (associated(cpo%<xsl:value-of select="translate(@path,'/','%')"/>)) then   
+				<!-- for comment only -->
+if (associated(cpo%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect3d_double_slice(idx,path, "<xsl:value-of select="@path"/>", &amp;
    cpo%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
    size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,2), &amp;
-   size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,3),cpo%time)    
-   if (ual_debug =='yes') write(*,*) &amp; 
+   size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,3),cpo%time)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put cpo%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
 			</xsl:when>
 			<xsl:when test="@type='array3dint_type'  and @timed='yes'">
 ! Put <xsl:value-of select="@path"/>
-				<!-- for comment only -->        
-if (associated(cpo%<xsl:value-of select="translate(@path,'/','%')"/>)) then   
+				<!-- for comment only -->
+if (associated(cpo%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect3d_int_slice(idx,path, "<xsl:value-of select="@path"/>", &amp;
    cpo%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
    size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,2),&amp;
-   size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,3),cpo%time)    
-   if (ual_debug =='yes') write(*,*) &amp; 
+   size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,3),cpo%time)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put cpo%<xsl:value-of select="translate(@path,'/','%')"/>',cpo%<xsl:value-of select="translate(@path,'/','%')"/>
 endif
 <!-- -->
 			</xsl:when>
 			<xsl:when test="@type='array4dflt_type'  and @timed='yes'">
 ! Put <xsl:value-of select="@path"/>
-				<!-- for comment only -->        
-if (associated(cpo%<xsl:value-of select="translate(@path,'/','%')"/>)) then   
+				<!-- for comment only -->
+if (associated(cpo%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect4d_double_slice(idx,path, "<xsl:value-of select="@path"/>", &amp;
    cpo%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
    size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,2), &amp;
-   size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,3), &amp;    
-   size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,4),cpo%time)    
-   if (ual_debug =='yes') write(*,*) &amp; 
+   size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,3), &amp;
+   size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,4),cpo%time)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put cpo%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
 			</xsl:when>
 						<xsl:when test="@type='array5dflt_type'  and @timed='yes'">
 ! Put <xsl:value-of select="@path"/>
-if (associated(cpo%<xsl:value-of select="translate(@path,'/','%')"/>)) then   
+if (associated(cpo%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect5d_double_slice(idx,path, "<xsl:value-of select="@path"/>", &amp;
    cpo%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
    size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,2), &amp;
-   size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,3), &amp;    
-   size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,4), &amp;    
-   size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,5),cpo%time)    
-   if (ual_debug =='yes') write(*,*) &amp; 
+   size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,3), &amp;
+   size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,4), &amp;
+   size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,5),cpo%time)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put cpo%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
-			</xsl:when>			
+			</xsl:when>
 									<xsl:when test="@type='array6dflt_type'  and @timed='yes'">
 ! Put <xsl:value-of select="@path"/>
-if (associated(cpo%<xsl:value-of select="translate(@path,'/','%')"/>)) then   
+if (associated(cpo%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect6d_double_slice(idx,path, "<xsl:value-of select="@path"/>", &amp;
    cpo%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
    size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,2), &amp;
-   size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,3), &amp;    
-   size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,4), &amp;    
-   size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,5), &amp;    
-   size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,6),cpo%time)    
-   if (ual_debug =='yes') write(*,*) &amp; 
+   size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,3), &amp;
+   size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,4), &amp;
+   size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,5), &amp;
+   size(cpo%<xsl:value-of select="translate(@path,'/','%')"/>,6),cpo%time)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put cpo%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
@@ -2853,7 +2853,7 @@ endif
 
 		</xsl:choose>
 	</xsl:template>
-   
+
 	<!--!!!!!!!!!!!!!!!!!!!!!!!!!             PUT NON TIMED CPO ROUTINES           !!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
 	<!--<xsl:template match="CPO" mode="PUT_NON_TIMED">
 
@@ -2865,12 +2865,12 @@ endif
   <xsl:param name="objpath"/>   <!-- path inside the object -->
   <xsl:param name="idxpath"/>   <!-- full C++ path including indices -->
   <xsl:param name="timed"/>     <!-- are we looking for timed or non-timed fields? -->
-  
+
   <!-- build the path of the current field inside the object -->
   <xsl:param name="currentobjpath" select="concat($objpath,'/',@name)"/>
   <!-- build the complete path of the current field -->
   <xsl:param name="currentidxpath" select="concat($idxpath,'%',@name)"/>
-  
+
   <xsl:choose>
     <!--========== Arrays of structures ==========-->
     <xsl:when test="@type='struct_array'">
@@ -2893,7 +2893,7 @@ if (associated(<xsl:value-of select="$currentidxpath"/>)) then
       </xsl:apply-templates>
    enddo
 endif
-call put_object_in_object(idx,obj<xsl:value-of select="$level"/>, "<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>, obj<xsl:value-of select="$level + 1"/>);          
+call put_object_in_object(idx,obj<xsl:value-of select="$level"/>, "<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>, obj<xsl:value-of select="$level + 1"/>);
         </xsl:when>
         <xsl:otherwise>
 call begin_object(idx,obj<xsl:value-of select="$level"/>,i<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",NON_TIMED,obj<xsl:value-of select="$level + 1"/>)
@@ -2914,7 +2914,7 @@ call put_object_in_object(idx,obj<xsl:value-of select="$level"/>, "<xsl:value-of
       </xsl:if>
 
     </xsl:when>
-    
+
     <!--========== Regular structure ==========-->
     <xsl:when test="@type='structure'">
       <xsl:apply-templates select = "field" mode = "PUT_IN_OBJECT">
@@ -2935,7 +2935,7 @@ call put_object_in_object(idx,obj<xsl:value-of select="$level"/>, "<xsl:value-of
 if (associated(<xsl:value-of select="$currentidxpath"/>)) then
    longstring = ' '    <!-- Initialisation of longstring, otherwise strange problems occur !-->
    lenstring = size(<xsl:value-of select="$currentidxpath"/>)
-   if (lenstring.EQ.1) then             
+   if (lenstring.EQ.1) then
       longstring = trim(<xsl:value-of select="$currentidxpath"/>(1))
    else
       do istring=1,lenstring
@@ -2943,7 +2943,7 @@ if (associated(<xsl:value-of select="$currentidxpath"/>)) then
       enddo
    endif
    call put_string_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,trim(longstring))       ! should clean up longstring after that, or send to the put only the right length, which has been updated
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put <xsl:value-of select="$currentidxpath"/>',<xsl:value-of select="$currentidxpath"/>
 endif
 <!-- -->
@@ -2960,17 +2960,17 @@ if (associated(<xsl:value-of select="$currentidxpath"/>)) then
    call put_vect1d_string_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>, &amp;
          <xsl:value-of select="$currentidxpath"/>,dim1,dimtab)
    deallocate(dimtab)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put <xsl:value-of select="$currentidxpath"/>'
 endif
 <!-- -->
          </xsl:when>
          <xsl:when test="@type='xs:integer'">
 ! Put <xsl:value-of select="@path"/>
-            <!-- for comment only -->        
+            <!-- for comment only -->
 if (<xsl:value-of select="$currentidxpath"/>.NE.-999999999) then
    call put_int_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,<xsl:value-of select="$currentidxpath"/>)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put <xsl:value-of select="$currentidxpath"/>',<xsl:value-of select="$currentidxpath"/>
 endif
 <!-- -->
@@ -2980,7 +2980,7 @@ endif
             <!-- for comment only -->
 if (<xsl:value-of select="$currentidxpath"/>.NE.-9.D40) then
    call put_double_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,<xsl:value-of select="$currentidxpath"/>)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put <xsl:value-of select="$currentidxpath"/>',<xsl:value-of select="$currentidxpath"/>
 endif
 <!-- -->
@@ -2992,118 +2992,118 @@ if (associated(<xsl:value-of select="$currentidxpath"/>)) then
    call put_vect1d_double_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,&amp;
    <xsl:value-of select="$currentidxpath"/>,&amp;
    size(<xsl:value-of select="$currentidxpath"/>))
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put <xsl:value-of select="$currentidxpath"/>',<xsl:value-of select="$currentidxpath"/>
 endif
 <!-- -->
          </xsl:when>
          <xsl:when test="@type='vecint_type'">
 ! Put <xsl:value-of select="@path"/>
-            <!-- for comment only --> 
+            <!-- for comment only -->
 if (associated(<xsl:value-of select="$currentidxpath"/>)) then
    call put_vect1d_int_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,&amp;
    <xsl:value-of select="$currentidxpath"/>,&amp;
    size(<xsl:value-of select="$currentidxpath"/>))
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put <xsl:value-of select="$currentidxpath"/>',<xsl:value-of select="$currentidxpath"/>
 endif
 <!-- -->
          </xsl:when>
          <xsl:when test="@type='matflt_type'">
 ! Put <xsl:value-of select="@path"/>
-            <!-- for comment only -->        
+            <!-- for comment only -->
 if (associated(<xsl:value-of select="$currentidxpath"/>)) then
    call put_vect2d_double_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,&amp;
    <xsl:value-of select="$currentidxpath"/>, &amp;
    size(<xsl:value-of select="$currentidxpath"/>,1),&amp;
    size(<xsl:value-of select="$currentidxpath"/>,2))
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put <xsl:value-of select="$currentidxpath"/>',<xsl:value-of select="$currentidxpath"/>
 endif
 <!-- -->
          </xsl:when>
          <xsl:when test="@type='matint_type'">
 ! Put <xsl:value-of select="@path"/>
-            <!-- for comment only -->        
+            <!-- for comment only -->
 if (associated(<xsl:value-of select="$currentidxpath"/>)) then
    call put_vect2d_int_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,&amp;
    <xsl:value-of select="$currentidxpath"/>, &amp;
    size(<xsl:value-of select="$currentidxpath"/>,1), &amp;
    size(<xsl:value-of select="$currentidxpath"/>,2))
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put <xsl:value-of select="$currentidxpath"/>',<xsl:value-of select="$currentidxpath"/>
 endif
 <!-- -->
          </xsl:when>
          <xsl:when test="@type='array3dflt_type'">
 ! Put <xsl:value-of select="@path"/>
-            <!-- for comment only -->        
+            <!-- for comment only -->
 if (associated(<xsl:value-of select="$currentidxpath"/>)) then
    call put_vect3d_double_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>, &amp;
    <xsl:value-of select="$currentidxpath"/>, &amp;
    size(<xsl:value-of select="$currentidxpath"/>,1),&amp;
    size(<xsl:value-of select="$currentidxpath"/>,2), &amp;
    size(<xsl:value-of select="$currentidxpath"/>,3))
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put <xsl:value-of select="$currentidxpath"/>'
 endif
 <!-- -->
          </xsl:when>
          <xsl:when test="@type='array3dint_type'">
 ! Put <xsl:value-of select="@path"/>
-            <!-- for comment only -->        
+            <!-- for comment only -->
 if (associated(<xsl:value-of select="$currentidxpath"/>)) then
    call put_vect3d_int_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>, &amp;
    <xsl:value-of select="$currentidxpath"/>, &amp;
    size(<xsl:value-of select="$currentidxpath"/>,1),&amp;
    size(<xsl:value-of select="$currentidxpath"/>,2),&amp;
    size(<xsl:value-of select="$currentidxpath"/>,3))
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put <xsl:value-of select="$currentidxpath"/>',<xsl:value-of select="$currentidxpath"/>
 endif
 <!-- -->
          </xsl:when>
          <xsl:when test="@type='array4dflt_type'">
 ! Put <xsl:value-of select="@path"/>
-            <!-- for comment only -->        
+            <!-- for comment only -->
 if (associated(<xsl:value-of select="$currentidxpath"/>)) then
    call put_vect4d_double_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,<xsl:value-of select="$currentidxpath"/>, &amp;
    size(<xsl:value-of select="$currentidxpath"/>,1),size(<xsl:value-of select="$currentidxpath"/>,2),&amp;
    size(<xsl:value-of select="$currentidxpath"/>,3),size(<xsl:value-of select="$currentidxpath"/>,4))
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put <xsl:value-of select="$currentidxpath"/>',<xsl:value-of select="$currentidxpath"/>
 endif
 <!-- -->
          </xsl:when>
                   <xsl:when test="@type='array5dflt_type'">
 ! Put <xsl:value-of select="@path"/>
-            <!-- for comment only -->        
+            <!-- for comment only -->
 if (associated(<xsl:value-of select="$currentidxpath"/>)) then
    call put_vect5d_double_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,<xsl:value-of select="$currentidxpath"/>, &amp;
    size(<xsl:value-of select="$currentidxpath"/>,1),size(<xsl:value-of select="$currentidxpath"/>,2),&amp;
    size(<xsl:value-of select="$currentidxpath"/>,3),size(<xsl:value-of select="$currentidxpath"/>,4),&amp;
    size(<xsl:value-of select="$currentidxpath"/>,5))
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put <xsl:value-of select="$currentidxpath"/>',<xsl:value-of select="$currentidxpath"/>
 endif
 <!-- -->
          </xsl:when>
-         
+
 
                   <xsl:when test="@type='array6dflt_type'">
 ! Put <xsl:value-of select="@path"/>
-            <!-- for comment only -->        
+            <!-- for comment only -->
 if (associated(<xsl:value-of select="$currentidxpath"/>)) then
    call put_vect6d_double_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",i<xsl:value-of select="$level"/>,<xsl:value-of select="$currentidxpath"/>, &amp;
    size(<xsl:value-of select="$currentidxpath"/>,1),size(<xsl:value-of select="$currentidxpath"/>,2),&amp;
    size(<xsl:value-of select="$currentidxpath"/>,3),size(<xsl:value-of select="$currentidxpath"/>,4),&amp;
    size(<xsl:value-of select="$currentidxpath"/>,5),size(<xsl:value-of select="$currentidxpath"/>,6))
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put <xsl:value-of select="$currentidxpath"/>',<xsl:value-of select="$currentidxpath"/>
 endif
 <!-- -->
-         </xsl:when>       
-         
+         </xsl:when>
+
          <xsl:otherwise>
  ! Put <xsl:value-of select="@path"/> : PROBLEM : UNIDENTIFIED TYPE !!! <!-- for comment only -->
          </xsl:otherwise>
@@ -3112,7 +3112,7 @@ endif
    </xsl:otherwise>
  </xsl:choose>
 </xsl:template>
-   
+
 	<!--!!!!!!!!!!!!!!!!!!!!!!!!!             DELETE CPO ROUTINES           !!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
 	<!--<xsl:template match="CPO" mode="DELETE">
 
@@ -3128,8 +3128,8 @@ call delete_data(idx,cpopath,"<xsl:value-of select="@path"/>")         <!-- call
 			</xsl:otherwise>
 		</xsl:choose>
 	</xsl:template>
-	
-	
+
+
 	<!--!!!!!!!!!!!!!!!!!!!!!!!!!             DEALLOCATE CPO ROUTINES           !!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
 <!--<xsl:template match="CPO" mode="DEALLOCATE">
 
@@ -3139,10 +3139,10 @@ call delete_data(idx,cpopath,"<xsl:value-of select="@path"/>")         <!-- call
 <xsl:template match="field" mode="DEALLOCATE">
     <xsl:param name="level"/>     <!-- recursion level -->
     <xsl:param name="idxpath"/>   <!-- full fortran path including indices -->
-    
+
     <!-- build the complete path of the current field -->
     <xsl:param name="currentidxpath" select="concat($idxpath,'%',@name)"/>
-	
+
     <xsl:choose>
 <!-- xs:integer and xs:float are not deallocated (they are not allocatable !) -->
 			<xsl:when test="@type='vecflt_type' or @type='vecint_type' or @type='matflt_type' or @type='matint_type' or @type='array3dflt_type' or @type='array4dflt_type' or @type='xs:string' or @type='vecstring_type'">
@@ -3177,14 +3177,14 @@ call delete_data(idx,cpopath,"<xsl:value-of select="@path"/>")         <!-- call
 	<!--<xsl:template match="CPO" mode="COPY">
 
 </xsl:template>-->
-	
+
 	<xsl:template match="field" mode="COPY_TIMED">
       <xsl:param name="level"/>     <!-- recursion level -->
       <xsl:param name="idxpath"/>   <!-- full fortran path including indices -->
 
       <!-- build the complete path of the current field -->
       <xsl:param name="currentidxpath" select="concat($idxpath,'%',@name)"/>
-      
+
 		<xsl:choose>
 			<xsl:when test="@timed = 'yes'">
 				<!-- Time dependent signals in time-dependent CPO : copy the time-dependent value from the proper index of the array of cpo structure -->
@@ -3194,15 +3194,15 @@ call delete_data(idx,cpopath,"<xsl:value-of select="@path"/>")         <!-- call
 if (cpoin(itime)<xsl:value-of select="$currentidxpath"/>/=-999999999)  then
    cpoout(itime)<xsl:value-of select="$currentidxpath"/> = &amp;
    cpoin(itime)<xsl:value-of select="$currentidxpath"/>
-endif   
+endif
         <!-- -->
 					</xsl:when>
 					<xsl:when test="@type='xs:float'">
-! Copy <xsl:value-of select="@path"/>  
+! Copy <xsl:value-of select="@path"/>
 if (cpoin(itime)<xsl:value-of select="$currentidxpath"/>/=-9.D40)  then
    cpoout(itime)<xsl:value-of select="$currentidxpath"/> = &amp;
    cpoin(itime)<xsl:value-of select="$currentidxpath"/>
-endif 
+endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test="@type='vecflt_type' or @type='vecint_type' ">
@@ -3264,8 +3264,8 @@ if (associated(cpoin(itime)<xsl:value-of select="$currentidxpath"/>)) then
 endif
 <!-- -->
 					</xsl:when>
-						
-					
+
+
 					<xsl:when test="@type='array6dflt_type'">
 ! Copy <xsl:value-of select="@path"/>
 if (associated(cpoin(itime)<xsl:value-of select="$currentidxpath"/>)) then
@@ -3281,7 +3281,7 @@ if (associated(cpoin(itime)<xsl:value-of select="$currentidxpath"/>)) then
 endif
 <!-- -->
 					</xsl:when>
-						
+
                <xsl:when test="@type='struct_array'">
 ! Copy <xsl:value-of select="@path"/>
 if (associated(cpoin(itime)<xsl:value-of select = "$currentidxpath"/>)) then
@@ -3301,7 +3301,7 @@ endif
                   </xsl:apply-templates>
 					</xsl:when>
 					<xsl:otherwise>
- ! Copy <xsl:value-of select="@path"/> : PROBLEM : UNIDENTIFIED TYPE !!!         
+ ! Copy <xsl:value-of select="@path"/> : PROBLEM : UNIDENTIFIED TYPE !!!
         </xsl:otherwise>
 				</xsl:choose>
 			</xsl:when>
@@ -3341,7 +3341,7 @@ endif
 if (cpoin(1)<xsl:value-of select="$currentidxpath"/>/=-999999999)  then
    cpoout(itime)<xsl:value-of select="$currentidxpath"/> = &amp;
    cpoin(1)<xsl:value-of select="$currentidxpath"/>
-endif   
+endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test="@type='xs:float'">
@@ -3425,7 +3425,7 @@ endif
 			</xsl:otherwise>
 		</xsl:choose>
 	</xsl:template>
-   
+
 	<xsl:template match="field" mode="COPY_NON_TIMED">
 		<!-- copy an element from a CPO which is NOT time-dependent  -->
       <xsl:param name="level"/>     <!-- recursion level -->
@@ -3468,7 +3468,7 @@ endif
 if (cpoin<xsl:value-of select="$currentidxpath"/>/=-999999999)  then
    cpoout<xsl:value-of select="$currentidxpath"/> = &amp;
    cpoin<xsl:value-of select="$currentidxpath"/>
-endif   
+endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test="@type='xs:float'">
@@ -3558,7 +3558,7 @@ endif
 
       <!-- build the complete path of the current field -->
       <xsl:param name="currentidxpath" select="concat($idxpath,'%',@name)"/>
-      
+
 		<xsl:choose>
          <xsl:when test="@type='struct_array'">
 ! Copy <xsl:value-of select="@path"/>
@@ -3593,7 +3593,7 @@ endif
 if (cpoin(1)<xsl:value-of select="$currentidxpath"/>/=-999999999)  then
    cpoout<xsl:value-of select="$currentidxpath"/> = &amp;
    cpoin(1)<xsl:value-of select="$currentidxpath"/>
-endif   
+endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test="@type='xs:float'">
@@ -3682,7 +3682,7 @@ endif
 
       <!-- build the complete path of the current field -->
       <xsl:param name="currentidxpath" select="concat($idxpath,'%',@name)"/>
-      
+
 		<xsl:choose>
          <xsl:when test="@type='struct_array'">
 ! Copy <xsl:value-of select="@path"/>
@@ -3717,7 +3717,7 @@ endif
 if (cpoin<xsl:value-of select="$currentidxpath"/>/=-999999999)  then
    cpoout(1)<xsl:value-of select="$currentidxpath"/> = &amp;
    cpoin<xsl:value-of select="$currentidxpath"/>
-endif   
+endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test="@type='xs:float'">
@@ -3798,7 +3798,7 @@ endif
 			</xsl:otherwise>
 		</xsl:choose>
 	</xsl:template>
-	
+
 	<!--!!!!!!!!!!!!!!!!!!!!!!!!!             FLUSH CPO ROUTINES           !!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
 	<!--<xsl:template match="CPO" mode="FLUSH_CACHE">
         </xsl:template>-->
@@ -3811,10 +3811,10 @@ endif
 			<xsl:otherwise>
 call euitm_flush_cache(idx,cpopath,"<xsl:value-of select="@path"/>")         <!-- call to the low level euitm_flush_cache routine -->
 			</xsl:otherwise>
-		</xsl:choose> 
+		</xsl:choose>
 
 	</xsl:template>
-	
+
 	<!--!!!!!!!!!!!!!!!!!!!!!!!!!             DISCARD CPO ROUTINES           !!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
 	<!--<xsl:template match="CPO" mode="DISCARD_CACHE">
 
@@ -3831,6 +3831,6 @@ call euitm_discard_cache(idx,cpopath,"<xsl:value-of select="@path"/>")         <
 			</xsl:otherwise>
 		</xsl:choose>
 	</xsl:template>
-	
-	
+
+
 </xsl:stylesheet>

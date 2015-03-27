@@ -19,11 +19,11 @@ clean: makefile-gen
 clean-src: makefile-gen
 	$(MAKE) -f makefile-gen clean-src
 	rm -f makefile-gen
-	
-test: 
+
+test:
 	$(MAKE) -C tests/generator test
 
-test-clean: 
+test-clean:
 	$(MAKE) -C tests/generator clean
 
 test-clean-src:

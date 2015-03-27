@@ -24,13 +24,13 @@ module <xsl:value-of select="substring-before(@schemaLocation,'/')"/>_copy_struc
 use utilities_copy_struct
 </xsl:if>
 
-interface ids_copy        
+interface ids_copy
 <xsl:for-each select="document(@schemaLocation)/*/xs:complexType"> <!-- Scan all structures within the schema -->
-   module procedure ids_copy_struct_<xsl:value-of select="local:unique_name(@name)"/>	<!-- The name is truncated since Fortran 90/95 does not authorize procedure names above 33 characters -->	
+   module procedure ids_copy_struct_<xsl:value-of select="local:unique_name(@name)"/>	<!-- The name is truncated since Fortran 90/95 does not authorize procedure names above 33 characters -->
 </xsl:for-each>
 <xsl:if test="substring-before(@schemaLocation,'/')='utilities'">  <!-- Declare also the reference elements in utilities -->
 <xsl:for-each select="document(@schemaLocation)/*/xs:element[./xs:complexType]"> <!-- Scan all elements that are structures -->
-   module procedure ids_copy_struct_<xsl:value-of select="local:unique_name(@name)"/>	<!-- The name is truncated since Fortran 90/95 does not authorize procedure names above 33 characters -->	
+   module procedure ids_copy_struct_<xsl:value-of select="local:unique_name(@name)"/>	<!-- The name is truncated since Fortran 90/95 does not authorize procedure names above 33 characters -->
 </xsl:for-each>
 </xsl:if>
 end interface ids_copy
@@ -49,7 +49,7 @@ implicit none
 integer :: itime, lentime, lenstring, istring
 integer :: i1,i2,i3,i4,i5,i6,i7
 
-type(ids_<xsl:value-of select="@name"/>) :: struct_in, struct_out      
+type(ids_<xsl:value-of select="@name"/>) :: struct_in, struct_out
 
       <xsl:apply-templates select="./xs:sequence/xs:element" mode="COPY_FIELD">
          <xsl:with-param name="level" select="1"/>
@@ -76,7 +76,7 @@ implicit none
 integer :: itime, lentime, lenstring, istring
 integer :: i1,i2,i3,i4,i5,i6,i7
 
-type(ids_<xsl:value-of select="@name"/>) :: struct_in, struct_out      
+type(ids_<xsl:value-of select="@name"/>) :: struct_in, struct_out
 
       <xsl:apply-templates select="./xs:complexType/xs:sequence/xs:element" mode="COPY_FIELD">
          <xsl:with-param name="level" select="1"/>
@@ -110,17 +110,17 @@ end module
 if (associated(struct_in<xsl:value-of select = "$currentidxpath"/>)) then  <!-- assumes that either all time indices are associated, or none-->
    allocate(struct_out<xsl:value-of select="$currentidxpath"/>(size(struct_in<xsl:value-of select = "$currentidxpath"/>)))
    do i<xsl:value-of select="$level"/> = 1,size(struct_in<xsl:value-of select = "$currentidxpath"/>)
-      call ids_copy(struct_in<xsl:value-of select = "$currentidxpath"/>(i<xsl:value-of select="$level"/>), struct_out<xsl:value-of select = "$currentidxpath"/>(i<xsl:value-of select="$level"/>)) 
+      call ids_copy(struct_in<xsl:value-of select = "$currentidxpath"/>(i<xsl:value-of select="$level"/>), struct_out<xsl:value-of select = "$currentidxpath"/>(i<xsl:value-of select="$level"/>))
 <!-- Let's be clever and make it recursive -->
 <!-- OLD version    <xsl:apply-templates select = "./xs:sequence/xs:element" mode = "COPY_FIELD">
          <xsl:with-param name="level" select="$level + 1"/>
-         <xsl:with-param name="idxpath" select="concat($currentidxpath,'(i',$level,')')"/> 
+         <xsl:with-param name="idxpath" select="concat($currentidxpath,'(i',$level,')')"/>
       </xsl:apply-templates> -->
    enddo
 endif
          </xsl:when>
 			<xsl:when test="@type and not(@type='int_type' or @type='flt_type'  or @type='str_type' or @type='flt_1d_type') and not(@maxOccurs)"> <!-- Case of a simple structure -->
-      call ids_copy(struct_in<xsl:value-of select = "$currentidxpath"/>, struct_out<xsl:value-of select = "$currentidxpath"/>) 
+      call ids_copy(struct_in<xsl:value-of select = "$currentidxpath"/>, struct_out<xsl:value-of select = "$currentidxpath"/>)
 
         <!-- Let's be clever and make it recursive -->
 <!-- OLD version   <xsl:apply-templates select = "./xs:sequence/xs:element" mode = "COPY_FIELD">
@@ -143,7 +143,7 @@ endif
 if (struct_in<xsl:value-of select="$currentidxpath"/>/=-999999999)  then
    struct_out<xsl:value-of select="$currentidxpath"/> = &amp;
    struct_in<xsl:value-of select="$currentidxpath"/>
-endif   
+endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test="@type='flt_type' or ./xs:complexType/xs:group[@ref='FLT_0D']">

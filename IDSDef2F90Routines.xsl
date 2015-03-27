@@ -48,59 +48,59 @@ end module
 
   <xsl:result-document href="{@name}.f90">
 module <xsl:value-of select="@name"/>_ids_module
-! Declaration of the generic IDS GET routine 
+! Declaration of the generic IDS GET routine
 
-interface ids_get        
+interface ids_get
    module procedure ids_get_<xsl:value-of select="@name"/>
-end interface ids_get   
+end interface ids_get
 
 
-! Declaration of the generic IDS GET_SLICE routine 
-interface ids_get_slice        
+! Declaration of the generic IDS GET_SLICE routine
+interface ids_get_slice
    module procedure  ids_get_slice_<xsl:value-of select="@name"/>
 end interface ids_get_slice
 
-<xsl:if test=".//field[@type='dynamic']"> <!-- Procedure put_slice should exist only for time-dependent IDSs -->   
-! Declaration of the generic IDS PUT_SLICE routine 
-interface ids_put_slice    
+<xsl:if test=".//field[@type='dynamic']"> <!-- Procedure put_slice should exist only for time-dependent IDSs -->
+! Declaration of the generic IDS PUT_SLICE routine
+interface ids_put_slice
    module procedure ids_put_slice_<xsl:value-of select="@name"/>
 end interface ids_put_slice
 </xsl:if >
 
-! Declaration of the generic IDS PUT routine 
-interface ids_put        
-   module procedure ids_put_<xsl:value-of select="@name"/>		
+! Declaration of the generic IDS PUT routine
+interface ids_put
+   module procedure ids_put_<xsl:value-of select="@name"/>
 end interface ids_put
 
-! Declaration of the generic IDS PUT_NON_TIMED routine 
+! Declaration of the generic IDS PUT_NON_TIMED routine
 interface ids_put_non_timed
-   module procedure ids_put_non_timed_<xsl:value-of select="@name"/> 		 
+   module procedure ids_put_non_timed_<xsl:value-of select="@name"/>
 end interface ids_put_non_timed
 
-! Declaration of the generic IDS DELETE routine 
-interface ids_delete        
-   module procedure ids_delete_<xsl:value-of select="@name"/>		
+! Declaration of the generic IDS DELETE routine
+interface ids_delete
+   module procedure ids_delete_<xsl:value-of select="@name"/>
 end interface ids_delete
 
-! Declaration of the generic IDS DEALLOCATE routine 
-interface ids_deallocate        
-   module procedure ids_deallocate_<xsl:value-of select="@name"/>		
+! Declaration of the generic IDS DEALLOCATE routine
+interface ids_deallocate
+   module procedure ids_deallocate_<xsl:value-of select="@name"/>
 end interface ids_deallocate
 
 
-! Declaration of the generic IDS COPY routine 
-interface ids_copy        
-   module procedure ids_copy_<xsl:value-of select="@name"/>		
+! Declaration of the generic IDS COPY routine
+interface ids_copy
+   module procedure ids_copy_<xsl:value-of select="@name"/>
 end interface ids_copy
 
 <!--
 ! Declaration of the generic IDS FLUSH routine
-interface ids_flush        
-   module procedure ids_flush_<xsl:value-of select="@name"/>		
+interface ids_flush
+   module procedure ids_flush_<xsl:value-of select="@name"/>
 end interface ids_flush
 
 ! Declaration of the generic IDS DISCARD routine
-interface ids_discard        
+interface ids_discard
    module procedure ids_discard_<xsl:value-of select="@name"/>
 end interface ids_discard
 -->
@@ -109,7 +109,7 @@ character(len=3)::ual_debug
 
 contains
 
-character(10) function int2str(num) 
+character(10) function int2str(num)
    integer, intent(in):: num
    character(10) :: str
    ! convert integer to string using formatted write
@@ -126,16 +126,16 @@ FUNCTION isErrorCritical(status, fieldPath) RESULT (exitRequest)
 	character(len=100000)::longstring
 
 	exitRequest = .FALSE.
-	
+
 	if(status == 0) then
 		exitRequest = .FALSE.
 		return
 	endif
-		
+
 	if(0 .NE. is_critical_error(status) ) then
 		exitRequest = .TRUE.
-	endif	
-	
+	endif
+
 	if ( (ual_debug == 'yes') .OR. (ual_debug == 'vvv') .OR. exitRequest)then
 		call get_last_errmsg(longstring)
 		write(*,*) "ERROR! FIELD: ", trim(fieldPath), "    STATUS: ", status, "    MSG: ", trim(longstring)
@@ -145,7 +145,7 @@ END FUNCTION isErrorCritical
 
 <!-- ======================================  GET ======================================= -->
 
-!!!!!! Routines to GET the full IDS 
+!!!!!! Routines to GET the full IDS
 subroutine ids_get_<xsl:value-of select="@name"/>(idx,path,  IDS)
 
 use ids_schemas
@@ -157,8 +157,8 @@ integer :: ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7,dum1,dum2,dum3,dum4,dum5,dum
 
 character(len=132)::stringans      ! Temporary way of getting short strings
 character(len=100000)::longstring
-character(len=300) :: timepath    
-character(len=132), dimension(:), pointer ::stringpointer   => null()     
+character(len=300) :: timepath
+character(len=132), dimension(:), pointer ::stringpointer   => null()
 integer :: obj_all_times,obj1,obj2,obj3,obj4,obj5,obj6,obj7
 integer :: dimObj0,dimObj1,dimObj2,dimObj3,dimObj4,dimObj5,dimObj6,dimObj7
 integer :: i1,i2,i3,i4,i5,i6,i7
@@ -170,13 +170,13 @@ integer :: int0d
 real(DP) :: double0d
 
 
-type(ids_<xsl:value-of select="@name"/>) :: IDS       
+type(ids_<xsl:value-of select="@name"/>) :: IDS
 
 call getenv('ual_debug',ual_debug) ! Debug flag
 
 call begin_IDS_get(idx, path,0,dum1)
       <xsl:apply-templates select="field" mode="GET_SINGLE"/>
-call end_IDS_get(idx, path)      
+call end_IDS_get(idx, path)
 
 return
 end subroutine ids_get_<xsl:value-of select="@name"/>
@@ -201,7 +201,7 @@ real(DP), pointer :: vect1DDouble(:), time(:), vect2DDouble(:,:), vect3DDouble(:
 real(DP), pointer :: vect5DDouble(:,:,:,:,:), vect6DDouble(:,:,:,:,:,:) => null()
 character(len=132), dimension(:), pointer :: stringans => null()
 character(len=100000)::longstring
-character(len=300) :: timepath    
+character(len=300) :: timepath
 integer :: obj_single_time,obj1,obj2,obj3,obj4,obj5,obj6,obj7
 integer :: dimObj1,dimObj2,dimObj3,dimObj4,dimObj5,dimObj6,dimObj7
 integer :: i1,i2,i3,i4,i5,i6,i7
@@ -209,7 +209,7 @@ integer :: i1,i2,i3,i4,i5,i6,i7
 integer :: i<xsl:value-of select="@name"/>
 </xsl:for-each>
 
-type(ids_<xsl:value-of select="@name"/>) :: IDS      
+type(ids_<xsl:value-of select="@name"/>) :: IDS
 
 call getenv('ual_debug',ual_debug)
 
@@ -220,7 +220,7 @@ if (status.EQ.0) then
 else
    write(*,*) 'Get slice impossible, IDS is missing or requested time slice is not within the time interval of the IDS'
 endif
-call end_IDS_Get_Slice(idx,path)	      
+call end_IDS_Get_Slice(idx,path)
 
 return
 end subroutine ids_GET_SLICE_<xsl:value-of select="@name"/>
@@ -239,7 +239,7 @@ integer :: status = 0, retStatus = 0
 character*(*) :: path
 integer :: idx, lentime
 
-type(ids_<xsl:value-of select="@name"/>) :: IDS       
+type(ids_<xsl:value-of select="@name"/>) :: IDS
 
 ! internal variables declaration
 
@@ -253,7 +253,7 @@ real(DP), pointer :: vect1DDouble(:), time(:), vect2DDouble(:,:), vect3DDouble(:
 real(DP), pointer :: vect5DDouble(:,:,:,:,:), vect6DDouble(:,:,:,:,:,:) => null()
 character(len=132), dimension(:), pointer :: stri => null()
 character(len=100000)::longstring
-character(len=300) :: timepath    
+character(len=300) :: timepath
 integer :: obj_all_times,obj1,obj2,obj3,obj4,obj5,obj6,obj7
 integer :: i1,i2,i3,i4,i5,i6,i7
 <xsl:for-each select=".//field[@data_type='struct_array' and @maxoccur!='unbounded']">
@@ -288,7 +288,7 @@ end subroutine ids_put_<xsl:value-of select="@name"/>
 
 <!-- ======================================  PUT SLICE ======================================= -->
 
-<xsl:if test=".//field[@type='dynamic']"> <!-- Procedure put_slice should exist only for time-dependent IDSs -->   
+<xsl:if test=".//field[@type='dynamic']"> <!-- Procedure put_slice should exist only for time-dependent IDSs -->
 !!!!!! Routines to PUT_SLICE one time slice of a time-dependent IDS (affects only time-dependent fields)
 
 subroutine ids_put_slice_<xsl:value-of select="@name"/>(idx,path,IDS)
@@ -298,7 +298,7 @@ implicit none
 
 character*(*) :: path
 integer :: idx, lentime
-integer :: status = 0, retStatus = 0 
+integer :: status = 0, retStatus = 0
 
 type(ids_<xsl:value-of select="@name"/>) :: IDS
 
@@ -312,8 +312,8 @@ real(DP) :: double0D
 real(DP), pointer :: vect1DDouble(:), time(:), vect2DDouble(:,:), vect3DDouble(:,:,:), vect4DDouble(:,:,:,:) => null()
 real(DP), pointer :: vect5DDouble(:,:,:,:,:), vect6DDouble(:,:,:,:,:,:) => null()
 character(len=132), dimension(:), pointer :: stri => null()
-character(len=100000)::longstring 
-character(len=300)::timepath   
+character(len=100000)::longstring
+character(len=300)::timepath
 integer :: obj_single_time,obj1,obj2,obj3,obj4,obj5,obj6,obj7
 integer :: i1,i2,i3,i4,i5,i6,i7
 <xsl:for-each select=".//field[@data_type='struct_array' and @maxoccur!='unbounded']">
@@ -338,7 +338,7 @@ call begin_IDS_put_slice(idx, path)
 <xsl:apply-templates select="field" mode="PUT_SLICE"/>
 call end_IDS_put_slice(idx, path)
 
- 
+
 return
 end subroutine ids_put_slice_<xsl:value-of select="@name"/>
 </xsl:if>
@@ -346,7 +346,7 @@ end subroutine ids_put_slice_<xsl:value-of select="@name"/>
 
 <!-- ======================================  PUT NON TIMED ======================================= -->
 
-!!!!!! Routines to PUT_NON_TIMED the time INdependent data of time dependent IDSs 
+!!!!!! Routines to PUT_NON_TIMED the time INdependent data of time dependent IDSs
 
 subroutine ids_put_non_timed_<xsl:value-of select="@name"/>(idx, path,  IDS)
 
@@ -358,8 +358,8 @@ integer :: idx
 integer :: status = 0, retStatus = 0
 integer :: i,dim1,dim2,dim3,dim4,dim5,dim6,dim7, lenstring, istring
 integer, pointer :: dimtab(:) => null()
-character(len=100000)::longstring    
-character(len=300) :: timepath    
+character(len=100000)::longstring
+character(len=300) :: timepath
 integer :: obj1,obj2,obj3,obj4,obj5,obj6,obj7
 integer :: i1,i2,i3,i4,i5,i6,i7
 <xsl:for-each select=".//field[@data_type='struct_array' and @maxoccur!='unbounded']">
@@ -378,7 +378,7 @@ call ids_delete(idx,path,IDS)
 ! call ids_discard(idx,path,IDS)
 
 
-call begin_IDS_put_non_timed(idx, path) 
+call begin_IDS_put_non_timed(idx, path)
 		<xsl:apply-templates select="field" mode="PUT_SINGLE">
                 <xsl:with-param name="non_timed" select="yes"/>
                 </xsl:apply-templates>
@@ -389,7 +389,7 @@ end subroutine ids_put_non_timed_<xsl:value-of select="@name"/>
 
 
 <!-- ======================================  DELETE======================================= -->
-!!!!!! Routine to DELETE the IDS 
+!!!!!! Routine to DELETE the IDS
 
 subroutine ids_delete_<xsl:value-of select="@name"/>(idx,IDSpath,IDS)  <!-- systematic calls to the low level delete_data routine. The IDS input argument is added just for the interface to identify the relevant IDS type -->
 
@@ -398,10 +398,10 @@ implicit none
 character*(*) :: IDSpath
 integer :: idx
 
-type(ids_<xsl:value-of select="@name"/>) :: IDS       
+type(ids_<xsl:value-of select="@name"/>) :: IDS
 <xsl:for-each select=".//field[@data_type='struct_array' and @maxoccur!='unbounded']">
 integer :: i<xsl:value-of select="@name"/>
-</xsl:for-each>		
+</xsl:for-each>
 
 call getenv('ual_debug',ual_debug) ! Debug flag
 if (ual_debug =='yes') write(*,*) 'Deleting IDS ',IDSpath
@@ -412,16 +412,16 @@ end subroutine ids_delete_<xsl:value-of select="@name"/>
 
 
 <!-- ======================================  DEALLOCATE ======================================= -->
-!!!!!! Routines to DEALLOCATE IDSs 
+!!!!!! Routines to DEALLOCATE IDSs
 
-subroutine ids_deallocate_<xsl:value-of select="@name"/>(IDS)  
+subroutine ids_deallocate_<xsl:value-of select="@name"/>(IDS)
 
 use ids_schemas
 implicit none
 
 integer :: i1,i2,i3,i4,i5,i6,i7
 
-type(ids_<xsl:value-of select="@name"/>) :: IDS       
+type(ids_<xsl:value-of select="@name"/>) :: IDS
     <xsl:apply-templates select="field" mode="DEALLOCATE">
         <xsl:with-param name="level" select="1"/>
         <xsl:with-param name="idxpath" select="'IDS'"/>
@@ -431,7 +431,7 @@ if (ual_debug =='yes') write(*,*) 'Deallocate an <xsl:value-of select="@name"/> 
 end subroutine ids_deallocate_<xsl:value-of select="@name"/>
 
 
-!!!!!! Routines to COPY IDSs 
+!!!!!! Routines to COPY IDSs
 subroutine ids_copy_<xsl:value-of select="@name"/>(IDSin,  IDSout)
 ! Copies all fields of IDSin to IDSout
 
@@ -442,7 +442,7 @@ implicit none
 integer :: itime, lentime, lenstring, istring
 integer :: i1,i2,i3,i4,i5,i6,i7
 
-type(ids_<xsl:value-of select="@name"/>) :: IDSin, IDSout      
+type(ids_<xsl:value-of select="@name"/>) :: IDSin, IDSout
 
 call getenv('ual_debug',ual_debug) ! Debug flag
 
@@ -467,10 +467,10 @@ integer, parameter :: DP=kind(1.0D0)
 
   <xsl:choose>
 			<xsl:when test="@timed = 'yes'">
-type(ids_<xsl:value-of select="@name"/>),pointer :: IDS(:)       
+type(ids_<xsl:value-of select="@name"/>),pointer :: IDS(:)
 			</xsl:when>
 			<xsl:otherwise>
-type(ids_<xsl:value-of select="@name"/>) :: IDS       
+type(ids_<xsl:value-of select="@name"/>) :: IDS
 			</xsl:otherwise>
 		</xsl:choose>
 
@@ -491,10 +491,10 @@ implicit none
 character*(*) :: IDSpath
 integer :: idx
 
-type(ids_<xsl:value-of select="@name"/>) :: IDS       
+type(ids_<xsl:value-of select="@name"/>) :: IDS
 <xsl:for-each select=".//field[@data_type='struct_array' and @maxoccur!='unbounded']">
 integer :: i<xsl:value-of select="@name"/>
-</xsl:for-each>		
+</xsl:for-each>
 
 call getenv('ual_debug',ual_debug) ! Debug flag
 if (ual_debug =='yes') write(*,*) 'Discarding IDS ',IDSpath
@@ -503,11 +503,11 @@ if (ual_debug =='yes') write(*,*) 'Discarding IDS ',IDSpath,' done'
 end subroutine ids_discard_<xsl:value-of select="@name"/>-->
 
 end module <xsl:value-of select="@name"/>_ids_module
-</xsl:result-document> 
- 
+</xsl:result-document>
+
 </xsl:template>
 
-  
+
 <!--!!!!!!!!!!!!!!!!!!!!!!!!!             GET SLICE ROUTINES           !!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
 
   <!--<xsl:template match="IDS" mode="GET_SLICE_OLD">
@@ -581,17 +581,17 @@ endif
                      </xsl:when>
                      <xsl:when test="@data_type='str_type' or @data_type='STR_0D'">
 ! Get <xsl:value-of select="@path"/>
-                        <!-- for comment only -->        
+                        <!-- for comment only -->
 ! TIME DEPENDENT STRINGS NOT TREATED YET !!!
 <!-- -->
                      </xsl:when>
 							<xsl:when test="@data_type='int_type' or @data_type='INT_0D'">
 ! Get <xsl:value-of select="@path"/>
 								<!-- for comment only -->
-call get_Int_Slice(idx,path, "<xsl:value-of select="@path"/>",int0d, twant,tret,interpol,status)        
+call get_Int_Slice(idx,path, "<xsl:value-of select="@path"/>",int0d, twant,tret,interpol,status)
 if (status.EQ.0) then
    IDS%<xsl:value-of select="translate(@path,'/','%')"/> = int0d
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
@@ -599,10 +599,10 @@ endif
 							<xsl:when test="@data_type='flt_type' or @data_type='FLT_0D'">
 ! Get <xsl:value-of select="@path"/>
 								<!-- for comment only -->
-call get_double_Slice(idx,path, "<xsl:value-of select="@path"/>",double0d, twant,tret,interpol,status)        
+call get_double_Slice(idx,path, "<xsl:value-of select="@path"/>",double0d, twant,tret,interpol,status)
 if (status.EQ.0) then
    IDS%<xsl:value-of select="translate(@path,'/','%')"/> = double0d
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
        'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
@@ -612,11 +612,11 @@ endif
 								<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
-   allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1))         
+   allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1))
    call get_vect1d_Int_Slice(idx,path, "<xsl:value-of select="@path"/>", &amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
-   dim1,dum1,twant,tret,interpol,status)        
-   if (ual_debug =='yes') write(*,*) &amp; 
+   dim1,dum1,twant,tret,interpol,status)
+   if (ual_debug =='yes') write(*,*) &amp;
        'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
@@ -626,11 +626,11 @@ endif
 								<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
-   allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1))         
+   allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1))
    call get_vect1d_double_Slice(idx,path, "<xsl:value-of select="@path"/>", &amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
-   dim1,dum1,twant,tret,interpol,status)        
-   if (ual_debug =='yes') write(*,*) &amp; 
+   dim1,dum1,twant,tret,interpol,status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
@@ -640,11 +640,11 @@ endif
 								<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
-   allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2))         
+   allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2))
    call get_vect2d_double_Slice(idx,path, "<xsl:value-of select="@path"/>", &amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>,&amp;
-   dim1,dim2,dum1,dum2,twant,tret,interpol,status)        
-   if (ual_debug =='yes') write(*,*) &amp; 
+   dim1,dim2,dum1,dum2,twant,tret,interpol,status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
@@ -654,39 +654,39 @@ endif
 								<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
-   allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2))         
+   allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2))
    call get_vect2d_int_Slice(idx,path, "<xsl:value-of select="@path"/>", &amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>,&amp;
-   dim1,dim2,dum1,dum2,twant,tret,interpol,status)        
-   if (ual_debug =='yes') write(*,*) &amp; 
+   dim1,dim2,dum1,dum2,twant,tret,interpol,status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
 							</xsl:when>
 							<xsl:when test="@data_type='FLT_3D'">
 ! Get <xsl:value-of select="@path"/>
-								<!-- for comment only -->        
+								<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
-   allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3))         
+   allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3))
    call get_vect3d_double_Slice(idx,path, "<xsl:value-of select="@path"/>", &amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>,&amp;
-   dim1,dim2,dim3,dum1,dum2,dum3,twant,tret,interpol,status)        
-   if (ual_debug =='yes') write(*,*) &amp; 
+   dim1,dim2,dim3,dum1,dum2,dum3,twant,tret,interpol,status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
 							</xsl:when>
 							<xsl:when test="@data_type='INT_3D'">
 ! Get <xsl:value-of select="@path"/>
-								<!-- for comment only -->        
+								<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
-   allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3))         
+   allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3))
    call get_vect3d_int_Slice(idx,path, "<xsl:value-of select="@path"/>", &amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>,&amp;
-   dim1,dim2,dim3,dum1,dum2,dum3,twant,tret,interpol,status)        
-   if (ual_debug =='yes') write(*,*) &amp; 
+   dim1,dim2,dim3,dum1,dum2,dum3,twant,tret,interpol,status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
@@ -694,14 +694,14 @@ endif
 
 							<xsl:when test="@data_type='FLT_4D'">
 ! Get <xsl:value-of select="@path"/>
-								<!-- for comment only -->        
+								<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
-   allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3,dim4))         
+   allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3,dim4))
    call get_vect4d_double_Slice(idx,path, "<xsl:value-of select="@path"/>", &amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>,&amp;
-   dim1,dim2,dim3,dim4,dum1,dum2,dum3,dum4,twant,tret,interpol,status)        
-   if (ual_debug =='yes') write(*,*) &amp; 
+   dim1,dim2,dim3,dim4,dum1,dum2,dum3,dum4,twant,tret,interpol,status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
@@ -709,28 +709,28 @@ endif
 
 							<xsl:when test="@data_type='FLT_5D'">
 ! Get <xsl:value-of select="@path"/>
-								<!-- for comment only -->        
+								<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
-   allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3,dim4,dim5))         
+   allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3,dim4,dim5))
    call get_vect5d_double_Slice(idx,path, "<xsl:value-of select="@path"/>", &amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>,&amp;
-   dim1,dim2,dim3,dim4,dim5,dum1,dum2,dum3,dum4,dum5,twant,tret,interpol,status)        
-   if (ual_debug =='yes') write(*,*) &amp; 
+   dim1,dim2,dim3,dim4,dim5,dum1,dum2,dum3,dum4,dum5,twant,tret,interpol,status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
 							</xsl:when>
 							<xsl:when test="@data_type='FLT_6D'">
 ! Get <xsl:value-of select="@path"/>
-								<!-- for comment only -->        
+								<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
-   allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3,dim4,dim5,dim6))         
+   allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3,dim4,dim5,dim6))
    call get_vect6d_double_Slice(idx,path, "<xsl:value-of select="@path"/>", &amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>,&amp;
-   dim1,dim2,dim3,dim4,dim5,dim6,dum1,dum2,dum3,dum4,dum5,dum6,twant,tret,interpol,status)        
-   if (ual_debug =='yes') write(*,*) &amp; 
+   dim1,dim2,dim3,dim4,dim5,dim6,dum1,dum2,dum3,dum4,dum5,dum6,twant,tret,interpol,status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
@@ -753,8 +753,8 @@ endif
 			</xsl:otherwise>
 		</xsl:choose>
 	</xsl:template>
-   
-   
+
+
 	<!--!!!!!!!!!!!!!!!!!!!!!!!!!             GET FULL IDS ROUTINES           !!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
 
 	<xsl:template match="field" mode="GET_FULL">
@@ -769,7 +769,7 @@ allocate(vect1DInt(lentime))
 call get_vect1d_int(idx,path,"<xsl:value-of select="@path"/>",vect1DInt,lentime,dum1,status)
 if (status.EQ.0) then
    IDSs(1:lentime)%<xsl:value-of select="translate(@path,'/','%')"/> = vect1DInt(1:lentime)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDSs%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 deallocate(vect1DInt)
@@ -777,12 +777,12 @@ deallocate(vect1DInt)
 					</xsl:when>
 					<xsl:when test="@data_type='flt_type' or @data_type='FLT_0D'">
 ! Get <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
+						<!-- for comment only -->
 allocate(vect1Ddouble(lentime))
 call get_vect1d_double(idx,path,"<xsl:value-of select="@path"/>",vect1Ddouble,lentime,dum1,status)
 if (status.EQ.0) then
    IDSs(1:lentime)%<xsl:value-of select="translate(@path,'/','%')"/> = vect1Ddouble(1:lentime)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDSs%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 deallocate(vect1Ddouble)
@@ -793,24 +793,24 @@ enddo -->
 					</xsl:when>
 					<xsl:when test="@data_type='flt_1d_type' or @data_type='FLT_1D'">
 ! Get <xsl:value-of select="@path"/>
-						<!-- for comment only -->     
+						<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
-if (dim1.GT.0) then 
+if (dim1.GT.0) then
    allocate(vect2Ddouble(dim1,dim2)) <!-- dim2 contains lentime-->
    call get_vect2d_double(idx,path,"<xsl:value-of select="@path"/>",vect2Ddouble,dim1,dim2,dum1,dum2,status)
    do itime=1,lentime
       allocate(IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(dim1))
       IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/> = vect2DDouble(:,itime)   <!-- assign the value to the IDS structure -->
    enddo
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDSs%<xsl:value-of select="translate(@path,'/','%')"/>'
    deallocate(vect2DDouble)
-endif   
+endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test="@data_type='int_1d_type' or @data_type='INT_1D'">
 ! Get <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
+						<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(vect2Dint(dim1,dim2)) <!-- dim2 contains lentime-->
@@ -820,28 +820,28 @@ if (dim1.GT.0) then
       allocate(IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(dim1))
       IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/> = vect2Dint(:,itime)   <!-- assign the value to the IDS structure -->
    enddo
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDSs%<xsl:value-of select="translate(@path,'/','%')"/>'
    deallocate(vect2Dint)
-endif   
+endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test=" @data_type='FLT_2D'">
 ! Get <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
+						<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
-   allocate(vect3Ddouble(dim1,dim2,dim3)) <!-- dim3 contains lentime--> 
+   allocate(vect3Ddouble(dim1,dim2,dim3)) <!-- dim3 contains lentime-->
    call get_vect3D_double(idx,path,"<xsl:value-of select="@path"/>",vect3Ddouble,  &amp;
    dim1,dim2,dim3,dum1,dum2,dum3,status)
    do itime=1,lentime
       allocate(IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2))
       IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/> = vect3DDouble(:,:,itime)   <!-- assign the value to the IDS structure -->
    enddo
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDSs%<xsl:value-of select="translate(@path,'/','%')"/>'
    deallocate(vect3DDouble)
-endif   
+endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test=" @data_type='INT_2D'">
@@ -856,15 +856,15 @@ if (dim1.GT.0) then
       allocate(IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2))
       IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/> = vect3DInt(:,:,itime)   <!-- assign the value to the IDS structure -->
    enddo
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDSs%<xsl:value-of select="translate(@path,'/','%')"/>'
    deallocate(vect3DInt)
-endif   
+endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test="@data_type='FLT_3D'">
 ! Get <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
+						<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(vect4Ddouble(dim1,dim2,dim3,dim4)) <!-- dim4 contains lentime-->
@@ -874,15 +874,15 @@ if (dim1.GT.0) then
       allocate(IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3))
       IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/> = vect4DDouble(:,:,:,itime)   <!-- assign the value to the IDS structure -->
    enddo
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDSs%<xsl:value-of select="translate(@path,'/','%')"/>'
    deallocate(vect4DDouble)
-endif   
+endif
 <!-- -->
 					</xsl:when>
 										<xsl:when test="@data_type='FLT_4D'">
 ! Get <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
+						<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(vect5Ddouble(dim1,dim2,dim3,dim4,dim5)) <!-- dim5 contains lentime-->
@@ -892,15 +892,15 @@ if (dim1.GT.0) then
       allocate(IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3,dim4))
       IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/> = vect5DDouble(:,:,:,:,itime)   <!-- assign the value to the IDS structure -->
    enddo
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDSs%<xsl:value-of select="translate(@path,'/','%')"/>'
    deallocate(vect5DDouble)
-endif   
+endif
 <!-- -->
 					</xsl:when>
 										<xsl:when test="@data_type='FLT_5D'">
 ! Get <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
+						<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(vect6Ddouble(dim1,dim2,dim3,dim4,dim5,dim6)) <!-- dim6 contains lentime-->
@@ -910,10 +910,10 @@ if (dim1.GT.0) then
       allocate(IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3,dim4,dim5))
       IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/> = vect6DDouble(:,:,:,:,:,itime)   <!-- assign the value to the IDS structure -->
    enddo
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDSs%<xsl:value-of select="translate(@path,'/','%')"/>'
    deallocate(vect6DDouble)
-endif   
+endif
 <!-- -->
 					</xsl:when>
 
@@ -1003,29 +1003,29 @@ endif
 				<xsl:choose>
 					<xsl:when test="@data_type='str_type' or @data_type='STR_0D'">
 ! Get <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
+						<!-- for comment only -->
 longstring = ' '
-call get_String(idx,path, "<xsl:value-of select="@path"/>",longstring, status)           
+call get_String(idx,path, "<xsl:value-of select="@path"/>",longstring, status)
 if (status.EQ.0) then
    do itime=1,lentime
-      lenstring = len_trim(longstring)      
-      allocate(IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(floor(real(lenstring/132))+1)) 
-      if (lenstring &lt;= 132) then             
+      lenstring = len_trim(longstring)
+      allocate(IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(floor(real(lenstring/132))+1))
+      if (lenstring &lt;= 132) then
          IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(1) = trim(longstring)
       else
          do istring=1,floor(real(lenstring/132))+1
-             IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(istring) = trim(longstring(1+(istring-1)*132 : istring*132))  
+             IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(istring) = trim(longstring(1+(istring-1)*132 : istring*132))
          enddo
       endif
    enddo
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDSs%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test="@data_type='str_1d_type' or @data_type='STR_1D'">
 ! Get <xsl:value-of select="@path"/>
-						<!-- for comment only -->  
+						<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    do itime=1,lentime
@@ -1034,33 +1034,33 @@ if (dim1.GT.0) then
    allocate(stringpointer(dim1))
    call get_Vect1d_string(idx,path, "<xsl:value-of select="@path"/>", &amp;
                         stringpointer,dim1,dum1,status)
-   do itime=1,lentime                     
-      IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/> = stringpointer                                        
+   do itime=1,lentime
+      IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/> = stringpointer
    enddo
-   deallocate(stringpointer)   
-   if (ual_debug =='yes') write(*,*) &amp; 
+   deallocate(stringpointer)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDSs%<xsl:value-of select="translate(@path,'/','%')"/>'
-endif   
+endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test="@data_type='int_type' or @data_type='INT_0D'">
 ! Get <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
+						<!-- for comment only -->
 call get_Int(idx,path, "<xsl:value-of select="@path"/>",Int0D, status)           <!--reads the MDS dynamic, which has one more dimension (time)-->
 if (status.EQ.0) then
    IDSs(1:lentime)%<xsl:value-of select="translate(@path,'/','%')"/> = Int0D   <!-- assign the value to the IDS structure -->
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDSs%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test="@data_type='flt_type' or @data_type='FLT_0D'">
 ! Get <xsl:value-of select="@path"/>
-						<!-- for comment only -->   
+						<!-- for comment only -->
 call get_Double(idx,path, "<xsl:value-of select="@path"/>",double0D, status)           <!--reads the MDS dynamic, which has one more dimension (time)-->
 if (status.EQ.0) then
    IDSs(1:lentime)%<xsl:value-of select="translate(@path,'/','%')"/> = double0D   <!-- assign the value to the IDS structure -->
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDSs%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
@@ -1070,151 +1070,151 @@ endif
 						<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
-   allocate(vect1DDouble(dim1))        
+   allocate(vect1DDouble(dim1))
    call get_vect1D_Double(idx,path, "<xsl:value-of select="@path"/>", &amp;
-   vect1DDouble,dim1,dum1, status)           
+   vect1DDouble,dim1,dum1, status)
    do itime=1,lentime
       allocate(IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(dim1))
       IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/> = vect1DDouble   <!-- assign the value to the IDS structure -->
    enddo
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDSs%<xsl:value-of select="translate(@path,'/','%')"/>'
    deallocate(vect1DDouble)
-endif   
+endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test="@data_type='int_1d_type' or @data_type='INT_1D'">
 ! Get <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
+						<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
-   allocate(vect1Dint(dim1))        
+   allocate(vect1Dint(dim1))
    call get_vect1D_int(idx,path, "<xsl:value-of select="@path"/>", &amp;
    vect1Dint,dim1,dum1, status)           <!--reads the MDS dynamic, which has one more dimension (time)-->
    do itime=1,lentime
       allocate(IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(dim1))
       IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/> = vect1Dint   <!-- assign the value to the IDS structure -->
    enddo
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDSs%<xsl:value-of select="translate(@path,'/','%')"/>'
    deallocate(vect1Dint)
-endif 
+endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test=" @data_type='FLT_2D'">
 ! Get <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
+						<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
-   allocate(vect2DDouble(dim1,dim2))        
+   allocate(vect2DDouble(dim1,dim2))
    call get_vect2D_Double(idx,path, "<xsl:value-of select="@path"/>", &amp;
-   vect2DDouble,dim1,dim2,dum1,dum2, status)           
+   vect2DDouble,dim1,dim2,dum1,dum2, status)
    do itime=1,lentime
       allocate(IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2))
       IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/> = vect2DDouble   <!-- assign the value to the IDS structure -->
    enddo
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDSs%<xsl:value-of select="translate(@path,'/','%')"/>'
    deallocate(vect2DDouble)
-endif 
+endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test=" @data_type='INT_2D'">
 ! Get <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
+						<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
-   allocate(vect2DInt(dim1,dim2))        
+   allocate(vect2DInt(dim1,dim2))
    call get_vect2D_Int(idx,path, "<xsl:value-of select="@path"/>", &amp;
-   vect2DInt,dim1,dim2,dum1,dum2, status)           
+   vect2DInt,dim1,dim2,dum1,dum2, status)
    do itime=1,lentime
       allocate(IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2))
       IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/> = vect2DInt   <!-- assign the value to the IDS structure -->
    enddo
    deallocate(vect2DInt)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDSs%<xsl:value-of select="translate(@path,'/','%')"/>'
-endif 
+endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test="@data_type='FLT_3D'">
 ! Get <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
+						<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
-   allocate(vect3DDouble(dim1,dim2,dim3))        
+   allocate(vect3DDouble(dim1,dim2,dim3))
    call get_vect3D_Double(idx,path, "<xsl:value-of select="@path"/>",vect3DDouble, &amp;
-   dim1,dim2,dim3,dum1,dum2,dum3,status)           
+   dim1,dim2,dim3,dum1,dum2,dum3,status)
    do itime=1,lentime
       allocate(IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3))
       IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/> = vect3DDouble   <!-- assign the value to the IDS structure -->
    enddo
    deallocate(vect3DDouble)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDSs%<xsl:value-of select="translate(@path,'/','%')"/>'
-endif 
+endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test="@data_type='INT_3D'">
 ! Get <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
+						<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
-   allocate(vect3DInt(dim1,dim2,dim3))        
+   allocate(vect3DInt(dim1,dim2,dim3))
    call get_vect3D_Int(idx,path, "<xsl:value-of select="@path"/>",vect3DInt, &amp;
-   dim1,dim2,dim3,dum1,dum2,dum3,status)           
+   dim1,dim2,dim3,dum1,dum2,dum3,status)
    do itime=1,lentime
       allocate(IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3))
       IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/> = vect3DInt   <!-- assign the value to the IDS structure -->
    enddo
    deallocate(vect3DInt)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDSs%<xsl:value-of select="translate(@path,'/','%')"/>'
-endif 
+endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test="@data_type='FLT_4D'">
 ! Get <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
+						<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
-   allocate(vect4dDouble(dim1,dim2,dim3,dim4))        
+   allocate(vect4dDouble(dim1,dim2,dim3,dim4))
    call get_vect4d_Double(idx,path, "<xsl:value-of select="@path"/>", &amp;
-   vect4dDouble,dim1,dim2,dim3,dim4,dum1,dum2,dum3,dum4,status)           
+   vect4dDouble,dim1,dim2,dim3,dim4,dum1,dum2,dum3,dum4,status)
    do itime=1,lentime
       allocate(IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3,dim4))
       IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/> = vect4dDouble   <!-- assign the value to the IDS structure -->
    enddo
    deallocate(vect4dDouble)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDSs%<xsl:value-of select="translate(@path,'/','%')"/>'
-endif 
+endif
 <!-- -->
 					</xsl:when>
 										<xsl:when test="@data_type='FLT_5D'">
 ! Get <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
+						<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
-   allocate(vect5dDouble(dim1,dim2,dim3,dim4,dim5))        
+   allocate(vect5dDouble(dim1,dim2,dim3,dim4,dim5))
    call get_vect5d_Double(idx,path, "<xsl:value-of select="@path"/>", &amp;
-   vect5dDouble,dim1,dim2,dim3,dim4,dim5,dum1,dum2,dum3,dum4,dum5,status)          
+   vect5dDouble,dim1,dim2,dim3,dim4,dim5,dum1,dum2,dum3,dum4,dum5,status)
    do itime=1,lentime
       allocate(IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3,dim4,dim5))
       IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/> = vect5dDouble   <!-- assign the value to the IDS structure -->
    enddo
    deallocate(vect5dDouble)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDSs%<xsl:value-of select="translate(@path,'/','%')"/>'
-endif 
+endif
 <!-- -->
 					</xsl:when>
 										<xsl:when test="@data_type='FLT_6D'">
 ! Get <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
+						<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
-   allocate(vect6dDouble(dim1,dim2,dim3,dim4,dim5,dim6))        
+   allocate(vect6dDouble(dim1,dim2,dim3,dim4,dim5,dim6))
    call get_vect6d_Double(idx,path, "<xsl:value-of select="@path"/>", &amp;
    vect6dDouble,dim1,dim2,dim3,dim4,dim5,dim6,dum1,dum2,dum3,dum4,dum5,dum6,status)           <!--reads the MDS dynamic, which has one more dimension (time)-->
    do itime=1,lentime
@@ -1222,9 +1222,9 @@ if (dim1.GT.0) then
       IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/> = vect6dDouble   <!-- assign the value to the IDS structure -->
    enddo
    deallocate(vect6dDouble)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDSs%<xsl:value-of select="translate(@path,'/','%')"/>'
-endif 
+endif
 <!-- -->
 					</xsl:when>
                <xsl:when test="@name='struct_array'">
@@ -1265,62 +1265,62 @@ endif
 			</xsl:otherwise>
 		</xsl:choose>
 	</xsl:template>
-   
+
 <!--!!!!!!!!!!!!!!!!!!!!!!!!!             GET SINGLE IDS ROUTINES           !!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
 	<xsl:template match="field" mode="GET_SINGLE_OLD">
 		<!-- to get an element from a IDS which is NOT time-dependent : easy : elementary GET-->
 		<xsl:choose>
 			<xsl:when test="@data_type='str_type' or @data_type='STR_0D'">
 ! Get <xsl:value-of select="@path"/>
-				<!-- for comment only -->  
+				<!-- for comment only -->
 longstring = ' '
 call get_string(idx,path, "<xsl:value-of select="@path"/>",longstring,status)
 if (status.EQ.0) then
-   lenstring = len_trim(longstring)      
-   allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(floor(real(lenstring/132))+1)) 
-   if (lenstring &lt;= 132) then             
+   lenstring = len_trim(longstring)
+   allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(floor(real(lenstring/132))+1))
+   if (lenstring &lt;= 132) then
       IDS%<xsl:value-of select="translate(@path,'/','%')"/> = trim(longstring)
    else
       do istring=1,floor(real(lenstring/132))+1
-          IDS%<xsl:value-of select="translate(@path,'/','%')"/>(istring) = trim(longstring(1+(istring-1)*132 : istring*132)) 
+          IDS%<xsl:value-of select="translate(@path,'/','%')"/>(istring) = trim(longstring(1+(istring-1)*132 : istring*132))
       enddo
    endif
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
-endif   
+endif
 <!-- -->
 			</xsl:when>
 			<xsl:when test="@data_type='str_1d_type' or @data_type='STR_1D'">
 ! Get <xsl:value-of select="@path"/>
-				<!-- for comment only -->  
+				<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1))
    call get_Vect1d_string(idx,path, "<xsl:value-of select="@path"/>", &amp;
                         IDS%<xsl:value-of select="translate(@path,'/','%')"/>,dim1,dum1,status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
-endif   
+endif
 <!-- -->
 			</xsl:when>
 			<xsl:when test="@data_type='int_type' or @data_type='INT_0D'">
 ! Get <xsl:value-of select="@path"/>
-				<!-- for comment only --> 
+				<!-- for comment only -->
 call get_int(idx,path, "<xsl:value-of select="@path"/>",int0d,status)
 if (status.EQ.0) then
    IDS%<xsl:value-of select="translate(@path,'/','%')"/> = int0d
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
-endif                 
+endif
 <!-- -->
 			</xsl:when>
 			<xsl:when test="@data_type='flt_type' or @data_type='FLT_0D'">
 ! Get <xsl:value-of select="@path"/>
-				<!-- for comment only --> 
+				<!-- for comment only -->
 call get_double(idx,path, "<xsl:value-of select="@path"/>",double0d,status)
 if (status.EQ.0) then
    IDS%<xsl:value-of select="translate(@path,'/','%')"/> = double0d
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
@@ -1333,124 +1333,124 @@ if (dim1.GT.0) then
    allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1))
    call get_vect1d_double(idx,path,"<xsl:value-of select="@path"/>", &amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>,dim1,dum1,status)
-   if (ual_debug =='yes') write(*,*) &amp;  
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
-endif        
+endif
 <!-- -->
 			</xsl:when>
 			<xsl:when test="@data_type='int_1d_type' or @data_type='INT_1D'">
 ! Get <xsl:value-of select="@path"/>
-				<!-- for comment only -->        
+				<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1))
    call get_vect1d_int(idx,path,"<xsl:value-of select="@path"/>", &amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>,dim1,dum1,status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
-endif 
+endif
 <!-- -->
 			</xsl:when>
 			<xsl:when test=" @data_type='FLT_2D'">
 ! Get <xsl:value-of select="@path"/>
-				<!-- for comment only -->        
+				<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2))
    call get_vect2d_double(idx,path,"<xsl:value-of select="@path"/>", &amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    dim1,dim2,dum1,dum2,status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
-endif 
+endif
 <!-- -->
 			</xsl:when>
 			<xsl:when test=" @data_type='INT_2D'">
 ! Get <xsl:value-of select="@path"/>
-				<!-- for comment only -->        
+				<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2))
    call get_vect2d_int(idx,path,"<xsl:value-of select="@path"/>", &amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    dim1,dim2,dum1,dum2,status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
 			</xsl:when>
 			<xsl:when test="@data_type='FLT_3D'">
 ! Get <xsl:value-of select="@path"/>
-				<!-- for comment only -->        
+				<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3))
    call get_vect3d_double(idx,path,"<xsl:value-of select="@path"/>",&amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    dim1,dim2,dim3,dum1,dum2,dum3,status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
 			</xsl:when>
 			<xsl:when test="@data_type='INT_3D'">
 ! Get <xsl:value-of select="@path"/>
-				<!-- for comment only -->        
+				<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3))
    call get_vect3d_int(idx,path,"<xsl:value-of select="@path"/>",&amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    dim1,dim2,dim3,dum1,dum2,dum3,status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
 			</xsl:when>
 			<xsl:when test="@data_type='FLT_4D'">
 ! Get <xsl:value-of select="@path"/>
-				<!-- for comment only -->        
+				<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3,dim4))
    call get_vect4d_double(idx,path,"<xsl:value-of select="@path"/>", &amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    dim1,dim2,dim3,dim4,dum1,dum2,dum3,dum4,status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
 			</xsl:when>
-			
+
 			<xsl:when test="@data_type='FLT_5D'">
 ! Get <xsl:value-of select="@path"/>
-				<!-- for comment only -->        
+				<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3,dim4,dim5))
    call get_vect5d_double(idx,path,"<xsl:value-of select="@path"/>", &amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    dim1,dim2,dim3,dim4,dim5,dum1,dum2,dum3,dum4,dum5,status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
 			</xsl:when>
 						<xsl:when test="@data_type='FLT_6D'">
 ! Get <xsl:value-of select="@path"/>
-				<!-- for comment only -->        
+				<!-- for comment only -->
 call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3,dim4,dim5,dim6))
    call get_vect6d_double(idx,path,"<xsl:value-of select="@path"/>", &amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    dim1,dim2,dim3,dim4,dim5,dim6,dum1,dum2,dum3,dum4,dum5,dum6,status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
 endif
 <!-- -->
-			</xsl:when>			
-			
+			</xsl:when>
+
          <xsl:when test="@name='struct_array'">
 ! Get <xsl:value-of select="@path"/>
                         <!-- for comment only -->
@@ -1485,22 +1485,22 @@ endif
 			</xsl:otherwise>
 		</xsl:choose>
 	</xsl:template>
-   
 
-   
+
+
    <!--!!!!!!!!!!!!!!!!!!!!!!!!!             GET FROM OBJECT           !!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
-	
+
 <xsl:template match = "field" mode = "GET_FROM_OBJECT">
   <xsl:param name="level"/>     <!-- recursion level -->
   <xsl:param name="objpath"/>   <!-- path inside the object -->
   <xsl:param name="idxpath"/>   <!-- full C++ path including indices -->
   <xsl:param name="timed"/>     <!-- are we looking for timed or non-timed fields? -->
-  
+
   <!-- build the path of the current field inside the object -->
   <xsl:param name="currentobjpath" select="concat($objpath,'/',@name)"/>
   <!-- build the complete path of the current field -->
   <xsl:param name="currentidxpath" select="concat($idxpath,'%',@name)"/>
-  
+
   <xsl:choose>
     <!--========== Arrays of structures ==========-->
     <xsl:when test="@data_type='struct_array'">
@@ -1542,7 +1542,7 @@ if (status.EQ.0) then
 endif
   <!--    </xsl:if> -->
     </xsl:when>
-        
+
     <!--========== Regular structure ==========-->
     <xsl:when test="@data_type='structure'">
       <xsl:apply-templates select = "field" mode = "GET_FROM_OBJECT">
@@ -1552,62 +1552,62 @@ endif
          <xsl:with-param name="timed" select="$timed"/>
       </xsl:apply-templates>
     </xsl:when>
-    
+
     <xsl:otherwise>
       <!--========== select either timed or non-timed fields ==========-->
       <!--<xsl:if test="@timed=$timed">-->
         <xsl:choose>
          <xsl:when test="@data_type='str_type' or @data_type='STR_0D'">
 ! Get <xsl:value-of select="@path"/>
-            <!-- for comment only -->  
+            <!-- for comment only -->
 longstring = ' '
 call get_string_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>,longstring,status)
 if (status.EQ.0) then
-   lenstring = len_trim(longstring)      
+   lenstring = len_trim(longstring)
    allocate(<xsl:value-of select="$currentidxpath"/>(floor(real(lenstring/132))+1))
-   if (lenstring &lt;= 132) then             
+   if (lenstring &lt;= 132) then
       <xsl:value-of select="$currentidxpath"/> = trim(longstring)
    else
       do istring=1,floor(real(lenstring/132))+1
           <xsl:value-of select="$currentidxpath"/>(istring) = trim(longstring(1+(istring-1)*132 : istring*132))
       enddo
    endif
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get <xsl:value-of select="$currentidxpath"/>'
-endif   
+endif
 <!-- -->
          </xsl:when>
          <xsl:when test="@data_type='str_1d_type' or @data_type='STR_1D'">
 ! Get <xsl:value-of select="@path"/>
-            <!-- for comment only -->  
+            <!-- for comment only -->
 call get_dimension_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(<xsl:value-of select="$currentidxpath"/>(dim1))
    call get_vect1d_string_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>, &amp;
                         <xsl:value-of select="$currentidxpath"/>,dim1,dum1,status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get <xsl:value-of select="$currentidxpath"/>'
-endif   
+endif
 <!-- -->
          </xsl:when>
          <xsl:when test="@data_type='int_type' or @data_type='INT_0D'">
 ! Get <xsl:value-of select="@path"/>
-            <!-- for comment only --> 
+            <!-- for comment only -->
 call get_int_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>,int0d,status)
 if (status.EQ.0) then
    <xsl:value-of select="$currentidxpath"/> = int0d
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get <xsl:value-of select="$currentidxpath"/>'
-endif                 
+endif
 <!-- -->
          </xsl:when>
          <xsl:when test="@data_type='flt_type' or @data_type='FLT_0D'">
 ! Get <xsl:value-of select="@path"/>
-            <!-- for comment only --> 
+            <!-- for comment only -->
 call get_double_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose> ,double0d,status)
 if (status.EQ.0) then
    <xsl:value-of select="$currentidxpath"/> = double0d
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get <xsl:value-of select="$currentidxpath"/>'
 endif
 <!-- -->
@@ -1620,119 +1620,119 @@ if (dim1.GT.0) then
    allocate(<xsl:value-of select="$currentidxpath"/>(dim1))
    call get_vect1d_double_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>, &amp;
    <xsl:value-of select="$currentidxpath"/>,dim1,dum1,status)
-   if (ual_debug =='yes') write(*,*) &amp;  
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get <xsl:value-of select="$currentidxpath"/>'
-endif        
+endif
 <!-- -->
          </xsl:when>
          <xsl:when test="@data_type='int_1d_type' or @data_type='INT_1D'">
 ! Get <xsl:value-of select="@path"/>
-            <!-- for comment only -->        
+            <!-- for comment only -->
 call get_dimension_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(<xsl:value-of select="$currentidxpath"/>(dim1))
    call get_vect1d_int_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>, &amp;
    <xsl:value-of select="$currentidxpath"/>,dim1,dum1,status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get <xsl:value-of select="$currentidxpath"/>'
-endif 
+endif
 <!-- -->
          </xsl:when>
          <xsl:when test=" @data_type='FLT_2D'">
 ! Get <xsl:value-of select="@path"/>
-            <!-- for comment only -->        
+            <!-- for comment only -->
 call get_dimension_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(<xsl:value-of select="$currentidxpath"/>(dim1,dim2))
    call get_vect2d_double_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>, &amp;
    <xsl:value-of select="$currentidxpath"/>, &amp;
    dim1,dim2,dum1,dum2,status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get <xsl:value-of select="$currentidxpath"/>'
-endif 
+endif
 <!-- -->
          </xsl:when>
          <xsl:when test=" @data_type='INT_2D'">
 ! Get <xsl:value-of select="@path"/>
-            <!-- for comment only -->        
+            <!-- for comment only -->
 call get_dimension_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(<xsl:value-of select="$currentidxpath"/>(dim1,dim2))
    call get_vect2d_int_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>, &amp;
    <xsl:value-of select="$currentidxpath"/>, &amp;
    dim1,dim2,dum1,dum2,status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get <xsl:value-of select="$currentidxpath"/>'
 endif
 <!-- -->
          </xsl:when>
          <xsl:when test="@data_type='FLT_3D'">
 ! Get <xsl:value-of select="@path"/>
-            <!-- for comment only -->        
+            <!-- for comment only -->
 call get_dimension_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(<xsl:value-of select="$currentidxpath"/>(dim1,dim2,dim3))
    call get_vect3d_double_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>,&amp;
    <xsl:value-of select="$currentidxpath"/>, &amp;
    dim1,dim2,dim3,dum1,dum2,dum3,status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get <xsl:value-of select="$currentidxpath"/>'
 endif
 <!-- -->
          </xsl:when>
          <xsl:when test="@data_type='INT_3D'">
 ! Get <xsl:value-of select="@path"/>
-            <!-- for comment only -->        
+            <!-- for comment only -->
 call get_dimension_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(<xsl:value-of select="$currentidxpath"/>(dim1,dim2,dim3))
    call get_vect3d_int_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>,&amp;
    <xsl:value-of select="$currentidxpath"/>, &amp;
    dim1,dim2,dim3,dum1,dum2,dum3,status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get <xsl:value-of select="$currentidxpath"/>'
 endif
 <!-- -->
          </xsl:when>
          <xsl:when test="@data_type='FLT_4D'">
 ! Get <xsl:value-of select="@path"/>
-            <!-- for comment only -->        
+            <!-- for comment only -->
 call get_dimension_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(<xsl:value-of select="$currentidxpath"/>(dim1,dim2,dim3,dim4))
    call get_vect4d_double_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>, &amp;
    <xsl:value-of select="$currentidxpath"/>, &amp;
    dim1,dim2,dim3,dim4,dum1,dum2,dum3,dum4,status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get <xsl:value-of select="$currentidxpath"/>'
 endif
 <!-- -->
          </xsl:when>
-         
+
          <xsl:when test="@data_type='FLT_5D'">
 ! Get <xsl:value-of select="@path"/>
-            <!-- for comment only -->        
+            <!-- for comment only -->
 call get_dimension_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(<xsl:value-of select="$currentidxpath"/>(dim1,dim2,dim3,dim4,dim5))
    call get_vect5d_double_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>, &amp;
    <xsl:value-of select="$currentidxpath"/>, &amp;
    dim1,dim2,dim3,dim4,dim5,dum1,dum2,dum3,dum4,dum5,status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get <xsl:value-of select="$currentidxpath"/>'
 endif
 <!-- -->
          </xsl:when>
                   <xsl:when test="@data_type='FLT_6D'">
 ! Get <xsl:value-of select="@path"/>
-            <!-- for comment only -->        
+            <!-- for comment only -->
 call get_dimension_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(<xsl:value-of select="$currentidxpath"/>(dim1,dim2,dim3,dim4,dim5,dim6))
    call get_vect6d_double_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>, &amp;
    <xsl:value-of select="$currentidxpath"/>, &amp;
    dim1,dim2,dim3,dim4,dim5,dim6,dum1,dum2,dum3,dum4,dum5,dum6,status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get <xsl:value-of select="$currentidxpath"/>'
 endif
          </xsl:when>
@@ -1756,30 +1756,30 @@ endif
 					<xsl:when test="@data_type='int_type' or @data_type='INT_0D'">
 ! Put <xsl:value-of select="@path"/>
 if (any(IDSs(1:lentime)%<xsl:value-of select="translate(@path,'/','%')"/>/=-999999999))  then
-   allocate(vect1Dint(lentime))        
-   vect1DInt(1:lentime) = IDSs(1:lentime)%<xsl:value-of select="translate(@path,'/','%')"/>    
+   allocate(vect1Dint(lentime))
+   vect1DInt(1:lentime) = IDSs(1:lentime)%<xsl:value-of select="translate(@path,'/','%')"/>
    call put_vect1D_int(idx,path, "<xsl:value-of select="@path"/>",&amp;
-   vect1DInt,lentime,1, status)           
+   vect1DInt,lentime,1, status)
    deallocate(vect1DInt)
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
    </xsl:call-template>
-          
-   
-endif   
+
+
+endif
         <!-- -->
 					</xsl:when>
 					<xsl:when test="@data_type='flt_type' or @data_type='FLT_0D'">
-! Put <xsl:value-of select="@path"/>  
+! Put <xsl:value-of select="@path"/>
 if (any(IDSs(1:lentime)%<xsl:value-of select="translate(@path,'/','%')"/>/=-9.D40))  then
-   allocate(vect1DDouble(lentime))        
-   vect1DDouble(1:lentime) = IDSs(1:lentime)%<xsl:value-of select="translate(@path,'/','%')"/>    
-   call put_vect1D_double(idx,path, "<xsl:value-of select="@path"/>",vect1DDouble,lentime,1, status)           
+   allocate(vect1DDouble(lentime))
+   vect1DDouble(1:lentime) = IDSs(1:lentime)%<xsl:value-of select="translate(@path,'/','%')"/>
+   call put_vect1D_double(idx,path, "<xsl:value-of select="@path"/>",vect1DDouble,lentime,1, status)
    deallocate(vect1DDouble)
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
    </xsl:call-template>
-endif 
+endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test="@data_type='flt_1d_type' or @data_type='FLT_1D'">
@@ -1790,7 +1790,7 @@ if (associated(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then 
       vect2DDouble(:,itime) = IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/>
    enddo
    call put_vect2D_Double(idx,path, "<xsl:value-of select="@path"/>",vect2DDouble, &amp;
-   size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,1),lentime,1, status)           
+   size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,1),lentime,1, status)
    deallocate(vect2DDouble)
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
@@ -1807,7 +1807,7 @@ if (associated(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then 
       vect2DInt(:,itime) = IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/>
    enddo
    call put_vect2D_Int(idx,path, "<xsl:value-of select="@path"/>",vect2DInt, &amp;
-   size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,1),lentime,1, status)           
+   size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,1),lentime,1, status)
    deallocate(vect2DInt)
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
@@ -1826,7 +1826,7 @@ if (associated(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then 
    enddo
    call put_vect3D_Double(idx,path, "<xsl:value-of select="@path"/>",vect3DDouble, &amp;
    size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
-   size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,2),lentime,1, status)           
+   size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,2),lentime,1, status)
    deallocate(vect3DDouble)
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
@@ -1836,7 +1836,7 @@ endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test=" @data_type='INT_2D'">
-! put <xsl:value-of select="@path"/>  
+! put <xsl:value-of select="@path"/>
 if (associated(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then  <!-- assumes that either all time indices are associated, or none-->
    allocate(vect3Dint(size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
    size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,2),lentime))
@@ -1844,7 +1844,7 @@ if (associated(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then 
       vect3Dint(:,:,itime)  = IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/>
    enddo
    call put_vect3D_int(idx,path, "<xsl:value-of select="@path"/>",vect3Dint, &amp;
-   size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,1),size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,2),lentime,1, status)           
+   size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,1),size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,2),lentime,1, status)
    deallocate(vect3Dint)
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
@@ -1865,7 +1865,7 @@ if (associated(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then 
    enddo
    call put_vect4d_Double(idx,path, "<xsl:value-of select="@path"/>",vect4dDouble, &amp;
    size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,1),size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,2),&amp;
-   size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,3),lentime,1, status)           
+   size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,3),lentime,1, status)
    deallocate(vect4dDouble)
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
@@ -1874,7 +1874,7 @@ if (associated(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then 
 endif
 <!-- -->
 					</xsl:when>
-					
+
 					<xsl:when test="@data_type='FLT_4D'">
 ! put <xsl:value-of select="@path"/>
 						<!-- for comment only -->
@@ -1889,7 +1889,7 @@ if (associated(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then 
    call put_vect5d_Double(idx,path, "<xsl:value-of select="@path"/>",vect5dDouble, &amp;
    size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,1),size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,2),&amp;
    size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,3),size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,4),&amp;
-   lentime,1, status)           
+   lentime,1, status)
    deallocate(vect5dDouble)
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
@@ -1912,7 +1912,7 @@ if (associated(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then 
    call put_vect6d_Double(idx,path, "<xsl:value-of select="@path"/>",vect6dDouble, &amp;
    size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,1),size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,2),&amp;
    size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,3),size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,4),&amp;
-   size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,5),lentime,1, status)           
+   size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,5),lentime,1, status)
    deallocate(vect6dDouble)
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
@@ -1938,7 +1938,7 @@ do itime = 1,lentime
    call put_object_in_object(idx,obj_all_times,"ALLTIMES",itime,obj1)
 enddo
 call put_object(idx,path,"<xsl:value-of select = "@path"/>",obj_all_times,1, status)
-  
+
 ! Write non-timed fields    */
 call begin_object(idx,-1,1,path//"/<xsl:value-of select = "@path"/>",NON_TIMED,obj1)
 if (associated(IDSs(1)%<xsl:value-of select = "translate(@path,'/','%')"/>)) then
@@ -1956,16 +1956,16 @@ call put_object(idx,path,"<xsl:value-of select = "@path"/>",obj1,0, status)
         <xsl:with-param name="method" select="'put'"/>
    </xsl:call-template>
                </xsl:when>
-					
+
 					<xsl:when test="@name='structure'">
 						<xsl:apply-templates select="field" mode="PUT_TIMED"/>
 					</xsl:when>
 					<xsl:otherwise>
- ! Get <xsl:value-of select="@path"/> : PROBLEM : UNIDENTIFIED TYPE !!!         
+ ! Get <xsl:value-of select="@path"/> : PROBLEM : UNIDENTIFIED TYPE !!!
         </xsl:otherwise>
 				</xsl:choose>
 			</xsl:when>
-         
+
 			<xsl:otherwise>
 				<!-- Time independent dynamics in time-dependent IDS : the first index IDSs(1) defines the value of the time-independent data -->
 				<xsl:choose>
@@ -1989,7 +1989,7 @@ call put_object(idx,path,"<xsl:value-of select = "@path"/>",obj1,0, status)
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
    </xsl:call-template>
-	
+
                </xsl:when>
 					<xsl:when test="@name='structure'">
 						<xsl:apply-templates select="field" mode="PUT_TIMED"/>
@@ -1999,8 +1999,8 @@ call put_object(idx,path,"<xsl:value-of select = "@path"/>",obj1,0, status)
 						<!-- for comment only -->
 if (associated(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    longstring = ' '    <!-- Initialisation of longstring, otherwise strange problems occur !-->
-   lenstring = size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>)      
-   if (lenstring.EQ.1) then             
+   lenstring = size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>)
+   if (lenstring.EQ.1) then
       longstring = trim(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>(1))
    else
       do istring=1,lenstring
@@ -2008,7 +2008,7 @@ if (associated(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then
       enddo
    endif
    call put_string(idx,path, "<xsl:value-of select="@path"/>",trim(longstring), status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDSs%<xsl:value-of select="translate(@path,'/','%')"/>'
      <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
@@ -2028,7 +2028,7 @@ if (associated(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_Vect1d_String(idx,path, "<xsl:value-of select="@path"/>", &amp;
          IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,dim1,dimtab,0, status)
    deallocate(dimtab)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDSs%<xsl:value-of select="translate(@path,'/','%')"/>'
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
@@ -2038,10 +2038,10 @@ endif
 					</xsl:when>
 					<xsl:when test="@data_type='int_type' or @data_type='INT_0D'">
 ! Put <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
+						<!-- for comment only -->
 if (IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>.NE.-999999999) then
-   call put_int(idx,path, "<xsl:value-of select="@path"/>",IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>, status)        
-   if (ual_debug =='yes') write(*,*) &amp; 
+   call put_int(idx,path, "<xsl:value-of select="@path"/>",IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>, status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDSs%<xsl:value-of select="translate(@path,'/','%')"/>'
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
@@ -2053,9 +2053,9 @@ endif
 					<xsl:when test="@data_type='flt_type' or @data_type='FLT_0D'">
 ! Put <xsl:value-of select="@path"/>
 						<!-- for comment only -->
-if (IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>.NE.-9.D40) then 
-   call put_double(idx,path, "<xsl:value-of select="@path"/>",IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>, status)  
-   if (ual_debug =='yes') write(*,*) &amp; 
+if (IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>.NE.-9.D40) then
+   call put_double(idx,path, "<xsl:value-of select="@path"/>",IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>, status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDSs%<xsl:value-of select="translate(@path,'/','%')"/>'
 
    <xsl:call-template name="checkError">
@@ -2068,11 +2068,11 @@ endif
 					<xsl:when test="@data_type='flt_1d_type' or @data_type='FLT_1D'">
 ! Put <xsl:value-of select="@path"/>
 						<!-- for comment only -->
-if (associated(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then   
+if (associated(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect1d_double(idx,path, "<xsl:value-of select="@path"/>", &amp;
    IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>),0, status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDSs%<xsl:value-of select="translate(@path,'/','%')"/>'
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
@@ -2083,12 +2083,12 @@ endif
 					</xsl:when>
 					<xsl:when test="@data_type='int_1d_type' or @data_type='INT_1D'">
 ! Put <xsl:value-of select="@path"/>
-						<!-- for comment only --> 
-if (associated(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then         
+						<!-- for comment only -->
+if (associated(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect1d_int(idx,path, "<xsl:value-of select="@path"/>",&amp;
    IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
-   size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>),0, status) 
-   if (ual_debug =='yes') write(*,*) &amp; 
+   size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>),0, status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDSs%<xsl:value-of select="translate(@path,'/','%')"/>'
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
@@ -2099,12 +2099,12 @@ endif
 					</xsl:when>
 					<xsl:when test=" @data_type='FLT_2D'">
 ! Put <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
-if (associated(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then   
+						<!-- for comment only -->
+if (associated(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect2d_double(idx,path, "<xsl:value-of select="@path"/>", &amp;
    IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,&amp;
    size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
-   size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,2),0, status)  
+   size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,2),0, status)
    if (ual_debug =='yes') write(*,*) &amp;
        'Put IDSs%<xsl:value-of select="translate(@path,'/','%')"/>'
    <xsl:call-template name="checkError">
@@ -2116,13 +2116,13 @@ endif
 					</xsl:when>
 					<xsl:when test=" @data_type='INT_2D'">
 ! Put <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
-if (associated(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then   
+						<!-- for comment only -->
+if (associated(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect2d_int(idx,path, "<xsl:value-of select="@path"/>", &amp;
    IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,1), &amp;
-   size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,2),0)  
-   if (ual_debug =='yes') write(*,*) &amp; 
+   size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,2),0)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDSs%<xsl:value-of select="translate(@path,'/','%')"/>'
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
@@ -2133,14 +2133,14 @@ endif
 					</xsl:when>
 					<xsl:when test="@data_type='FLT_3D'">
 ! Put <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
-if (associated(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then   
+						<!-- for comment only -->
+if (associated(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect3d_double(idx,path, "<xsl:value-of select="@path"/>", &amp;
    IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,1), &amp;
    size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,2),&amp;
-   size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,3),0, status)    
-   if (ual_debug =='yes') write(*,*) &amp; 
+   size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,3),0, status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDSs%<xsl:value-of select="translate(@path,'/','%')"/>'
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
@@ -2151,14 +2151,14 @@ endif
 					</xsl:when>
 					<xsl:when test="@data_type='INT_3D'">
 ! Put <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
-if (associated(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then   
+						<!-- for comment only -->
+if (associated(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect3d_int(idx,path, "<xsl:value-of select="@path"/>", &amp;
    IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,1), &amp;
    size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,2),&amp;
-   size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,3),0, status)    
-   if (ual_debug =='yes') write(*,*) &amp; 
+   size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,3),0, status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDSs%<xsl:value-of select="translate(@path,'/','%')"/>'
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
@@ -2169,12 +2169,12 @@ endif
 					</xsl:when>
 					<xsl:when test="@data_type='FLT_4D'">
 ! Put <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
-if (associated(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then   
+						<!-- for comment only -->
+if (associated(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect4d_double(idx,path, "<xsl:value-of select="@path"/>",IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,1),size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,2),&amp;
    size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,3),size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,4),0, status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDSs%<xsl:value-of select="translate(@path,'/','%')"/>'
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
@@ -2185,13 +2185,13 @@ endif
 					</xsl:when>
 <xsl:when test="@data_type='FLT_5D'">
 ! Put <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
-if (associated(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then   
+						<!-- for comment only -->
+if (associated(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect5d_double(idx,path, "<xsl:value-of select="@path"/>",IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,1),size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,2),&amp;
    size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,3),size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,4),&amp;
    size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,5),0, status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDSs%<xsl:value-of select="translate(@path,'/','%')"/>'
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
@@ -2202,13 +2202,13 @@ endif
 </xsl:when>
 <xsl:when test="@data_type='FLT_6D'">
 ! Put <xsl:value-of select="@path"/>
-						<!-- for comment only -->        
-if (associated(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then   
+						<!-- for comment only -->
+if (associated(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect6d_double(idx,path, "<xsl:value-of select="@path"/>",IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,1),size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,2),&amp;
    size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,3),size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,4),&amp;
    size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,5),size(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>,6),0, status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDSs%<xsl:value-of select="translate(@path,'/','%')"/>'
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
@@ -2216,9 +2216,9 @@ if (associated(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then
 
 endif
 <!-- -->
-					</xsl:when>					
-					
-					
+					</xsl:when>
+
+
 					<xsl:otherwise>
  ! Put <xsl:value-of select="@path"/> : PROBLEM : UNIDENTIFIED TYPE !!! <!-- for comment only -->
 					</xsl:otherwise>
@@ -2226,7 +2226,7 @@ endif
 			</xsl:otherwise>
 		</xsl:choose>
 	</xsl:template>
-   
+
 <!--!!!!!!!!!!!!!!!!!!!!!!!!!        PUT_SINGLE for FIELDS       !!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
 <xsl:template match="field" mode="PUT_SINGLE">
 <xsl:param name="variable_path"/>
@@ -2326,7 +2326,7 @@ if (associated(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>))
          write(*,*) "ERROR : the time vector of the type 3 array of structure <xsl:value-of select = "concat($variable_path,'%',@name)"/> must be filled"
          return
       endif
-   else 
+   else
       do i1 = 1,size(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>) ! the AoS time vector is there, fill time with it
          time(i1) = IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>(i1)%time
       enddo
@@ -2338,9 +2338,9 @@ if (associated(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>))
         trim(timepath),&amp;
         time,&amp;
         size(time),1, status)
-   
+
    call end_IDS_put_timed(idx, path)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
    'Put <xsl:value-of select="concat($mds_path,'//&quot;/',@name,'/time')"/>', time
    deallocate(time)
    <xsl:call-template name="checkError">
@@ -2377,7 +2377,7 @@ if (associated(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)) then
          write(*,*) "ERROR : the time vector of the type 3 array of structure <xsl:value-of select = "translate(@path,'/','%')"/> must be filled"
          return
       endif
-   else 
+   else
       do i1 = 1,size(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>) ! the AoS time vector is there, fill time with it
          time(i1) = IDS%<xsl:value-of select = "translate(@path,'/','%')"/>(i1)%time
       enddo
@@ -2389,9 +2389,9 @@ if (associated(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)) then
         trim(timepath),&amp;
         time,&amp;
         size(time),1, status)
-    
+
     call end_IDS_put_timed(idx, path)
-    if (ual_debug =='yes') write(*,*) &amp; 
+    if (ual_debug =='yes') write(*,*) &amp;
       'Put <xsl:call-template name="printtimevariable"/>',time
     deallocate(time)
    <xsl:call-template name="checkError">
@@ -2432,7 +2432,7 @@ call put_object(idx,path,"<xsl:value-of select = "@path"/>",obj1,0, status)
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
    </xsl:call-template>
-	
+
 </xsl:otherwise>
 </xsl:choose>
          </xsl:when>
@@ -2442,8 +2442,8 @@ call put_object(idx,path,"<xsl:value-of select = "@path"/>",obj1,0, status)
 <xsl:when test="$variable_path">
 if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then
    longstring = ' '    <!-- Initialisation of longstring, otherwise strange problems occur !-->
-   lenstring = size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)      
-   if (lenstring.EQ.1) then             
+   lenstring = size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)
+   if (lenstring.EQ.1) then
       longstring = trim(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(1))
    else
       do istring=1,lenstring
@@ -2451,7 +2451,7 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
       enddo
    endif
    call put_string(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,trim(longstring), status)       ! should clean up longstring after that, or send to the put only the right length, which has been updated
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
@@ -2462,8 +2462,8 @@ endif
 <xsl:otherwise>
 if (associated(IDS%<xsl:value-of select="@name"/>)) then
    longstring = ' '    <!-- Initialisation of longstring, otherwise strange problems occur !-->
-   lenstring = size(IDS%<xsl:value-of select="@name"/>)      
-   if (lenstring.EQ.1) then             
+   lenstring = size(IDS%<xsl:value-of select="@name"/>)
+   if (lenstring.EQ.1) then
       longstring = trim(IDS%<xsl:value-of select="@name"/>(1))
    else
       do istring=1,lenstring
@@ -2471,7 +2471,7 @@ if (associated(IDS%<xsl:value-of select="@name"/>)) then
       enddo
    endif
    call put_string(idx,path, "<xsl:value-of select="@name"/>",trim(longstring), status)       ! should clean up longstring after that, or send to the put only the right length, which has been updated
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="@name"/>',IDS%<xsl:value-of select="@name"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
@@ -2492,7 +2492,7 @@ endif
 if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then
    <xsl:choose>
    <xsl:when test="@type='dynamic'">
-   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
        <!--XSLtest whether this is a data/time structure, otherwise assume that the timepath attribute from IDSDef is correct-->
        <xsl:choose>
        <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data'])">
@@ -2504,15 +2504,15 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
        call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
        </xsl:otherwise>
        </xsl:choose>
-   else       
+   else
        timepath="time"
        call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
-   endif   
+   endif
    </xsl:when>
    <xsl:otherwise>
    timepath = ''
    </xsl:otherwise>
-   </xsl:choose>   
+   </xsl:choose>
    dim1 = size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)
    allocate(dimtab(dim1))
    do i=1,dim1
@@ -2524,9 +2524,9 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    <xsl:if test="@type='dynamic'">
    call end_IDS_put_timed(idx, path)
    </xsl:if>
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>'
-      
+
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
    </xsl:call-template>
@@ -2537,13 +2537,13 @@ endif
 if (associated(IDS%<xsl:value-of select="@name"/>)) then
    <xsl:choose>
    <xsl:when test="@type='dynamic'">
-   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
        timepath="<xsl:call-template name="printtimepath"/>"
        call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
    else
        timepath="time"
        call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
-   endif   
+   endif
    </xsl:when>
    <xsl:otherwise>
    timepath = ''
@@ -2560,7 +2560,7 @@ if (associated(IDS%<xsl:value-of select="@name"/>)) then
    <xsl:if test="@type='dynamic'">
    call end_IDS_put_timed(idx, path)
    </xsl:if>
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="@name"/>'
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
@@ -2577,8 +2577,8 @@ endif
 <xsl:when test="$variable_path">
 if (IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>.NE.-999999999) then
    call put_int(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
-       IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>, status)        
-   if (ual_debug =='yes') write(*,*) &amp; 
+       IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>, status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
@@ -2587,10 +2587,10 @@ endif
 </xsl:when>
 <xsl:otherwise>
 if (IDS%<xsl:value-of select="translate(@path,'/','%')"/>.NE.-999999999) then
-   call put_int(idx,path, "<xsl:value-of select="@path"/>",IDS%<xsl:value-of select="translate(@path,'/','%')"/>, status)        
-   if (ual_debug =='yes') write(*,*) &amp; 
+   call put_int(idx,path, "<xsl:value-of select="@path"/>",IDS%<xsl:value-of select="translate(@path,'/','%')"/>, status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
-      
+
       <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
    </xsl:call-template>
@@ -2603,9 +2603,9 @@ endif
 ! Put <xsl:value-of select="@path"/>
 <xsl:choose>
 <xsl:when test="$variable_path">
-if (IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>.NE.-9.D40) then 
-   call put_double(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>, status)  
-   if (ual_debug =='yes') write(*,*) &amp; 
+if (IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>.NE.-9.D40) then
+   call put_double(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>, status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
@@ -2614,9 +2614,9 @@ endif
 <!-- -->
 </xsl:when>
 <xsl:otherwise>
-if (IDS%<xsl:value-of select="@name"/>.NE.-9.D40) then 
-   call put_double(idx,path, "<xsl:value-of select="@path"/>",IDS%<xsl:value-of select="translate(@path,'/','%')"/>, status)  
-   if (ual_debug =='yes') write(*,*) &amp; 
+if (IDS%<xsl:value-of select="@name"/>.NE.-9.D40) then
+   call put_double(idx,path, "<xsl:value-of select="@path"/>",IDS%<xsl:value-of select="translate(@path,'/','%')"/>, status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
@@ -2635,7 +2635,7 @@ endif
 if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then
    <xsl:choose>
    <xsl:when test="@type='dynamic'">
-   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
        <!--XSLtest whether this is a data/time structure, otherwise assume that the timepath attribute from IDSDef is correct-->
        <xsl:choose>
        <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data'])">
@@ -2650,12 +2650,12 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    else
         timepath="time"
         call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
-   endif   
+   endif
    </xsl:when>
    <xsl:otherwise>
    timepath = ''
    </xsl:otherwise>
-   </xsl:choose>   
+   </xsl:choose>
    call put_vect1d_double(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
    trim(timepath),&amp;
    IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,&amp;
@@ -2663,7 +2663,7 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    <xsl:if test="@type='dynamic'">
    call end_IDS_put_timed(idx, path)
    </xsl:if>
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
@@ -2674,13 +2674,13 @@ endif
 if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    <xsl:choose>
    <xsl:when test="@type='dynamic'">
-   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
        timepath="<xsl:call-template name="printtimepath"/>"
        call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
    else
        timepath="time"
        call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
-   endif   
+   endif
    </xsl:when>
    <xsl:otherwise>
    timepath = ''
@@ -2693,9 +2693,9 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    <xsl:if test="@type='dynamic'">
    call end_IDS_put_timed(idx, path)
    </xsl:if>
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
-      
+
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
    </xsl:call-template>
@@ -2708,10 +2708,10 @@ endif
 ! Put <xsl:value-of select="@path"/>
 <xsl:choose>
 <xsl:when test="$variable_path">
-if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then         
+if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then
    <xsl:choose>
    <xsl:when test="@type='dynamic'">
-   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
        <!--XSLtest whether this is a data/time structure, otherwise assume that the timepath attribute from IDSDef is correct-->
        <xsl:choose>
        <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data'])">
@@ -2726,22 +2726,22 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    else
        timepath="time"
        call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
-   endif   
+   endif
    </xsl:when>
    <xsl:otherwise>
    timepath = ''
    </xsl:otherwise>
-   </xsl:choose>   
+   </xsl:choose>
    call put_vect1d_int(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
    trim(timepath), &amp;
    IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,&amp;
-   size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>),<xsl:call-template name="printIsTimed"/>, status) 
+   size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>),<xsl:call-template name="printIsTimed"/>, status)
    <xsl:if test="@type='dynamic'">
    call end_IDS_put_timed(idx, path)
    </xsl:if>
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
-      
+
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
    </xsl:call-template>
@@ -2751,28 +2751,28 @@ endif
 if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    <xsl:choose>
    <xsl:when test="@type='dynamic'">
-   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
        timepath="<xsl:call-template name="printtimepath"/>"
        call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
    else
        timepath="time"
        call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
-   endif   
+   endif
    </xsl:when>
    <xsl:otherwise>
    timepath = ''
    </xsl:otherwise>
-   </xsl:choose>        
+   </xsl:choose>
    call put_vect1d_int(idx,path, "<xsl:value-of select="@path"/>",&amp;
    trim(timepath),&amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>,&amp;
-   size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>),<xsl:call-template name="printIsTimed"/>, status) 
+   size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>),<xsl:call-template name="printIsTimed"/>, status)
    <xsl:if test="@type='dynamic'">
    call end_IDS_put_timed(idx, path)
    </xsl:if>
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
-      
+
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
    </xsl:call-template>
@@ -2786,10 +2786,10 @@ endif
 ! Put <xsl:value-of select="@path"/>
 <xsl:choose>
 <xsl:when test="$variable_path">
-if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then   
+if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then
    <xsl:choose>
    <xsl:when test="@type='dynamic'">
-   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
        <!--XSLtest whether this is a data/time structure, otherwise assume that the timepath attribute from IDSDef is correct-->
        <xsl:choose>
        <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data'])">
@@ -2804,21 +2804,21 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    else
        timepath="time"
        call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
-   endif   
+   endif
    </xsl:when>
    <xsl:otherwise>
    timepath = ''
    </xsl:otherwise>
-   </xsl:choose>   
+   </xsl:choose>
    call put_vect2d_double(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
    trim(timepath),&amp;
    IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>, &amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,1),&amp;
-   size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,2),<xsl:call-template name="printIsTimed"/>, status)  
+   size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,2),<xsl:call-template name="printIsTimed"/>, status)
    <xsl:if test="@type='dynamic'">
    call end_IDS_put_timed(idx, path)
    </xsl:if>
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
@@ -2829,27 +2829,27 @@ endif
 if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    <xsl:choose>
    <xsl:when test="@type='dynamic'">
-   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
        timepath="<xsl:call-template name="printtimepath"/>"
        call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
    else
        timepath="time"
        call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
-   endif   
+   endif
    </xsl:when>
    <xsl:otherwise>
    timepath = ''
    </xsl:otherwise>
-   </xsl:choose>           
+   </xsl:choose>
    call put_vect2d_double(idx,path, "<xsl:value-of select="@path"/>",&amp;
    trim(timepath),&amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
-   size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,2),<xsl:call-template name="printIsTimed"/>, status)  
+   size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,2),<xsl:call-template name="printIsTimed"/>, status)
    <xsl:if test="@type='dynamic'">
    call end_IDS_put_timed(idx, path)
    </xsl:if>
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
@@ -2867,7 +2867,7 @@ endif
 if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then
    <xsl:choose>
    <xsl:when test="@type='dynamic'">
-   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
        <!--XSLtest whether this is a data/time structure, otherwise assume that the timepath attribute from IDSDef is correct-->
        <xsl:choose>
        <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data'])">
@@ -2882,21 +2882,21 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    else
        timepath="time"
        call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
-   endif   
+   endif
    </xsl:when>
    <xsl:otherwise>
    timepath = ''
    </xsl:otherwise>
-   </xsl:choose>      
+   </xsl:choose>
    call put_vect2d_int(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
    trim(timepath),&amp;
    IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>, &amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,1),&amp;
-   size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,2),<xsl:call-template name="printIsTimed"/>, status)  
+   size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,2),<xsl:call-template name="printIsTimed"/>, status)
    <xsl:if test="@type='dynamic'">
    call end_IDS_put_timed(idx, path)
    </xsl:if>
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
@@ -2907,27 +2907,27 @@ endif
 if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    <xsl:choose>
    <xsl:when test="@type='dynamic'">
-   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
        timepath="<xsl:call-template name="printtimepath"/>"
        call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
    else
        timepath="time"
        call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
-   endif   
+   endif
    </xsl:when>
    <xsl:otherwise>
    timepath = ''
    </xsl:otherwise>
-   </xsl:choose>          
+   </xsl:choose>
    call put_vect2d_int(idx,path, "<xsl:value-of select="@path"/>",&amp;
    trim(timepath),&amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
-   size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,2),<xsl:call-template name="printIsTimed"/>, status)  
+   size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,2),<xsl:call-template name="printIsTimed"/>, status)
    <xsl:if test="@type='dynamic'">
    call end_IDS_put_timed(idx, path)
    </xsl:if>
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
@@ -2942,10 +2942,10 @@ endif
 ! Put <xsl:value-of select="@path"/>
 <xsl:choose>
 <xsl:when test="$variable_path">
-if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then  
+if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then
    <xsl:choose>
    <xsl:when test="@type='dynamic'">
-   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
        <!--XSLtest whether this is a data/time structure, otherwise assume that the timepath attribute from IDSDef is correct-->
        <xsl:choose>
        <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data'])">
@@ -2960,23 +2960,23 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    else
        timepath="time"
        call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
-   endif   
+   endif
    </xsl:when>
    <xsl:otherwise>
    timepath = ''
    </xsl:otherwise>
-   </xsl:choose>    
+   </xsl:choose>
    call put_vect3d_double(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
    trim(timepath),&amp;
    IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>, &amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,1),&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,2),&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,3),&amp;
-   <xsl:call-template name="printIsTimed"/>, status)  
+   <xsl:call-template name="printIsTimed"/>, status)
    <xsl:if test="@type='dynamic'">
    call end_IDS_put_timed(idx, path)
    </xsl:if>
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
@@ -2984,32 +2984,32 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
 endif
 </xsl:when>
 <xsl:otherwise>
-if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then 
+if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    <xsl:choose>
    <xsl:when test="@type='dynamic'">
-   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
        timepath="<xsl:call-template name="printtimepath"/>"
        call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
    else
        timepath="time"
        call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
-   endif   
+   endif
    </xsl:when>
    <xsl:otherwise>
    timepath = ''
    </xsl:otherwise>
-   </xsl:choose>        
+   </xsl:choose>
    call put_vect3d_double(idx,path, "<xsl:value-of select="@path"/>",&amp;
    trim(timepath),&amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,2),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,3),&amp;
-   <xsl:call-template name="printIsTimed"/>, status)  
+   <xsl:call-template name="printIsTimed"/>, status)
    <xsl:if test="@type='dynamic'">
    call end_IDS_put_timed(idx, path)
    </xsl:if>
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
     <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
@@ -3026,7 +3026,7 @@ endif
 if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then
    <xsl:choose>
    <xsl:when test="@type='dynamic'">
-   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
        <!--XSLtest whether this is a data/time structure, otherwise assume that the timepath attribute from IDSDef is correct-->
        <xsl:choose>
        <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data'])">
@@ -3041,25 +3041,25 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    else
        timepath="time"
        call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
-   endif   
+   endif
    </xsl:when>
    <xsl:otherwise>
    timepath = ''
    </xsl:otherwise>
-   </xsl:choose>      
+   </xsl:choose>
    call put_vect3d_int(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
    trim(timepath),&amp;
    IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>, &amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,1),&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,2),&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,3),&amp;
-   <xsl:call-template name="printIsTimed"/>, status)  
+   <xsl:call-template name="printIsTimed"/>, status)
    <xsl:if test="@type='dynamic'">
    call end_IDS_put_timed(idx, path)
    </xsl:if>
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
-      
+
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
    </xsl:call-template>
@@ -3069,29 +3069,29 @@ endif
 if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    <xsl:choose>
    <xsl:when test="@type='dynamic'">
-   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
        timepath="<xsl:call-template name="printtimepath"/>"
        call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
    else
        timepath="time"
        call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
-   endif   
+   endif
    </xsl:when>
    <xsl:otherwise>
    timepath = ''
    </xsl:otherwise>
-   </xsl:choose>           
+   </xsl:choose>
    call put_vect3d_int(idx,path, "<xsl:value-of select="@path"/>",&amp;
    trim(timepath),&amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,2),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,3),&amp;
-   <xsl:call-template name="printIsTimed"/>, status)  
+   <xsl:call-template name="printIsTimed"/>, status)
    <xsl:if test="@type='dynamic'">
    call end_IDS_put_timed(idx, path)
    </xsl:if>
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
 
  endif
@@ -3106,7 +3106,7 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
 if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then
    <xsl:choose>
    <xsl:when test="@type='dynamic'">
-   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
        <!--XSLtest whether this is a data/time structure, otherwise assume that the timepath attribute from IDSDef is correct-->
        <xsl:choose>
        <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data'])">
@@ -3121,12 +3121,12 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    else
        timepath="time"
        call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
-   endif   
+   endif
    </xsl:when>
    <xsl:otherwise>
    timepath = ''
    </xsl:otherwise>
-   </xsl:choose>      
+   </xsl:choose>
    call put_vect4d_double(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
    trim(timepath),&amp;
    IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>, &amp;
@@ -3134,11 +3134,11 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,2),&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,3),&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,4),&amp;
-   <xsl:call-template name="printIsTimed"/>, status)  
+   <xsl:call-template name="printIsTimed"/>, status)
    <xsl:if test="@type='dynamic'">
    call end_IDS_put_timed(idx, path)
    </xsl:if>
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
@@ -3149,18 +3149,18 @@ endif
 if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    <xsl:choose>
    <xsl:when test="@type='dynamic'">
-   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
        timepath="<xsl:call-template name="printtimepath"/>"
        call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
    else
        timepath="time"
        call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
-   endif   
+   endif
    </xsl:when>
    <xsl:otherwise>
    timepath = ''
    </xsl:otherwise>
-   </xsl:choose>          
+   </xsl:choose>
    call put_vect4d_double(idx,path, "<xsl:value-of select="@path"/>",&amp;
    trim(timepath),&amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
@@ -3168,11 +3168,11 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,2),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,3),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,4),&amp;
-   <xsl:call-template name="printIsTimed"/>, status)  
+   <xsl:call-template name="printIsTimed"/>, status)
    <xsl:if test="@type='dynamic'">
    call end_IDS_put_timed(idx, path)
    </xsl:if>
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
 
     <xsl:call-template name="checkError">
@@ -3188,10 +3188,10 @@ endif
 ! Put <xsl:value-of select="@path"/>
 <xsl:choose>
 <xsl:when test="$variable_path">
-if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then  
+if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then
    <xsl:choose>
    <xsl:when test="@type='dynamic'">
-   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
        <!--XSLtest whether this is a data/time structure, otherwise assume that the timepath attribute from IDSDef is correct-->
        <xsl:choose>
        <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data'])">
@@ -3206,12 +3206,12 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    else
        timepath="time"
        call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
-   endif   
+   endif
    </xsl:when>
    <xsl:otherwise>
    timepath = ''
    </xsl:otherwise>
-   </xsl:choose>    
+   </xsl:choose>
    call put_vect5d_double(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
    trim(timepath),&amp;
    IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>, &amp;
@@ -3220,11 +3220,11 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,3),&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,4),&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,5),&amp;
-   <xsl:call-template name="printIsTimed"/>, status)  
+   <xsl:call-template name="printIsTimed"/>, status)
    <xsl:if test="@type='dynamic'">
    call end_IDS_put_timed(idx, path)
    </xsl:if>
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
@@ -3232,21 +3232,21 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
 endif
 </xsl:when>
 <xsl:otherwise>
-if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then 
+if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    <xsl:choose>
    <xsl:when test="@type='dynamic'">
-   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
        timepath="<xsl:call-template name="printtimepath"/>"
        call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
    else
        timepath="time"
        call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
-   endif   
+   endif
    </xsl:when>
    <xsl:otherwise>
    timepath = ''
    </xsl:otherwise>
-   </xsl:choose>          
+   </xsl:choose>
    call put_vect5d_double(idx,path, "<xsl:value-of select="@path"/>",&amp;
    trim(timepath),&amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
@@ -3255,11 +3255,11 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,3),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,4),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,5),&amp;
-   <xsl:call-template name="printIsTimed"/>, status)  
+   <xsl:call-template name="printIsTimed"/>, status)
    <xsl:if test="@type='dynamic'">
    call end_IDS_put_timed(idx, path)
    </xsl:if>
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
@@ -3276,7 +3276,7 @@ endif
 if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then
    <xsl:choose>
    <xsl:when test="@type='dynamic'">
-   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
        <!--XSLtest whether this is a data/time structure, otherwise assume that the timepath attribute from IDSDef is correct-->
        <xsl:choose>
        <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data'])">
@@ -3291,12 +3291,12 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    else
        timepath="time"
        call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
-   endif   
+   endif
    </xsl:when>
    <xsl:otherwise>
    timepath = ''
    </xsl:otherwise>
-   </xsl:choose>     
+   </xsl:choose>
    call put_vect6d_double(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
    trim(timepath),&amp;
    IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>, &amp;
@@ -3306,11 +3306,11 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,4),&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,5),&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,6),&amp;
-   <xsl:call-template name="printIsTimed"/>, status)  
+   <xsl:call-template name="printIsTimed"/>, status)
    <xsl:if test="@type='dynamic'">
    call end_IDS_put_timed(idx, path)
    </xsl:if>
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
@@ -3321,18 +3321,18 @@ endif
 if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    <xsl:choose>
    <xsl:when test="@type='dynamic'">
-   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
        timepath="<xsl:call-template name="printtimepath"/>"
        call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
    else
        timepath="time"
        call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
-   endif   
+   endif
    </xsl:when>
    <xsl:otherwise>
    timepath = ''
    </xsl:otherwise>
-   </xsl:choose>           
+   </xsl:choose>
    call put_vect6d_double(idx,path, "<xsl:value-of select="@path"/>",&amp;
    trim(timepath),&amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
@@ -3342,11 +3342,11 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,4),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,5),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,6),&amp;
-   <xsl:call-template name="printIsTimed"/>, status)  
+   <xsl:call-template name="printIsTimed"/>, status)
    <xsl:if test="@type='dynamic'">
    call end_IDS_put_timed(idx, path)
    </xsl:if>
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
@@ -3355,8 +3355,8 @@ endif
 </xsl:otherwise>
 </xsl:choose>
 <!-- -->
-			</xsl:when>			
-			
+			</xsl:when>
+
 			<xsl:otherwise>
  ! Put <xsl:value-of select="@path"/> : PROBLEM : UNIDENTIFIED TYPE !!! <!-- for comment only -->
 			</xsl:otherwise>
@@ -3446,7 +3446,7 @@ if (associated(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>))
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
    </xsl:call-template>
-	
+
    ! Store time of the array of structure (hidden variable for the user, but used by the UAL for future get_slice operations)
    allocate(time(1))
    if (IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>(1)%time.EQ.-9.D40) then ! Check the presence of a time vector at the root of the AoS (on the first index only)
@@ -3461,7 +3461,7 @@ if (associated(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>))
          write(*,*) "ERROR : the time vector of the type 3 array of structure <xsl:value-of select = "concat($variable_path,'%',@name)"/> must be filled"
          return
       endif
-   else 
+   else
       do i1 = 1,size(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>) ! the AoS time vector is there, fill time with it
          time(i1) = IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>(i1)%time
       enddo
@@ -3472,7 +3472,7 @@ if (associated(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>))
       trim(timepath),&amp;
       time,&amp;
       time, status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>%time', time
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
@@ -3498,7 +3498,7 @@ if (associated(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)) then
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
    </xsl:call-template>
-	
+
    ! Store time of the array of structure (hidden variable for the user, but used by the UAL for future get_slice operations)
    allocate(time(1))
    if (IDS%<xsl:value-of select = "translate(@path,'/','%')"/>(1)%time.EQ.-9.D40) then ! Check the presence of a time vector at the root of the AoS (on the first index only)
@@ -3508,7 +3508,7 @@ if (associated(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)) then
          write(*,*) "ERROR : the time vector of the type 3 array of structure <xsl:value-of select = "translate(@path,'/','%')"/> must be filled"
          return
       endif
-   else 
+   else
       do i1 = 1,size(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>) ! the AoS time vector is there, fill time with it
          time(i1) = IDS%<xsl:value-of select = "translate(@path,'/','%')"/>(i1)%time
       enddo
@@ -3519,7 +3519,7 @@ if (associated(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)) then
       trim(timepath),&amp;
       time,&amp;
       time, status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>%time',time
     <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
@@ -3536,9 +3536,9 @@ endif
 if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then
    call put_string_slice(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;, &amp;
           trim(timepath),IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(1),IDS%time(1), status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>'
-   
+
     <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
    </xsl:call-template>
@@ -3549,7 +3549,7 @@ endif
 if (associated(IDS%<xsl:value-of select="@name"/>)) then
    call put_String_slice(idx,path, "<xsl:value-of select="@name"/>", &amp;
           trim(timepath),IDS%<xsl:value-of select="@name"/>,(1),IDS%time(1), status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="@name"/>'
          <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
@@ -3561,7 +3561,7 @@ endif
 <!-- -->
 			</xsl:when>
 
-			
+
 			<xsl:when test="@data_type='flt_1d_type' or @data_type='FLT_1D'">
 ! Put <xsl:value-of select="@path"/>
 <xsl:choose>
@@ -3571,7 +3571,7 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    trim(timepath),&amp;
    IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(1),&amp;
    IDS%time(1), status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
 endif
 </xsl:when>
@@ -3581,9 +3581,9 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    trim(timepath),&amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>(1),&amp;
    IDS%time(1), status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
-      
+
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
    </xsl:call-template>
@@ -3596,18 +3596,18 @@ endif
 ! Put <xsl:value-of select="@path"/>
 <xsl:choose>
 <xsl:when test="$variable_path">
-if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then         
+if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then
    call put_int_slice(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
    trim(timepath), &amp;
    IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(1),&amp;
-   IDS%time(1), status) 
-   if (ual_debug =='yes') write(*,*) &amp; 
+   IDS%time(1), status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
 
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
    </xsl:call-template>
-	
+
 endif
 </xsl:when>
 <xsl:otherwise>
@@ -3615,8 +3615,8 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_int_slice(idx,path, "<xsl:value-of select="@path"/>",&amp;
    trim(timepath),&amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>(1),&amp;
-   IDS%time(1), status) 
-   if (ual_debug =='yes') write(*,*) &amp; 
+   IDS%time(1), status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
@@ -3631,13 +3631,13 @@ endif
 ! Put <xsl:value-of select="@path"/>
 <xsl:choose>
 <xsl:when test="$variable_path">
-if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then   
+if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then
    call put_vect1d_double_slice(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
    trim(timepath),&amp;
    IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(:,1), &amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,1),&amp;
-   IDS%time(1), status)  
-   if (ual_debug =='yes') write(*,*) &amp; 
+   IDS%time(1), status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
 
      <xsl:call-template name="checkError">
@@ -3651,8 +3651,8 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    trim(timepath),&amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>(:,1), &amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
-   IDS%time(1), status)  
-   if (ual_debug =='yes') write(*,*) &amp; 
+   IDS%time(1), status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
 
    <xsl:call-template name="checkError">
@@ -3674,8 +3674,8 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    trim(timepath),&amp;
    IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(:,1), &amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,1),&amp;
-   IDS%time(1), status)  
-   if (ual_debug =='yes') write(*,*) &amp; 
+   IDS%time(1), status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
 
    <xsl:call-template name="checkError">
@@ -3684,13 +3684,13 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
 endif
 </xsl:when>
 <xsl:otherwise>
-if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then    
+if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect1d_int_slice(idx,path, "<xsl:value-of select="@path"/>",&amp;
    trim(timepath),&amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>(:,1), &amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
-   IDS%time(1), status)  
-   if (ual_debug =='yes') write(*,*) &amp; 
+   IDS%time(1), status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
 
    <xsl:call-template name="checkError">
@@ -3706,14 +3706,14 @@ endif
 ! Put <xsl:value-of select="@path"/>
 <xsl:choose>
 <xsl:when test="$variable_path">
-if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then  
+if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then
    call put_vect2d_double_slice(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
    trim(timepath),&amp;
    IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(:,:,1), &amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,1),&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,2),&amp;
-   IDS%time(1), status)  
-   if (ual_debug =='yes') write(*,*) &amp; 
+   IDS%time(1), status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
@@ -3721,14 +3721,14 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
 endif
 </xsl:when>
 <xsl:otherwise>
-if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then 
+if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect2d_double_slice(idx,path, "<xsl:value-of select="@path"/>",&amp;
    trim(timepath),&amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>(:,:,1), &amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,2),&amp;
-   IDS%time(1), status)  
-   if (ual_debug =='yes') write(*,*) &amp; 
+   IDS%time(1), status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
@@ -3742,14 +3742,14 @@ endif
 ! Put <xsl:value-of select="@path"/>
 <xsl:choose>
 <xsl:when test="$variable_path">
-if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then  
+if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then
    call put_vect2d_int_slice(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
    trim(timepath),&amp;
    IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(:,:,1), &amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,1),&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,2),&amp;
-   IDS%time(1), status)  
-   if (ual_debug =='yes') write(*,*) &amp; 
+   IDS%time(1), status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
@@ -3757,14 +3757,14 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
 endif
 </xsl:when>
 <xsl:otherwise>
-if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then 
+if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect2d_int_slice(idx,path, "<xsl:value-of select="@path"/>",&amp;
    trim(timepath),&amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>(:,:,1), &amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,2),&amp;
-   IDS%time(1), status)  
-   if (ual_debug =='yes') write(*,*) &amp; 
+   IDS%time(1), status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
@@ -3778,17 +3778,17 @@ endif
 ! Put <xsl:value-of select="@path"/>
 <xsl:choose>
 <xsl:when test="$variable_path">
-if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then    
+if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then
    call put_vect3d_double_slice(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
    trim(timepath),&amp;
    IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(:,:,:,1), &amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,1),&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,2),&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,3),&amp;
-   IDS%time(1), status)  
-   if (ual_debug =='yes') write(*,*) &amp; 
+   IDS%time(1), status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
-      
+
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
    </xsl:call-template>
@@ -3802,8 +3802,8 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,2),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,3),&amp;
-   IDS%time(1), status)  
-   if (ual_debug =='yes') write(*,*) &amp; 
+   IDS%time(1), status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
@@ -3817,7 +3817,7 @@ endif
 ! Put <xsl:value-of select="@path"/>
 <xsl:choose>
 <xsl:when test="$variable_path">
-if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then  
+if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) then
    call put_vect4d_double_slice(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
    trim(timepath),&amp;
    IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(:,:,:,:,1), &amp;
@@ -3825,17 +3825,17 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,2),&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,3),&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,4),&amp;
-   IDS%time(1), status)  
-   if (ual_debug =='yes') write(*,*) &amp; 
+   IDS%time(1), status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
-      
+
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
    </xsl:call-template>
 endif
 </xsl:when>
 <xsl:otherwise>
-if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then       
+if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect4d_double_slice(idx,path, "<xsl:value-of select="@path"/>",&amp;
    trim(timepath),&amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>(:,:,:,:,1), &amp;
@@ -3843,10 +3843,10 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,2),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,3),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,4),&amp;
-   IDS%time(1), status)  
-   if (ual_debug =='yes') write(*,*) &amp; 
+   IDS%time(1), status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
-      
+
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
    </xsl:call-template>
@@ -3868,8 +3868,8 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,3),&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,4),&amp;
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,5),&amp;
-   IDS%time(1), status)  
-   if (ual_debug =='yes') write(*,*) &amp; 
+   IDS%time(1), status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
@@ -3886,8 +3886,8 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,3),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,4),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,5),&amp;
-   IDS%time(1), status)  
-   if (ual_debug =='yes') write(*,*) &amp; 
+   IDS%time(1), status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
 
 
@@ -3898,8 +3898,8 @@ endif
 </xsl:otherwise>
 </xsl:choose>
 <!-- -->
-			</xsl:when>			
-			
+			</xsl:when>
+
 			<xsl:otherwise>
  ! Put <xsl:value-of select="@path"/> : PROBLEM : UNIDENTIFIED TYPE !!! <!-- for comment only -->
 			</xsl:otherwise>
@@ -4049,38 +4049,38 @@ endif
 <xsl:choose>
 <xsl:when test="$variable_path">
 longstring = ' '    <!-- Initialisation of longstring, otherwise strange problems occur !-->
-call get_string(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,longstring, status)       
+call get_string(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,longstring, status)
 if (status.EQ.0) then
    lenstring = len_trim(longstring)
    allocate(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(floor(real(lenstring/132))+1))
-   if (lenstring &lt;= 132) then             
+   if (lenstring &lt;= 132) then
       IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/> = trim(longstring)
    else
       do istring=1,floor(real(lenstring/132))+1
-          IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(istring) = trim(longstring(1+(istring-1)*132 : istring*132)) 
+          IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(istring) = trim(longstring(1+(istring-1)*132 : istring*132))
       enddo
    endif
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
-endif   
+endif
 <!-- -->
 </xsl:when>
 <xsl:otherwise>
 longstring = ' '    <!-- Initialisation of longstring, otherwise strange problems occur !-->
-call get_string(idx,path, "<xsl:value-of select="@name"/>",longstring, status)       
+call get_string(idx,path, "<xsl:value-of select="@name"/>",longstring, status)
 if (status.EQ.0) then
    lenstring = len_trim(longstring)
    allocate(IDS%<xsl:value-of select="@name"/>(floor(real(lenstring/132))+1))
-   if (lenstring &lt;= 132) then             
+   if (lenstring &lt;= 132) then
       IDS%<xsl:value-of select="@name"/> = trim(longstring)
    else
       do istring=1,floor(real(lenstring/132))+1
-          IDS%<xsl:value-of select="@name"/>(istring) = trim(longstring(1+(istring-1)*132 : istring*132)) 
+          IDS%<xsl:value-of select="@name"/>(istring) = trim(longstring(1+(istring-1)*132 : istring*132))
       enddo
    endif
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="@name"/>',IDS%<xsl:value-of select="@name"/>
-endif   
+endif
 <!-- -->
 </xsl:otherwise>
 </xsl:choose>
@@ -4094,9 +4094,9 @@ endif
       allocate(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(dim1))
       call get_Vect1d_string(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;, &amp;
           IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,dim1,dum1,status)
-      if (ual_debug =='yes') write(*,*) &amp; 
+      if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>'
-   endif   
+   endif
 <!-- -->
 </xsl:when>
 <xsl:otherwise>
@@ -4105,9 +4105,9 @@ endif
       allocate(IDS%<xsl:value-of select="@name"/>(dim1))
       call get_Vect1d_string(idx,path, "<xsl:value-of select="@name"/>", &amp;
           IDS%<xsl:value-of select="@name"/>,dim1,dum1,status)
-      if (ual_debug =='yes') write(*,*) &amp; 
+      if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="@name"/>'
-   endif   
+   endif
 <!-- -->
 </xsl:otherwise>
 </xsl:choose>
@@ -4120,17 +4120,17 @@ endif
 call get_int(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,int0d,status)
 if (status.EQ.0) then
    IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/> = int0d
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>'
-endif                 
+endif
 </xsl:when>
 <xsl:otherwise>
 call get_int(idx,path, "<xsl:value-of select="@path"/>",int0d,status)
 if (status.EQ.0) then
    IDS%<xsl:value-of select="translate(@path,'/','%')"/> = int0d
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
-endif                 
+endif
 </xsl:otherwise>
 </xsl:choose>
 <!-- -->
@@ -4142,17 +4142,17 @@ endif
 call get_double(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,double0d,status)
 if (status.EQ.0) then
    IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/> = double0d
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>'
-endif                 
+endif
 </xsl:when>
 <xsl:otherwise>
 call get_double(idx,path, "<xsl:value-of select="@path"/>",double0d,status)
 if (status.EQ.0) then
    IDS%<xsl:value-of select="translate(@path,'/','%')"/> = double0d
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
-endif                 
+endif
 </xsl:otherwise>
 </xsl:choose>
 <!-- -->
@@ -4169,9 +4169,9 @@ endif
       call get_vect1d_double(idx,path,<xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;, &amp;
       IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/> &amp;
       ,dim1,dum1,status)
-      if (ual_debug =='yes') write(*,*) &amp;  
+      if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>'
-   endif        
+   endif
 </xsl:when>
 <xsl:otherwise>
    call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
@@ -4180,9 +4180,9 @@ endif
       call get_vect1d_double(idx,path,"<xsl:value-of select="@path"/>", &amp;
       IDS%<xsl:value-of select="translate(@path,'/','%')"/> &amp;
       ,dim1,dum1,status)
-      if (ual_debug =='yes') write(*,*) &amp;  
+      if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
-   endif        
+   endif
 </xsl:otherwise>
 </xsl:choose>
 <!-- -->
@@ -4197,9 +4197,9 @@ endif
       call get_vect1d_int(idx,path,<xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;, &amp;
       IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/> &amp;
       ,dim1,dum1,status)
-      if (ual_debug =='yes') write(*,*) &amp;  
+      if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>'
-   endif        
+   endif
 </xsl:when>
 <xsl:otherwise>
    call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
@@ -4208,9 +4208,9 @@ endif
       call get_vect1d_int(idx,path,"<xsl:value-of select="@path"/>", &amp;
       IDS%<xsl:value-of select="translate(@path,'/','%')"/> &amp;
       ,dim1,dum1,status)
-      if (ual_debug =='yes') write(*,*) &amp;  
+      if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
-   endif        
+   endif
 </xsl:otherwise>
 </xsl:choose>
 <!-- -->
@@ -4226,9 +4226,9 @@ endif
       call get_vect2d_double(idx,path,<xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;, &amp;
       IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/> &amp;
       ,dim1,dim2, dum1,dum2, status)
-      if (ual_debug =='yes') write(*,*) &amp;  
+      if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>'
-   endif        
+   endif
 </xsl:when>
 <xsl:otherwise>
    call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
@@ -4237,9 +4237,9 @@ endif
       call get_vect2d_double(idx,path,"<xsl:value-of select="@path"/>", &amp;
       IDS%<xsl:value-of select="translate(@path,'/','%')"/> &amp;
       ,dim1,dim2, dum1, dum2, status)
-      if (ual_debug =='yes') write(*,*) &amp;  
+      if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
-   endif        
+   endif
 </xsl:otherwise>
 </xsl:choose>
 <!-- -->
@@ -4254,9 +4254,9 @@ endif
       call get_vect2d_int(idx,path,<xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;, &amp;
       IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/> &amp;
       ,dim1,dim2, dum1, dum2, status)
-      if (ual_debug =='yes') write(*,*) &amp;  
+      if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>'
-   endif        
+   endif
 </xsl:when>
 <xsl:otherwise>
    call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
@@ -4265,9 +4265,9 @@ endif
       call get_vect2d_int(idx,path,"<xsl:value-of select="@path"/>", &amp;
       IDS%<xsl:value-of select="translate(@path,'/','%')"/> &amp;
       ,dim1,dim2,dum1, dum2, status)
-      if (ual_debug =='yes') write(*,*) &amp;  
+      if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
-   endif        
+   endif
 </xsl:otherwise>
 </xsl:choose>
 <!-- -->
@@ -4282,9 +4282,9 @@ endif
       call get_vect3d_double(idx,path,<xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;, &amp;
       IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/> &amp;
       ,dim1,dim2, dim3, dum1,dum2, dum3, status)
-      if (ual_debug =='yes') write(*,*) &amp;  
+      if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>'
-   endif        
+   endif
 </xsl:when>
 <xsl:otherwise>
    call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
@@ -4293,12 +4293,12 @@ endif
       call get_vect3d_double(idx,path,"<xsl:value-of select="@path"/>", &amp;
       IDS%<xsl:value-of select="translate(@path,'/','%')"/> &amp;
       ,dim1,dim2, dim3, dum1, dum2, dum3, status)
-      if (ual_debug =='yes') write(*,*) &amp;  
+      if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
-   endif        
+   endif
 </xsl:otherwise>
 </xsl:choose>
-<!-- -->	
+<!-- -->
 		</xsl:when>
 			<xsl:when test="@data_type='INT_3D'">
 ! Get <xsl:value-of select="@path"/>
@@ -4310,9 +4310,9 @@ endif
       call get_vect3d_int(idx,path,<xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;, &amp;
       IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/> &amp;
       ,dim1,dim2, dim3, dum1, dum2, dum3, status)
-      if (ual_debug =='yes') write(*,*) &amp;  
+      if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>'
-   endif        
+   endif
 </xsl:when>
 <xsl:otherwise>
    call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
@@ -4321,9 +4321,9 @@ endif
       call get_vect3d_int(idx,path,"<xsl:value-of select="@path"/>", &amp;
       IDS%<xsl:value-of select="translate(@path,'/','%')"/> &amp;
       ,dim1,dim2, dim3, dum1, dum2, dum3, status)
-      if (ual_debug =='yes') write(*,*) &amp;  
+      if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
-   endif        
+   endif
 </xsl:otherwise>
 </xsl:choose>
 <!-- -->				</xsl:when>
@@ -4337,9 +4337,9 @@ endif
       call get_vect4d_double(idx,path,<xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;, &amp;
       IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/> &amp;
       ,dim1,dim2, dim3, dim4, dum1, dum2, dum3, dum4, status)
-      if (ual_debug =='yes') write(*,*) &amp;  
+      if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>'
-   endif        
+   endif
 </xsl:when>
 <xsl:otherwise>
    call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
@@ -4348,12 +4348,12 @@ endif
       call get_vect4d_double(idx,path,"<xsl:value-of select="@path"/>", &amp;
       IDS%<xsl:value-of select="translate(@path,'/','%')"/> &amp;
       ,dim1,dim2, dim3, dim4, dum1, dum2, dum3, dum4, status)
-      if (ual_debug =='yes') write(*,*) &amp;  
+      if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
-   endif        
+   endif
 </xsl:otherwise>
 </xsl:choose>
-<!-- -->	
+<!-- -->
 			</xsl:when>
          <xsl:when test="@data_type='FLT_5D'">
 ! Get <xsl:value-of select="@path"/>
@@ -4365,9 +4365,9 @@ endif
       call get_vect5d_double(idx,path,<xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;, &amp;
       IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/> &amp;
       ,dim1,dim2, dim3, dim4, dim5, dum1, dum2, dum3, dum4, dum5, status)
-      if (ual_debug =='yes') write(*,*) &amp;  
+      if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>'
-   endif        
+   endif
 </xsl:when>
 <xsl:otherwise>
    call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
@@ -4376,12 +4376,12 @@ endif
       call get_vect5d_double(idx,path,"<xsl:value-of select="@path"/>", &amp;
       IDS%<xsl:value-of select="translate(@path,'/','%')"/> &amp;
       ,dim1,dim2, dim3, dim4, dim5, dum1, dum2, dum3, dum4, dum5, status)
-      if (ual_debug =='yes') write(*,*) &amp;  
+      if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
-   endif        
+   endif
 </xsl:otherwise>
 </xsl:choose>
-<!-- -->	
+<!-- -->
 			</xsl:when>
          <xsl:when test="@data_type='FLT_6D'">
 ! Get <xsl:value-of select="@path"/>
@@ -4393,9 +4393,9 @@ endif
       call get_vect6d_double(idx,path,<xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;, &amp;
       IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/> &amp;
       ,dim1,dim2, dim3, dim4, dim5, dim6, dum1, dum2, dum3, dum4, dum5, dum6, status)
-      if (ual_debug =='yes') write(*,*) &amp;  
+      if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>'
-   endif        
+   endif
 </xsl:when>
 <xsl:otherwise>
    call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
@@ -4404,14 +4404,14 @@ endif
       call get_vect6d_double(idx,path,"<xsl:value-of select="@path"/>", &amp;
       IDS%<xsl:value-of select="translate(@path,'/','%')"/> &amp;
       ,dim1,dim2, dim3, dim4, dim5, dim6, dum1, dum2, dum3, dum4, dum5, dum6, status)
-      if (ual_debug =='yes') write(*,*) &amp;  
+      if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
-   endif        
+   endif
 </xsl:otherwise>
 </xsl:choose>
-<!-- -->	
-			</xsl:when>			
-			
+<!-- -->
+			</xsl:when>
+
 			<xsl:otherwise>
  ! Get <xsl:value-of select="@path"/> : PROBLEM : UNIDENTIFIED TYPE !!! <!-- for comment only -->
 			</xsl:otherwise>
@@ -4535,13 +4535,13 @@ endif
 </xsl:choose>
 </xsl:when>
 
-  
+
    <xsl:when test="@type='dynamic'">
 <!-- Get slice is specific only for dynamicS -->
 ! Get <xsl:value-of select="@path"/>
 <xsl:choose>
 <xsl:when test="$variable_path">
-   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
        <!--XSLtest whether this is a data/time structure, otherwise assume that the timepath attribute from IDSDef is correct-->
        <xsl:choose>
        <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data'])">
@@ -4551,20 +4551,20 @@ endif
        timepath=&quot;<xsl:call-template name="printtimepath"/>&quot;
        </xsl:otherwise>
        </xsl:choose>
-   else       
+   else
        timepath="time"
-   endif   
+   endif
 </xsl:when>
 <xsl:otherwise>
-   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then 
+   if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
        timepath="<xsl:call-template name="printtimepath"/>"
    else
        timepath="time"
-   endif   
+   endif
 </xsl:otherwise>
 </xsl:choose>
 
-<xsl:choose>	
+<xsl:choose>
 			<xsl:when test="@data_type='str_1d_type' or @data_type='STR_1D'">
 <xsl:choose>
 <xsl:when test="$variable_path">
@@ -4574,9 +4574,9 @@ endif
       call get_string_slice(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;, &amp;
           trim(timepath),&amp;
           IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,twant,tret,interpol,status)
-      if (ual_debug =='yes') write(*,*) &amp; 
+      if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>'
-   endif   
+   endif
 <!-- -->
 </xsl:when>
 <xsl:otherwise>
@@ -4586,15 +4586,15 @@ endif
       call get_string_slice(idx,path, "<xsl:value-of select="@name"/>", &amp;
           trim(timepath),&amp;
           IDS%<xsl:value-of select="@name"/>,twant,tret,interpol,status)
-      if (ual_debug =='yes') write(*,*) &amp; 
+      if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="@name"/>'
-   endif   
+   endif
 <!-- -->
 </xsl:otherwise>
 </xsl:choose>
 <!-- -->
 			</xsl:when>
-			
+
 			<xsl:when test="@data_type='flt_1d_type' or @data_type='FLT_1D'">
 ! Get <xsl:value-of select="@path"/>
 <xsl:choose>
@@ -4606,9 +4606,9 @@ endif
       trim(timepath),&amp;
       IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/> &amp;
       ,twant,tret,interpol,status)
-      if (ual_debug =='yes') write(*,*) &amp;  
+      if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>'
-   endif        
+   endif
 </xsl:when>
 <xsl:otherwise>
    call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
@@ -4618,9 +4618,9 @@ endif
       trim(timepath),&amp;
       IDS%<xsl:value-of select="translate(@path,'/','%')"/> &amp;
       ,twant,tret,interpol,status)
-      if (ual_debug =='yes') write(*,*) &amp;  
+      if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
-   endif        
+   endif
 </xsl:otherwise>
 </xsl:choose>
 <!-- -->
@@ -4635,9 +4635,9 @@ endif
       trim(timepath),&amp;
       IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/> &amp;
       ,twant,tret,interpol,status)
-      if (ual_debug =='yes') write(*,*) &amp;  
+      if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>'
-   endif        
+   endif
 </xsl:when>
 <xsl:otherwise>
    call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
@@ -4647,9 +4647,9 @@ endif
       trim(timepath),&amp;
       IDS%<xsl:value-of select="translate(@path,'/','%')"/> &amp;
       ,twant,tret,interpol,status)
-      if (ual_debug =='yes') write(*,*) &amp;  
+      if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
-   endif        
+   endif
 </xsl:otherwise>
 </xsl:choose>
 <!-- -->
@@ -4665,9 +4665,9 @@ endif
       trim(timepath),&amp;
       IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/> &amp;
       ,dim1, dum1,twant,tret,interpol,status)
-      if (ual_debug =='yes') write(*,*) &amp;  
+      if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>'
-   endif        
+   endif
 </xsl:when>
 <xsl:otherwise>
    call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
@@ -4677,9 +4677,9 @@ endif
       trim(timepath),&amp;
       IDS%<xsl:value-of select="translate(@path,'/','%')"/> &amp;
       ,dim1, dum1, twant,tret,interpol,status)
-      if (ual_debug =='yes') write(*,*) &amp;  
+      if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
-   endif        
+   endif
 </xsl:otherwise>
 </xsl:choose>
 <!-- -->
@@ -4694,9 +4694,9 @@ endif
       trim(timepath),&amp;
       IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/> &amp;
       ,dim1,dum1,twant,tret,interpol,status)
-      if (ual_debug =='yes') write(*,*) &amp;  
+      if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>'
-   endif        
+   endif
 </xsl:when>
 <xsl:otherwise>
    call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
@@ -4706,9 +4706,9 @@ endif
       trim(timepath),&amp;
       IDS%<xsl:value-of select="translate(@path,'/','%')"/> &amp;
       ,dim1,dum1, twant,tret,interpol,status)
-      if (ual_debug =='yes') write(*,*) &amp;  
+      if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
-   endif        
+   endif
 </xsl:otherwise>
 </xsl:choose>
 <!-- -->
@@ -4724,9 +4724,9 @@ endif
       trim(timepath),&amp;
       IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/> &amp;
       ,dim1,dim2, dum1,dum2, twant,tret,interpol,status)
-      if (ual_debug =='yes') write(*,*) &amp;  
+      if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>'
-   endif        
+   endif
 </xsl:when>
 <xsl:otherwise>
    call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
@@ -4736,12 +4736,12 @@ endif
       trim(timepath),&amp;
       IDS%<xsl:value-of select="translate(@path,'/','%')"/> &amp;
       ,dim1,dim2, dum1, dum2, twant,tret,interpol, status)
-      if (ual_debug =='yes') write(*,*) &amp;  
+      if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
-   endif        
+   endif
 </xsl:otherwise>
 </xsl:choose>
-<!-- -->	
+<!-- -->
 		</xsl:when>
 			<xsl:when test="@data_type='INT_3D'">
 ! Get <xsl:value-of select="@path"/>
@@ -4754,9 +4754,9 @@ endif
       trim(timepath),&amp;
       IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/> &amp;
       ,dim1,dim2, dum1, dum2, twant,tret,interpol, status)
-      if (ual_debug =='yes') write(*,*) &amp;  
+      if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>'
-   endif        
+   endif
 </xsl:when>
 <xsl:otherwise>
    call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
@@ -4766,9 +4766,9 @@ endif
       trim(timepath),&amp;
       IDS%<xsl:value-of select="translate(@path,'/','%')"/> &amp;
       ,dim1,dim2, dum1, dum2, twant,tret,interpol,  status)
-      if (ual_debug =='yes') write(*,*) &amp;  
+      if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
-   endif        
+   endif
 </xsl:otherwise>
 </xsl:choose>
 <!-- -->				</xsl:when>
@@ -4783,9 +4783,9 @@ endif
       trim(timepath),&amp;
       IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/> &amp;
       ,dim1,dim2, dim3, dum1, dum2, dum3, twant,tret,interpol, status)
-      if (ual_debug =='yes') write(*,*) &amp;  
+      if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>'
-   endif        
+   endif
 </xsl:when>
 <xsl:otherwise>
    call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
@@ -4795,12 +4795,12 @@ endif
       trim(timepath),&amp;
       IDS%<xsl:value-of select="translate(@path,'/','%')"/> &amp;
       ,dim1,dim2, dim3, dum1, dum2, dum3, twant,tret,interpol, status)
-      if (ual_debug =='yes') write(*,*) &amp;  
+      if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
-   endif        
+   endif
 </xsl:otherwise>
 </xsl:choose>
-<!-- -->	
+<!-- -->
 			</xsl:when>
          <xsl:when test="@data_type='FLT_5D'">
 ! Get <xsl:value-of select="@path"/>
@@ -4813,9 +4813,9 @@ endif
       trim(timepath),&amp;
       IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/> &amp;
       ,dim1,dim2, dim3, dim4, dum1, dum2, dum3, dum4, twant,tret,interpol,  status)
-      if (ual_debug =='yes') write(*,*) &amp;  
+      if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>'
-   endif        
+   endif
 </xsl:when>
 <xsl:otherwise>
    call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
@@ -4825,12 +4825,12 @@ endif
       trim(timepath),&amp;
       IDS%<xsl:value-of select="translate(@path,'/','%')"/> &amp;
       ,dim1,dim2, dim3, dim4, dum1, dum2, dum3, dum4, twant,tret,interpol, status)
-      if (ual_debug =='yes') write(*,*) &amp;  
+      if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
-   endif        
+   endif
 </xsl:otherwise>
 </xsl:choose>
-<!-- -->	
+<!-- -->
 			</xsl:when>
          <xsl:when test="@data_type='FLT_6D'">
 ! Get <xsl:value-of select="@path"/>
@@ -4843,9 +4843,9 @@ endif
       trim(timepath),&amp;
       IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/> &amp;
       ,dim1,dim2, dim3, dim4, dim5, dum1, dum2, dum3, dum4, dum5, twant,tret,interpol,  status)
-      if (ual_debug =='yes') write(*,*) &amp;  
+      if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>'
-   endif        
+   endif
 </xsl:when>
 <xsl:otherwise>
    call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
@@ -4855,14 +4855,14 @@ endif
       trim(timepath),&amp;
       IDS%<xsl:value-of select="translate(@path,'/','%')"/> &amp;
       ,dim1,dim2, dim3, dim4, dim5, dum1, dum2, dum3, dum4, dum5, twant,tret,interpol, status)
-      if (ual_debug =='yes') write(*,*) &amp;  
+      if (ual_debug =='yes') write(*,*) &amp;
       'Get IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
-   endif        
+   endif
 </xsl:otherwise>
 </xsl:choose>
-<!-- -->	
-			</xsl:when>			
-			
+<!-- -->
+			</xsl:when>
+
 			<xsl:otherwise>
  ! Get <xsl:value-of select="@path"/> : PROBLEM : UNIDENTIFIED TYPE !!! <!-- for comment only -->
 			</xsl:otherwise>
@@ -4879,7 +4879,7 @@ endif
 </xsl:choose>
 
 </xsl:template>
- 
+
 
 
 
@@ -4924,7 +4924,7 @@ call put_object_slice(idx,path,"<xsl:value-of select="@path"/>",IDS%time,obj_sin
      <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
    </xsl:call-template>
-	
+
          </xsl:when>
 			<xsl:when test="@name='xs:string' and @timed='yes'">
 ! Put <xsl:value-of select="@path"/>  ERROR : NO TIME DEPENDENT STRING EXPECTED IN THE data STRUCTURE
@@ -4936,13 +4936,13 @@ call put_object_slice(idx,path,"<xsl:value-of select="@path"/>",IDS%time,obj_sin
 			</xsl:when>
 			<xsl:when test="@name='xs:integer'  and @timed='yes'">
 ! Put <xsl:value-of select="@path"/>
-				<!-- for comment only -->        
+				<!-- for comment only -->
 if (IDS%<xsl:value-of select="translate(@path,'/','%')"/>.NE.-999999999) then
    call put_int_slice(idx,path, "<xsl:value-of select="@path"/>",IDS%<xsl:value-of select="translate(@path,'/','%')"/>,&amp;
-   IDS%time, status)        
-   if (ual_debug =='yes') write(*,*) &amp; 
+   IDS%time, status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
-      
+
      <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
    </xsl:call-template>
@@ -4952,9 +4952,9 @@ endif
 			<xsl:when test="@name='xs:float'  and @timed='yes'">
 ! Put <xsl:value-of select="@path"/>
 				<!-- for comment only -->
-if (IDS%<xsl:value-of select="translate(@path,'/','%')"/>.NE.-9.D40) then 
+if (IDS%<xsl:value-of select="translate(@path,'/','%')"/>.NE.-9.D40) then
    call put_double_slice(idx,path, "<xsl:value-of select="@path"/>",IDS%<xsl:value-of select="translate(@path,'/','%')"/>,&amp;
-   IDS%time, status)  
+   IDS%time, status)
    if (ual_debug =='yes') write(*,*) &amp;
        'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
      <xsl:call-template name="checkError">
@@ -4966,11 +4966,11 @@ endif
 			<xsl:when test="@name='vecflt_type'  and @timed='yes'">
 ! Put <xsl:value-of select="@path"/>
 				<!-- for comment only -->
-if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then   
+if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect1d_double_slice(idx,path, "<xsl:value-of select="@path"/>",&amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>,&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>),IDS%time, status)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',&amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>
      <xsl:call-template name="checkError">
@@ -4981,11 +4981,11 @@ endif
 			</xsl:when>
 			<xsl:when test="@name='vecint_type'  and @timed='yes'">
 ! Put <xsl:value-of select="@path"/>
-				<!-- for comment only --> 
-if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then         
+				<!-- for comment only -->
+if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect1d_int_slice(idx,path, "<xsl:value-of select="@path"/>",&amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>,&amp;
-   size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>),IDS%time, status) 
+   size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>),IDS%time, status)
    if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
            <xsl:call-template name="checkError">
@@ -4995,13 +4995,13 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
 			</xsl:when>
 			<xsl:when test="@name='matflt_type'  and @timed='yes'">
 ! Put <xsl:value-of select="@path"/>
-				<!-- for comment only -->        
-if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then   
+				<!-- for comment only -->
+if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect2d_double_slice(idx,path, "<xsl:value-of select="@path"/>", &amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
-   size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,2),IDS%time, status)  
-   if (ual_debug =='yes') write(*,*) &amp; 
+   size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,2),IDS%time, status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
          <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
@@ -5011,13 +5011,13 @@ endif
 			</xsl:when>
 			<xsl:when test="@name='matint_type'  and @timed='yes'">
 ! Put <xsl:value-of select="@path"/>
-				<!-- for comment only -->        
-if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then   
+				<!-- for comment only -->
+if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect2d_int_slice(idx,path, "<xsl:value-of select="@path"/>",&amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,1), &amp;
-   size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,2),IDS%time, status)  
-   if (ual_debug =='yes') write(*,*) &amp; 
+   size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,2),IDS%time, status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
      <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
@@ -5027,14 +5027,14 @@ endif
 			</xsl:when>
 			<xsl:when test="@name='array3dflt_type'  and @timed='yes'">
 ! Put <xsl:value-of select="@path"/>
-				<!-- for comment only -->        
-if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then   
+				<!-- for comment only -->
+if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect3d_double_slice(idx,path, "<xsl:value-of select="@path"/>", &amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,2), &amp;
-   size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,3),IDS%time, status)    
-   if (ual_debug =='yes') write(*,*) &amp; 
+   size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,3),IDS%time, status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
      <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
@@ -5044,16 +5044,16 @@ endif
 			</xsl:when>
 			<xsl:when test="@name='array3dint_type'  and @timed='yes'">
 ! Put <xsl:value-of select="@path"/>
-				<!-- for comment only -->        
-if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then   
+				<!-- for comment only -->
+if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect3d_int_slice(idx,path, "<xsl:value-of select="@path"/>", &amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,2),&amp;
-   size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,3),IDS%time, status)    
-   if (ual_debug =='yes') write(*,*) &amp; 
+   size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,3),IDS%time, status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
-      
+
      <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
    </xsl:call-template>
@@ -5062,17 +5062,17 @@ endif
 			</xsl:when>
 			<xsl:when test="@name='array4dflt_type'  and @timed='yes'">
 ! Put <xsl:value-of select="@path"/>
-				<!-- for comment only -->        
-if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then   
+				<!-- for comment only -->
+if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect4d_double_slice(idx,path, "<xsl:value-of select="@path"/>", &amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,2), &amp;
-   size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,3), &amp;    
-   size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,4),IDS%time, status)    
-   if (ual_debug =='yes') write(*,*) &amp; 
+   size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,3), &amp;
+   size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,4),IDS%time, status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
-      
+
      <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
    </xsl:call-template>
@@ -5081,37 +5081,37 @@ endif
 			</xsl:when>
 						<xsl:when test="@name='array5dflt_type'  and @timed='yes'">
 ! Put <xsl:value-of select="@path"/>
-if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then   
+if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect5d_double_slice(idx,path, "<xsl:value-of select="@path"/>", &amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,2), &amp;
-   size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,3), &amp;    
-   size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,4), &amp;    
-   size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,5),IDS%time, status)    
-   if (ual_debug =='yes') write(*,*) &amp; 
+   size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,3), &amp;
+   size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,4), &amp;
+   size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,5),IDS%time, status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
-      
+
      <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
    </xsl:call-template>
 endif
 <!-- -->
-			</xsl:when>			
+			</xsl:when>
 									<xsl:when test="@name='array6dflt_type'  and @timed='yes'">
 ! Put <xsl:value-of select="@path"/>
-if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then   
+if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call put_vect6d_double_slice(idx,path, "<xsl:value-of select="@path"/>", &amp;
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>, &amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,2), &amp;
-   size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,3), &amp;    
-   size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,4), &amp;    
-   size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,5), &amp;    
-   size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,6),IDS%time, status)    
-   if (ual_debug =='yes') write(*,*) &amp; 
+   size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,3), &amp;
+   size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,4), &amp;
+   size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,5), &amp;
+   size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,6),IDS%time, status)
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>'
-      
+
      <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
    </xsl:call-template>
@@ -5121,7 +5121,7 @@ endif
 
 		</xsl:choose>
 	</xsl:template>
-   
+
 	<!--!!!!!!!!!!!!!!!!!!!!!!!!!             PUT NON TIMED IDS ROUTINES           !!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
 	<!--<xsl:template match="IDS" mode="PUT_NON_TIMED">
 
@@ -5147,7 +5147,7 @@ endif
 <!-- Present implementation assumes that nested AoS are necessarily of level 2, this may need to be upgraded for other cases later (?) -->
 if (associated(<xsl:value-of select="$currentidxpath"/>)) then
 call begin_object(idx,obj<xsl:value-of select="$level"/>,1,"<xsl:value-of select="$currentobjpath"/>",NON_TIMED,obj<xsl:value-of select="$level + 1"/>)
-! Start to declare a nested Type 2 Aos 
+! Start to declare a nested Type 2 Aos
    do i<xsl:value-of select="$level + 1"/> = 1,size(<xsl:value-of select="$currentidxpath"/>)
          <xsl:apply-templates select = "field" mode = "PUT_IN_OBJECT">
             <xsl:with-param name="level" select="$level + 1"/>
@@ -5159,7 +5159,7 @@ call begin_object(idx,obj<xsl:value-of select="$level"/>,1,"<xsl:value-of select
 call put_object_in_object(idx,obj<xsl:value-of select="$level"/>, "<xsl:value-of select="$currentobjpath"/>",<xsl:value-of select="$child_index"/>, obj<xsl:value-of select="$level + 1"/>)
 endif
     </xsl:when>
-    
+
     <!--========== Regular structure ==========-->
     <xsl:when test="@data_type='structure'">
      <xsl:apply-templates select = "field" mode = "PUT_IN_OBJECT">
@@ -5167,7 +5167,7 @@ endif
         <xsl:with-param name="objpath" select="$currentobjpath"/>
         <xsl:with-param name="idxpath" select="$currentidxpath"/>
         <xsl:with-param name="child_index" select="$child_index"/>
-      </xsl:apply-templates> 
+      </xsl:apply-templates>
     </xsl:when>
 
     <!--========== select either timed or non-timed fields ==========-->
@@ -5180,7 +5180,7 @@ endif
 if (associated(<xsl:value-of select="$currentidxpath"/>)) then
    longstring = ' '    <!-- Initialisation of longstring, otherwise strange problems occur !-->
    lenstring = size(<xsl:value-of select="$currentidxpath"/>)
-   if (lenstring.EQ.1) then             
+   if (lenstring.EQ.1) then
       longstring = trim(<xsl:value-of select="$currentidxpath"/>(1))
    else
       do istring=1,lenstring
@@ -5188,7 +5188,7 @@ if (associated(<xsl:value-of select="$currentidxpath"/>)) then
       enddo
    endif
    call put_string_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:value-of select="$child_index"/>,trim(longstring))       ! should clean up longstring after that, or send to the put only the right length, which has been updated
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put <xsl:value-of select="$currentidxpath"/>',<xsl:value-of select="$currentidxpath"/>
 endif
 <!-- -->
@@ -5205,17 +5205,17 @@ if (associated(<xsl:value-of select="$currentidxpath"/>)) then
    call put_vect1d_string_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:value-of select="$child_index"/>, &amp;
          <xsl:value-of select="$currentidxpath"/>,dim1,dimtab)
    deallocate(dimtab)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put <xsl:value-of select="$currentidxpath"/>'
 endif
 <!-- -->
          </xsl:when>
          <xsl:when test="@data_type='int_type' or @data_type='INT_0D'">
 ! Put <xsl:value-of select="@path"/>
-            <!-- for comment only -->        
+            <!-- for comment only -->
 if (<xsl:value-of select="$currentidxpath"/>.NE.-999999999) then
    call put_int_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:value-of select="$child_index"/>,<xsl:value-of select="$currentidxpath"/>)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put <xsl:value-of select="$currentidxpath"/>',<xsl:value-of select="$currentidxpath"/>
 endif
 <!-- -->
@@ -5225,7 +5225,7 @@ endif
             <!-- for comment only -->
 if (<xsl:value-of select="$currentidxpath"/>.NE.-9.D40) then
    call put_double_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:value-of select="$child_index"/>,<xsl:value-of select="$currentidxpath"/>)
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put <xsl:value-of select="$currentidxpath"/>',<xsl:value-of select="$currentidxpath"/>
 endif
 <!-- -->
@@ -5237,118 +5237,118 @@ if (associated(<xsl:value-of select="$currentidxpath"/>)) then
    call put_vect1d_double_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:value-of select="$child_index"/>,&amp;
    <xsl:value-of select="$currentidxpath"/>,&amp;
    size(<xsl:value-of select="$currentidxpath"/>))
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put <xsl:value-of select="$currentidxpath"/>',<xsl:value-of select="$currentidxpath"/>
 endif
 <!-- -->
          </xsl:when>
          <xsl:when test="@data_type='int_1d_type' or @data_type='INT_1D'">
 ! Put <xsl:value-of select="@path"/>
-            <!-- for comment only --> 
+            <!-- for comment only -->
 if (associated(<xsl:value-of select="$currentidxpath"/>)) then
    call put_vect1d_int_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:value-of select="$child_index"/>,&amp;
    <xsl:value-of select="$currentidxpath"/>,&amp;
    size(<xsl:value-of select="$currentidxpath"/>))
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put <xsl:value-of select="$currentidxpath"/>',<xsl:value-of select="$currentidxpath"/>
 endif
 <!-- -->
          </xsl:when>
          <xsl:when test=" @data_type='FLT_2D'">
 ! Put <xsl:value-of select="@path"/>
-            <!-- for comment only -->        
+            <!-- for comment only -->
 if (associated(<xsl:value-of select="$currentidxpath"/>)) then
    call put_vect2d_double_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:value-of select="$child_index"/>,&amp;
    <xsl:value-of select="$currentidxpath"/>, &amp;
    size(<xsl:value-of select="$currentidxpath"/>,1),&amp;
    size(<xsl:value-of select="$currentidxpath"/>,2))
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put <xsl:value-of select="$currentidxpath"/>',<xsl:value-of select="$currentidxpath"/>
 endif
 <!-- -->
          </xsl:when>
          <xsl:when test=" @data_type='INT_2D'">
 ! Put <xsl:value-of select="@path"/>
-            <!-- for comment only -->        
+            <!-- for comment only -->
 if (associated(<xsl:value-of select="$currentidxpath"/>)) then
    call put_vect2d_int_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:value-of select="$child_index"/>,&amp;
    <xsl:value-of select="$currentidxpath"/>, &amp;
    size(<xsl:value-of select="$currentidxpath"/>,1), &amp;
    size(<xsl:value-of select="$currentidxpath"/>,2))
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put <xsl:value-of select="$currentidxpath"/>',<xsl:value-of select="$currentidxpath"/>
 endif
 <!-- -->
          </xsl:when>
          <xsl:when test="@data_type='FLT_3D'">
 ! Put <xsl:value-of select="@path"/>
-            <!-- for comment only -->        
+            <!-- for comment only -->
 if (associated(<xsl:value-of select="$currentidxpath"/>)) then
    call put_vect3d_double_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:value-of select="$child_index"/>, &amp;
    <xsl:value-of select="$currentidxpath"/>, &amp;
    size(<xsl:value-of select="$currentidxpath"/>,1),&amp;
    size(<xsl:value-of select="$currentidxpath"/>,2), &amp;
    size(<xsl:value-of select="$currentidxpath"/>,3))
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put <xsl:value-of select="$currentidxpath"/>'
 endif
 <!-- -->
          </xsl:when>
          <xsl:when test="@data_type='INT_3D'">
 ! Put <xsl:value-of select="@path"/>
-            <!-- for comment only -->        
+            <!-- for comment only -->
 if (associated(<xsl:value-of select="$currentidxpath"/>)) then
    call put_vect3d_int_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:value-of select="$child_index"/>, &amp;
    <xsl:value-of select="$currentidxpath"/>, &amp;
    size(<xsl:value-of select="$currentidxpath"/>,1),&amp;
    size(<xsl:value-of select="$currentidxpath"/>,2),&amp;
    size(<xsl:value-of select="$currentidxpath"/>,3))
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put <xsl:value-of select="$currentidxpath"/>',<xsl:value-of select="$currentidxpath"/>
 endif
 <!-- -->
          </xsl:when>
          <xsl:when test="@data_type='FLT_4D'">
 ! Put <xsl:value-of select="@path"/>
-            <!-- for comment only -->        
+            <!-- for comment only -->
 if (associated(<xsl:value-of select="$currentidxpath"/>)) then
    call put_vect4d_double_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:value-of select="$child_index"/>,<xsl:value-of select="$currentidxpath"/>, &amp;
    size(<xsl:value-of select="$currentidxpath"/>,1),size(<xsl:value-of select="$currentidxpath"/>,2),&amp;
    size(<xsl:value-of select="$currentidxpath"/>,3),size(<xsl:value-of select="$currentidxpath"/>,4))
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put <xsl:value-of select="$currentidxpath"/>',<xsl:value-of select="$currentidxpath"/>
 endif
 <!-- -->
          </xsl:when>
                   <xsl:when test="@data_type='FLT_5D'">
 ! Put <xsl:value-of select="@path"/>
-            <!-- for comment only -->        
+            <!-- for comment only -->
 if (associated(<xsl:value-of select="$currentidxpath"/>)) then
    call put_vect5d_double_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:value-of select="$child_index"/>,<xsl:value-of select="$currentidxpath"/>, &amp;
    size(<xsl:value-of select="$currentidxpath"/>,1),size(<xsl:value-of select="$currentidxpath"/>,2),&amp;
    size(<xsl:value-of select="$currentidxpath"/>,3),size(<xsl:value-of select="$currentidxpath"/>,4),&amp;
    size(<xsl:value-of select="$currentidxpath"/>,5))
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put <xsl:value-of select="$currentidxpath"/>',<xsl:value-of select="$currentidxpath"/>
 endif
 <!-- -->
          </xsl:when>
-         
+
 
                   <xsl:when test="@data_type='FLT_6D'">
 ! Put <xsl:value-of select="@path"/>
-            <!-- for comment only -->        
+            <!-- for comment only -->
 if (associated(<xsl:value-of select="$currentidxpath"/>)) then
    call put_vect6d_double_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:value-of select="$child_index"/>,<xsl:value-of select="$currentidxpath"/>, &amp;
    size(<xsl:value-of select="$currentidxpath"/>,1),size(<xsl:value-of select="$currentidxpath"/>,2),&amp;
    size(<xsl:value-of select="$currentidxpath"/>,3),size(<xsl:value-of select="$currentidxpath"/>,4),&amp;
    size(<xsl:value-of select="$currentidxpath"/>,5),size(<xsl:value-of select="$currentidxpath"/>,6))
-   if (ual_debug =='yes') write(*,*) &amp; 
+   if (ual_debug =='yes') write(*,*) &amp;
       'Put <xsl:value-of select="$currentidxpath"/>',<xsl:value-of select="$currentidxpath"/>
 endif
 <!-- -->
-         </xsl:when>       
-         
+         </xsl:when>
+
          <xsl:otherwise>
  ! Put <xsl:value-of select="@path"/> : PROBLEM : UNIDENTIFIED TYPE !!! <!-- for comment only -->
          </xsl:otherwise>
@@ -5357,7 +5357,7 @@ endif
    </xsl:otherwise>
  </xsl:choose>
 </xsl:template>
-   
+
 <!--!!!!!!!!!!!!!!!!!!!!!!!!!             DELETE IDS ROUTINES           !!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
 <xsl:template match="field" mode="DELETE">
 <xsl:param name="variable_path"/>
@@ -5411,16 +5411,16 @@ call delete_data(idx,IDSpath,"<xsl:value-of select="@path"/>")         <!-- call
 			</xsl:otherwise>
 		</xsl:choose>
 	</xsl:template>
-	
-	
+
+
 	<!--!!!!!!!!!!!!!!!!!!!!!!!!!             DEALLOCATE IDS ROUTINES           !!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
 <xsl:template match="field" mode="DEALLOCATE">
     <xsl:param name="level"/>     <!-- recursion level -->
     <xsl:param name="idxpath"/>   <!-- full fortran path including indices -->
-    
+
     <!-- build the complete path of the current field -->
     <xsl:param name="currentidxpath" select="concat($idxpath,'%',@name)"/>
-	
+
     <xsl:choose>
 <!-- xs:integer and xs:float are not deallocated (they are not allocatable !) -->
 			<xsl:when test="@data_type='str_type' or @data_type='STR_0D' or @data_type='str_1d_type' or @data_type='STR_1D' or @data_type='flt_1d_type' or @data_type='FLT_1D' or @data_type='int_1d_type' or @data_type='INT_1D' or @data_type='FLT_2D' or @data_type='INT_2D' or @data_type='FLT_3D' or @data_type='INT_3D' or @data_type='FLT_4D' or @data_type='FLT_5D' or @data_type='FLT_6D' ">
@@ -5455,14 +5455,14 @@ call delete_data(idx,IDSpath,"<xsl:value-of select="@path"/>")         <!-- call
 	<!--<xsl:template match="IDS" mode="COPY">
 
 </xsl:template>-->
-	
+
 	<xsl:template match="field" mode="COPY_TIMED">
       <xsl:param name="level"/>     <!-- recursion level -->
       <xsl:param name="idxpath"/>   <!-- full fortran path including indices -->
 
       <!-- build the complete path of the current field -->
       <xsl:param name="currentidxpath" select="concat($idxpath,'%',@name)"/>
-      
+
 		<xsl:choose>
 			<xsl:when test="@timed = 'yes'">
 				<!-- Time dependent dynamics in time-dependent IDS : copy the time-dependent value from the proper index of the array of IDS structure -->
@@ -5472,15 +5472,15 @@ call delete_data(idx,IDSpath,"<xsl:value-of select="@path"/>")         <!-- call
 if (IDSin(itime)<xsl:value-of select="$currentidxpath"/>/=-999999999)  then
    IDSout(itime)<xsl:value-of select="$currentidxpath"/> = &amp;
    IDSin(itime)<xsl:value-of select="$currentidxpath"/>
-endif   
+endif
         <!-- -->
 					</xsl:when>
 					<xsl:when test="@data_type='flt_type' or @data_type='FLT_0D'">
-! Copy <xsl:value-of select="@path"/>  
+! Copy <xsl:value-of select="@path"/>
 if (IDSin(itime)<xsl:value-of select="$currentidxpath"/>/=-9.D40)  then
    IDSout(itime)<xsl:value-of select="$currentidxpath"/> = &amp;
    IDSin(itime)<xsl:value-of select="$currentidxpath"/>
-endif 
+endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test="@name='vecflt_type' or @name='vecint_type' ">
@@ -5542,8 +5542,8 @@ if (associated(IDSin(itime)<xsl:value-of select="$currentidxpath"/>)) then
 endif
 <!-- -->
 					</xsl:when>
-						
-					
+
+
 					<xsl:when test="@data_type='FLT_6D'">
 ! Copy <xsl:value-of select="@path"/>
 if (associated(IDSin(itime)<xsl:value-of select="$currentidxpath"/>)) then
@@ -5559,7 +5559,7 @@ if (associated(IDSin(itime)<xsl:value-of select="$currentidxpath"/>)) then
 endif
 <!-- -->
 					</xsl:when>
-						
+
                <xsl:when test="@name='struct_array'">
 ! Copy <xsl:value-of select="@path"/>
 if (associated(IDSin(itime)<xsl:value-of select = "$currentidxpath"/>)) then
@@ -5579,7 +5579,7 @@ endif
                   </xsl:apply-templates>
 					</xsl:when>
 					<xsl:otherwise>
- ! Copy <xsl:value-of select="@path"/> : PROBLEM : UNIDENTIFIED TYPE !!!         
+ ! Copy <xsl:value-of select="@path"/> : PROBLEM : UNIDENTIFIED TYPE !!!
         </xsl:otherwise>
 				</xsl:choose>
 			</xsl:when>
@@ -5619,7 +5619,7 @@ endif
 if (IDSin(1)<xsl:value-of select="$currentidxpath"/>/=-999999999)  then
    IDSout(itime)<xsl:value-of select="$currentidxpath"/> = &amp;
    IDSin(1)<xsl:value-of select="$currentidxpath"/>
-endif   
+endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test="@data_type='flt_type' or @data_type='FLT_0D'">
@@ -5703,7 +5703,7 @@ endif
 			</xsl:otherwise>
 		</xsl:choose>
 	</xsl:template>
-   
+
 	<xsl:template match="field" mode="COPY_FIELD">
 		<!-- copy an element from an IDS-->
       <xsl:param name="level"/>     <!-- recursion level -->
@@ -5746,7 +5746,7 @@ endif
 if (IDSin<xsl:value-of select="$currentidxpath"/>/=-999999999)  then
    IDSout<xsl:value-of select="$currentidxpath"/> = &amp;
    IDSin<xsl:value-of select="$currentidxpath"/>
-endif   
+endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test="@data_type='flt_type' or @data_type='FLT_0D'">
@@ -5836,7 +5836,7 @@ endif
 
       <!-- build the complete path of the current field -->
       <xsl:param name="currentidxpath" select="concat($idxpath,'%',@name)"/>
-      
+
 		<xsl:choose>
          <xsl:when test="@name='struct_array'">
 ! Copy <xsl:value-of select="@path"/>
@@ -5871,7 +5871,7 @@ endif
 if (IDSin(1)<xsl:value-of select="$currentidxpath"/>/=-999999999)  then
    IDSout<xsl:value-of select="$currentidxpath"/> = &amp;
    IDSin(1)<xsl:value-of select="$currentidxpath"/>
-endif   
+endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test="@data_type='flt_type' or @data_type='FLT_0D'">
@@ -5960,7 +5960,7 @@ endif
 
       <!-- build the complete path of the current field -->
       <xsl:param name="currentidxpath" select="concat($idxpath,'%',@name)"/>
-      
+
 		<xsl:choose>
          <xsl:when test="@name='struct_array'">
 ! Copy <xsl:value-of select="@path"/>
@@ -5995,7 +5995,7 @@ endif
 if (IDSin<xsl:value-of select="$currentidxpath"/>/=-999999999)  then
    IDSout(1)<xsl:value-of select="$currentidxpath"/> = &amp;
    IDSin<xsl:value-of select="$currentidxpath"/>
-endif   
+endif
 <!-- -->
 					</xsl:when>
 					<xsl:when test="@data_type='flt_type' or @data_type='FLT_0D'">
@@ -6076,7 +6076,7 @@ endif
 			</xsl:otherwise>
 		</xsl:choose>
 	</xsl:template>
-	
+
 	<!--!!!!!!!!!!!!!!!!!!!!!!!!!             FLUSH IDS ROUTINES           !!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
 	<!--<xsl:template match="IDS" mode="FLUSH_CACHE">
         </xsl:template>-->
@@ -6089,10 +6089,10 @@ endif
 			<xsl:otherwise>
 call ids_flush_cache(idx,IDSpath,"<xsl:value-of select="@path"/>")         <!-- call to the low level ids_flush_cache routine -->
 			</xsl:otherwise>
-		</xsl:choose> 
+		</xsl:choose>
 
 	</xsl:template>
-	
+
 <!--!!!!!!!!!!!!!!!!!!!!!!!!!             DISCARD IDS ROUTINES           !!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
 <xsl:template match="field" mode="DISCARD_CACHE">
 <xsl:param name="variable_path"/>
@@ -6190,5 +6190,5 @@ call ids_discard_cache(idx,IDSpath,"<xsl:value-of select="@path"/>")         <!-
 <xsl:template name ="printIsTimed">
 <xsl:choose><xsl:when test="@type = 'dynamic'"> <xsl:value-of select="1"/> </xsl:when> <xsl:otherwise> <xsl:value-of select="0"/> </xsl:otherwise> </xsl:choose>
 </xsl:template>
-	
+
 </xsl:stylesheet>

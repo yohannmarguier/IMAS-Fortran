@@ -126,7 +126,7 @@ ids_schemas_gfortran.o: ids_schemas.f90
 &#009;mkdir -p $(MODDIR_gfortran)
 &#009;$(F90_gfortran) -c $(COPTS_gfortran) $(INCDIR_gfortran) $&lt; -o $@
 
-utilities_copy_struct_gfortran.o: utilities_copy_struct.f90 ids_schemas_gfortran.o 
+utilities_copy_struct_gfortran.o: utilities_copy_struct.f90 ids_schemas_gfortran.o
 &#009;$(F90_gfortran) -c $(COPTS_gfortran) $(INCDIR_gfortran) $&lt; -o $@
 
 <xsl:for-each select="IDS">
@@ -173,7 +173,7 @@ ids_schemas_ifort.o: ids_schemas.f90
 &#009;mkdir -p $(MODDIR_ifort)
 &#009;$(F90_ifort) -c $(COPTS_ifort) $(INCDIR_ifort) $&lt; -o $@
 
-utilities_copy_struct_ifort.o: utilities_copy_struct.f90 ids_schemas_ifort.o 
+utilities_copy_struct_ifort.o: utilities_copy_struct.f90 ids_schemas_ifort.o
 &#009;$(F90_ifort) -c $(COPTS_ifort) $(INCDIR_ifort) $&lt; -o $@
 
 <xsl:for-each select="IDS">
@@ -188,8 +188,8 @@ ids_<xsl:value-of select="@name"/>_ifort.o: <xsl:value-of select="@name"/>.f90 i
 
 #----------------------- xslt ---------------------
 ids_routines.f90: IDSDef2F90Routines.xsl xsd2copy_structures.xsl
-&#009;java -cp $(IMAS_HOME)/saxonica/saxon9he.jar net.sf.saxon.Transform -t -s:$(IDSDEF) -xsl:IDSDef2F90Routines.xsl
-&#009;java -cp $(IMAS_HOME)/saxonica/saxon9he.jar net.sf.saxon.Transform -t -s:../xml/dd_physics_data_dictionary.xsd -xsl:xsd2copy_structures.xsl
+&#009;java net.sf.saxon.Transform -t -s:$(IDSDEF) -xsl:IDSDef2F90Routines.xsl
+&#009;java net.sf.saxon.Transform -t -s:../xml/dd_physics_data_dictionary.xsd -xsl:xsd2copy_structures.xsl
 
 ids_schemas.f90: xsd2F90TypeDef.xsl
 &#009;(cp xsd2F90TypeDef.xsl ../xml/ ; cd ../xml/ ; \
