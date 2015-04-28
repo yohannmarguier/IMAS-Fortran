@@ -4,8 +4,8 @@ libdir=${exec_prefix}/lib
 includedir=${prefix}/include
 
 Name: imas-gfortran
+Version: imas:__DD_GIT_DESCRIBE__ ual:__UAL_GIT_DESCRIBE__
 Description: IMAS Fortran Libraries (gfortran)
 URL: https://portal.iter.org/departments/POP/Pages/IM-Users-and-Developers.aspx
-Version: __VERSION__
-Libs: -L${libdir}/fortraninterface -lUALFORTRANInterface_gfortran
-Cflags: -I${includedir}/fortraninterface/amd64_gfortran
+Libs: -L${libdir} -limas-gfortran
+Cflags: -I${includedir}/gfortran

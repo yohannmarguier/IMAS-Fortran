@@ -1,7 +1,7 @@
 *.mod
 *.f90
-amd64_g95
-amd64_gfortran
-amd64_ifort
-amd64_pgi
+g95
+gfortran
+ifort
+pgi
 makefile-gen
