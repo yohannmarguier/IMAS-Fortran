@@ -1,22 +1,21 @@
 #!/bin/bash
-UAL_BUILD_DIR=$(shell cd ../../..; pwd )
 
-include $(UAL_BUILD_DIR)/Makefile.common
+include ../../../Makefile.common
+
+ifeq (,$(ids_path))
+$(error Please first install imas and then module load imas/... to populate environment.)
+endif
 
 #------------------------------- gfortran ----------------------------------
-F90_gfortran      = gfortran
-COPTS_gfortran    = -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none -Jamd64_gfortran
-INCDIR_gfortran   = -I$(UAL_BUILD_DIR)/fortraninterface/amd64_gfortran  -Iamd64_gfortran
-LIBS_gfortran     = -Wl,-rpath,$(UAL_BUILD_DIR)/lib -L$(UAL_BUILD_DIR)/fortraninterface -lUALFORTRANInterface_gfortran 
+F90_gfortran=gfortran
+COPTS_gfortran = -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none `pkg-config imas-gfortran --cflags`
+LIBS_gfortran = `pkg-config imas-gfortran imas-lowlevel --libs` -lm
 
-F90_ifort       = ifort
-COPTS_ifort     = -g -r8 -O0 -assume no2underscore  -fPIC -module amd64_ifort -shared-intel
-INCDIR_ifort    = -I$(UAL_BUILD_DIR)/fortraninterface/amd64_ifort
-LIBS_ifort      = -Wl,-rpath,$(UAL_BUILD_DIR)/lib -L$(UAL_BUILD_DIR)/fortraninterface -lUALFORTRANInterface_ifort 
+F90_ifort=ifort
+COPTS_ifort = -g -r8 -assume no2underscore  -fPIC `pkg-config imas-ifort --cflags` -shared-intel
+LIBS_ifort= `pkg-config imas-ifort imas-lowlevel --libs` -lm
 
-IDSDEF= $(UAL_BUILD_DIR)/xml/IDSDef.xml
-ids_path := $(UAL_BUILD_DIR)/models/mdsplus
-LD_LIBRARY_PATH :=  $(UAL_BUILD_DIR)/lowlevel:$(UAL_BUILD_DIR)/fortraninterface:$(LD_LIBRARY_PATH)
+IDSDEF = $(UAL)/xml/IDSDef.xml
 
 
 ifeq "$(strip $(GFORTRAN))" "yes"
@@ -27,55 +26,60 @@ ifeq "$(strip $(IFORT))" "yes"
     TARGETS += ifort_testSuite
 endif
 
-all : testSuite.f90 comp 
-	
+all : testSuite.f90 comp
+
+.PHONY: clean clean-src
 clean: ifort_clean gfortran_clean
 	rm -rf build *~ *.o *.mod
-	
+
 clean-src: clean
 	rm -f testSuite.f90
-	
-testSuite.f90: IDSDef2TestSuite.xsl  
+
+testSuite.f90: IDSDef2TestSuite.xsl
 	xsltproc IDSDef2TestSuite.xsl $(IDSDEF)  > testSuite.f90
 
 comp: $(TARGETS)
 
-.PHONY: ifort_clean ifort_prep test comp clean
-	
-#test: export ids_path = $(UAL_BUILD_DIR)/models/mdsplus
-test: testSuite.f90 comp 
-	ids_path=$(ids_path) ./gfortran_testSuite | tee gfortran_testSuite.results
-	ids_path=$(ids_path) ./ifort_testSuite | tee ifort_testSuite.results
+.PHONY: test ifort_test gfortran_test
+cmd_test = ( for N in 0 1 2 3 4 5 6 7 8 9 ; do \
+		export `echo MDSPLUS_TREE_BASE_$$N`=$$PWD/imasdb-$@/$$N ;\
+		mkdir -p $$PWD/imasdb-$@/$$N ;\
+	done ; \
+	./$@Suite 2>&1 | tee $@.results )
+
+gfortran_test: testSuite.f90 comp
+	$(call cmd_test)
+
+ifort_test: testSuite.f90 comp
+	$(call cmd_test)
+
+test : gfortran_test ifort_test
 
 #------------------------- gfortran ----------------------------
-gfortran_clean: 
-	rm -rf gfortran_testSuite amd64_gfortran
+.PHONY: gfortran_clean
+gfortran_clean:
+	rm -rf gfortran_testSuite
 
 gfortran_helper.o: helper.f90
-	mkdir -p amd64_gfortran
-	$(F90_gfortran) $(COPTS_gfortran) $(INCDIR_gfortran) -c $< -o $@ 
+	$(F90_gfortran) $(COPTS_gfortran) -c $< -o $@
 
 gfortran_comparator.o: comparator.f90
-	mkdir -p amd64_gfortran
-	$(F90_gfortran) $(COPTS_gfortran) $(INCDIR_gfortran) -c $< -o $@ 
+	$(F90_gfortran) $(COPTS_gfortran) -c $< -o $@
 
 gfortran_testSuite: testSuite.f90 gfortran_helper.o gfortran_comparator.o
-	mkdir -p amd64_gfortran
-	$(F90_gfortran) $(COPTS_gfortran)  $(INCDIR_gfortran) -o $@ $^ $(LIBS_gfortran)
+	$(F90_gfortran) $(COPTS_gfortran) -o $@ $^ $(LIBS_gfortran)
 
 #------------------------- ifort ----------------------------
-ifort_clean: 
-	rm -rf ifort_testSuite amd64_ifort
+.PHONY: ifort_clean
+ifort_clean:
+	rm -rf ifort_testSuite
 
 ifort_helper.o: helper.f90
-	mkdir -p amd64_ifort
-	$(F90_ifort) $(COPTS_ifort) $(INCDIR_ifort) -c $< -o $@ 
+	$(F90_ifort) $(COPTS_ifort) -c $< -o $@
 
 ifort_comparator.o: comparator.f90
-	mkdir -p amd64_ifort
-	$(F90_ifort) $(COPTS_ifort) $(INCDIR_ifort) -c $< -o $@ 
+	$(F90_ifort) $(COPTS_ifort) -c $< -o $@
 
 ifort_testSuite: testSuite.f90 ifort_helper.o ifort_comparator.o
-	mkdir -p amd64_ifort
-	$(F90_ifort) $(COPTS_ifort)  $(INCDIR_ifort) -o $@ $^ $(LIBS_ifort)
+	$(F90_ifort) $(COPTS_ifort) -o $@ $^ $(LIBS_ifort)
 
