@@ -2,23 +2,20 @@
 
 include ../../../Makefile.common
 
-ifeq (,$(INSTALL))
-$(error Please supply a variable INSTALL that is the prefix of your IMAS installation.)
+ifeq (,$(ids_path))
+$(error Please first install imas and then module load imas/... to populate environment.)
 endif
 
-#------------------------- gfortran ----------------------------
-F90_gfortran = gfortran
-COPTS_gfortran = -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none -I$(INSTALL)/include/gfortran
-LIBS_gfortran = -L$(INSTALL)/lib -limas-gfortran -limas -lm
+#------------------------------- gfortran ----------------------------------
+F90_gfortran=gfortran
+COPTS_gfortran = -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none `pkg-config imas-gfortran --cflags`
+LIBS_gfortran = `pkg-config imas-gfortran imas-lowlevel --libs` -lm
 
-#------------------------- ifort ----------------------------
-F90_ifort = ifort
-COPTS_ifort = -r8 -assume no2underscore  -fPIC -module $(INSTALL)/include/ifort -shared-intel
-LIBS_ifort = -L$(INSTALL)/lib -limas-ifort -limas -lm
-
+F90_ifort=ifort
+COPTS_ifort = -g -r8 -assume no2underscore  -fPIC `pkg-config imas-ifort --cflags` -shared-intel
+LIBS_ifort= `pkg-config imas-ifort imas-lowlevel --libs` -lm
 
 IDSDEF = $(UAL)/xml/IDSDef.xml
-ids_path = $(UAL)/models/mdsplus
 
 
 ifeq "$(strip $(GFORTRAN))" "yes"
@@ -44,11 +41,11 @@ testSuite.f90: IDSDef2TestSuite.xsl
 comp: $(TARGETS)
 
 .PHONY: test ifort_test gfortran_test
-cmd_test = ( cp -av $(ids_path) idspath-$@ ; \
-	export LD_LIBRARY_PATH=$(INSTALL)/lib:$$LD_LIBRARY_PATH \
-		ids_path=$$PWD/idspath-$@ \
-		ual_debug=yes; \
-	./$@Suite | tee $@Suite.results )
+cmd_test = ( for N in 0 1 2 3 4 5 6 7 8 9 ; do \
+		export `echo MDSPLUS_TREE_BASE_$$N`=$$PWD/imasdb-$@/$$N ual_debug=yes;\
+		mkdir -p $$PWD/imasdb-$@/$$N ;\
+	done ; \
+	./$@Suite 2>&1 | tee $@.results )
 
 gfortran_test: testSuite.f90 comp
 	$(call cmd_test)
