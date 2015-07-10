@@ -33,7 +33,7 @@ INCDIR_pgi      = -I$(MODDIR_pgi)
 
 F90_ifort       = ifort
 MODDIR_ifort    = ifort
-COPTS_ifort     = -r8 -O0 -assume no2underscore  -fPIC -module $(MODDIR_ifort) -shared-intel
+COPTS_ifort     = -r8 -O0 -assume no2underscore -fPIC -module $(MODDIR_ifort) -g -shared-intel
 INCDIR_ifort    = -I$(MODDIR_ifort)
 
 IDSDEF          = ../xml/IDSDef.xml
