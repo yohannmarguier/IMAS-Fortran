@@ -13,6 +13,7 @@ use utilities_copy_struct
 
 <xsl:for-each select="IDS">
 use <xsl:value-of select="@name"/>_ids_module
+use <xsl:value-of select="@name"/>_ids_module_get
 use <xsl:value-of select="@name"/>_copy_struct
 </xsl:for-each>
 
@@ -48,17 +49,6 @@ end module
 
   <xsl:result-document href="{@name}.f90">
 module <xsl:value-of select="@name"/>_ids_module
-! Declaration of the generic IDS GET routine
-
-interface ids_get
-   module procedure ids_get_<xsl:value-of select="@name"/>
-end interface ids_get
-
-
-! Declaration of the generic IDS GET_SLICE routine
-interface ids_get_slice
-   module procedure  ids_get_slice_<xsl:value-of select="@name"/>
-end interface ids_get_slice
 
 <xsl:if test=".//field[@type='dynamic']"> <!-- Procedure put_slice should exist only for time-dependent IDSs -->
 ! Declaration of the generic IDS PUT_SLICE routine
@@ -143,87 +133,7 @@ FUNCTION isErrorCritical(status, fieldPath) RESULT (exitRequest)
 
 END FUNCTION isErrorCritical
 
-<!-- ======================================  GET ======================================= -->
 
-!!!!!! Routines to GET the full IDS
-subroutine ids_get_<xsl:value-of select="@name"/>(idx,path,  IDS)
-
-use ids_schemas
-implicit none
-
-character*(*) :: path
-integer :: idx, retStatus = 0, status = 0, lenstring, istring, itime, lentime
-integer :: ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7,dum1,dum2,dum3,dum4,dum5,dum6,dum7
-
-character(len=132)::stringans      ! Temporary way of getting short strings
-character(len=100000)::longstring
-character(len=300) :: timepath
-character(len=132), dimension(:), pointer ::stringpointer   => null()
-integer :: obj_all_times,obj1,obj2,obj3,obj4,obj5,obj6,obj7
-integer :: dimObj0,dimObj1,dimObj2,dimObj3,dimObj4,dimObj5,dimObj6,dimObj7
-integer :: i1,i2,i3,i4,i5,i6,i7
-<xsl:for-each select=".//field[@data_type='struct_array' and @maxoccur!='unbounded']">
-integer :: i<xsl:value-of select="@name"/>
-</xsl:for-each>
-
-integer :: int0d
-real(DP) :: double0d
-
-
-type(ids_<xsl:value-of select="@name"/>) :: IDS
-
-call getenv('ual_debug',ual_debug) ! Debug flag
-
-call begin_IDS_get(idx, path,0,dum1)
-      <xsl:apply-templates select="field" mode="GET_SINGLE"/>
-call end_IDS_get(idx, path)
-
-return
-end subroutine ids_get_<xsl:value-of select="@name"/>
-
-<!-- ======================================  GET SLICE ======================================= -->
-
-!!!!!! Routines to GET one time slice of a IDS, with time interpolation -->
-subroutine ids_get_slice_<xsl:value-of select="@name"/>(idx,path,  IDS, twant, interpol)
-
-use ids_schemas
-implicit none
-
-character*(*) :: path
-integer :: status = 0, interpol, idx, lenstring, istring
-real(DP) :: twant,tret
-
-integer :: int0D
-integer,pointer :: vect1DInt(:), vect2DInt(:,:), vect3DInt(:,:,:) => null()
-integer :: ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7,dum1,dum2,dum3,dum4,dum5,dum6,dum7
-real(DP) :: double0D
-real(DP), pointer :: vect1DDouble(:), time(:), vect2DDouble(:,:), vect3DDouble(:,:,:), vect4DDouble(:,:,:,:) => null()
-real(DP), pointer :: vect5DDouble(:,:,:,:,:), vect6DDouble(:,:,:,:,:,:) => null()
-character(len=132), dimension(:), pointer :: stringans => null()
-character(len=100000)::longstring
-character(len=300) :: timepath
-integer :: obj_single_time,obj1,obj2,obj3,obj4,obj5,obj6,obj7
-integer :: dimObj1,dimObj2,dimObj3,dimObj4,dimObj5,dimObj6,dimObj7
-integer :: i1,i2,i3,i4,i5,i6,i7
-<xsl:for-each select=".//field[@data_type='struct_array' and @maxoccur!='unbounded']">
-integer :: i<xsl:value-of select="@name"/>
-</xsl:for-each>
-
-type(ids_<xsl:value-of select="@name"/>) :: IDS
-
-call getenv('ual_debug',ual_debug)
-
-
-call begin_IDS_Get_Slice(idx,path, twant,status)
-if (status.EQ.0) then
-	      <xsl:apply-templates select="field" mode="GET_SLICE"/>
-else
-   write(*,*) 'Get slice impossible, IDS is missing or requested time slice is not within the time interval of the IDS'
-endif
-call end_IDS_Get_Slice(idx,path)
-
-return
-end subroutine ids_GET_SLICE_<xsl:value-of select="@name"/>
 
 
 <!-- ======================================  PUT ======================================= -->
@@ -505,6 +415,144 @@ end subroutine ids_discard_<xsl:value-of select="@name"/>-->
 end module <xsl:value-of select="@name"/>_ids_module
 </xsl:result-document>
 
+  <xsl:result-document href="{@name}_get.f90">
+module <xsl:value-of select="@name"/>_ids_module_get
+! Declaration of the generic IDS GET routine
+
+interface ids_get
+   module procedure ids_get_<xsl:value-of select="@name"/>
+end interface ids_get
+
+
+! Declaration of the generic IDS GET_SLICE routine
+interface ids_get_slice
+   module procedure  ids_get_slice_<xsl:value-of select="@name"/>
+end interface ids_get_slice
+
+
+
+character(len=3)::ual_debug
+
+contains
+
+character(10) function int2str(num)
+   integer, intent(in):: num
+   character(10) :: str
+   ! convert integer to string using formatted write
+   write(str, '(i10)') num
+   int2str = adjustl(str)
+end function int2str
+
+
+
+FUNCTION isErrorCritical(status, fieldPath) RESULT (exitRequest)
+	integer :: status
+	character*(*) :: fieldPath
+	logical :: exitRequest
+	character(len=100000)::longstring
+
+	exitRequest = .FALSE.
+
+	if(status == 0) then
+		exitRequest = .FALSE.
+		return
+	endif
+
+	if(0 .NE. is_critical_error(status) ) then
+		exitRequest = .TRUE.
+	endif
+
+	if ( (ual_debug == 'yes') .OR. (ual_debug == 'vvv') .OR. exitRequest)then
+		call get_last_errmsg(longstring)
+		write(*,*) "ERROR! FIELD: ", trim(fieldPath), "    STATUS: ", status, "    MSG: ", trim(longstring)
+	endif
+
+END FUNCTION isErrorCritical
+
+<!-- ======================================  GET ======================================= -->
+
+!!!!!! Routines to GET the full IDS
+subroutine ids_get_<xsl:value-of select="@name"/>(idx,path,  IDS)
+
+use ids_schemas
+implicit none
+
+character*(*) :: path
+integer :: idx, retStatus = 0, status = 0, lenstring, istring, itime, lentime
+integer :: ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7,dum1,dum2,dum3,dum4,dum5,dum6,dum7
+
+character(len=132)::stringans      ! Temporary way of getting short strings
+character(len=100000)::longstring
+character(len=300) :: timepath
+character(len=132), dimension(:), pointer ::stringpointer   => null()
+integer :: obj_all_times,obj1,obj2,obj3,obj4,obj5,obj6,obj7
+integer :: dimObj0,dimObj1,dimObj2,dimObj3,dimObj4,dimObj5,dimObj6,dimObj7
+integer :: i1,i2,i3,i4,i5,i6,i7
+<xsl:for-each select=".//field[@data_type='struct_array' and @maxoccur!='unbounded']">
+integer :: i<xsl:value-of select="@name"/>
+</xsl:for-each>
+
+integer :: int0d
+real(DP) :: double0d
+
+
+type(ids_<xsl:value-of select="@name"/>) :: IDS
+
+call getenv('ual_debug',ual_debug) ! Debug flag
+
+call begin_IDS_get(idx, path,0,dum1)
+      <xsl:apply-templates select="field" mode="GET_SINGLE"/>
+call end_IDS_get(idx, path)
+
+return
+end subroutine ids_get_<xsl:value-of select="@name"/>
+
+<!-- ======================================  GET SLICE ======================================= -->
+
+!!!!!! Routines to GET one time slice of a IDS, with time interpolation -->
+subroutine ids_get_slice_<xsl:value-of select="@name"/>(idx,path,  IDS, twant, interpol)
+
+use ids_schemas
+implicit none
+
+character*(*) :: path
+integer :: status = 0, interpol, idx, lenstring, istring
+real(DP) :: twant,tret
+
+integer :: int0D
+integer,pointer :: vect1DInt(:), vect2DInt(:,:), vect3DInt(:,:,:) => null()
+integer :: ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7,dum1,dum2,dum3,dum4,dum5,dum6,dum7
+real(DP) :: double0D
+real(DP), pointer :: vect1DDouble(:), time(:), vect2DDouble(:,:), vect3DDouble(:,:,:), vect4DDouble(:,:,:,:) => null()
+real(DP), pointer :: vect5DDouble(:,:,:,:,:), vect6DDouble(:,:,:,:,:,:) => null()
+character(len=132), dimension(:), pointer :: stringans => null()
+character(len=100000)::longstring
+character(len=300) :: timepath
+integer :: obj_single_time,obj1,obj2,obj3,obj4,obj5,obj6,obj7
+integer :: dimObj1,dimObj2,dimObj3,dimObj4,dimObj5,dimObj6,dimObj7
+integer :: i1,i2,i3,i4,i5,i6,i7
+<xsl:for-each select=".//field[@data_type='struct_array' and @maxoccur!='unbounded']">
+integer :: i<xsl:value-of select="@name"/>
+</xsl:for-each>
+
+type(ids_<xsl:value-of select="@name"/>) :: IDS
+
+call getenv('ual_debug',ual_debug)
+
+
+call begin_IDS_Get_Slice(idx,path, twant,status)
+if (status.EQ.0) then
+	      <xsl:apply-templates select="field" mode="GET_SLICE"/>
+else
+   write(*,*) 'Get slice impossible, IDS is missing or requested time slice is not within the time interval of the IDS'
+endif
+call end_IDS_Get_Slice(idx,path)
+
+return
+end subroutine ids_GET_SLICE_<xsl:value-of select="@name"/>
+
+end module <xsl:value-of select="@name"/>_ids_module_get
+</xsl:result-document>
 </xsl:template>
 
 
