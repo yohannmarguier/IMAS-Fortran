@@ -113,13 +113,13 @@ ids_<xsl:value-of select="@name"/>_g95.o: <xsl:value-of select="@name"/>.f90 ids
 
 
 #--------------------- gfortran --------------
-libimas-gfortran.so: ids_schemas_gfortran.o utilities_copy_struct_gfortran.o <xsl:for-each select="IDS"> ids_<xsl:value-of select="@name"/>_gfortran.o ids_<xsl:value-of select="@name"/>_get_gfortran.o <xsl:value-of select="@name"/>_copy_struct_gfortran.o </xsl:for-each> ids_routines_gfortran.o
+libimas-gfortran.so: ids_schemas_gfortran.o utilities_copy_struct_gfortran.o <xsl:for-each select="IDS"> ids_<xsl:value-of select="@name"/>_gfortran.o ids_<xsl:value-of select="@name"/>_get_gfortran.o <xsl:value-of select="@name"/>_copy_struct_gfortran.o <xsl:value-of select="@name"/>_copy_gfortran.o </xsl:for-each> ids_routines_gfortran.o
 &#009;$(F90_gfortran) $(COPTS_gfortran) -o $@ -shared -Wl,-soname,$@.$(IMAS_MAJOR).$(IMAS_MINOR) $^ $(LIBS)
 
-libimas-gfortran.a: ids_schemas_gfortran.o <xsl:for-each select="IDS"> ids_<xsl:value-of select="@name"/>_gfortran.o ids_<xsl:value-of select="@name"/>_get_gfortran.o <xsl:value-of select="@name"/>_copy_struct_gfortran.o </xsl:for-each> ids_routines_gfortran.o
+libimas-gfortran.a: ids_schemas_gfortran.o <xsl:for-each select="IDS"> ids_<xsl:value-of select="@name"/>_gfortran.o ids_<xsl:value-of select="@name"/>_get_gfortran.o <xsl:value-of select="@name"/>_copy_struct_gfortran.o <xsl:value-of select="@name"/>_copy_gfortran.o</xsl:for-each> ids_routines_gfortran.o
 &#009;ar rvs $@ $^
 
-ids_routines_gfortran.o: ids_routines.f90 utilities_copy_struct_gfortran.o <xsl:for-each select="IDS">ids_<xsl:value-of select="@name"/>_gfortran.o ids_<xsl:value-of select="@name"/>_get_gfortran.o <xsl:value-of select="@name"/>_copy_struct_gfortran.o </xsl:for-each>
+ids_routines_gfortran.o: ids_routines.f90 utilities_copy_struct_gfortran.o <xsl:for-each select="IDS">ids_<xsl:value-of select="@name"/>_gfortran.o ids_<xsl:value-of select="@name"/>_get_gfortran.o <xsl:value-of select="@name"/>_copy_struct_gfortran.o <xsl:value-of select="@name"/>_copy_gfortran.o</xsl:for-each>
 &#009;$(F90_gfortran) -c $(COPTS_gfortran) $(INCDIR_gfortran) ids_routines.f90 -o $@
 
 ids_schemas_gfortran.o: ids_schemas.f90
@@ -134,6 +134,9 @@ ids_<xsl:value-of select="@name"/>_gfortran.o: <xsl:value-of select="@name"/>.f9
 &#009;$(F90_gfortran) -c $(COPTS_gfortran) $(INCDIR_gfortran) $&lt; -o $@
 
 ids_<xsl:value-of select="@name"/>_get_gfortran.o: <xsl:value-of select="@name"/>_get.f90 ids_schemas_gfortran.o
+&#009;$(F90_gfortran) -c $(COPTS_gfortran) $(INCDIR_gfortran) $&lt; -o $@
+
+<xsl:value-of select="@name"/>_copy_gfortran.o: <xsl:value-of select="@name"/>_copy.f90 ids_schemas_gfortran.o
 &#009;$(F90_gfortran) -c $(COPTS_gfortran) $(INCDIR_gfortran) $&lt; -o $@
 
 <xsl:value-of select="@name"/>_copy_struct_gfortran.o: <xsl:value-of select="@name"/>_copy_struct.f90  utilities_copy_struct_gfortran.o ids_schemas_gfortran.o
@@ -163,13 +166,13 @@ ids_<xsl:value-of select="@name"/>_pgi.o: <xsl:value-of select="@name"/>.f90 ids
 
 
 #--------------------- ifort --------------
-libimas-ifort.so: ids_schemas_ifort.o utilities_copy_struct_ifort.o <xsl:for-each select="IDS"> ids_<xsl:value-of select="@name"/>_ifort.o ids_<xsl:value-of select="@name"/>_get_ifort.o <xsl:value-of select="@name"/>_copy_struct_ifort.o </xsl:for-each> ids_routines_ifort.o $(DEP_IFORT)
+libimas-ifort.so: ids_schemas_ifort.o utilities_copy_struct_ifort.o <xsl:for-each select="IDS"> ids_<xsl:value-of select="@name"/>_ifort.o ids_<xsl:value-of select="@name"/>_get_ifort.o <xsl:value-of select="@name"/>_copy_struct_ifort.o  <xsl:value-of select="@name"/>_copy_ifort.o </xsl:for-each> ids_routines_ifort.o $(DEP_IFORT)
 &#009;$(F90_ifort) $(COPTS_ifort) -o $@ -shared -Wl,-soname,$@.$(IMAS_MAJOR).$(IMAS_MINOR) $^ $(LIBS)
 
-libimas-ifort.a: ids_schemas_ifort.o utilities_copy_struct_ifort.o <xsl:for-each select="IDS"> ids_<xsl:value-of select="@name"/>_ifort.o ids_<xsl:value-of select="@name"/>_get_ifort.o <xsl:value-of select="@name"/>_copy_struct_ifort.o </xsl:for-each> ids_routines_ifort.o $(DEP_IFORT)
+libimas-ifort.a: ids_schemas_ifort.o utilities_copy_struct_ifort.o <xsl:for-each select="IDS"> ids_<xsl:value-of select="@name"/>_ifort.o ids_<xsl:value-of select="@name"/>_get_ifort.o <xsl:value-of select="@name"/>_copy_struct_ifort.o <xsl:value-of select="@name"/>_copy_ifort.o </xsl:for-each> ids_routines_ifort.o $(DEP_IFORT)
 &#009;ar rvs $@ $^
 
-ids_routines_ifort.o: ids_routines.f90 utilities_copy_struct_ifort.o <xsl:for-each select="IDS">ids_<xsl:value-of select="@name"/>_ifort.o ids_<xsl:value-of select="@name"/>_get_ifort.o <xsl:value-of select="@name"/>_copy_struct_ifort.o </xsl:for-each>
+ids_routines_ifort.o: ids_routines.f90 utilities_copy_struct_ifort.o <xsl:for-each select="IDS">ids_<xsl:value-of select="@name"/>_ifort.o ids_<xsl:value-of select="@name"/>_get_ifort.o <xsl:value-of select="@name"/>_copy_struct_ifort.o  <xsl:value-of select="@name"/>_copy_ifort.o </xsl:for-each>
 &#009;$(F90_ifort) -c $(COPTS_ifort) $(INCDIR_ifort) ids_routines.f90 -o $@
 
 ids_schemas_ifort.o: ids_schemas.f90
@@ -184,6 +187,9 @@ ids_<xsl:value-of select="@name"/>_ifort.o: <xsl:value-of select="@name"/>.f90 i
 &#009;$(F90_ifort) -c $(COPTS_ifort) $(INCDIR_ifort) $&lt; -o $@
 
 ids_<xsl:value-of select="@name"/>_get_ifort.o: <xsl:value-of select="@name"/>_get.f90 ids_schemas_ifort.o
+&#009;$(F90_ifort) -c $(COPTS_ifort) $(INCDIR_ifort) $&lt; -o $@
+
+<xsl:value-of select="@name"/>_copy_ifort.o: <xsl:value-of select="@name"/>_copy.f90 ids_schemas_ifort.o
 &#009;$(F90_ifort) -c $(COPTS_ifort) $(INCDIR_ifort) $&lt; -o $@
 
 <xsl:value-of select="@name"/>_copy_struct_ifort.o: <xsl:value-of select="@name"/>_copy_struct.f90  utilities_copy_struct_ifort.o ids_schemas_ifort.o

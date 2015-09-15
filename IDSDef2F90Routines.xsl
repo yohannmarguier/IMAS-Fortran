@@ -14,6 +14,7 @@ use utilities_copy_struct
 <xsl:for-each select="IDS">
 use <xsl:value-of select="@name"/>_ids_module
 use <xsl:value-of select="@name"/>_ids_module_get
+use <xsl:value-of select="@name"/>_copy
 use <xsl:value-of select="@name"/>_copy_struct
 </xsl:for-each>
 
@@ -66,22 +67,6 @@ end interface ids_put
 interface ids_put_non_timed
    module procedure ids_put_non_timed_<xsl:value-of select="@name"/>
 end interface ids_put_non_timed
-
-! Declaration of the generic IDS DELETE routine
-interface ids_delete
-   module procedure ids_delete_<xsl:value-of select="@name"/>
-end interface ids_delete
-
-! Declaration of the generic IDS DEALLOCATE routine
-interface ids_deallocate
-   module procedure ids_deallocate_<xsl:value-of select="@name"/>
-end interface ids_deallocate
-
-
-! Declaration of the generic IDS COPY routine
-interface ids_copy
-   module procedure ids_copy_<xsl:value-of select="@name"/>
-end interface ids_copy
 
 <!--
 ! Declaration of the generic IDS FLUSH routine
@@ -298,71 +283,6 @@ return
 end subroutine ids_put_non_timed_<xsl:value-of select="@name"/>
 
 
-<!-- ======================================  DELETE======================================= -->
-!!!!!! Routine to DELETE the IDS
-
-subroutine ids_delete_<xsl:value-of select="@name"/>(idx,IDSpath,IDS)  <!-- systematic calls to the low level delete_data routine. The IDS input argument is added just for the interface to identify the relevant IDS type -->
-
-use ids_schemas
-implicit none
-character*(*) :: IDSpath
-integer :: idx
-
-type(ids_<xsl:value-of select="@name"/>) :: IDS
-<xsl:for-each select=".//field[@data_type='struct_array' and @maxoccur!='unbounded']">
-integer :: i<xsl:value-of select="@name"/>
-</xsl:for-each>
-
-call getenv('ual_debug',ual_debug) ! Debug flag
-if (ual_debug =='yes') write(*,*) 'Deleting IDS ',IDSpath
-<xsl:apply-templates select="field" mode="DELETE"/>
-if (ual_debug =='yes') write(*,*) 'Delete IDS ',IDSpath,' done'
-end subroutine ids_delete_<xsl:value-of select="@name"/>
-
-
-
-<!-- ======================================  DEALLOCATE ======================================= -->
-!!!!!! Routines to DEALLOCATE IDSs
-
-subroutine ids_deallocate_<xsl:value-of select="@name"/>(IDS)
-
-use ids_schemas
-implicit none
-
-integer :: i1,i2,i3,i4,i5,i6,i7
-
-type(ids_<xsl:value-of select="@name"/>) :: IDS
-    <xsl:apply-templates select="field" mode="DEALLOCATE">
-        <xsl:with-param name="level" select="1"/>
-        <xsl:with-param name="idxpath" select="'IDS'"/>
-    </xsl:apply-templates>
-
-if (ual_debug =='yes') write(*,*) 'Deallocate an <xsl:value-of select="@name"/> IDS : done'
-end subroutine ids_deallocate_<xsl:value-of select="@name"/>
-
-
-!!!!!! Routines to COPY IDSs
-subroutine ids_copy_<xsl:value-of select="@name"/>(IDSin,  IDSout)
-! Copies all fields of IDSin to IDSout
-
-use ids_schemas
-implicit none
-!integer, parameter :: DP=kind(1.0D0)
-
-integer :: itime, lentime, lenstring, istring
-integer :: i1,i2,i3,i4,i5,i6,i7
-
-type(ids_<xsl:value-of select="@name"/>) :: IDSin, IDSout
-
-call getenv('ual_debug',ual_debug) ! Debug flag
-
-      <xsl:apply-templates select="field" mode="COPY_FIELD">
-         <xsl:with-param name="level" select="1"/>
-         <xsl:with-param name="idxpath" select="''"/>
-      </xsl:apply-templates>
-
-return
-end subroutine ids_copy_<xsl:value-of select="@name"/>
 
 <!--
 !!!!!! Routines to flush IDSs
@@ -553,7 +473,151 @@ end subroutine ids_GET_SLICE_<xsl:value-of select="@name"/>
 
 end module <xsl:value-of select="@name"/>_ids_module_get
 </xsl:result-document>
+
+
+
+<xsl:result-document href="{@name}_copy.f90">
+module <xsl:value-of select="@name"/>_copy
+! Declaration of the generic IDS DELETE routine
+interface ids_delete
+   module procedure ids_delete_<xsl:value-of select="@name"/>
+end interface ids_delete
+
+! Declaration of the generic IDS DEALLOCATE routine
+interface ids_deallocate
+   module procedure ids_deallocate_<xsl:value-of select="@name"/>
+end interface ids_deallocate
+
+
+! Declaration of the generic IDS COPY routine
+interface ids_copy
+   module procedure ids_copy_<xsl:value-of select="@name"/>
+end interface ids_copy
+
+
+
+
+character(len=3)::ual_debug
+
+contains
+
+character(10) function int2str(num)
+   integer, intent(in):: num
+   character(10) :: str
+   ! convert integer to string using formatted write
+   write(str, '(i10)') num
+   int2str = adjustl(str)
+end function int2str
+
+
+
+FUNCTION isErrorCritical(status, fieldPath) RESULT (exitRequest)
+	integer :: status
+	character*(*) :: fieldPath
+	logical :: exitRequest
+	character(len=100000)::longstring
+
+	exitRequest = .FALSE.
+
+	if(status == 0) then
+		exitRequest = .FALSE.
+		return
+	endif
+
+	if(0 .NE. is_critical_error(status) ) then
+		exitRequest = .TRUE.
+	endif
+
+	if ( (ual_debug == 'yes') .OR. (ual_debug == 'vvv') .OR. exitRequest)then
+		call get_last_errmsg(longstring)
+		write(*,*) "ERROR! FIELD: ", trim(fieldPath), "    STATUS: ", status, "    MSG: ", trim(longstring)
+	endif
+
+END FUNCTION isErrorCritical
+
+<!-- ======================================  DELETE======================================= -->
+!!!!!! Routine to DELETE the IDS
+
+subroutine ids_delete_<xsl:value-of select="@name"/>(idx,IDSpath,IDS)  <!-- systematic calls to the low level delete_data routine. The IDS input argument is added just for the interface to identify the relevant IDS type -->
+
+use ids_schemas
+implicit none
+character*(*) :: IDSpath
+integer :: idx
+
+type(ids_<xsl:value-of select="@name"/>) :: IDS
+<xsl:for-each select=".//field[@data_type='struct_array' and @maxoccur!='unbounded']">
+integer :: i<xsl:value-of select="@name"/>
+</xsl:for-each>
+
+call getenv('ual_debug',ual_debug) ! Debug flag
+if (ual_debug =='yes') write(*,*) 'Deleting IDS ',IDSpath
+<xsl:apply-templates select="field" mode="DELETE"/>
+if (ual_debug =='yes') write(*,*) 'Delete IDS ',IDSpath,' done'
+end subroutine ids_delete_<xsl:value-of select="@name"/>
+
+
+
+<!-- ======================================  DEALLOCATE ======================================= -->
+!!!!!! Routines to DEALLOCATE IDSs
+
+subroutine ids_deallocate_<xsl:value-of select="@name"/>(IDS)
+
+use ids_schemas
+implicit none
+
+integer :: i1,i2,i3,i4,i5,i6,i7
+
+type(ids_<xsl:value-of select="@name"/>) :: IDS
+    <xsl:apply-templates select="field" mode="DEALLOCATE">
+        <xsl:with-param name="level" select="1"/>
+        <xsl:with-param name="idxpath" select="'IDS'"/>
+    </xsl:apply-templates>
+
+if (ual_debug =='yes') write(*,*) 'Deallocate an <xsl:value-of select="@name"/> IDS : done'
+end subroutine ids_deallocate_<xsl:value-of select="@name"/>
+
+
+!!!!!! Routines to COPY IDSs
+subroutine ids_copy_<xsl:value-of select="@name"/>(IDSin,  IDSout)
+! Copies all fields of IDSin to IDSout
+
+use ids_schemas
+implicit none
+!integer, parameter :: DP=kind(1.0D0)
+
+integer :: itime, lentime, lenstring, istring
+integer :: i1,i2,i3,i4,i5,i6,i7
+
+type(ids_<xsl:value-of select="@name"/>) :: IDSin, IDSout
+
+call getenv('ual_debug',ual_debug) ! Debug flag
+
+      <xsl:apply-templates select="field" mode="COPY_FIELD">
+         <xsl:with-param name="level" select="1"/>
+         <xsl:with-param name="idxpath" select="''"/>
+      </xsl:apply-templates>
+
+return
+end subroutine ids_copy_<xsl:value-of select="@name"/>
+
+
+
+end module <xsl:value-of select="@name"/>_copy
+</xsl:result-document>
 </xsl:template>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 <!--!!!!!!!!!!!!!!!!!!!!!!!!!             GET SLICE ROUTINES           !!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
