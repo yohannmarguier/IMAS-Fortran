@@ -116,10 +116,10 @@ ids_<xsl:value-of select="@name"/>_g95.o: <xsl:value-of select="@name"/>.f90 ids
 libimas-gfortran.so: ids_schemas_gfortran.o utilities_copy_struct_gfortran.o <xsl:for-each select="IDS"> ids_<xsl:value-of select="@name"/>_gfortran.o ids_<xsl:value-of select="@name"/>_get_gfortran.o <xsl:value-of select="@name"/>_copy_struct_gfortran.o <xsl:value-of select="@name"/>_copy_gfortran.o </xsl:for-each> ids_routines_gfortran.o
 &#009;$(F90_gfortran) $(COPTS_gfortran) -o $@ -shared -Wl,-soname,$@.$(IMAS_MAJOR).$(IMAS_MINOR) $^ $(LIBS)
 
-libimas-gfortran.a: ids_schemas_gfortran.o <xsl:for-each select="IDS"> ids_<xsl:value-of select="@name"/>_gfortran.o ids_<xsl:value-of select="@name"/>_get_gfortran.o <xsl:value-of select="@name"/>_copy_struct_gfortran.o <xsl:value-of select="@name"/>_copy_gfortran.o</xsl:for-each> ids_routines_gfortran.o
+libimas-gfortran.a: ids_schemas_gfortran.o <xsl:for-each select="IDS"> ids_<xsl:value-of select="@name"/>_gfortran.o ids_<xsl:value-of select="@name"/>_get_gfortran.o <xsl:value-of select="@name"/>_copy_struct_gfortran.o <xsl:value-of select="@name"/>_copy_gfortran.o </xsl:for-each> ids_routines_gfortran.o
 &#009;ar rvs $@ $^
 
-ids_routines_gfortran.o: ids_routines.f90 utilities_copy_struct_gfortran.o <xsl:for-each select="IDS">ids_<xsl:value-of select="@name"/>_gfortran.o ids_<xsl:value-of select="@name"/>_get_gfortran.o <xsl:value-of select="@name"/>_copy_struct_gfortran.o <xsl:value-of select="@name"/>_copy_gfortran.o</xsl:for-each>
+ids_routines_gfortran.o: ids_routines.f90 utilities_copy_struct_gfortran.o <xsl:for-each select="IDS">ids_<xsl:value-of select="@name"/>_gfortran.o ids_<xsl:value-of select="@name"/>_get_gfortran.o <xsl:value-of select="@name"/>_copy_struct_gfortran.o <xsl:value-of select="@name"/>_copy_gfortran.o </xsl:for-each>
 &#009;$(F90_gfortran) -c $(COPTS_gfortran) $(INCDIR_gfortran) ids_routines.f90 -o $@
 
 ids_schemas_gfortran.o: ids_schemas.f90
