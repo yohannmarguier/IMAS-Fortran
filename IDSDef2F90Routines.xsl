@@ -12,8 +12,11 @@ use ids_schemas
 use utilities_copy_struct
 
 <xsl:for-each select="IDS">
-use <xsl:value-of select="@name"/>_ids_module
+use <xsl:value-of select="@name"/>_ids_module_put
+use <xsl:value-of select="@name"/>_ids_module_put_slice
+use <xsl:value-of select="@name"/>_ids_module_put_non_timed
 use <xsl:value-of select="@name"/>_ids_module_get
+use <xsl:value-of select="@name"/>_ids_module_get_slice
 use <xsl:value-of select="@name"/>_copy
 use <xsl:value-of select="@name"/>_copy_struct
 </xsl:for-each>
@@ -48,25 +51,14 @@ end module
 
  <xsl:template match="IDS" mode="main">
 
-  <xsl:result-document href="{@name}.f90">
-module <xsl:value-of select="@name"/>_ids_module
-
-<xsl:if test=".//field[@type='dynamic']"> <!-- Procedure put_slice should exist only for time-dependent IDSs -->
-! Declaration of the generic IDS PUT_SLICE routine
-interface ids_put_slice
-   module procedure ids_put_slice_<xsl:value-of select="@name"/>
-end interface ids_put_slice
-</xsl:if >
+  <xsl:result-document href="{@name}_put.f90">
+module <xsl:value-of select="@name"/>_ids_module_put
 
 ! Declaration of the generic IDS PUT routine
 interface ids_put
    module procedure ids_put_<xsl:value-of select="@name"/>
 end interface ids_put
 
-! Declaration of the generic IDS PUT_NON_TIMED routine
-interface ids_put_non_timed
-   module procedure ids_put_non_timed_<xsl:value-of select="@name"/>
-end interface ids_put_non_timed
 
 <!--
 ! Declaration of the generic IDS FLUSH routine
@@ -181,6 +173,212 @@ return
 end subroutine ids_put_<xsl:value-of select="@name"/>
 
 
+<!--
+!!!!!! Routines to flush IDSs
+
+subroutine ids_flush_<xsl:value-of select="@name"/>(idx,IDSpath,IDS) --> <!-- systematic calls to the low level ids_flush_cache routine. The IDS input argument is added just for the interface to identify the relevant IDS type -->
+<!--
+use ids_schemas
+implicit none
+character*(*) :: IDSpath
+integer :: idx
+integer, parameter :: DP=kind(1.0D0)
+
+  <xsl:choose>
+			<xsl:when test="@timed = 'yes'">
+type(ids_<xsl:value-of select="@name"/>),pointer :: IDS(:)
+			</xsl:when>
+			<xsl:otherwise>
+type(ids_<xsl:value-of select="@name"/>) :: IDS
+			</xsl:otherwise>
+		</xsl:choose>
+
+
+call getenv('ual_debug',ual_debug) ! Debug flag
+if (ual_debug =='yes') write(*,*) 'Flushing IDS ',IDSpath
+<xsl:apply-templates select="field" mode="FLUSH_CACHE"/>
+if (ual_debug =='yes') write(*,*) 'Flushing IDS ',IDSpath,' done'
+end subroutine ids_flush_<xsl:value-of select="@name"/>
+-->
+
+<!--!!!!!! Routine to discard IDS-->
+<!--subroutine ids_discard_<xsl:value-of select="@name"/>(idx,IDSpath,IDS)-->
+<!-- systematic calls to the low level ids_discard_cache routine. The IDS input argument is added just for the interface to identify the relevant IDS type -->
+<!--
+use ids_schemas
+implicit none
+character*(*) :: IDSpath
+integer :: idx
+
+type(ids_<xsl:value-of select="@name"/>) :: IDS
+<xsl:for-each select=".//field[@data_type='struct_array' and @maxoccur!='unbounded']">
+integer :: i<xsl:value-of select="@name"/>
+</xsl:for-each>
+
+call getenv('ual_debug',ual_debug) ! Debug flag
+if (ual_debug =='yes') write(*,*) 'Discarding IDS ',IDSpath
+<xsl:apply-templates select="field" mode="DISCARD_CACHE"/>
+if (ual_debug =='yes') write(*,*) 'Discarding IDS ',IDSpath,' done'
+end subroutine ids_discard_<xsl:value-of select="@name"/>-->
+
+end module <xsl:value-of select="@name"/>_ids_module_put
+</xsl:result-document>
+
+
+
+<xsl:result-document href="{@name}_put_non_timed.f90">
+module <xsl:value-of select="@name"/>_ids_module_put_non_timed
+
+
+! Declaration of the generic IDS PUT_NON_TIMED routine
+interface ids_put_non_timed
+   module procedure ids_put_non_timed_<xsl:value-of select="@name"/>
+end interface ids_put_non_timed
+
+
+character(len=3)::ual_debug
+
+contains
+
+character(10) function int2str(num)
+   integer, intent(in):: num
+   character(10) :: str
+   ! convert integer to string using formatted write
+   write(str, '(i10)') num
+   int2str = adjustl(str)
+end function int2str
+
+
+
+FUNCTION isErrorCritical(status, fieldPath) RESULT (exitRequest)
+	integer :: status
+	character*(*) :: fieldPath
+	logical :: exitRequest
+	character(len=100000)::longstring
+
+	exitRequest = .FALSE.
+
+	if(status == 0) then
+		exitRequest = .FALSE.
+		return
+	endif
+
+	if(0 .NE. is_critical_error(status) ) then
+		exitRequest = .TRUE.
+	endif
+
+	if ( (ual_debug == 'yes') .OR. (ual_debug == 'vvv') .OR. exitRequest)then
+		call get_last_errmsg(longstring)
+		write(*,*) "ERROR! FIELD: ", trim(fieldPath), "    STATUS: ", status, "    MSG: ", trim(longstring)
+	endif
+
+END FUNCTION isErrorCritical
+
+
+
+<!-- ======================================  PUT NON TIMED ======================================= -->
+
+!!!!!! Routines to PUT_NON_TIMED the time INdependent data of time dependent IDSs
+
+subroutine ids_put_non_timed_<xsl:value-of select="@name"/>(idx, path,  IDS)
+
+use ids_schemas
+implicit none
+
+character*(*) :: path
+integer :: idx
+integer :: status = 0, retStatus = 0
+integer :: i,dim1,dim2,dim3,dim4,dim5,dim6,dim7, lenstring, istring
+integer, pointer :: dimtab(:) => null()
+character(len=100000)::longstring
+character(len=300) :: timepath
+integer :: obj1,obj2,obj3,obj4,obj5,obj6,obj7
+integer :: i1,i2,i3,i4,i5,i6,i7
+<xsl:for-each select=".//field[@data_type='struct_array' and @maxoccur!='unbounded']">
+integer :: i<xsl:value-of select="@name"/>
+</xsl:for-each>
+
+type(ids_<xsl:value-of select="@name"/>) :: IDS       ! real declaration of the IDS for the put
+
+call getenv('ual_debug',ual_debug) ! Debug flag
+
+! Systematic delete of the previous IDS, in case it existed; guarantees the time-dependent data is deleted
+call ids_delete(idx,path,IDS)
+
+! And systematic erase of the previous changes in cache
+! The ids_discard routines are obsolete, do not call them anymore
+! call ids_discard(idx,path,IDS)
+
+
+call begin_IDS_put_non_timed(idx, path)
+		<xsl:apply-templates select="field" mode="PUT_SINGLE">
+                <xsl:with-param name="non_timed" select="yes"/>
+                </xsl:apply-templates>
+call end_IDS_put_non_timed(idx, path)
+
+return
+end subroutine ids_put_non_timed_<xsl:value-of select="@name"/>
+
+
+
+
+end module <xsl:value-of select="@name"/>_ids_module_put_non_timed
+</xsl:result-document>
+
+
+<xsl:result-document href="{@name}_put_slice.f90">
+module <xsl:value-of select="@name"/>_ids_module_put_slice
+
+<xsl:if test=".//field[@type='dynamic']"> <!-- Procedure put_slice should exist only for time-dependent IDSs -->
+! Declaration of the generic IDS PUT_SLICE routine
+interface ids_put_slice
+   module procedure ids_put_slice_<xsl:value-of select="@name"/>
+end interface ids_put_slice
+</xsl:if >
+
+character(len=3)::ual_debug
+
+contains
+
+character(10) function int2str(num)
+   integer, intent(in):: num
+   character(10) :: str
+   ! convert integer to string using formatted write
+   write(str, '(i10)') num
+   int2str = adjustl(str)
+end function int2str
+
+
+
+FUNCTION isErrorCritical(status, fieldPath) RESULT (exitRequest)
+	integer :: status
+	character*(*) :: fieldPath
+	logical :: exitRequest
+	character(len=100000)::longstring
+
+	exitRequest = .FALSE.
+
+	if(status == 0) then
+		exitRequest = .FALSE.
+		return
+	endif
+
+	if(0 .NE. is_critical_error(status) ) then
+		exitRequest = .TRUE.
+	endif
+
+	if ( (ual_debug == 'yes') .OR. (ual_debug == 'vvv') .OR. exitRequest)then
+		call get_last_errmsg(longstring)
+		write(*,*) "ERROR! FIELD: ", trim(fieldPath), "    STATUS: ", status, "    MSG: ", trim(longstring)
+	endif
+
+END FUNCTION isErrorCritical
+
+
+
+
+
+
 <!-- ======================================  PUT SLICE ======================================= -->
 
 <xsl:if test=".//field[@type='dynamic']"> <!-- Procedure put_slice should exist only for time-dependent IDSs -->
@@ -239,101 +437,12 @@ end subroutine ids_put_slice_<xsl:value-of select="@name"/>
 </xsl:if>
 
 
-<!-- ======================================  PUT NON TIMED ======================================= -->
 
-!!!!!! Routines to PUT_NON_TIMED the time INdependent data of time dependent IDSs
-
-subroutine ids_put_non_timed_<xsl:value-of select="@name"/>(idx, path,  IDS)
-
-use ids_schemas
-implicit none
-
-character*(*) :: path
-integer :: idx
-integer :: status = 0, retStatus = 0
-integer :: i,dim1,dim2,dim3,dim4,dim5,dim6,dim7, lenstring, istring
-integer, pointer :: dimtab(:) => null()
-character(len=100000)::longstring
-character(len=300) :: timepath
-integer :: obj1,obj2,obj3,obj4,obj5,obj6,obj7
-integer :: i1,i2,i3,i4,i5,i6,i7
-<xsl:for-each select=".//field[@data_type='struct_array' and @maxoccur!='unbounded']">
-integer :: i<xsl:value-of select="@name"/>
-</xsl:for-each>
-
-type(ids_<xsl:value-of select="@name"/>) :: IDS       ! real declaration of the IDS for the put
-
-call getenv('ual_debug',ual_debug) ! Debug flag
-
-! Systematic delete of the previous IDS, in case it existed; guarantees the time-dependent data is deleted
-call ids_delete(idx,path,IDS)
-
-! And systematic erase of the previous changes in cache
-! The ids_discard routines are obsolete, do not call them anymore
-! call ids_discard(idx,path,IDS)
-
-
-call begin_IDS_put_non_timed(idx, path)
-		<xsl:apply-templates select="field" mode="PUT_SINGLE">
-                <xsl:with-param name="non_timed" select="yes"/>
-                </xsl:apply-templates>
-call end_IDS_put_non_timed(idx, path)
-
-return
-end subroutine ids_put_non_timed_<xsl:value-of select="@name"/>
-
-
-
-<!--
-!!!!!! Routines to flush IDSs
-
-subroutine ids_flush_<xsl:value-of select="@name"/>(idx,IDSpath,IDS) --> <!-- systematic calls to the low level ids_flush_cache routine. The IDS input argument is added just for the interface to identify the relevant IDS type -->
-<!--
-use ids_schemas
-implicit none
-character*(*) :: IDSpath
-integer :: idx
-integer, parameter :: DP=kind(1.0D0)
-
-  <xsl:choose>
-			<xsl:when test="@timed = 'yes'">
-type(ids_<xsl:value-of select="@name"/>),pointer :: IDS(:)
-			</xsl:when>
-			<xsl:otherwise>
-type(ids_<xsl:value-of select="@name"/>) :: IDS
-			</xsl:otherwise>
-		</xsl:choose>
-
-
-call getenv('ual_debug',ual_debug) ! Debug flag
-if (ual_debug =='yes') write(*,*) 'Flushing IDS ',IDSpath
-<xsl:apply-templates select="field" mode="FLUSH_CACHE"/>
-if (ual_debug =='yes') write(*,*) 'Flushing IDS ',IDSpath,' done'
-end subroutine ids_flush_<xsl:value-of select="@name"/>
--->
-
-<!--!!!!!! Routine to discard IDS-->
-<!--subroutine ids_discard_<xsl:value-of select="@name"/>(idx,IDSpath,IDS)-->
-<!-- systematic calls to the low level ids_discard_cache routine. The IDS input argument is added just for the interface to identify the relevant IDS type -->
-<!--
-use ids_schemas
-implicit none
-character*(*) :: IDSpath
-integer :: idx
-
-type(ids_<xsl:value-of select="@name"/>) :: IDS
-<xsl:for-each select=".//field[@data_type='struct_array' and @maxoccur!='unbounded']">
-integer :: i<xsl:value-of select="@name"/>
-</xsl:for-each>
-
-call getenv('ual_debug',ual_debug) ! Debug flag
-if (ual_debug =='yes') write(*,*) 'Discarding IDS ',IDSpath
-<xsl:apply-templates select="field" mode="DISCARD_CACHE"/>
-if (ual_debug =='yes') write(*,*) 'Discarding IDS ',IDSpath,' done'
-end subroutine ids_discard_<xsl:value-of select="@name"/>-->
-
-end module <xsl:value-of select="@name"/>_ids_module
+end module <xsl:value-of select="@name"/>_ids_module_put_slice
 </xsl:result-document>
+
+
+
 
   <xsl:result-document href="{@name}_get.f90">
 module <xsl:value-of select="@name"/>_ids_module_get
@@ -342,12 +451,6 @@ module <xsl:value-of select="@name"/>_ids_module_get
 interface ids_get
    module procedure ids_get_<xsl:value-of select="@name"/>
 end interface ids_get
-
-
-! Declaration of the generic IDS GET_SLICE routine
-interface ids_get_slice
-   module procedure  ids_get_slice_<xsl:value-of select="@name"/>
-end interface ids_get_slice
 
 
 
@@ -427,6 +530,61 @@ call end_IDS_get(idx, path)
 return
 end subroutine ids_get_<xsl:value-of select="@name"/>
 
+
+
+end module <xsl:value-of select="@name"/>_ids_module_get
+</xsl:result-document>
+
+
+<xsl:result-document href="{@name}_get_slice.f90">
+module <xsl:value-of select="@name"/>_ids_module_get_slice
+
+! Declaration of the generic IDS GET_SLICE routine
+interface ids_get_slice
+   module procedure  ids_get_slice_<xsl:value-of select="@name"/>
+end interface ids_get_slice
+
+
+
+character(len=3)::ual_debug
+
+contains
+
+character(10) function int2str(num)
+   integer, intent(in):: num
+   character(10) :: str
+   ! convert integer to string using formatted write
+   write(str, '(i10)') num
+   int2str = adjustl(str)
+end function int2str
+
+
+
+FUNCTION isErrorCritical(status, fieldPath) RESULT (exitRequest)
+	integer :: status
+	character*(*) :: fieldPath
+	logical :: exitRequest
+	character(len=100000)::longstring
+
+	exitRequest = .FALSE.
+
+	if(status == 0) then
+		exitRequest = .FALSE.
+		return
+	endif
+
+	if(0 .NE. is_critical_error(status) ) then
+		exitRequest = .TRUE.
+	endif
+
+	if ( (ual_debug == 'yes') .OR. (ual_debug == 'vvv') .OR. exitRequest)then
+		call get_last_errmsg(longstring)
+		write(*,*) "ERROR! FIELD: ", trim(fieldPath), "    STATUS: ", status, "    MSG: ", trim(longstring)
+	endif
+
+END FUNCTION isErrorCritical
+
+
 <!-- ======================================  GET SLICE ======================================= -->
 
 !!!!!! Routines to GET one time slice of a IDS, with time interpolation -->
@@ -471,7 +629,7 @@ call end_IDS_Get_Slice(idx,path)
 return
 end subroutine ids_GET_SLICE_<xsl:value-of select="@name"/>
 
-end module <xsl:value-of select="@name"/>_ids_module_get
+end module <xsl:value-of select="@name"/>_ids_module_get_slice
 </xsl:result-document>
 
 
