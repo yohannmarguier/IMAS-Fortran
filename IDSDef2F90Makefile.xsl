@@ -110,10 +110,10 @@ utilities_copy_struct_g95.o: utilities_copy_struct.f90 ids_schemas_g95.o
 &#009;$(F90_g95) -c $(COPTS_g95) $(INCDIR_g95) $&lt; -o $@
 
 <xsl:for-each select="IDS">
-<xsl:value-of select="@name"/>_put_g95.o: <xsl:value-of select="@name"/>_put.f90 ids_schemas_g95.o
+<xsl:value-of select="@name"/>_put_g95.o: <xsl:value-of select="@name"/>_put.f90 ids_schemas_g95.o <xsl:value-of select="@name"/>_copy_g95.o
 &#009;$(F90_g95) -c $(COPTS_g95) $(INCDIR_g95) $&lt; -o $@
 
-<xsl:value-of select="@name"/>_put_non_timed_g95.o: <xsl:value-of select="@name"/>_put_non_timed.f90 ids_schemas_g95.o
+<xsl:value-of select="@name"/>_put_non_timed_g95.o: <xsl:value-of select="@name"/>_put_non_timed.f90 ids_schemas_g95.o <xsl:value-of select="@name"/>_copy_g95.o
 &#009;$(F90_g95) -c $(COPTS_g95) $(INCDIR_g95) $&lt; -o $@
 
 <xsl:value-of select="@name"/>_put_slice_g95.o: <xsl:value-of select="@name"/>_put_slice.f90 ids_schemas_g95.o
@@ -152,10 +152,10 @@ utilities_copy_struct_gfortran.o: utilities_copy_struct.f90 ids_schemas_gfortran
 &#009;$(F90_gfortran) -c $(COPTS_gfortran) $(INCDIR_gfortran) $&lt; -o $@
 
 <xsl:for-each select="IDS">
-<xsl:value-of select="@name"/>_put_gfortran.o: <xsl:value-of select="@name"/>_put.f90 ids_schemas_gfortran.o
+<xsl:value-of select="@name"/>_put_gfortran.o: <xsl:value-of select="@name"/>_put.f90 ids_schemas_gfortran.o <xsl:value-of select="@name"/>_copy_gfortran.o
 &#009;$(F90_gfortran) -c $(COPTS_gfortran) $(INCDIR_gfortran) $&lt; -o $@
 
-<xsl:value-of select="@name"/>_put_non_timed_gfortran.o: <xsl:value-of select="@name"/>_put_non_timed.f90 ids_schemas_gfortran.o
+<xsl:value-of select="@name"/>_put_non_timed_gfortran.o: <xsl:value-of select="@name"/>_put_non_timed.f90 <xsl:value-of select="@name"/>_copy_gfortran.o ids_schemas_gfortran.o
 &#009;$(F90_gfortran) -c $(COPTS_gfortran) $(INCDIR_gfortran) $&lt; -o $@
 
 <xsl:value-of select="@name"/>_put_slice_gfortran.o: <xsl:value-of select="@name"/>_put_slice.f90 ids_schemas_gfortran.o
@@ -194,10 +194,10 @@ utilities_copy_struct_pgi.o: utilities_copy_struct.f90 ids_schemas_pgi.o
 &#009;$(F90_pgi) -c $(COPTS_pgi) $(INCDIR_pgi) $&lt; -o $@
 
 <xsl:for-each select="IDS">
-<xsl:value-of select="@name"/>_put_pgi.o: <xsl:value-of select="@name"/>_put.f90 ids_schemas_pgi.o
+<xsl:value-of select="@name"/>_put_pgi.o: <xsl:value-of select="@name"/>_put.f90 ids_schemas_pgi.o <xsl:value-of select="@name"/>_copy_pgi.o
 &#009;$(F90_pgi) -c $(COPTS_pgi) $(INCDIR_pgi) $&lt; -o $@
 
-<xsl:value-of select="@name"/>_put_non_timed_pgi.o: <xsl:value-of select="@name"/>_put_non_timed.f90 ids_schemas_pgi.o
+<xsl:value-of select="@name"/>_put_non_timed_pgi.o: <xsl:value-of select="@name"/>_put_non_timed.f90 ids_schemas_pgi.o <xsl:value-of select="@name"/>_copy_pgi.o
 &#009;$(F90_pgi) -c $(COPTS_pgi) $(INCDIR_pgi) $&lt; -o $@
 
 <xsl:value-of select="@name"/>_put_slice_pgi.o: <xsl:value-of select="@name"/>_put_slice.f90 ids_schemas_pgi.o
@@ -235,10 +235,10 @@ utilities_copy_struct_ifort.o: utilities_copy_struct.f90 ids_schemas_ifort.o
 &#009;$(F90_ifort) -c $(COPTS_ifort) $(INCDIR_ifort) $&lt; -o $@
 
 <xsl:for-each select="IDS">
-<xsl:value-of select="@name"/>_put_ifort.o: <xsl:value-of select="@name"/>_put.f90 ids_schemas_ifort.o
+<xsl:value-of select="@name"/>_put_ifort.o: <xsl:value-of select="@name"/>_put.f90 ids_schemas_ifort.o <xsl:value-of select="@name"/>_copy_ifort.o
 &#009;$(F90_ifort) -c $(COPTS_ifort) $(INCDIR_ifort) $&lt; -o $@
 
-<xsl:value-of select="@name"/>_put_non_timed_ifort.o: <xsl:value-of select="@name"/>_put_non_timed.f90 ids_schemas_ifort.o
+<xsl:value-of select="@name"/>_put_non_timed_ifort.o: <xsl:value-of select="@name"/>_put_non_timed.f90 ids_schemas_ifort.o <xsl:value-of select="@name"/>_copy_ifort.o
 &#009;$(F90_ifort) -c $(COPTS_ifort) $(INCDIR_ifort) $&lt; -o $@
 
 <xsl:value-of select="@name"/>_put_slice_ifort.o: <xsl:value-of select="@name"/>_put_slice.f90 ids_schemas_ifort.o

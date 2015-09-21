@@ -119,6 +119,7 @@ END FUNCTION isErrorCritical
 subroutine ids_put_<xsl:value-of select="@name"/>(idx, path,  IDS)
 
 use ids_schemas
+use <xsl:value-of select="@name"/>_copy  ! Needed since the _copy module contains the ids_delete routines
 implicit none
 !integer, parameter :: DP=kind(1.0D0)
 integer :: status = 0, retStatus = 0
@@ -283,6 +284,7 @@ END FUNCTION isErrorCritical
 subroutine ids_put_non_timed_<xsl:value-of select="@name"/>(idx, path,  IDS)
 
 use ids_schemas
+use <xsl:value-of select="@name"/>_copy  ! Needed since the _copy module contains the ids_delete routines
 implicit none
 
 character*(*) :: path
