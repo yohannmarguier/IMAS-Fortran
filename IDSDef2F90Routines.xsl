@@ -110,7 +110,21 @@ FUNCTION isErrorCritical(status, fieldPath) RESULT (exitRequest)
 
 END FUNCTION isErrorCritical
 
+subroutine fput_vect1d_double_in_object(idx, obj, path_in_object, index_in_object, variable, variable_name, ual_debug)
 
+use ids_schemas
+implicit none
+real(DP), pointer :: variable(:)
+integer :: idx, obj, index_in_object
+character*(*) :: path_in_object, variable_name
+character(len=3) :: ual_debug
+
+if (associated(variable)) then
+   call put_vect1d_double_in_object(idx, obj, path_in_object, index_in_object, variable, size(variable))
+   if (ual_debug =='yes') write(*,*) 'Put ', trim(variable_name), variable
+endif
+
+end subroutine fput_vect1d_double_in_object
 
 
 <!-- ======================================  PUT ======================================= -->
@@ -5505,13 +5519,10 @@ endif
          <xsl:when test="@data_type='flt_1d_type' or @data_type='FLT_1D'">
 ! Put <xsl:value-of select="@path"/>
 
-if (associated(<xsl:value-of select="$currentidxpath"/>)) then
-   call put_vect1d_double_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:value-of select="$child_index"/>,&amp;
+call fput_vect1d_double_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:value-of select="$child_index"/>,&amp;
    <xsl:value-of select="$currentidxpath"/>,&amp;
-   size(<xsl:value-of select="$currentidxpath"/>))
-   if (ual_debug =='yes') write(*,*) &amp;
-      'Put <xsl:value-of select="$currentidxpath"/>',<xsl:value-of select="$currentidxpath"/>
-endif
+   &quot;<xsl:value-of select="$currentidxpath"/>&quot;,ual_debug)
+
 <!-- -->
          </xsl:when>
          <xsl:when test="@data_type='int_1d_type' or @data_type='INT_1D'">
