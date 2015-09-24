@@ -709,6 +709,18 @@ FUNCTION isErrorCritical(status, fieldPath) RESULT (exitRequest)
 
 END FUNCTION isErrorCritical
 
+
+subroutine copy_flt1d(in, out)
+use ids_schemas
+implicit none
+real(DP), pointer :: in(:), out(:)
+
+if (associated(in)) then
+   allocate(out(size(in)))
+   out = in
+endif
+end subroutine copy_flt1d
+
 <!-- ======================================  DELETE======================================= -->
 !!!!!! Routine to DELETE the IDS
 
@@ -6014,7 +6026,7 @@ endif
           <xsl:with-param name="idxpath" select="$currentidxpath"/>
         </xsl:apply-templates>
 			</xsl:when>
-			<xsl:when test="@data_type='str_type' or @data_type='STR_0D' or @data_type='str_1d_type' or @data_type='STR_1D' or @data_type='flt_1d_type' or @data_type='FLT_1D' or @data_type='int_1d_type' or @data_type='INT_1D' ">
+			<xsl:when test="@data_type='str_type' or @data_type='STR_0D' or @data_type='str_1d_type' or @data_type='STR_1D' or @data_type='int_1d_type' or @data_type='INT_1D' ">
 ! Copy <xsl:value-of select="@path"/>
 if (associated(IDSin<xsl:value-of select="$currentidxpath"/>)) then
    allocate(IDSout<xsl:value-of select="$currentidxpath"/>&amp;
@@ -6022,6 +6034,11 @@ if (associated(IDSin<xsl:value-of select="$currentidxpath"/>)) then
    IDSout<xsl:value-of select="$currentidxpath"/> = &amp;
    IDSin<xsl:value-of select="$currentidxpath"/>
 endif
+<!-- -->
+					</xsl:when>
+			<xsl:when test="@data_type='flt_1d_type' or @data_type='FLT_1D' ">
+! Copy <xsl:value-of select="@path"/>
+call copy_flt1d(IDSin<xsl:value-of select="$currentidxpath"/>, IDSout<xsl:value-of select="$currentidxpath"/>)
 <!-- -->
 					</xsl:when>
 					<xsl:when test="@data_type='int_type' or @data_type='INT_0D'">
