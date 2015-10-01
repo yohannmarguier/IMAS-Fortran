@@ -43,35 +43,6 @@ allocate(time(lentime))
 call get_vect1d_double(idx,path,"time",time,lentime,dum1,status)
 
 end subroutine
-
-subroutine fput_vect1d_double_in_object(idx, obj, path_in_object, index_in_object, variable, variable_name, ual_debug)
-
-use ids_schemas
-implicit none
-real(DP), pointer :: variable(:)
-integer :: idx, obj, index_in_object
-character*(*) :: path_in_object, variable_name
-character(len=3) :: ual_debug
-
-if (associated(variable)) then
-   call put_vect1d_double_in_object(idx, obj, path_in_object, index_in_object, variable, size(variable))
-   if (ual_debug =='yes') write(*,*) 'Put ', trim(variable_name), variable
-endif
-
-end subroutine fput_vect1d_double_in_object
-
-subroutine copy_flt1d(in, out)
-use ids_schemas
-implicit none
-real(DP), pointer :: in(:), out(:)
-
-if (associated(in)) then
-   allocate(out(size(in)))
-   out = in
-endif
-end subroutine copy_flt1d
-
-
 end module
 </xsl:result-document>
 <xsl:apply-templates select="IDS" mode="main"/>
@@ -139,6 +110,21 @@ FUNCTION isErrorCritical(status, fieldPath) RESULT (exitRequest)
 
 END FUNCTION isErrorCritical
 
+subroutine fput_vect1d_double_in_object(idx, obj, path_in_object, index_in_object, variable, variable_name, ual_debug)
+
+use ids_schemas
+implicit none
+real(DP), pointer :: variable(:)
+integer :: idx, obj, index_in_object
+character*(*) :: path_in_object, variable_name
+character(len=3) :: ual_debug
+
+if (associated(variable)) then
+   call put_vect1d_double_in_object(idx, obj, path_in_object, index_in_object, variable, size(variable))
+   if (ual_debug =='yes') write(*,*) 'Put ', trim(variable_name), variable
+endif
+
+end subroutine fput_vect1d_double_in_object
 
 
 <!-- ======================================  PUT ======================================= -->
@@ -147,8 +133,7 @@ END FUNCTION isErrorCritical
 subroutine ids_put_<xsl:value-of select="@name"/>(idx, path,  IDS)
 
 use ids_schemas
-use ids_routines
-!use <xsl:value-of select="@name"/>_copy  ! Needed since the _copy module contains the ids_delete routines
+use <xsl:value-of select="@name"/>_copy  ! Needed since the _copy module contains the ids_delete routines
 implicit none
 !integer, parameter :: DP=kind(1.0D0)
 integer :: status = 0, retStatus = 0
@@ -406,6 +391,21 @@ FUNCTION isErrorCritical(status, fieldPath) RESULT (exitRequest)
 END FUNCTION isErrorCritical
 
 
+subroutine fput_vect1d_double_in_object(idx, obj, path_in_object, index_in_object, variable, variable_name, ual_debug)
+
+use ids_schemas
+implicit none
+real(DP), pointer :: variable(:)
+integer :: idx, obj, index_in_object
+character*(*) :: path_in_object, variable_name
+character(len=3) :: ual_debug
+
+if (associated(variable)) then
+   call put_vect1d_double_in_object(idx, obj, path_in_object, index_in_object, variable, size(variable))
+   if (ual_debug =='yes') write(*,*) 'Put ', trim(variable_name), variable
+endif
+
+end subroutine fput_vect1d_double_in_object
 
 
 
@@ -725,6 +725,16 @@ FUNCTION isErrorCritical(status, fieldPath) RESULT (exitRequest)
 END FUNCTION isErrorCritical
 
 
+subroutine copy_flt1d(in, out)
+use ids_schemas
+implicit none
+real(DP), pointer :: in(:), out(:)
+
+if (associated(in)) then
+   allocate(out(size(in)))
+   out = in
+endif
+end subroutine copy_flt1d
 
 <!-- ======================================  DELETE======================================= -->
 !!!!!! Routine to DELETE the IDS
@@ -774,7 +784,6 @@ subroutine ids_copy_<xsl:value-of select="@name"/>(IDSin,  IDSout)
 ! Copies all fields of IDSin to IDSout
 
 use ids_schemas
-use ids_routines
 implicit none
 !integer, parameter :: DP=kind(1.0D0)
 
