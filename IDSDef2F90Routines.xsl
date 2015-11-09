@@ -2,23 +2,30 @@
 <?modxslt-stylesheet type="text/xsl" media="fuffa, screen and $GET[stylesheet]" href="./%24GET%5Bstylesheet%5D" alternate="no" title="Translation using provided stylesheet" charset="ISO-8859-1" ?>
 <?modxslt-stylesheet type="text/xsl" media="screen" alternate="no" title="Show raw source of the XML file" charset="ISO-8859-1" ?>
 <xsl:stylesheet xmlns:yaslt="http://www.mod-xslt2.com/ns/2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:xs="http://www.w3.org/2001/XMLSchema" version="2.0" extension-element-prefixes="yaslt" xmlns:fn="http://www.w3.org/2005/02/xpath-functions" xmlns:local="http://www.example.com/functions/local" exclude-result-prefixes="local xs">
-	<xsl:output method="text" version="1.0" encoding="UTF-8" indent="yes"/>
-	<!-- This XSL translates the list of ITM IDSDefs to Fortran 90 GET/PUT Routines for IDSs -->
-	<xsl:template match="/IDSs">
+<xsl:output method="text" version="1.0" encoding="UTF-8" indent="yes"/>	<!-- This XSL translates the list of ITM IDSDefs to Fortran 90 GET/PUT Routines for IDSs -->
+
+<xsl:function name="local:unique_name" as="xs:string">
+<!-- Provides unique 12 characters reference to arbitrary long field name  -->
+<xsl:param name="FullName" as="xs:string"/>
+<xsl:variable name="result" as="xs:string" select="concat(lower-case(substring($FullName,1,8)), sum(string-to-codepoints(lower-case(substring($FullName,9)))))"/>
+<xsl:value-of select="$result"/>
+</xsl:function>
+
+<xsl:template match="/IDSs">
  <xsl:result-document href="ids_routines.f90">
 module ids_routines
 
 use ids_schemas
-use utilities_copy_struct
+use <xsl:value-of select="local:unique_name('utilities')"/>_copy_struct
 
 <xsl:for-each select="IDS">
-use <xsl:value-of select="@name"/>_ids_module_put
-use <xsl:value-of select="@name"/>_ids_module_put_slice
-use <xsl:value-of select="@name"/>_ids_module_put_non_timed
-use <xsl:value-of select="@name"/>_ids_module_get
-use <xsl:value-of select="@name"/>_ids_module_get_slice
-use <xsl:value-of select="@name"/>_copy
-use <xsl:value-of select="@name"/>_copy_struct
+use <xsl:value-of select="local:unique_name(@name)"/>_ids_module_put
+use <xsl:value-of select="local:unique_name(@name)"/>_ids_module_put_slice
+use <xsl:value-of select="local:unique_name(@name)"/>_ids_module_put_non_timed
+use <xsl:value-of select="local:unique_name(@name)"/>_ids_module_get
+use <xsl:value-of select="local:unique_name(@name)"/>_ids_module_get_slice
+use <xsl:value-of select="local:unique_name(@name)"/>_copy
+use <xsl:value-of select="local:unique_name(@name)"/>_copy_struct
 </xsl:for-each>
 
 
@@ -52,11 +59,11 @@ end module
  <xsl:template match="IDS" mode="main">
 
   <xsl:result-document href="{@name}_put.f90">
-module <xsl:value-of select="@name"/>_ids_module_put
+module <xsl:value-of select="local:unique_name(@name)"/>_ids_module_put
 
 ! Declaration of the generic IDS PUT routine
 interface ids_put
-   module procedure ids_put_<xsl:value-of select="@name"/>
+   module procedure ids_put_<xsl:value-of select="local:unique_name(@name)"/>
 end interface ids_put
 
 
@@ -130,10 +137,10 @@ end subroutine fput_vect1d_double_in_object
 <!-- ======================================  PUT ======================================= -->
 
 !!!!!! Routines to PUT the full IDS
-subroutine ids_put_<xsl:value-of select="@name"/>(idx, path,  IDS)
+subroutine ids_put_<xsl:value-of select="local:unique_name(@name)"/>(idx, path,  IDS)
 
 use ids_schemas
-use <xsl:value-of select="@name"/>_copy  ! Needed since the _copy module contains the ids_delete routines
+use <xsl:value-of select="local:unique_name(@name)"/>_copy  ! Needed since the _copy module contains the ids_delete routines
 implicit none
 !integer, parameter :: DP=kind(1.0D0)
 integer :: status = 0, retStatus = 0
@@ -185,7 +192,7 @@ call begin_ids_put(idx, path)
 call end_ids_put(idx, path)
 
 return
-end subroutine ids_put_<xsl:value-of select="@name"/>
+end subroutine ids_put_<xsl:value-of select="local:unique_name(@name)"/>
 
 
 <!--
@@ -236,18 +243,18 @@ if (ual_debug =='yes') write(*,*) 'Discarding IDS ',IDSpath
 if (ual_debug =='yes') write(*,*) 'Discarding IDS ',IDSpath,' done'
 end subroutine ids_discard_<xsl:value-of select="@name"/>-->
 
-end module <xsl:value-of select="@name"/>_ids_module_put
+end module <xsl:value-of select="local:unique_name(@name)"/>_ids_module_put
 </xsl:result-document>
 
 
 
 <xsl:result-document href="{@name}_put_non_timed.f90">
-module <xsl:value-of select="@name"/>_ids_module_put_non_timed
+module <xsl:value-of select="local:unique_name(@name)"/>_ids_module_put_non_timed
 
 
 ! Declaration of the generic IDS PUT_NON_TIMED routine
 interface ids_put_non_timed
-   module procedure ids_put_non_timed_<xsl:value-of select="@name"/>
+   module procedure ids_put_non_timed_<xsl:value-of select="local:unique_name(@name)"/>
 end interface ids_put_non_timed
 
 
@@ -295,10 +302,10 @@ END FUNCTION isErrorCritical
 
 !!!!!! Routines to PUT_NON_TIMED the time INdependent data of time dependent IDSs
 
-subroutine ids_put_non_timed_<xsl:value-of select="@name"/>(idx, path,  IDS)
+subroutine ids_put_non_timed_<xsl:value-of select="local:unique_name(@name)"/>(idx, path,  IDS)
 
 use ids_schemas
-use <xsl:value-of select="@name"/>_copy  ! Needed since the _copy module contains the ids_delete routines
+use <xsl:value-of select="local:unique_name(@name)"/>_copy  ! Needed since the _copy module contains the ids_delete routines
 implicit none
 
 character*(*) :: path
@@ -333,22 +340,22 @@ call begin_IDS_put_non_timed(idx, path)
 call end_IDS_put_non_timed(idx, path)
 
 return
-end subroutine ids_put_non_timed_<xsl:value-of select="@name"/>
+end subroutine ids_put_non_timed_<xsl:value-of select="local:unique_name(@name)"/>
 
 
 
 
-end module <xsl:value-of select="@name"/>_ids_module_put_non_timed
+end module <xsl:value-of select="local:unique_name(@name)"/>_ids_module_put_non_timed
 </xsl:result-document>
 
 
 <xsl:result-document href="{@name}_put_slice.f90">
-module <xsl:value-of select="@name"/>_ids_module_put_slice
+module <xsl:value-of select="local:unique_name(@name)"/>_ids_module_put_slice
 
 <xsl:if test=".//field[@type='dynamic']"> <!-- Procedure put_slice should exist only for time-dependent IDSs -->
 ! Declaration of the generic IDS PUT_SLICE routine
 interface ids_put_slice
-   module procedure ids_put_slice_<xsl:value-of select="@name"/>
+   module procedure ids_put_slice_<xsl:value-of select="local:unique_name(@name)"/>
 end interface ids_put_slice
 </xsl:if >
 
@@ -415,7 +422,7 @@ end subroutine fput_vect1d_double_in_object
 <xsl:if test=".//field[@type='dynamic']"> <!-- Procedure put_slice should exist only for time-dependent IDSs -->
 !!!!!! Routines to PUT_SLICE one time slice of a time-dependent IDS (affects only time-dependent fields)
 
-subroutine ids_put_slice_<xsl:value-of select="@name"/>(idx,path,IDS)
+subroutine ids_put_slice_<xsl:value-of select="local:unique_name(@name)"/>(idx,path,IDS)
 
 use ids_schemas
 implicit none
@@ -464,23 +471,23 @@ call end_IDS_put_slice(idx, path)
 
 
 return
-end subroutine ids_put_slice_<xsl:value-of select="@name"/>
+end subroutine ids_put_slice_<xsl:value-of select="local:unique_name(@name)"/>
 </xsl:if>
 
 
 
-end module <xsl:value-of select="@name"/>_ids_module_put_slice
+end module <xsl:value-of select="local:unique_name(@name)"/>_ids_module_put_slice
 </xsl:result-document>
 
 
 
 
   <xsl:result-document href="{@name}_get.f90">
-module <xsl:value-of select="@name"/>_ids_module_get
+module <xsl:value-of select="local:unique_name(@name)"/>_ids_module_get
 ! Declaration of the generic IDS GET routine
 
 interface ids_get
-   module procedure ids_get_<xsl:value-of select="@name"/>
+   module procedure ids_get_<xsl:value-of select="local:unique_name(@name)"/>
 end interface ids_get
 
 
@@ -526,7 +533,7 @@ END FUNCTION isErrorCritical
 <!-- ======================================  GET ======================================= -->
 
 !!!!!! Routines to GET the full IDS
-subroutine ids_get_<xsl:value-of select="@name"/>(idx,path,  IDS)
+subroutine ids_get_<xsl:value-of select="local:unique_name(@name)"/>(idx,path,  IDS)
 
 use ids_schemas
 implicit none
@@ -559,20 +566,20 @@ call begin_IDS_get(idx, path,0,dum1)
 call end_IDS_get(idx, path)
 
 return
-end subroutine ids_get_<xsl:value-of select="@name"/>
+end subroutine ids_get_<xsl:value-of select="local:unique_name(@name)"/>
 
 
 
-end module <xsl:value-of select="@name"/>_ids_module_get
+end module <xsl:value-of select="local:unique_name(@name)"/>_ids_module_get
 </xsl:result-document>
 
 
 <xsl:result-document href="{@name}_get_slice.f90">
-module <xsl:value-of select="@name"/>_ids_module_get_slice
+module <xsl:value-of select="local:unique_name(@name)"/>_ids_module_get_slice
 
 ! Declaration of the generic IDS GET_SLICE routine
 interface ids_get_slice
-   module procedure  ids_get_slice_<xsl:value-of select="@name"/>
+   module procedure  ids_get_slice_<xsl:value-of select="local:unique_name(@name)"/>
 end interface ids_get_slice
 
 
@@ -619,7 +626,7 @@ END FUNCTION isErrorCritical
 <!-- ======================================  GET SLICE ======================================= -->
 
 !!!!!! Routines to GET one time slice of a IDS, with time interpolation -->
-subroutine ids_get_slice_<xsl:value-of select="@name"/>(idx,path,  IDS, twant, interpol)
+subroutine ids_get_slice_<xsl:value-of select="local:unique_name(@name)"/>(idx,path,  IDS, twant, interpol)
 
 use ids_schemas
 implicit none
@@ -658,29 +665,29 @@ endif
 call end_IDS_Get_Slice(idx,path)
 
 return
-end subroutine ids_GET_SLICE_<xsl:value-of select="@name"/>
+end subroutine ids_GET_SLICE_<xsl:value-of select="local:unique_name(@name)"/>
 
-end module <xsl:value-of select="@name"/>_ids_module_get_slice
+end module <xsl:value-of select="local:unique_name(@name)"/>_ids_module_get_slice
 </xsl:result-document>
 
 
 
 <xsl:result-document href="{@name}_copy.f90">
-module <xsl:value-of select="@name"/>_copy
+module <xsl:value-of select="local:unique_name(@name)"/>_copy
 ! Declaration of the generic IDS DELETE routine
 interface ids_delete
-   module procedure ids_delete_<xsl:value-of select="@name"/>
+   module procedure ids_delete_<xsl:value-of select="local:unique_name(@name)"/>
 end interface ids_delete
 
 ! Declaration of the generic IDS DEALLOCATE routine
 interface ids_deallocate
-   module procedure ids_deallocate_<xsl:value-of select="@name"/>
+   module procedure ids_deallocate_<xsl:value-of select="local:unique_name(@name)"/>
 end interface ids_deallocate
 
 
 ! Declaration of the generic IDS COPY routine
 interface ids_copy
-   module procedure ids_copy_<xsl:value-of select="@name"/>
+   module procedure ids_copy_<xsl:value-of select="local:unique_name(@name)"/>
 end interface ids_copy
 
 
@@ -739,7 +746,7 @@ end subroutine copy_flt1d
 <!-- ======================================  DELETE======================================= -->
 !!!!!! Routine to DELETE the IDS
 
-subroutine ids_delete_<xsl:value-of select="@name"/>(idx,IDSpath,IDS)  <!-- systematic calls to the low level delete_data routine. The IDS input argument is added just for the interface to identify the relevant IDS type -->
+subroutine ids_delete_<xsl:value-of select="local:unique_name(@name)"/>(idx,IDSpath,IDS)  <!-- systematic calls to the low level delete_data routine. The IDS input argument is added just for the interface to identify the relevant IDS type -->
 
 use ids_schemas
 implicit none
@@ -755,14 +762,14 @@ call getenv('ual_debug',ual_debug) ! Debug flag
 if (ual_debug =='yes') write(*,*) 'Deleting IDS ',IDSpath
 <xsl:apply-templates select="field" mode="DELETE"/>
 if (ual_debug =='yes') write(*,*) 'Delete IDS ',IDSpath,' done'
-end subroutine ids_delete_<xsl:value-of select="@name"/>
+end subroutine ids_delete_<xsl:value-of select="local:unique_name(@name)"/>
 
 
 
 <!-- ======================================  DEALLOCATE ======================================= -->
 !!!!!! Routines to DEALLOCATE IDSs
 
-subroutine ids_deallocate_<xsl:value-of select="@name"/>(IDS)
+subroutine ids_deallocate_<xsl:value-of select="local:unique_name(@name)"/>(IDS)
 
 use ids_schemas
 implicit none
@@ -776,11 +783,11 @@ type(ids_<xsl:value-of select="@name"/>) :: IDS
     </xsl:apply-templates>
 
 if (ual_debug =='yes') write(*,*) 'Deallocate an <xsl:value-of select="@name"/> IDS : done'
-end subroutine ids_deallocate_<xsl:value-of select="@name"/>
+end subroutine ids_deallocate_<xsl:value-of select="local:unique_name(@name)"/>
 
 
 !!!!!! Routines to COPY IDSs
-subroutine ids_copy_<xsl:value-of select="@name"/>(IDSin,  IDSout)
+subroutine ids_copy_<xsl:value-of select="local:unique_name(@name)"/>(IDSin,  IDSout)
 ! Copies all fields of IDSin to IDSout
 
 use ids_schemas
@@ -800,11 +807,11 @@ call getenv('ual_debug',ual_debug) ! Debug flag
       </xsl:apply-templates>
 
 return
-end subroutine ids_copy_<xsl:value-of select="@name"/>
+end subroutine ids_copy_<xsl:value-of select="local:unique_name(@name)"/>
 
 
 
-end module <xsl:value-of select="@name"/>_copy
+end module <xsl:value-of select="local:unique_name(@name)"/>_copy
 </xsl:result-document>
 </xsl:template>
 
