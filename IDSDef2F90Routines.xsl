@@ -166,7 +166,7 @@ character(len=300) :: timepath
 integer :: obj_all_times,obj1,obj2,obj3,obj4,obj5,obj6,obj7
 integer :: i1,i2,i3,i4,i5,i6,i7
 <xsl:for-each select=".//field[@data_type='struct_array' and @maxoccur!='unbounded']">
-integer :: i<xsl:value-of select="@name"/>
+integer :: i<xsl:value-of select="concat(@name,generate-id(.))"/>
 </xsl:for-each>
 
 call getenv('ual_debug',ual_debug) ! Debug flag
@@ -234,7 +234,7 @@ integer :: idx
 
 type(ids_<xsl:value-of select="@name"/>) :: IDS
 <xsl:for-each select=".//field[@data_type='struct_array' and @maxoccur!='unbounded']">
-integer :: i<xsl:value-of select="@name"/>
+integer :: i<xsl:value-of select="concat(@name,generate-id(.))"/>
 </xsl:for-each>
 
 call getenv('ual_debug',ual_debug) ! Debug flag
@@ -318,7 +318,7 @@ character(len=300) :: timepath
 integer :: obj1,obj2,obj3,obj4,obj5,obj6,obj7
 integer :: i1,i2,i3,i4,i5,i6,i7
 <xsl:for-each select=".//field[@data_type='struct_array' and @maxoccur!='unbounded']">
-integer :: i<xsl:value-of select="@name"/>
+integer :: i<xsl:value-of select="concat(@name,generate-id(.))"/>
 </xsl:for-each>
 
 type(ids_<xsl:value-of select="@name"/>) :: IDS       ! real declaration of the IDS for the put
@@ -448,7 +448,7 @@ character(len=300)::timepath
 integer :: obj_single_time,obj1,obj2,obj3,obj4,obj5,obj6,obj7
 integer :: i1,i2,i3,i4,i5,i6,i7
 <xsl:for-each select=".//field[@data_type='struct_array' and @maxoccur!='unbounded']">
-integer :: i<xsl:value-of select="@name"/>
+integer :: i<xsl:value-of select="concat(@name,generate-id(.))"/>
 </xsl:for-each>
 
 call getenv('ual_debug',ual_debug) ! Debug flag
@@ -550,7 +550,7 @@ integer :: obj_all_times,obj1,obj2,obj3,obj4,obj5,obj6,obj7
 integer :: dimObj0,dimObj1,dimObj2,dimObj3,dimObj4,dimObj5,dimObj6,dimObj7
 integer :: i1,i2,i3,i4,i5,i6,i7
 <xsl:for-each select=".//field[@data_type='struct_array' and @maxoccur!='unbounded']">
-integer :: i<xsl:value-of select="@name"/>
+integer :: i<xsl:value-of select="concat(@name,generate-id(.))"/>
 </xsl:for-each>
 
 integer :: int0d
@@ -648,7 +648,7 @@ integer :: obj_single_time,obj1,obj2,obj3,obj4,obj5,obj6,obj7
 integer :: dimObj1,dimObj2,dimObj3,dimObj4,dimObj5,dimObj6,dimObj7
 integer :: i1,i2,i3,i4,i5,i6,i7
 <xsl:for-each select=".//field[@data_type='struct_array' and @maxoccur!='unbounded']">
-integer :: i<xsl:value-of select="@name"/>
+integer :: i<xsl:value-of select="concat(@name,generate-id(.))"/>
 </xsl:for-each>
 
 type(ids_<xsl:value-of select="@name"/>) :: IDS
@@ -755,7 +755,7 @@ integer :: idx
 
 type(ids_<xsl:value-of select="@name"/>) :: IDS
 <xsl:for-each select=".//field[@data_type='struct_array' and @maxoccur!='unbounded']">
-integer :: i<xsl:value-of select="@name"/>
+integer :: i<xsl:value-of select="concat(@name,generate-id(.))"/>
 </xsl:for-each>
 
 call getenv('ual_debug',ual_debug) ! Debug flag
@@ -2582,10 +2582,10 @@ endif
 if (associated(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>)) then
    call put_int(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>/Shape_of&quot;,&amp;
        size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>), status)
-   do i<xsl:value-of select = "@name"/> = 1,size(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>)
+   do i<xsl:value-of select = "concat(@name,generate-id(.))"/> = 1,size(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>)
       <xsl:apply-templates select = "field" mode = "PUT_SINGLE">
-<xsl:with-param name ="variable_path" select="concat($variable_path,'%',@name,'(i',@name,')')"/>
-<xsl:with-param name="mds_path" select="concat($mds_path,'//','&quot;/',@name,'/&quot;//trim(int2str(i',@name,'))')"/>
+<xsl:with-param name ="variable_path" select="concat($variable_path,'%',@name,'(i',@name,generate-id(.),')')"/>
+<xsl:with-param name="mds_path" select="concat($mds_path,'//','&quot;/',@name,'/&quot;//trim(int2str(i',@name,generate-id(.),'))')"/>
 <xsl:with-param name="non_timed" select="$non_timed"/>
 </xsl:apply-templates>
    enddo
@@ -2599,10 +2599,10 @@ if (associated(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)) then
         <xsl:with-param name="method" select="'put'"/>
    </xsl:call-template>
 
-   do i<xsl:value-of select = "@name"/> = 1,size(IDS%<xsl:value-of select = "@name"/>)
+   do i<xsl:value-of select = "concat(@name,generate-id(.))"/> = 1,size(IDS%<xsl:value-of select = "@name"/>)
       <xsl:apply-templates select = "field" mode = "PUT_SINGLE">
-<xsl:with-param name ="variable_path" select="concat(@name,'(i',@name,')')"/>
-<xsl:with-param name="mds_path" select="concat('&quot;',@name,'/&quot;//trim(int2str(i',@name,'))')"/>
+<xsl:with-param name ="variable_path" select="concat(@name,'(i',@name,generate-id(.),')')"/>
+<xsl:with-param name="mds_path" select="concat('&quot;',@name,'/&quot;//trim(int2str(i',@name,generate-id(.),'))')"/>
 <xsl:with-param name="non_timed" select="$non_timed"/>
 
 </xsl:apply-templates>
@@ -3720,10 +3720,10 @@ if (associated(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>))
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
    </xsl:call-template>
-   do i<xsl:value-of select = "@name"/> = 1,size(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>)
+   do i<xsl:value-of select = "concat(@name,generate-id(.))"/> = 1,size(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>)
       <xsl:apply-templates select = "field" mode = "PUT_SLICE">
-<xsl:with-param name ="variable_path" select="concat($variable_path,'%',@name,'(i',@name,')')"/>
-<xsl:with-param name="mds_path" select="concat($mds_path,'//','&quot;/',@name,'/&quot;//trim(int2str(i',@name,'))')"/>
+<xsl:with-param name ="variable_path" select="concat($variable_path,'%',@name,'(i',@name,generate-id(.),')')"/>
+<xsl:with-param name="mds_path" select="concat($mds_path,'//','&quot;/',@name,'/&quot;//trim(int2str(i',@name,generate-id(.),'))')"/>
 </xsl:apply-templates>
    enddo
 endif
@@ -3735,10 +3735,10 @@ if (associated(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)) then
      <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
    </xsl:call-template>
-   do i<xsl:value-of select = "@name"/> = 1,size(IDS%<xsl:value-of select = "@name"/>)
+   do i<xsl:value-of select = "concat(@name,generate-id(.))"/> = 1,size(IDS%<xsl:value-of select = "@name"/>)
       <xsl:apply-templates select = "field" mode = "PUT_SLICE">
-<xsl:with-param name ="variable_path" select="concat(@name,'(i',@name,')')"/>
-<xsl:with-param name="mds_path" select="concat('&quot;',@name,'/&quot;//trim(int2str(i',@name,'))')"/>
+<xsl:with-param name ="variable_path" select="concat(@name,'(i',@name,generate-id(.),')')"/>
+<xsl:with-param name="mds_path" select="concat('&quot;',@name,'/&quot;//trim(int2str(i',@name,generate-id(.),'))')"/>
 </xsl:apply-templates>
    enddo
 endif
@@ -4258,10 +4258,10 @@ endif
 call get_int(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>/Shape_of&quot;,int0d,status)
 if (status.EQ.0) then
    allocate(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>(int0d))
-   do i<xsl:value-of select = "@name"/> = 1,size(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>)
+   do i<xsl:value-of select = "concat(@name,generate-id(.))"/> = 1,size(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>)
       <xsl:apply-templates select = "field" mode = "GET_SINGLE">
-<xsl:with-param name ="variable_path" select="concat($variable_path,'%',@name,'(i',@name,')')"/>
-<xsl:with-param name="mds_path" select="concat($mds_path,'//','&quot;/',@name,'/&quot;//trim(int2str(i',@name,'))')"/>
+<xsl:with-param name ="variable_path" select="concat($variable_path,'%',@name,'(i',@name,generate-id(.),')')"/>
+<xsl:with-param name="mds_path" select="concat($mds_path,'//','&quot;/',@name,'/&quot;//trim(int2str(i',@name,generate-id(.),'))')"/>
 </xsl:apply-templates>
    enddo
 endif
@@ -4270,10 +4270,10 @@ endif
 call get_int(idx,path, &quot;<xsl:value-of select="@name"/>/Shape_of&quot;,int0d,status)
 if (status.EQ.0) then
    allocate(IDS%<xsl:value-of select = "@name"/>(int0d))
-   do i<xsl:value-of select = "@name"/> = 1,size(IDS%<xsl:value-of select = "@name"/>)
+   do i<xsl:value-of select = "concat(@name,generate-id(.))"/> = 1,size(IDS%<xsl:value-of select = "@name"/>)
       <xsl:apply-templates select = "field" mode = "GET_SINGLE">
-<xsl:with-param name ="variable_path" select="concat(@name,'(i',@name,')')"/>
-<xsl:with-param name="mds_path" select="concat('&quot;',@name,'/&quot;//trim(int2str(i',@name,'))')"/>
+<xsl:with-param name ="variable_path" select="concat(@name,'(i',@name,generate-id(.),')')"/>
+<xsl:with-param name="mds_path" select="concat('&quot;',@name,'/&quot;//trim(int2str(i',@name,generate-id(.),'))')"/>
 </xsl:apply-templates>
    enddo
 endif
@@ -4773,10 +4773,10 @@ endif
 call get_int(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>/Shape_of&quot;,int0d,status)
 if (status.EQ.0) then
    allocate(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>(int0d))
-   do i<xsl:value-of select = "@name"/> = 1,size(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>)
+   do i<xsl:value-of select = "concat(@name,generate-id(.))"/> = 1,size(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>)
       <xsl:apply-templates select = "field" mode = "GET_SLICE">
-<xsl:with-param name ="variable_path" select="concat($variable_path,'%',@name,'(i',@name,')')"/>
-<xsl:with-param name="mds_path" select="concat($mds_path,'//','&quot;/',@name,'/&quot;//trim(int2str(i',@name,'))')"/>
+<xsl:with-param name ="variable_path" select="concat($variable_path,'%',@name,'(i',@name,generate-id(.),')')"/>
+<xsl:with-param name="mds_path" select="concat($mds_path,'//','&quot;/',@name,'/&quot;//trim(int2str(i',@name,generate-id(.),'))')"/>
 </xsl:apply-templates>
    enddo
 endif
@@ -4785,10 +4785,10 @@ endif
 call get_int(idx,path, &quot;<xsl:value-of select="@name"/>/Shape_of&quot;,int0d,status)
 if (status.EQ.0) then
    allocate(IDS%<xsl:value-of select = "@name"/>(int0d))
-   do i<xsl:value-of select = "@name"/> = 1,size(IDS%<xsl:value-of select = "@name"/>)
+   do i<xsl:value-of select = "concat(@name,generate-id(.))"/> = 1,size(IDS%<xsl:value-of select = "@name"/>)
       <xsl:apply-templates select = "field" mode = "GET_SLICE">
-<xsl:with-param name ="variable_path" select="concat(@name,'(i',@name,')')"/>
-<xsl:with-param name="mds_path" select="concat('&quot;',@name,'/&quot;//trim(int2str(i',@name,'))')"/>
+<xsl:with-param name ="variable_path" select="concat(@name,'(i',@name,generate-id(.),')')"/>
+<xsl:with-param name="mds_path" select="concat('&quot;',@name,'/&quot;//trim(int2str(i',@name,generate-id(.),'))')"/>
 </xsl:apply-templates>
    enddo
 endif
@@ -5699,18 +5699,18 @@ endif
 <xsl:when test="@data_type='struct_array' and @maxoccur!='unbounded'">
    <xsl:choose>
    <xsl:when test="$mds_path">
-do i<xsl:value-of select = "@name"/> = 1,<xsl:value-of select = "@maxoccur"/>
+do i<xsl:value-of select = "concat(@name,generate-id(.))"/> = 1,<xsl:value-of select = "@maxoccur"/>
 <xsl:apply-templates select = "field" mode = "DELETE">
-<xsl:with-param name ="variable_path" select="concat($variable_path,'%',@name,'(i',@name,')')"/>
-<xsl:with-param name="mds_path" select="concat($mds_path,'//','&quot;/',@name,'/&quot;//trim(int2str(i',@name,'))')"/>
+<xsl:with-param name ="variable_path" select="concat($variable_path,'%',@name,'(i',@name,generate-id(.),')')"/>
+<xsl:with-param name="mds_path" select="concat($mds_path,'//','&quot;/',@name,'/&quot;//trim(int2str(i',@name,generate-id(.),'))')"/>
 </xsl:apply-templates>
 enddo
    </xsl:when>
    <xsl:otherwise>
-do i<xsl:value-of select = "@name"/> = 1,<xsl:value-of select = "@maxoccur"/>
+do i<xsl:value-of select = "concat(@name,generate-id(.))"/> = 1,<xsl:value-of select = "@maxoccur"/>
       <xsl:apply-templates select = "field" mode = "DELETE">
-<xsl:with-param name ="variable_path" select="concat(@name,'(i',@name,')')"/>
-<xsl:with-param name="mds_path" select="concat('&quot;/',@name,'/&quot;//trim(int2str(i',@name,'))')"/>
+<xsl:with-param name ="variable_path" select="concat(@name,'(i',@name,generate-id(.),')')"/>
+<xsl:with-param name="mds_path" select="concat('&quot;/',@name,'/&quot;//trim(int2str(i',@name,generate-id(.),'))')"/>
 </xsl:apply-templates>
 enddo
    </xsl:otherwise>
@@ -6439,18 +6439,18 @@ call ids_flush_cache(idx,IDSpath,"<xsl:value-of select="@path"/>")         <!-- 
 <xsl:when test="@data_type='struct_array'">
    <xsl:choose>
    <xsl:when test="$mds_path">
-do i<xsl:value-of select = "@name"/> = 1,<xsl:value-of select = "@maxoccur"/>
+do i<xsl:value-of select = "concat(@name,generate-id(.))"/> = 1,<xsl:value-of select = "@maxoccur"/>
 <xsl:apply-templates select = "field" mode = "DISCARD_CACHE">
-<xsl:with-param name ="variable_path" select="concat($variable_path,'%',@name,'(i',@name,')')"/>
-<xsl:with-param name="mds_path" select="concat($mds_path,'//','&quot;/',@name,'/&quot;//trim(int2str(i',@name,'))')"/>
+<xsl:with-param name ="variable_path" select="concat($variable_path,'%',@name,'(i',@name,generate-id(.),')')"/>
+<xsl:with-param name="mds_path" select="concat($mds_path,'//','&quot;/',@name,'/&quot;//trim(int2str(i',@name,generate-id(.),'))')"/>
 </xsl:apply-templates>
 enddo
    </xsl:when>
    <xsl:otherwise>
-do i<xsl:value-of select = "@name"/> = 1,<xsl:value-of select = "@maxoccur"/>
+do i<xsl:value-of select = "concat(@name,generate-id(.))"/> = 1,<xsl:value-of select = "@maxoccur"/>
       <xsl:apply-templates select = "field" mode = "DISCARD_CACHE">
-<xsl:with-param name ="variable_path" select="concat(@name,'(i',@name,')')"/>
-<xsl:with-param name="mds_path" select="concat('&quot;/',@name,'/&quot;//trim(int2str(i',@name,'))')"/>
+<xsl:with-param name ="variable_path" select="concat(@name,'(i',@name,generate-id(.),')')"/>
+<xsl:with-param name="mds_path" select="concat('&quot;/',@name,'/&quot;//trim(int2str(i',@name,generate-id(.),'))')"/>
 </xsl:apply-templates>
 enddo
    </xsl:otherwise>
