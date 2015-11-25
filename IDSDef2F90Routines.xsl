@@ -17,6 +17,7 @@ module ids_routines
 
 use ids_schemas
 use <xsl:value-of select="local:unique_name('utilities')"/>_copy_struct
+use <xsl:value-of select="local:unique_name('utilities')"/>_deallocate_struct
 
 <xsl:for-each select="IDS">
 use <xsl:value-of select="local:unique_name(@name)"/>_ids_module_put
@@ -26,6 +27,7 @@ use <xsl:value-of select="local:unique_name(@name)"/>_ids_module_get
 use <xsl:value-of select="local:unique_name(@name)"/>_ids_module_get_slice
 use <xsl:value-of select="local:unique_name(@name)"/>_copy
 use <xsl:value-of select="local:unique_name(@name)"/>_copy_struct
+use <xsl:value-of select="local:unique_name(@name)"/>_deallocate_struct
 </xsl:for-each>
 
 

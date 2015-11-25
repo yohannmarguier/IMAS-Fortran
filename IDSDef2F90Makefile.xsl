@@ -89,17 +89,17 @@ clean:
 &#009;rm -rf *.o *.mod  *.so *~ g95/ gfortran/ pgi/ ifort/ *.a
 
 clean-src: clean
-&#009;rm -f ids_schemas.f90 ids_routines.f90 *_copy_struct.f90 <xsl:for-each select="IDS"> <xsl:value-of select="@name"/>.f90 </xsl:for-each>
+&#009;rm -f ids_schemas.f90 ids_routines.f90 *_copy_struct.f90 *_deallocate_struct.f90 <xsl:for-each select="IDS"> <xsl:value-of select="@name"/>.f90 </xsl:for-each>
 
 
 #--------------------- g95 --------------
-libimas-g95.so: ids_schemas_g95.o utilities_copy_struct_g95.o <xsl:for-each select="IDS"> <xsl:value-of select="@name"/>_put_g95.o <xsl:value-of select="@name"/>_put_slice_g95.o <xsl:value-of select="@name"/>_put_non_timed_g95.o <xsl:value-of select="@name"/>_get_g95.o <xsl:value-of select="@name"/>_get_slice_g95.o  <xsl:value-of select="@name"/>_copy_struct_g95.o  <xsl:value-of select="@name"/>_copy_g95.o </xsl:for-each> ids_routines_g95.o $(DEP_g95)
+libimas-g95.so: ids_schemas_g95.o utilities_copy_struct_g95.o utilities_deallocate_struct_g95.o <xsl:for-each select="IDS"> <xsl:value-of select="@name"/>_put_g95.o <xsl:value-of select="@name"/>_put_slice_g95.o <xsl:value-of select="@name"/>_put_non_timed_g95.o <xsl:value-of select="@name"/>_get_g95.o <xsl:value-of select="@name"/>_get_slice_g95.o  <xsl:value-of select="@name"/>_copy_struct_g95.o  <xsl:value-of select="@name"/>_deallocate_struct_g95.o <xsl:value-of select="@name"/>_copy_g95.o </xsl:for-each> ids_routines_g95.o $(DEP_g95)
 &#009;$(F90_g95) $(COPTS_g95) -o $@ -shared -Wl,-soname,$@.$(IMAS_MAJOR).$(IMAS_MINOR) $^ $(LIBS)
 
-libimas-g95.a: ids_schemas_g95.o utilities_copy_struct_g95.o <xsl:for-each select="IDS"> <xsl:value-of select="@name"/>_put_g95.o <xsl:value-of select="@name"/>_put_slice_g95.o <xsl:value-of select="@name"/>_put_non_timed_g95.o <xsl:value-of select="@name"/>_get_g95.o <xsl:value-of select="@name"/>_get_slice_g95.o  <xsl:value-of select="@name"/>_copy_struct_g95.o <xsl:value-of select="@name"/>_copy_g95.o </xsl:for-each> ids_routines_g95.o $(DEP_g95)
+libimas-g95.a: ids_schemas_g95.o utilities_copy_struct_g95.o utilities_deallocate_struct_g95.o <xsl:for-each select="IDS"> <xsl:value-of select="@name"/>_put_g95.o <xsl:value-of select="@name"/>_put_slice_g95.o <xsl:value-of select="@name"/>_put_non_timed_g95.o <xsl:value-of select="@name"/>_get_g95.o <xsl:value-of select="@name"/>_get_slice_g95.o  <xsl:value-of select="@name"/>_copy_struct_g95.o <xsl:value-of select="@name"/>_deallocate_struct_g95.o <xsl:value-of select="@name"/>_copy_g95.o </xsl:for-each> ids_routines_g95.o $(DEP_g95)
 &#009;ar rvs $@ $^
 
-ids_routines_g95.o: ids_routines.f90 utilities_copy_struct_g95.o <xsl:for-each select="IDS"><xsl:value-of select="@name"/>_put_g95.o <xsl:value-of select="@name"/>_put_slice_g95.o <xsl:value-of select="@name"/>_put_non_timed_g95.o <xsl:value-of select="@name"/>_get_g95.o <xsl:value-of select="@name"/>_get_slice_g95.o <xsl:value-of select="@name"/>_copy_struct_g95.o  <xsl:value-of select="@name"/>_copy_g95.o </xsl:for-each>
+ids_routines_g95.o: ids_routines.f90 utilities_copy_struct_g95.o utilities_deallocate_struct_g95.o <xsl:for-each select="IDS"><xsl:value-of select="@name"/>_put_g95.o <xsl:value-of select="@name"/>_put_slice_g95.o <xsl:value-of select="@name"/>_put_non_timed_g95.o <xsl:value-of select="@name"/>_get_g95.o <xsl:value-of select="@name"/>_get_slice_g95.o <xsl:value-of select="@name"/>_copy_struct_g95.o <xsl:value-of select="@name"/>_deallocate_struct_g95.o <xsl:value-of select="@name"/>_copy_g95.o </xsl:for-each>
 &#009;$(F90_g95) -c $(COPTS_g95) $(INCDIR_g95) ids_routines.f90 -o $@
 
 ids_schemas_g95.o: ids_schemas.f90
@@ -107,6 +107,9 @@ ids_schemas_g95.o: ids_schemas.f90
 &#009;$(F90_g95) -c $(COPTS_g95) $(INCDIR_g95) $&lt; -o $@
 
 utilities_copy_struct_g95.o: utilities_copy_struct.f90 ids_schemas_g95.o
+&#009;$(F90_g95) -c $(COPTS_g95) $(INCDIR_g95) $&lt; -o $@
+
+utilities_deallocate_struct_g95.o: utilities_deallocate_struct.f90 ids_schemas_g95.o
 &#009;$(F90_g95) -c $(COPTS_g95) $(INCDIR_g95) $&lt; -o $@
 
 <xsl:for-each select="IDS">
@@ -131,17 +134,20 @@ utilities_copy_struct_g95.o: utilities_copy_struct.f90 ids_schemas_g95.o
 <xsl:value-of select="@name"/>_copy_struct_g95.o: <xsl:value-of select="@name"/>_copy_struct.f90  utilities_copy_struct_g95.o ids_schemas_g95.o
 &#009;$(F90_g95) -c $(COPTS_g95) $(INCDIR_g95) $&lt; -o $@
 
+<xsl:value-of select="@name"/>_deallocate_struct_g95.o: <xsl:value-of select="@name"/>_deallocate_struct.f90  utilities_deallocate_struct_g95.o ids_schemas_g95.o
+&#009;$(F90_g95) -c $(COPTS_g95) $(INCDIR_g95) $&lt; -o $@
+
 </xsl:for-each>
 
 
 #--------------------- gfortran --------------
-libimas-gfortran.so: ids_schemas_gfortran.o utilities_copy_struct_gfortran.o <xsl:for-each select="IDS"> <xsl:value-of select="@name"/>_put_gfortran.o <xsl:value-of select="@name"/>_put_slice_gfortran.o <xsl:value-of select="@name"/>_put_non_timed_gfortran.o <xsl:value-of select="@name"/>_get_gfortran.o <xsl:value-of select="@name"/>_get_slice_gfortran.o  <xsl:value-of select="@name"/>_copy_struct_gfortran.o  <xsl:value-of select="@name"/>_copy_gfortran.o </xsl:for-each> ids_routines_gfortran.o $(DEP_gfortran)
+libimas-gfortran.so: ids_schemas_gfortran.o utilities_copy_struct_gfortran.o utilities_deallocate_struct_gfortran.o <xsl:for-each select="IDS"> <xsl:value-of select="@name"/>_put_gfortran.o <xsl:value-of select="@name"/>_put_slice_gfortran.o <xsl:value-of select="@name"/>_put_non_timed_gfortran.o <xsl:value-of select="@name"/>_get_gfortran.o <xsl:value-of select="@name"/>_get_slice_gfortran.o  <xsl:value-of select="@name"/>_copy_struct_gfortran.o <xsl:value-of select="@name"/>_deallocate_struct_gfortran.o <xsl:value-of select="@name"/>_copy_gfortran.o </xsl:for-each> ids_routines_gfortran.o $(DEP_gfortran)
 &#009;$(F90_gfortran) $(COPTS_gfortran) -o $@ -shared -Wl,-soname,$@.$(IMAS_MAJOR).$(IMAS_MINOR) $^ $(LIBS)
 
-libimas-gfortran.a: ids_schemas_gfortran.o utilities_copy_struct_gfortran.o <xsl:for-each select="IDS"> <xsl:value-of select="@name"/>_put_gfortran.o <xsl:value-of select="@name"/>_put_slice_gfortran.o <xsl:value-of select="@name"/>_put_non_timed_gfortran.o <xsl:value-of select="@name"/>_get_gfortran.o <xsl:value-of select="@name"/>_get_slice_gfortran.o  <xsl:value-of select="@name"/>_copy_struct_gfortran.o <xsl:value-of select="@name"/>_copy_gfortran.o </xsl:for-each> ids_routines_gfortran.o $(DEP_gfortran)
+libimas-gfortran.a: ids_schemas_gfortran.o utilities_copy_struct_gfortran.o utilities_deallocate_struct_gfortran.o <xsl:for-each select="IDS"> <xsl:value-of select="@name"/>_put_gfortran.o <xsl:value-of select="@name"/>_put_slice_gfortran.o <xsl:value-of select="@name"/>_put_non_timed_gfortran.o <xsl:value-of select="@name"/>_get_gfortran.o <xsl:value-of select="@name"/>_get_slice_gfortran.o  <xsl:value-of select="@name"/>_copy_struct_gfortran.o <xsl:value-of select="@name"/>_deallocate_struct_gfortran.o <xsl:value-of select="@name"/>_copy_gfortran.o </xsl:for-each> ids_routines_gfortran.o $(DEP_gfortran)
 &#009;ar rvs $@ $^
 
-ids_routines_gfortran.o: ids_routines.f90 utilities_copy_struct_gfortran.o <xsl:for-each select="IDS"><xsl:value-of select="@name"/>_put_gfortran.o <xsl:value-of select="@name"/>_put_slice_gfortran.o <xsl:value-of select="@name"/>_put_non_timed_gfortran.o <xsl:value-of select="@name"/>_get_gfortran.o <xsl:value-of select="@name"/>_get_slice_gfortran.o <xsl:value-of select="@name"/>_copy_struct_gfortran.o  <xsl:value-of select="@name"/>_copy_gfortran.o </xsl:for-each>
+ids_routines_gfortran.o: ids_routines.f90 utilities_copy_struct_gfortran.o utilities_deallocate_struct_gfortran.o <xsl:for-each select="IDS"><xsl:value-of select="@name"/>_put_gfortran.o <xsl:value-of select="@name"/>_put_slice_gfortran.o <xsl:value-of select="@name"/>_put_non_timed_gfortran.o <xsl:value-of select="@name"/>_get_gfortran.o <xsl:value-of select="@name"/>_get_slice_gfortran.o <xsl:value-of select="@name"/>_copy_struct_gfortran.o  <xsl:value-of select="@name"/>_deallocate_struct_gfortran.o <xsl:value-of select="@name"/>_copy_gfortran.o </xsl:for-each>
 &#009;$(F90_gfortran) -c $(COPTS_gfortran) $(INCDIR_gfortran) ids_routines.f90 -o $@
 
 ids_schemas_gfortran.o: ids_schemas.f90
@@ -149,6 +155,9 @@ ids_schemas_gfortran.o: ids_schemas.f90
 &#009;$(F90_gfortran) -c $(COPTS_gfortran) $(INCDIR_gfortran) $&lt; -o $@
 
 utilities_copy_struct_gfortran.o: utilities_copy_struct.f90 ids_schemas_gfortran.o
+&#009;$(F90_gfortran) -c $(COPTS_gfortran) $(INCDIR_gfortran) $&lt; -o $@
+
+utilities_deallocate_struct_gfortran.o: utilities_deallocate_struct.f90 ids_schemas_gfortran.o
 &#009;$(F90_gfortran) -c $(COPTS_gfortran) $(INCDIR_gfortran) $&lt; -o $@
 
 <xsl:for-each select="IDS">
@@ -173,17 +182,20 @@ utilities_copy_struct_gfortran.o: utilities_copy_struct.f90 ids_schemas_gfortran
 <xsl:value-of select="@name"/>_copy_struct_gfortran.o: <xsl:value-of select="@name"/>_copy_struct.f90  utilities_copy_struct_gfortran.o ids_schemas_gfortran.o
 &#009;$(F90_gfortran) -c $(COPTS_gfortran) $(INCDIR_gfortran) $&lt; -o $@
 
+<xsl:value-of select="@name"/>_deallocate_struct_gfortran.o: <xsl:value-of select="@name"/>_deallocate_struct.f90  utilities_deallocate_struct_gfortran.o ids_schemas_gfortran.o
+&#009;$(F90_gfortran) -c $(COPTS_gfortran) $(INCDIR_gfortran) $&lt; -o $@
+
 </xsl:for-each>
 
 
 #--------------------- pgi --------------
-libimas-pgi.so: ids_schemas_pgi.o utilities_copy_struct_pgi.o <xsl:for-each select="IDS"> <xsl:value-of select="@name"/>_put_pgi.o <xsl:value-of select="@name"/>_put_slice_pgi.o <xsl:value-of select="@name"/>_put_non_timed_pgi.o <xsl:value-of select="@name"/>_get_pgi.o <xsl:value-of select="@name"/>_get_slice_pgi.o  <xsl:value-of select="@name"/>_copy_struct_pgi.o  <xsl:value-of select="@name"/>_copy_pgi.o </xsl:for-each> ids_routines_pgi.o $(DEP_pgi)
+libimas-pgi.so: ids_schemas_pgi.o utilities_copy_struct_pgi.o utilities_deallocate_struct_pgi.o <xsl:for-each select="IDS"> <xsl:value-of select="@name"/>_put_pgi.o <xsl:value-of select="@name"/>_put_slice_pgi.o <xsl:value-of select="@name"/>_put_non_timed_pgi.o <xsl:value-of select="@name"/>_get_pgi.o <xsl:value-of select="@name"/>_get_slice_pgi.o  <xsl:value-of select="@name"/>_copy_struct_pgi.o <xsl:value-of select="@name"/>_deallocate_struct_pgi.o <xsl:value-of select="@name"/>_copy_pgi.o </xsl:for-each> ids_routines_pgi.o $(DEP_pgi)
 &#009;$(F90_pgi) $(COPTS_pgi) -o $@ -shared -Wl,-soname,$@.$(IMAS_MAJOR).$(IMAS_MINOR) $^ $(LIBS)
 
-libimas-pgi.a: ids_schemas_pgi.o utilities_copy_struct_pgi.o <xsl:for-each select="IDS"> <xsl:value-of select="@name"/>_put_pgi.o <xsl:value-of select="@name"/>_put_slice_pgi.o <xsl:value-of select="@name"/>_put_non_timed_pgi.o <xsl:value-of select="@name"/>_get_pgi.o <xsl:value-of select="@name"/>_get_slice_pgi.o  <xsl:value-of select="@name"/>_copy_struct_pgi.o <xsl:value-of select="@name"/>_copy_pgi.o </xsl:for-each> ids_routines_pgi.o $(DEP_pgi)
+libimas-pgi.a: ids_schemas_pgi.o utilities_copy_struct_pgi.o utilities_deallocate_struct_pgi.o <xsl:for-each select="IDS"> <xsl:value-of select="@name"/>_put_pgi.o <xsl:value-of select="@name"/>_put_slice_pgi.o <xsl:value-of select="@name"/>_put_non_timed_pgi.o <xsl:value-of select="@name"/>_get_pgi.o <xsl:value-of select="@name"/>_get_slice_pgi.o  <xsl:value-of select="@name"/>_copy_struct_pgi.o <xsl:value-of select="@name"/>_deallocate_struct_pgi.o <xsl:value-of select="@name"/>_copy_pgi.o </xsl:for-each> ids_routines_pgi.o $(DEP_pgi)
 &#009;ar rvs $@ $^
 
-ids_routines_pgi.o: ids_routines.f90 utilities_copy_struct_pgi.o <xsl:for-each select="IDS"><xsl:value-of select="@name"/>_put_pgi.o <xsl:value-of select="@name"/>_put_slice_pgi.o <xsl:value-of select="@name"/>_put_non_timed_pgi.o <xsl:value-of select="@name"/>_get_pgi.o <xsl:value-of select="@name"/>_get_slice_pgi.o <xsl:value-of select="@name"/>_copy_struct_pgi.o  <xsl:value-of select="@name"/>_copy_pgi.o </xsl:for-each>
+ids_routines_pgi.o: ids_routines.f90 utilities_copy_struct_pgi.o utilities_deallocate_struct_pgi.o <xsl:for-each select="IDS"><xsl:value-of select="@name"/>_put_pgi.o <xsl:value-of select="@name"/>_put_slice_pgi.o <xsl:value-of select="@name"/>_put_non_timed_pgi.o <xsl:value-of select="@name"/>_get_pgi.o <xsl:value-of select="@name"/>_get_slice_pgi.o <xsl:value-of select="@name"/>_copy_struct_pgi.o <xsl:value-of select="@name"/>_deallocate_struct_pgi.o <xsl:value-of select="@name"/>_copy_pgi.o </xsl:for-each>
 &#009;$(F90_pgi) -c $(COPTS_pgi) $(INCDIR_pgi) ids_routines.f90 -o $@
 
 ids_schemas_pgi.o: ids_schemas.f90
@@ -191,6 +203,9 @@ ids_schemas_pgi.o: ids_schemas.f90
 &#009;$(F90_pgi) -c $(COPTS_pgi) $(INCDIR_pgi) $&lt; -o $@
 
 utilities_copy_struct_pgi.o: utilities_copy_struct.f90 ids_schemas_pgi.o
+&#009;$(F90_pgi) -c $(COPTS_pgi) $(INCDIR_pgi) $&lt; -o $@
+
+utilities_deallocate_struct_pgi.o: utilities_deallocate_struct.f90 ids_schemas_pgi.o
 &#009;$(F90_pgi) -c $(COPTS_pgi) $(INCDIR_pgi) $&lt; -o $@
 
 <xsl:for-each select="IDS">
@@ -215,16 +230,19 @@ utilities_copy_struct_pgi.o: utilities_copy_struct.f90 ids_schemas_pgi.o
 <xsl:value-of select="@name"/>_copy_struct_pgi.o: <xsl:value-of select="@name"/>_copy_struct.f90  utilities_copy_struct_pgi.o ids_schemas_pgi.o
 &#009;$(F90_pgi) -c $(COPTS_pgi) $(INCDIR_pgi) $&lt; -o $@
 
+<xsl:value-of select="@name"/>_deallocate_struct_pgi.o: <xsl:value-of select="@name"/>_deallocate_struct.f90  utilities_deallocate_struct_pgi.o ids_schemas_pgi.o
+&#009;$(F90_pgi) -c $(COPTS_pgi) $(INCDIR_pgi) $&lt; -o $@
+
 </xsl:for-each>
 
 #--------------------- ifort --------------
-libimas-ifort.so: ids_schemas_ifort.o utilities_copy_struct_ifort.o <xsl:for-each select="IDS"> <xsl:value-of select="@name"/>_put_ifort.o <xsl:value-of select="@name"/>_put_slice_ifort.o <xsl:value-of select="@name"/>_put_non_timed_ifort.o <xsl:value-of select="@name"/>_get_ifort.o <xsl:value-of select="@name"/>_get_slice_ifort.o  <xsl:value-of select="@name"/>_copy_struct_ifort.o  <xsl:value-of select="@name"/>_copy_ifort.o </xsl:for-each> ids_routines_ifort.o $(DEP_IFORT)
+libimas-ifort.so: ids_schemas_ifort.o utilities_copy_struct_ifort.o utilities_deallocate_struct_ifort.o <xsl:for-each select="IDS"> <xsl:value-of select="@name"/>_put_ifort.o <xsl:value-of select="@name"/>_put_slice_ifort.o <xsl:value-of select="@name"/>_put_non_timed_ifort.o <xsl:value-of select="@name"/>_get_ifort.o <xsl:value-of select="@name"/>_get_slice_ifort.o  <xsl:value-of select="@name"/>_copy_struct_ifort.o  <xsl:value-of select="@name"/>_deallocate_struct_ifort.o <xsl:value-of select="@name"/>_copy_ifort.o </xsl:for-each> ids_routines_ifort.o $(DEP_IFORT)
 &#009;$(F90_ifort) $(COPTS_ifort) -o $@ -shared -Wl,-soname,$@.$(IMAS_MAJOR).$(IMAS_MINOR) $^ $(LIBS)
 
-libimas-ifort.a: ids_schemas_ifort.o utilities_copy_struct_ifort.o <xsl:for-each select="IDS"> <xsl:value-of select="@name"/>_put_ifort.o <xsl:value-of select="@name"/>_put_slice_ifort.o <xsl:value-of select="@name"/>_put_non_timed_ifort.o <xsl:value-of select="@name"/>_get_ifort.o <xsl:value-of select="@name"/>_get_slice_ifort.o  <xsl:value-of select="@name"/>_copy_struct_ifort.o <xsl:value-of select="@name"/>_copy_ifort.o </xsl:for-each> ids_routines_ifort.o $(DEP_IFORT)
+libimas-ifort.a: ids_schemas_ifort.o utilities_copy_struct_ifort.o utilities_deallocate_struct_ifort.o <xsl:for-each select="IDS"> <xsl:value-of select="@name"/>_put_ifort.o <xsl:value-of select="@name"/>_put_slice_ifort.o <xsl:value-of select="@name"/>_put_non_timed_ifort.o <xsl:value-of select="@name"/>_get_ifort.o <xsl:value-of select="@name"/>_get_slice_ifort.o  <xsl:value-of select="@name"/>_copy_struct_ifort.o <xsl:value-of select="@name"/>_deallocate_struct_ifort.o <xsl:value-of select="@name"/>_copy_ifort.o </xsl:for-each> ids_routines_ifort.o $(DEP_IFORT)
 &#009;ar rvs $@ $^
 
-ids_routines_ifort.o: ids_routines.f90 utilities_copy_struct_ifort.o <xsl:for-each select="IDS"><xsl:value-of select="@name"/>_put_ifort.o <xsl:value-of select="@name"/>_put_slice_ifort.o <xsl:value-of select="@name"/>_put_non_timed_ifort.o <xsl:value-of select="@name"/>_get_ifort.o <xsl:value-of select="@name"/>_get_slice_ifort.o <xsl:value-of select="@name"/>_copy_struct_ifort.o  <xsl:value-of select="@name"/>_copy_ifort.o </xsl:for-each>
+ids_routines_ifort.o: ids_routines.f90 utilities_copy_struct_ifort.o utilities_deallocate_struct_ifort.o <xsl:for-each select="IDS"><xsl:value-of select="@name"/>_put_ifort.o <xsl:value-of select="@name"/>_put_slice_ifort.o <xsl:value-of select="@name"/>_put_non_timed_ifort.o <xsl:value-of select="@name"/>_get_ifort.o <xsl:value-of select="@name"/>_get_slice_ifort.o <xsl:value-of select="@name"/>_copy_struct_ifort.o <xsl:value-of select="@name"/>_deallocate_struct_ifort.o <xsl:value-of select="@name"/>_copy_ifort.o </xsl:for-each>
 &#009;$(F90_ifort) -c $(COPTS_ifort) $(INCDIR_ifort) ids_routines.f90 -o $@
 
 ids_schemas_ifort.o: ids_schemas.f90
@@ -232,6 +250,9 @@ ids_schemas_ifort.o: ids_schemas.f90
 &#009;$(F90_ifort) -c $(COPTS_ifort) $(INCDIR_ifort) $&lt; -o $@
 
 utilities_copy_struct_ifort.o: utilities_copy_struct.f90 ids_schemas_ifort.o
+&#009;$(F90_ifort) -c $(COPTS_ifort) $(INCDIR_ifort) $&lt; -o $@
+
+utilities_deallocate_struct_ifort.o: utilities_deallocate_struct.f90 ids_schemas_ifort.o
 &#009;$(F90_ifort) -c $(COPTS_ifort) $(INCDIR_ifort) $&lt; -o $@
 
 <xsl:for-each select="IDS">
@@ -256,6 +277,9 @@ utilities_copy_struct_ifort.o: utilities_copy_struct.f90 ids_schemas_ifort.o
 <xsl:value-of select="@name"/>_copy_struct_ifort.o: <xsl:value-of select="@name"/>_copy_struct.f90  utilities_copy_struct_ifort.o ids_schemas_ifort.o
 &#009;$(F90_ifort) -c $(COPTS_ifort) $(INCDIR_ifort) $&lt; -o $@
 
+<xsl:value-of select="@name"/>_deallocate_struct_ifort.o: <xsl:value-of select="@name"/>_deallocate_struct.f90  utilities_deallocate_struct_ifort.o ids_schemas_ifort.o
+&#009;$(F90_ifort) -c $(COPTS_ifort) $(INCDIR_ifort) $&lt; -o $@
+
 </xsl:for-each>
 
 
@@ -263,6 +287,7 @@ utilities_copy_struct_ifort.o: utilities_copy_struct.f90 ids_schemas_ifort.o
 ids_routines.f90: IDSDef2F90Routines.xsl xsd2copy_structures.xsl
 &#009;java net.sf.saxon.Transform -t -s:$(IDSDEF) -xsl:IDSDef2F90Routines.xsl
 &#009;java net.sf.saxon.Transform -t -s:../xml/dd_physics_data_dictionary.xsd -xsl:xsd2copy_structures.xsl
+&#009;java net.sf.saxon.Transform -t -s:../xml/dd_physics_data_dictionary.xsd -xsl:xsd2deallocate_structures.xsl
 
 ids_schemas.f90: xsd2F90TypeDef.xsl
 &#009;(cp xsd2F90TypeDef.xsl ../xml/ ; cd ../xml/ ; \

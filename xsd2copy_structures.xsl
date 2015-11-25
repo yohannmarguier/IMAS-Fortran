@@ -36,18 +36,6 @@ interface ids_copy
 </xsl:if>
 end interface ids_copy
 
-
-interface ids_deallocate
-<xsl:for-each select="document(@schemaLocation)/*/xs:complexType"> <!-- Scan all structures within the schema -->
-   module procedure ids_deallocate_struct_<xsl:value-of select="local:unique_name(@name)"/>	<!-- The name is truncated since Fortran 90/95 does not authorize procedure names above 33 characters -->
-</xsl:for-each>
-<xsl:if test="substring-before(@schemaLocation,'/')='utilities'">  <!-- Declare also the reference elements in utilities -->
-<xsl:for-each select="document(@schemaLocation)/*/xs:element[./xs:complexType]"> <!-- Scan all elements that are structures -->
-   module procedure ids_deallocate_struct_<xsl:value-of select="local:unique_name(@name)"/>	<!-- The name is truncated since Fortran 90/95 does not authorize procedure names above 33 characters -->
-</xsl:for-each>
-</xsl:if>
-end interface ids_deallocate
-
 contains
 
 <xsl:for-each select="document(@schemaLocation)/*/xs:complexType"> <!-- Scan all structures within the schema -->
@@ -71,25 +59,6 @@ type(ids_<xsl:value-of select="@name"/>) :: struct_in, struct_out
 
 return
 end subroutine ids_copy_struct_<xsl:value-of select="local:unique_name(@name)"/>
-<xsl:text>
-
-</xsl:text>
-subroutine ids_deallocate_struct_<xsl:value-of select="local:unique_name(@name)"/>(struct_in)
-
-use ids_schemas
-implicit none
-
-integer :: i1,i2,i3,i4,i5,i6,i7
-
-type(ids_<xsl:value-of select="@name"/>) :: struct_in
-
-    <xsl:apply-templates select="./xs:sequence/xs:element" mode="DEALLOCATE_FIELD">
-        <xsl:with-param name="level" select="1"/>
-        <xsl:with-param name="idxpath" select="''"/>
-    </xsl:apply-templates>
-
-end subroutine ids_deallocate_struct_<xsl:value-of select="local:unique_name(@name)"/>
-
 <xsl:text>
 
 </xsl:text>
@@ -118,25 +87,6 @@ type(ids_<xsl:value-of select="@name"/>) :: struct_in, struct_out
 return
 end subroutine ids_copy_struct_<xsl:value-of select="local:unique_name(@name)"/>
 
-subroutine ids_deallocate_struct_<xsl:value-of select="local:unique_name(@name)"/>(struct_in)
-
-use ids_schemas
-implicit none
-
-integer :: i1,i2,i3,i4,i5,i6,i7
-
-type(ids_<xsl:value-of select="@name"/>) :: struct_in
-
-    <xsl:apply-templates select="./xs:complexType/xs:sequence/xs:element" mode="DEALLOCATE_FIELD">
-        <xsl:with-param name="level" select="1"/>
-        <xsl:with-param name="idxpath" select="''"/>
-    </xsl:apply-templates>
-
-<xsl:text>
-
-</xsl:text>
-end subroutine ids_deallocate_struct_<xsl:value-of select="local:unique_name(@name)"/>
-
 </xsl:for-each>
 </xsl:if>
 
@@ -146,49 +96,6 @@ end module
 </xsl:template>
 
 
-<xsl:template match="xs:element" mode="DEALLOCATE_FIELD">
-    <xsl:param name="level"/>     <!-- recursion level -->
-    <xsl:param name="idxpath"/>   <!-- full fortran path including indices -->
-
-    <!-- build the complete path of the current field -->
-    <xsl:param name="currentidxpath" select="concat($idxpath,'%',@name)"/>
-
-    <xsl:choose>
-<!-- xs:integer and xs:float are not deallocated (they are not allocatable !) -->
-			<xsl:when test="@type='str_type' or ./xs:complexType/xs:group[@ref='STR_0D'] or @type='str_1d_type' or ./xs:complexType/xs:group[@ref='STR_1D'] or @type='flt_1d_type' or ./xs:complexType/xs:group[@ref='FLT_1D'] or @type='int_1d_type' or ./xs:complexType/xs:group[@ref='INT_1D'] or ./xs:complexType/xs:group[@ref='FLT_2D'] or ./xs:complexType/xs:group[@ref='INT_2D'] or ./xs:complexType/xs:group[@ref='FLT_3D'] or ./xs:complexType/xs:group[@ref='INT_3D'] or ./xs:complexType/xs:group[@ref='FLT_4D'] or ./xs:complexType/xs:group[@ref='INT_4D'] or ./xs:complexType/xs:group[@ref='FLT_5D'] or ./xs:complexType/xs:group[@ref='FLT_6D'] ">
-   ! deallocate <xsl:value-of select="$currentidxpath"/>
-   if (associated(struct_in<xsl:value-of select="$currentidxpath"/>)) then
-        deallocate(struct_in<xsl:value-of select="$currentidxpath"/>)
-   endif
-   			</xsl:when>
-	<xsl:when test="@type and not(@type='int_type' or @type='flt_type'  or @type='str_type' or @type='flt_1d_type') and not(@maxOccurs)"> <!-- Case of a simple structure -->
-	call ids_deallocate(struct_in<xsl:value-of select = "$currentidxpath"/>)			
-	</xsl:when>
-         <xsl:when test="@maxOccurs">  <!-- Case of a struct array -->
-    ! deallocate <xsl:value-of select="$currentidxpath"/>
-    if (associated(struct_in<xsl:value-of select="$currentidxpath"/>)) then
-        do i<xsl:value-of select="$level"/> = 1,size(struct_in<xsl:value-of select = "$currentidxpath"/>)
-             call ids_deallocate(struct_in<xsl:value-of select = "$currentidxpath"/>(i<xsl:value-of select="$level"/>))
-        enddo
-        deallocate(struct_in<xsl:value-of select="$currentidxpath"/>)
-    endif
-         </xsl:when>
-
-<xsl:when test="./xs:complexType/xs:sequence/xs:group[@ref='FLT_1D']">
-<!-- Special data/time case for FLT 1D -->
-! Deallocate <xsl:value-of select="$currentidxpath"/> 
-if (associated(struct_in<xsl:value-of select="$currentidxpath"/>%data)) &amp;
-   deallocate(struct_in<xsl:value-of select="$currentidxpath"/>%data)
-
-if (associated(struct_in<xsl:value-of select="$currentidxpath"/>%time)) &amp;
-   deallocate(struct_in<xsl:value-of select="$currentidxpath"/>%time)
-</xsl:when>
-
-			<xsl:otherwise>
- ! Deallocate <xsl:value-of select="$currentidxpath"/> : PROBLEM : UNIDENTIFIED TYPE !!! <!-- for comment only -->
-			</xsl:otherwise>
-</xsl:choose>
-</xsl:template>
 
 
 
