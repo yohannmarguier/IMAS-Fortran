@@ -29,5 +29,5 @@ test-clean:
 test-clean-src:
 	$(MAKE) -C tests/generator clean-src
 
-PC_FILES = imas-ifort.pc imas-gfortran.pc
+PC_FILES = imas-ifort.pc imas-gfortran.pc imas-g95.pc
 include ../Makefile.pkgconfig
