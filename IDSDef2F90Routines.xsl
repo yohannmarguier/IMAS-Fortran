@@ -2817,7 +2817,7 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
        <!--XSLtest whether this is a data/time structure, otherwise assume that the timepath attribute from IDSDef is correct-->
        <xsl:choose>
-       <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data'])">
+       <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data']) or @name='data_error_upper' or @name='data_error_lower'">
        timepath=<xsl:value-of select="$mds_path"/>//&quot;/time&quot;
        call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%time')"/>),IDS%<xsl:value-of select="concat($variable_path,'%time')"/>)
        </xsl:when>
@@ -2960,7 +2960,7 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
        <!--XSLtest whether this is a data/time structure, otherwise assume that the timepath attribute from IDSDef is correct-->
        <xsl:choose>
-       <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data'])">
+       <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data']) or @name='data_error_upper' or @name='data_error_lower'">
        timepath=<xsl:value-of select="$mds_path"/>//&quot;/time&quot;
        call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%time')"/>),IDS%<xsl:value-of select="concat($variable_path,'%time')"/>)
        </xsl:when>
@@ -3036,7 +3036,7 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
        <!--XSLtest whether this is a data/time structure, otherwise assume that the timepath attribute from IDSDef is correct-->
        <xsl:choose>
-       <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data'])">
+       <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data']) or @name='data_error_upper' or @name='data_error_lower'">
        timepath=<xsl:value-of select="$mds_path"/>//&quot;/time&quot;
        call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%time')"/>),IDS%<xsl:value-of select="concat($variable_path,'%time')"/>)
        </xsl:when>
@@ -3114,7 +3114,7 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
        <!--XSLtest whether this is a data/time structure, otherwise assume that the timepath attribute from IDSDef is correct-->
        <xsl:choose>
-       <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data'])">
+       <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data']) or @name='data_error_upper' or @name='data_error_lower'">
        timepath=<xsl:value-of select="$mds_path"/>//&quot;/time&quot;
        call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%time')"/>),IDS%<xsl:value-of select="concat($variable_path,'%time')"/>)
        </xsl:when>
@@ -3192,7 +3192,7 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
        <!--XSLtest whether this is a data/time structure, otherwise assume that the timepath attribute from IDSDef is correct-->
        <xsl:choose>
-       <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data'])">
+       <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data']) or @name='data_error_upper' or @name='data_error_lower'">
        timepath=<xsl:value-of select="$mds_path"/>//&quot;/time&quot;
        call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%time')"/>),IDS%<xsl:value-of select="concat($variable_path,'%time')"/>)
        </xsl:when>
@@ -3270,7 +3270,7 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
        <!--XSLtest whether this is a data/time structure, otherwise assume that the timepath attribute from IDSDef is correct-->
        <xsl:choose>
-       <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data'])">
+       <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data']) or @name='data_error_upper' or @name='data_error_lower'">
        timepath=<xsl:value-of select="$mds_path"/>//&quot;/time&quot;
        call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%time')"/>),IDS%<xsl:value-of select="concat($variable_path,'%time')"/>)
        </xsl:when>
@@ -3351,7 +3351,7 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
        <!--XSLtest whether this is a data/time structure, otherwise assume that the timepath attribute from IDSDef is correct-->
        <xsl:choose>
-       <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data'])">
+       <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data']) or @name='data_error_upper' or @name='data_error_lower'">
        timepath=<xsl:value-of select="$mds_path"/>//&quot;/time&quot;
        call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%time')"/>),IDS%<xsl:value-of select="concat($variable_path,'%time')"/>)
        </xsl:when>
@@ -3431,7 +3431,7 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
        <!--XSLtest whether this is a data/time structure, otherwise assume that the timepath attribute from IDSDef is correct-->
        <xsl:choose>
-       <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data'])">
+       <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data']) or @name='data_error_upper' or @name='data_error_lower'">
        timepath=<xsl:value-of select="$mds_path"/>//&quot;/time&quot;
        call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%time')"/>),IDS%<xsl:value-of select="concat($variable_path,'%time')"/>)
        </xsl:when>
@@ -3516,7 +3516,7 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
        <!--XSLtest whether this is a data/time structure, otherwise assume that the timepath attribute from IDSDef is correct-->
        <xsl:choose>
-       <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data'])">
+       <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data']) or @name='data_error_upper' or @name='data_error_lower'">
        timepath=<xsl:value-of select="$mds_path"/>//&quot;/time&quot;
        call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%time')"/>),IDS%<xsl:value-of select="concat($variable_path,'%time')"/>)
        </xsl:when>
@@ -3601,7 +3601,7 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
        <!--XSLtest whether this is a data/time structure, otherwise assume that the timepath attribute from IDSDef is correct-->
        <xsl:choose>
-       <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data'])">
+       <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data']) or @name='data_error_upper' or @name='data_error_lower'">
        timepath=<xsl:value-of select="$mds_path"/>//&quot;/time&quot;
        call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%time')"/>),IDS%<xsl:value-of select="concat($variable_path,'%time')"/>)
        </xsl:when>
@@ -4866,7 +4866,7 @@ endif
    if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
        <!--XSLtest whether this is a data/time structure, otherwise assume that the timepath attribute from IDSDef is correct-->
        <xsl:choose>
-       <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data'])">
+       <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data']) or @name='data_error_upper' or @name='data_error_lower'">
        timepath=<xsl:value-of select="$mds_path"/>//&quot;/time&quot;
        </xsl:when>
        <xsl:otherwise>

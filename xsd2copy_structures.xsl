@@ -122,7 +122,7 @@ if (associated(struct_in<xsl:value-of select = "$currentidxpath"/>)) then  <!-- 
    enddo
 endif
          </xsl:when>
-			<xsl:when test="@type and not(@type='int_type' or @type='flt_type'  or @type='str_type' or @type='flt_1d_type') and not(@maxOccurs)"> <!-- Case of a simple structure -->
+			<xsl:when test="@type and not(@type='int_type' or @type='flt_type'  or @type='str_type' or @type='str_1d_type' or @type='flt_1d_type') and not(@maxOccurs)"> <!-- Case of a simple structure -->
       call ids_copy(struct_in<xsl:value-of select = "$currentidxpath"/>, struct_out<xsl:value-of select = "$currentidxpath"/>)
 
         <!-- Let's be clever and make it recursive -->
