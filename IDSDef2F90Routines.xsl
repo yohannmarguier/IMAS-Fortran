@@ -532,6 +532,45 @@ FUNCTION isErrorCritical(status, fieldPath) RESULT (exitRequest)
 
 END FUNCTION isErrorCritical
 
+subroutine fget_vect1d_double_from_object(idx, obj, path_in_object, index_in_object, variable, variable_name, ual_debug)
+
+use ids_schemas
+implicit none
+real(DP), pointer :: variable(:)
+integer :: idx, obj, index_in_object
+character*(*) :: path_in_object, variable_name
+character(len=3) :: ual_debug
+integer :: ndims,dim1,dum1,dim2,dim3,dim4,dim5,dim6,dim7,status
+
+call get_dimension_from_object(idx,obj,path_in_object,index_in_object,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+if (dim1.GT.0) then
+   allocate(variable(dim1))
+   call get_vect1d_double_from_object(idx,obj,path_in_object,index_in_object, &amp;
+   variable,dim1,dum1,status)
+   if (ual_debug =='yes') write(*,*) &amp;
+      'Get ', trim(variable_name)
+endif
+end subroutine fget_vect1d_double_from_object
+
+
+subroutine fget_double_from_object(idx, obj, path_in_object, index_in_object, variable, variable_name, ual_debug, status)
+
+use ids_schemas
+implicit none
+real(DP) :: variable, double0d
+integer :: idx, obj, index_in_object
+character*(*) :: path_in_object, variable_name
+character(len=3) :: ual_debug
+integer :: status
+
+call get_double_from_object(idx,obj,path_in_object,index_in_object,double0d,status)
+if (status.EQ.0) then
+   variable = double0d
+   if (ual_debug =='yes') write(*,*) &amp;
+      'Get ', trim(variable_name), 'value = ', variable
+endif
+end subroutine fget_double_from_object
+
 <!-- ======================================  GET ======================================= -->
 
 !!!!!! Routines to GET the full IDS
@@ -623,6 +662,44 @@ FUNCTION isErrorCritical(status, fieldPath) RESULT (exitRequest)
 	endif
 
 END FUNCTION isErrorCritical
+
+subroutine fget_vect1d_double_from_object(idx, obj, path_in_object, index_in_object, variable, variable_name, ual_debug)
+
+use ids_schemas
+implicit none
+real(DP), pointer :: variable(:)
+integer :: idx, obj, index_in_object
+character*(*) :: path_in_object, variable_name
+character(len=3) :: ual_debug
+integer :: ndims,dim1,dum1,dim2,dim3,dim4,dim5,dim6,dim7,status
+
+call get_dimension_from_object(idx,obj,path_in_object,index_in_object,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+if (dim1.GT.0) then
+   allocate(variable(dim1))
+   call get_vect1d_double_from_object(idx,obj,path_in_object,index_in_object, &amp;
+   variable,dim1,dum1,status)
+   if (ual_debug =='yes') write(*,*) &amp;
+      'Get ', trim(variable_name)
+endif
+end subroutine fget_vect1d_double_from_object
+
+subroutine fget_double_from_object(idx, obj, path_in_object, index_in_object, variable, variable_name, ual_debug, status)
+
+use ids_schemas
+implicit none
+real(DP) :: variable, double0d
+integer :: idx, obj, index_in_object
+character*(*) :: path_in_object, variable_name
+character(len=3) :: ual_debug
+integer :: status
+
+call get_double_from_object(idx,obj,path_in_object,index_in_object,double0d,status)
+if (status.EQ.0) then
+   variable = double0d
+   if (ual_debug =='yes') write(*,*) &amp;
+      'Get ', trim(variable_name), 'value = ', variable
+endif
+end subroutine fget_double_from_object
 
 
 <!-- ======================================  GET SLICE ======================================= -->
@@ -1925,26 +2002,16 @@ endif
          </xsl:when>
          <xsl:when test="@data_type='flt_type' or @data_type='FLT_0D'">
 ! Get <xsl:value-of select="@path"/>
-            <!-- for comment only -->
-call get_double_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose> ,double0d,status)
-if (status.EQ.0) then
-   <xsl:value-of select="$currentidxpath"/> = double0d
-   if (ual_debug =='yes') write(*,*) &amp;
-      'Get <xsl:value-of select="$currentidxpath"/>'
-endif
+call fget_double_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose> , &amp;
+   <xsl:value-of select="$currentidxpath"/>, &amp;
+   "<xsl:value-of select="$currentidxpath"/>", ual_debug, status)
 <!-- -->
          </xsl:when>
          <xsl:when test="@data_type='flt_1d_type' or @data_type='FLT_1D'">
 ! Get <xsl:value-of select="@path"/>
-            <!-- for comment only -->
-call get_dimension_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
-if (dim1.GT.0) then
-   allocate(<xsl:value-of select="$currentidxpath"/>(dim1))
-   call get_vect1d_double_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>, &amp;
-   <xsl:value-of select="$currentidxpath"/>,dim1,dum1,status)
-   if (ual_debug =='yes') write(*,*) &amp;
-      'Get <xsl:value-of select="$currentidxpath"/>'
-endif
+call fget_vect1d_double_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>, &amp;
+   <xsl:value-of select="$currentidxpath"/>, &amp;
+   "<xsl:value-of select="$currentidxpath"/>", ual_debug)
 <!-- -->
          </xsl:when>
          <xsl:when test="@data_type='int_1d_type' or @data_type='INT_1D'">
