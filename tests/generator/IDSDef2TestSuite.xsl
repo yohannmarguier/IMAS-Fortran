@@ -32,7 +32,7 @@
   <!-- <xsl:apply-templates select="child::IDS[@name='temporary']" mode="test"/>   -->
    <xsl:apply-templates select="child::IDS" mode="test"/>
 
-        <xsl:text>&#9;call finish();&#10;</xsl:text>
+        <xsl:text>&#9;call finish(idx);&#10;</xsl:text>
 
     <xsl:text>CONTAINS&#10;</xsl:text>
 
