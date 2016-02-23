@@ -328,34 +328,30 @@ END FUNCTION getDouble6DArray
 
 
 
-	SUBROUTINE init(idx2)
-	INTEGER, INTENT(OUT) :: idx2
+	SUBROUTINE init(idx)
+	INTEGER, INTENT(OUT) :: idx
 
-  	CALL imas_create('ids',TESTSHOT,TESTRUN, TESTSHOT,TESTRUN,idx2)
-	print *, "IDX:", idx2
-!	if (cmd.hasOption("seed"))
-!        seed = Long.valueOf(cmd.getOptionValue("seed"));
+  		CALL imas_create('ids',TESTSHOT,TESTRUN, TESTSHOT,TESTRUN,idx)
+		print *, "IDX:", idx
 
-!	if (cmd.hasOption("remote"))
-!        UALAccess.connect(cmd.getOptionValue("remote"));
-!        if (cmd.hasOption("method") &amp;&amp; cmd.getOptionValue("method").equals("get")) {
-!        if (cmd.hasOption("hdf5"))
-!        idx = UALAccess.openHdf5("euitm", TESTSHOT, TESTRUN);
-!        else
-!        idx = UALAccess.open("euitm", TESTSHOT, TESTRUN);
-!        } else {
-!        if (cmd.hasOption("hdf5"))
-!        idx = UALAccess.createHdf5("euitm", TESTSHOT, TESTRUN, -1, -1);
-!        else
-!        idx = UALAccess.create("euitm", TESTSHOT, TESTRUN, -1, -1);
-!        }
         END SUBROUTINE init
 
 
-        SUBROUTINE finish
-	 !       UALAccess.close(idx);
- !       if (cmd.hasOption("remote"))
- !       UALAccess.disconnect();
+
+	SUBROUTINE open(idx)
+	INTEGER, INTENT(OUT) :: idx
+
+  		CALL imas_open('ids',TESTSHOT,TESTRUN, idx)
+		print *, "IDX:", idx
+
+        END SUBROUTINE open
+	
+
+        SUBROUTINE finish(idx)
+	   INTEGER, INTENT(IN) :: idx
+	  
+	   call imas_close(idx)
+
         END SUBROUTINE finish
 
 END MODULE helper
