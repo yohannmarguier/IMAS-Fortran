@@ -3,9 +3,9 @@ exec_prefix=${prefix}
 libdir=${exec_prefix}/lib
 includedir=${prefix}/include
 
-Name: imas-ifort
+Name: imas-pgi
 Version: imas:__DD_GIT_DESCRIBE__ ual:__UAL_GIT_DESCRIBE__
-Description: IMAS Fortran Libraries (ifort)
+Description: IMAS Fortran Libraries (pgi)
 URL: https://imas.iter.org
-Libs: -L${libdir} -limas-ifort
-Cflags: -I${includedir}/ifort
+Libs: -L${libdir} -limas-pgi
+Cflags: -I${includedir}/pgi

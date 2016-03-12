@@ -1,5 +1,13 @@
 include ../Makefile.common
 
+ifeq ("no","$(FORTRAN)")
+$(warning "Ignoring fortraninterface (FORTRAN=no).")
+all:
+clean:
+clean-src:
+install:
+else
+
 IDSDEF	= ../xml/IDSDef.xml
 
 all: makefile-gen pkgconfig
@@ -29,5 +37,7 @@ test-clean:
 test-clean-src:
 	$(MAKE) -C tests/generator clean-src
 
-PC_FILES = imas-ifort.pc imas-gfortran.pc
+PC_FILES = imas-ifort.pc imas-gfortran.pc imas-pgi.pc imas-g95.pc
+
 include ../Makefile.pkgconfig
+endif # FORTRAN=no?

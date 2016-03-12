@@ -2839,7 +2839,10 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
           longstring(1+(istring-1)*132 : istring*132) = IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(istring)
       enddo
    endif
-   call put_string(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,trim(longstring), status)       ! should clean up longstring after that, or send to the put only the right length, which has been updated
+   call put_string(idx,path,&amp;
+       <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
+       trim(longstring), status)
+       ! should clean up longstring after that, or send to the put only the right length, which has been updated
    if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
    <xsl:call-template name="checkError">
@@ -2993,9 +2996,13 @@ endif
 <xsl:choose>
 <xsl:when test="$variable_path">
 if (IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>.NE.-9.D40) then
-   call put_double(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>, status)
+   call put_double(idx,path,&amp;
+       <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
+       IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,&amp;
+       status)
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
+      'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',&amp;
+          IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
    </xsl:call-template>

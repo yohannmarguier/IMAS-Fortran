@@ -16,7 +16,7 @@
 # -*- makefile -*- #
 include ../Makefile.common
 
-F90_g95         = x86_64-unknown-linux-gnu-g95
+F90_g95         = g95
 MODDIR_g95      = g95
 COPTS_g95       = -r8 -ftrace=full -fPIC -fno-second-underscore -ffree-line-length-huge -g -fmod=$(MODDIR_g95)
 INCDIR_g95      = -I$(MODDIR_g95)

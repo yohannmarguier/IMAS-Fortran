@@ -36,7 +36,9 @@ interface ids_copy
 </xsl:if>
 end interface ids_copy
 
+<xsl:if test="document(@schemaLocation)/*/xs:complexType!=''">
 contains
+</xsl:if>
 
 <xsl:for-each select="document(@schemaLocation)/*/xs:complexType"> <!-- Scan all structures within the schema -->
 subroutine ids_copy_struct_<xsl:value-of select="local:unique_name(@name)"/>(struct_in,  struct_out)
