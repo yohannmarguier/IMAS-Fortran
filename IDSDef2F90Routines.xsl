@@ -616,6 +616,25 @@ if (dim1.GT.0) then
 endif
 end subroutine fget_vect1d_double_from_object
 
+subroutine fget_vect2d_double_from_object(idx, obj, path_in_object, index_in_object, variable, variable_name, ual_debug)
+
+use ids_schemas
+implicit none
+real(DP), pointer :: variable(:,:)
+integer :: idx, obj, index_in_object
+character*(*) :: path_in_object, variable_name
+character(len=3) :: ual_debug
+integer :: ndims,dim1,dum1,dim2,dum2,dim3,dim4,dim5,dim6,dim7,status
+
+call get_dimension_from_object(idx,obj,path_in_object,index_in_object,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+if (dim1.GT.0) then
+   allocate(variable(dim1,dim2))
+   call get_vect2d_double_from_object(idx,obj,path_in_object,index_in_object, &amp;
+   variable,dim1,dim2,dum1,dum2,status)
+   if (ual_debug =='yes') write(*,*) &amp;
+      'Get ', trim(variable_name)
+endif
+end subroutine fget_vect2d_double_from_object
 
 subroutine fget_double_from_object(idx, obj, path_in_object, index_in_object, variable, variable_name, ual_debug, status)
 
@@ -634,6 +653,24 @@ if (status.EQ.0) then
       'Get ', trim(variable_name), 'value = ', variable
 endif
 end subroutine fget_double_from_object
+
+subroutine fget_int_from_object(idx, obj, path_in_object, index_in_object, variable, variable_name, ual_debug, status)
+
+use ids_schemas
+implicit none
+integer :: variable, int0d
+integer :: idx, obj, index_in_object
+character*(*) :: path_in_object, variable_name
+character(len=3) :: ual_debug
+integer :: status
+
+call get_int_from_object(idx,obj,path_in_object,index_in_object,int0d,status)
+if (status.EQ.0) then
+   variable = int0d
+   if (ual_debug =='yes') write(*,*) &amp;
+      'Get ', trim(variable_name), 'value = ', variable
+endif
+end subroutine fget_int_from_object
 
 <!-- ======================================  GET ======================================= -->
 
@@ -747,6 +784,26 @@ if (dim1.GT.0) then
 endif
 end subroutine fget_vect1d_double_from_object
 
+subroutine fget_vect2d_double_from_object(idx, obj, path_in_object, index_in_object, variable, variable_name, ual_debug)
+
+use ids_schemas
+implicit none
+real(DP), pointer :: variable(:,:)
+integer :: idx, obj, index_in_object
+character*(*) :: path_in_object, variable_name
+character(len=3) :: ual_debug
+integer :: ndims,dim1,dum1,dim2,dum2,dim3,dim4,dim5,dim6,dim7,status
+
+call get_dimension_from_object(idx,obj,path_in_object,index_in_object,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+if (dim1.GT.0) then
+   allocate(variable(dim1,dim2))
+   call get_vect2d_double_from_object(idx,obj,path_in_object,index_in_object, &amp;
+   variable,dim1,dim2,dum1,dum2,status)
+   if (ual_debug =='yes') write(*,*) &amp;
+      'Get ', trim(variable_name)
+endif
+end subroutine fget_vect2d_double_from_object
+
 subroutine fget_double_from_object(idx, obj, path_in_object, index_in_object, variable, variable_name, ual_debug, status)
 
 use ids_schemas
@@ -764,6 +821,25 @@ if (status.EQ.0) then
       'Get ', trim(variable_name), 'value = ', variable
 endif
 end subroutine fget_double_from_object
+
+subroutine fget_int_from_object(idx, obj, path_in_object, index_in_object, variable, variable_name, ual_debug, status)
+
+use ids_schemas
+implicit none
+integer :: variable, int0d
+integer :: idx, obj, index_in_object
+character*(*) :: path_in_object, variable_name
+character(len=3) :: ual_debug
+integer :: status
+
+call get_int_from_object(idx,obj,path_in_object,index_in_object,int0d,status)
+if (status.EQ.0) then
+   variable = int0d
+   if (ual_debug =='yes') write(*,*) &amp;
+      'Get ', trim(variable_name), 'value = ', variable
+endif
+end subroutine fget_int_from_object
+
 
 
 <!-- ======================================  GET SLICE ======================================= -->
@@ -2055,13 +2131,9 @@ endif
          </xsl:when>
          <xsl:when test="@data_type='int_type' or @data_type='INT_0D'">
 ! Get <xsl:value-of select="@path"/>
-            <!-- for comment only -->
-call get_int_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>,int0d,status)
-if (status.EQ.0) then
-   <xsl:value-of select="$currentidxpath"/> = int0d
-   if (ual_debug =='yes') write(*,*) &amp;
-      'Get <xsl:value-of select="$currentidxpath"/>'
-endif
+call fget_int_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>, &amp;
+   <xsl:value-of select="$currentidxpath"/>, &amp;
+   "<xsl:value-of select="$currentidxpath"/>", ual_debug, status)
 <!-- -->
          </xsl:when>
          <xsl:when test="@data_type='flt_type' or @data_type='FLT_0D'">
@@ -2093,16 +2165,9 @@ endif
          </xsl:when>
          <xsl:when test=" @data_type='FLT_2D'">
 ! Get <xsl:value-of select="@path"/>
-            <!-- for comment only -->
-call get_dimension_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
-if (dim1.GT.0) then
-   allocate(<xsl:value-of select="$currentidxpath"/>(dim1,dim2))
-   call get_vect2d_double_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>, &amp;
+call fget_vect2d_double_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>, &amp;
    <xsl:value-of select="$currentidxpath"/>, &amp;
-   dim1,dim2,dum1,dum2,status)
-   if (ual_debug =='yes') write(*,*) &amp;
-      'Get <xsl:value-of select="$currentidxpath"/>'
-endif
+   "<xsl:value-of select="$currentidxpath"/>", ual_debug)
 <!-- -->
          </xsl:when>
          <xsl:when test=" @data_type='INT_2D'">
