@@ -29,16 +29,16 @@ interface ids_copy
 <xsl:for-each select="document(@schemaLocation)/*/xs:complexType"> <!-- Scan all structures within the schema -->
    module procedure ids_copy_struct_<xsl:value-of select="local:unique_name(@name)"/>	<!-- The name is truncated since Fortran 90/95 does not authorize procedure names above 33 characters -->
 </xsl:for-each>
-<xsl:if test="substring-before(@schemaLocation,'/')='utilities'">  <!-- Declare also the reference elements in utilities -->
+<!-- <xsl:if test="substring-before(@schemaLocation,'/')='utilities'"> --> <!-- Declare also the reference elements in utilities -->
 <xsl:for-each select="document(@schemaLocation)/*/xs:element[./xs:complexType]"> <!-- Scan all elements that are structures -->
    module procedure ids_copy_struct_<xsl:value-of select="local:unique_name(@name)"/>	<!-- The name is truncated since Fortran 90/95 does not authorize procedure names above 33 characters -->
 </xsl:for-each>
-</xsl:if>
+<!--</xsl:if>-->
 end interface ids_copy
 
-<xsl:if test="document(@schemaLocation)/*/xs:complexType!=''">
+<!-- <xsl:if test="document(@schemaLocation)/*/xs:complexType!=''"> -->
 contains
-</xsl:if>
+<!--</xsl:if> -->
 
 <xsl:for-each select="document(@schemaLocation)/*/xs:complexType"> <!-- Scan all structures within the schema -->
 subroutine ids_copy_struct_<xsl:value-of select="local:unique_name(@name)"/>(struct_in,  struct_out)
@@ -66,7 +66,7 @@ end subroutine ids_copy_struct_<xsl:value-of select="local:unique_name(@name)"/>
 </xsl:text>
 </xsl:for-each>
 
-<xsl:if test="substring-before(@schemaLocation,'/')='utilities'">  <!-- Declare also the reference elements in utilities -->
+<!-- <xsl:if test="substring-before(@schemaLocation,'/')='utilities'"> --> <!-- Declare also the reference elements in utilities -->
 <xsl:for-each select="document(@schemaLocation)/*/xs:element[./xs:complexType]"> <!-- Scan all elements that are structures -->
 subroutine ids_copy_struct_<xsl:value-of select="local:unique_name(@name)"/>(struct_in,  struct_out)
 ! Copies all fields of struct_in to struct_out
@@ -90,7 +90,7 @@ return
 end subroutine ids_copy_struct_<xsl:value-of select="local:unique_name(@name)"/>
 
 </xsl:for-each>
-</xsl:if>
+<!-- </xsl:if> -->
 
 end module
 </xsl:result-document>
@@ -132,6 +132,19 @@ endif
           <xsl:with-param name="level" select="$level"/>
           <xsl:with-param name="idxpath" select="$currentidxpath"/>
         </xsl:apply-templates> -->
+			</xsl:when>
+<xsl:when test="@ref and not(@maxOccurs) and not(@ref='time')"> <!-- Case of a generic element from utilities, e.g. ids_properties -->
+      call ids_copy(struct_in<xsl:value-of select = "$currentidxpath"/><xsl:value-of select="@ref"/>, struct_out<xsl:value-of select = "$currentidxpath"/><xsl:value-of select="@ref"/>)
+			</xsl:when>
+<xsl:when test="@ref='time'"> <!-- The reference element "time" at the root of the IDS is a special case -->
+! Copy time
+if (associated(struct_in<xsl:value-of select="$currentidxpath"/>time)) then
+   allocate(struct_out<xsl:value-of select="$currentidxpath"/>time&amp;
+      (size(struct_in<xsl:value-of select="$currentidxpath"/>time,1)))
+   struct_out<xsl:value-of select="$currentidxpath"/>time = &amp;
+   struct_in<xsl:value-of select="$currentidxpath"/>time
+endif
+
 			</xsl:when>
 			<xsl:when test="@type='str_type' or @type='str_1d_type' or ./xs:complexType/xs:group[@ref='STR_0D'] or ./xs:complexType/xs:group[@ref='STR_1D'] or @type='flt_1d_type' or ./xs:complexType/xs:group[@ref='FLT_1D'] or @type='int_1d_type' or ./xs:complexType/xs:group[@ref='INT_1D'] ">
 ! Copy <xsl:value-of select="$currentidxpath"/>
