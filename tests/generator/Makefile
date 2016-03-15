@@ -8,12 +8,12 @@ endif
 
 #------------------------- gfortran ----------------------------
 F90_gfortran = gfortran
-COPTS_gfortran = -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none -I$(INSTALL)/include/gfortran
+COPTS_gfortran = -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none -I$(INSTALL)/fortraninterface/gfortran
 LIBS_gfortran = -L$(INSTALL)/lib -limas-gfortran -limas -lm
 
 #------------------------- ifort ----------------------------
 F90_ifort = ifort
-COPTS_ifort = -r8 -assume no2underscore  -fPIC -module $(INSTALL)/include/ifort -shared-intel
+COPTS_ifort = -r8 -assume no2underscore  -fPIC -module $(INSTALL)/fortraninterface/ifort -shared-intel
 LIBS_ifort = -L$(INSTALL)/lib -limas-ifort -limas -lm
 
 
