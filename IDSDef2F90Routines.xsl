@@ -898,10 +898,10 @@ interface ids_delete
    module procedure ids_delete_<xsl:value-of select="local:unique_name(@name)"/>
 end interface ids_delete
 
-! Declaration of the generic IDS DEALLOCATE routine
+<!-- ! Declaration of the generic IDS DEALLOCATE routine
 interface ids_deallocate
    module procedure ids_deallocate_<xsl:value-of select="local:unique_name(@name)"/>
-end interface ids_deallocate
+end interface ids_deallocate -->
 
 
 <!-- ! Declaration of the generic IDS COPY routine
@@ -986,7 +986,7 @@ end subroutine ids_delete_<xsl:value-of select="local:unique_name(@name)"/>
 
 
 <!-- ======================================  DEALLOCATE ======================================= -->
-!!!!!! Routines to DEALLOCATE IDSs
+<!-- !!!!!! Routines to DEALLOCATE IDSs
 
 subroutine ids_deallocate_<xsl:value-of select="local:unique_name(@name)"/>(IDS)
 
@@ -1003,7 +1003,7 @@ type(ids_<xsl:value-of select="@name"/>) :: IDS
 
 if (ual_debug =='yes') write(*,*) 'Deallocate an <xsl:value-of select="@name"/> IDS : done'
 end subroutine ids_deallocate_<xsl:value-of select="local:unique_name(@name)"/>
-
+-->
 <!--
 !!!!!! Routines to COPY IDSs
 subroutine ids_copy_<xsl:value-of select="local:unique_name(@name)"/>(IDSin,  IDSout)

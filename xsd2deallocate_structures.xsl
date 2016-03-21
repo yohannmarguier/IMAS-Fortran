@@ -30,16 +30,16 @@ interface ids_deallocate
 <xsl:for-each select="document(@schemaLocation)/*/xs:complexType"> <!-- Scan all structures within the schema -->
    module procedure ids_deallocate_struct_<xsl:value-of select="local:unique_name(@name)"/>	<!-- The name is truncated since Fortran 90/95 does not authorize procedure names above 33 characters -->
 </xsl:for-each>
-<xsl:if test="substring-before(@schemaLocation,'/')='utilities'">  <!-- Declare also the reference elements in utilities -->
+<!--<xsl:if test="substring-before(@schemaLocation,'/')='utilities'"> --> <!-- Declare also the reference elements in utilities -->
 <xsl:for-each select="document(@schemaLocation)/*/xs:element[./xs:complexType]"> <!-- Scan all elements that are structures -->
    module procedure ids_deallocate_struct_<xsl:value-of select="local:unique_name(@name)"/>	<!-- The name is truncated since Fortran 90/95 does not authorize procedure names above 33 characters -->
 </xsl:for-each>
-</xsl:if>
+<!--</xsl:if> -->
 end interface ids_deallocate
 
-<xsl:if test="document(@schemaLocation)/*/xs:complexType!=''">
+<!-- <xsl:if test="document(@schemaLocation)/*/xs:complexType!=''"> -->
 contains
-</xsl:if>
+<!-- </xsl:if> -->
 
 <xsl:for-each select="document(@schemaLocation)/*/xs:complexType"> <!-- Scan all structures within the schema -->
 subroutine ids_deallocate_struct_<xsl:value-of select="local:unique_name(@name)"/>(struct_in)
@@ -63,7 +63,7 @@ end subroutine ids_deallocate_struct_<xsl:value-of select="local:unique_name(@na
 </xsl:text>
 </xsl:for-each>
 
-<xsl:if test="substring-before(@schemaLocation,'/')='utilities'">  <!-- Declare also the reference elements in utilities -->
+<!-- <xsl:if test="substring-before(@schemaLocation,'/')='utilities'"> --> <!-- Declare also the reference elements in utilities -->
 <xsl:for-each select="document(@schemaLocation)/*/xs:element[./xs:complexType]"> <!-- Scan all elements that are structures -->
 
 subroutine ids_deallocate_struct_<xsl:value-of select="local:unique_name(@name)"/>(struct_in)
@@ -86,7 +86,7 @@ type(ids_<xsl:value-of select="@name"/>) :: struct_in
 end subroutine ids_deallocate_struct_<xsl:value-of select="local:unique_name(@name)"/>
 
 </xsl:for-each>
-</xsl:if>
+<!-- </xsl:if> -->
 
 end module
 </xsl:result-document>
@@ -121,7 +121,16 @@ end module
         deallocate(struct_in<xsl:value-of select="$currentidxpath"/>)
     endif
          </xsl:when>
+<xsl:when test="@ref and not(@maxOccurs) and not(@ref='time')"> <!-- Case of a generic element from utilities, e.g. ids_properties -->
+      call ids_deallocate(struct_in<xsl:value-of select = "$currentidxpath"/><xsl:value-of select="@ref"/>)
+			</xsl:when>
+<xsl:when test="@ref='time'"> <!-- The reference element "time" at the root of the IDS is a special case -->
+! Deallocate time
+if (associated(struct_in<xsl:value-of select="$currentidxpath"/>time)) then
+   deallocate(struct_in<xsl:value-of select="$currentidxpath"/>time)
+endif
 
+			</xsl:when>
 <xsl:when test="./xs:complexType/xs:sequence/xs:group[@ref='FLT_1D']">
 <!-- Special data/time case for FLT 1D -->
 ! Deallocate <xsl:value-of select="$currentidxpath"/> 
