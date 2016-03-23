@@ -18,17 +18,17 @@ include ../Makefile.common
 
 F90_g95         = g95
 MODDIR_g95      = g95
-COPTS_g95       = -D__USE_GNU -r8 -ftrace=full -fPIC -fno-second-underscore -ffree-line-length-huge -g -fmod=$(MODDIR_g95)
+COPTS_g95       = -D__USE_XOPEN2K8 -r8 -ftrace=full -fPIC -fno-second-underscore -ffree-line-length-huge -g -fmod=$(MODDIR_g95)
 INCDIR_g95      = -I$(MODDIR_g95)
 
 F90_gfortran    = gfortran
 MODDIR_gfortran = gfortran
-COPTS_gfortran  = -D__USE_GNU -fdefault-real-8 -fdefault-double-8 -fPIC -fno-second-underscore -ffree-line-length-none -g -J$(MODDIR_gfortran)
+COPTS_gfortran  = -D__USE_XOPEN2K8 -fdefault-real-8 -fdefault-double-8 -fPIC -fno-second-underscore -ffree-line-length-none -g -J$(MODDIR_gfortran)
 INCDIR_gfortran = -I$(MODDIR_gfortran)
 
 F90_pgi         = pgf90
 MODDIR_pgi      = pgi
-COPTS_pgi       = -D__USE_GNU -r8 -Mnosecond_underscore -fPIC -module=./$(MODDIR_pgi) -g
+COPTS_pgi       = -D__USE_XOPEN2K8 -r8 -Mnosecond_underscore -fPIC -module=./$(MODDIR_pgi) -g
 INCDIR_pgi      = -I$(MODDIR_pgi)
 
 F90_ifort       = ifort
