@@ -5899,6 +5899,7 @@ do i<xsl:value-of select = "concat(@name,generate-id(.))"/> = 1,<xsl:value-of se
 <xsl:with-param name="mds_path" select="concat($mds_path,'//','&quot;/',@name,'/&quot;//trim(int2str(i',@name,generate-id(.),'))')"/>
 </xsl:apply-templates>
 enddo
+call delete_data(idx,IDSpath,<xsl:value-of select="concat($mds_path,'//&quot;/',@name,'/Shape_of&quot;')"/>)
    </xsl:when>
    <xsl:otherwise>
 do i<xsl:value-of select = "concat(@name,generate-id(.))"/> = 1,<xsl:value-of select = "@maxoccur"/>
@@ -5907,9 +5908,29 @@ do i<xsl:value-of select = "concat(@name,generate-id(.))"/> = 1,<xsl:value-of se
 <xsl:with-param name="mds_path" select="concat('&quot;/',@name,'/&quot;//trim(int2str(i',@name,generate-id(.),'))')"/>
 </xsl:apply-templates>
 enddo
+call delete_data(idx,IDSpath,<xsl:value-of select="concat('&quot;/',@name,'/Shape_of&quot;')"/>)
+
    </xsl:otherwise>
    </xsl:choose>
 </xsl:when>
+<xsl:when test="@data_type='struct_array' and @maxoccur='unbounded'">
+   <xsl:choose>
+   <xsl:when test="$mds_path">
+call delete_data(idx,IDSpath,<xsl:value-of select="concat($mds_path,'//&quot;/',@name,'/timed&quot;')"/>)
+call delete_data(idx,IDSpath,<xsl:value-of select="concat($mds_path,'//&quot;/',@name,'/non_timed&quot;')"/>)
+call delete_data(idx,IDSpath,<xsl:value-of select="concat($mds_path,'//&quot;/',@name,'/time&quot;')"/>)
+   </xsl:when>
+   <xsl:otherwise>
+call delete_data(idx,IDSpath,<xsl:value-of select="concat('&quot;/',@name,'/timed&quot;')"/>)
+call delete_data(idx,IDSpath,<xsl:value-of select="concat('&quot;/',@name,'/non_timed&quot;')"/>)
+call delete_data(idx,IDSpath,<xsl:value-of select="concat('&quot;/',@name,'/time&quot;')"/>)
+   </xsl:otherwise>
+   </xsl:choose>
+</xsl:when>
+
+
+
+
 			<xsl:otherwise>
    <xsl:choose>
    <xsl:when test="$mds_path">
