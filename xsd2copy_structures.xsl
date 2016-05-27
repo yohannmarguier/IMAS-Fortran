@@ -253,6 +253,41 @@ if (associated(struct_in<xsl:value-of select="$currentidxpath"/>%data)) then
 endif
 
 </xsl:when>
+<xsl:when test="./xs:complexType/xs:sequence/xs:group[@ref='FLT_2D']">
+<!-- Special data/time case for FLT 2D -->
+! Copy <xsl:value-of select="$currentidxpath"/>
+if (associated(struct_in<xsl:value-of select="$currentidxpath"/>%data)) then
+   allocate(struct_out<xsl:value-of select="$currentidxpath"/>%data&amp;
+      (size(struct_in<xsl:value-of select="$currentidxpath"/>%data,1), &amp;
+      size(struct_in<xsl:value-of select="$currentidxpath"/>%data,2)))
+   struct_out<xsl:value-of select="$currentidxpath"/>%data = &amp;
+   struct_in<xsl:value-of select="$currentidxpath"/>%data
+
+   allocate(struct_out<xsl:value-of select="$currentidxpath"/>%time&amp;
+      (size(struct_in<xsl:value-of select="$currentidxpath"/>%time,1)))
+   struct_out<xsl:value-of select="$currentidxpath"/>%time = &amp;
+   struct_in<xsl:value-of select="$currentidxpath"/>%time
+endif
+
+</xsl:when>
+<xsl:when test="./xs:complexType/xs:sequence/xs:group[@ref='FLT_3D']">
+<!-- Special data/time case for FLT 3D -->
+! Copy <xsl:value-of select="$currentidxpath"/>
+if (associated(struct_in<xsl:value-of select="$currentidxpath"/>%data)) then
+   allocate(struct_out<xsl:value-of select="$currentidxpath"/>%data&amp;
+      (size(struct_in<xsl:value-of select="$currentidxpath"/>%data,1), &amp;
+      size(struct_in<xsl:value-of select="$currentidxpath"/>%data,2), &amp;
+      size(struct_in<xsl:value-of select="$currentidxpath"/>%data,3)))
+   struct_out<xsl:value-of select="$currentidxpath"/>%data = &amp;
+   struct_in<xsl:value-of select="$currentidxpath"/>%data
+
+   allocate(struct_out<xsl:value-of select="$currentidxpath"/>%time&amp;
+      (size(struct_in<xsl:value-of select="$currentidxpath"/>%time,1)))
+   struct_out<xsl:value-of select="$currentidxpath"/>%time = &amp;
+   struct_in<xsl:value-of select="$currentidxpath"/>%time
+endif
+
+</xsl:when>
 
 			<xsl:otherwise>
  ! Copy <xsl:value-of select="$currentidxpath"/> : PROBLEM : UNIDENTIFIED TYPE !!! <!-- for comment only -->
