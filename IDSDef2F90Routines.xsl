@@ -4493,21 +4493,23 @@ endif
 call get_object(idx,path,<xsl:value-of select = "concat($mds_path,'//&quot;/',@name,'&quot;')"/>,obj_all_times,TIMED,status) ! read the whole timed block
 if (status.EQ.0) then
    call get_object_dim(idx,obj_all_times,lentime)  ! the size of this top object is the number of time slices
-   allocate(ids%<xsl:value-of select = "concat($variable_path,'%',@name)"/>(lentime))
-   if (ual_debug =='yes') write(*,*) &amp;
+   if (lentime > 0) then
+      allocate(ids%<xsl:value-of select = "concat($variable_path,'%',@name)"/>(lentime))
+      if (ual_debug =='yes') write(*,*) &amp;
       'Get ids%<xsl:value-of select = "concat($variable_path,'%',@name)"/>, lentime =', lentime
-   do i1 = 1,lentime     ! fill every time slice
-      call get_object_from_object(idx,obj_all_times,"ALLTIMES",i1,obj1,status)
-      if (status.EQ.0) then
-         !call get_object_dim(idx,obj1,dimObj1)
+      do i1 = 1,lentime     ! fill every time slice
+         call get_object_from_object(idx,obj_all_times,"ALLTIMES",i1,obj1,status)
+         if (status.EQ.0) then
+            !call get_object_dim(idx,obj1,dimObj1)
                <xsl:apply-templates select = "field" mode = "GET_FROM_OBJECT">
                   <xsl:with-param name="level" select="1"/>
                   <xsl:with-param name="objpath" select="@name"/>
                   <xsl:with-param name="idxpath" select="concat('IDS%',$variable_path,'%',@name,'(i1)')"/>
                   <xsl:with-param name="timed" select="'yes'"/>
                </xsl:apply-templates>
-      endif
-   enddo
+         endif
+      enddo
+   endif
    call release_object(idx,obj_all_times)
 endif
 </xsl:when>
@@ -4516,12 +4518,13 @@ endif
 call get_object(idx,path,"<xsl:value-of select = "@path"/>",obj_all_times,TIMED,status) ! read the whole timed block
 if (status.EQ.0) then
    call get_object_dim(idx,obj_all_times,lentime)  ! the size of this top object is the number of time slices
-   allocate(ids%<xsl:value-of select = "translate(@path,'/','%')"/>(lentime))
-   if (ual_debug =='yes') write(*,*) &amp;
+   if (lentime > 0) then
+      allocate(ids%<xsl:value-of select = "translate(@path,'/','%')"/>(lentime))
+      if (ual_debug =='yes') write(*,*) &amp;
       'Get ids%<xsl:value-of select="translate(@path,'/','%')"/>, lentime =', lentime
-   do i1 = 1,lentime     ! fill every time slice
-      call get_object_from_object(idx,obj_all_times,"ALLTIMES",i1,obj1,status)
-      if (status.EQ.0) then
+      do i1 = 1,lentime     ! fill every time slice
+         call get_object_from_object(idx,obj_all_times,"ALLTIMES",i1,obj1,status)
+         if (status.EQ.0) then
          !call get_object_dim(idx,obj1,dimObj1)
                <xsl:apply-templates select = "field" mode = "GET_FROM_OBJECT">
                   <xsl:with-param name="level" select="1"/>
@@ -4529,8 +4532,9 @@ if (status.EQ.0) then
                   <xsl:with-param name="idxpath" select="concat('ids%',translate(@path,'/','%'),'(i1)')"/>
                   <xsl:with-param name="timed" select="'yes'"/>
                </xsl:apply-templates>
-      endif
-   enddo
+         endif
+      enddo
+   endif
    call release_object(idx,obj_all_times)
 endif
 </xsl:otherwise>
