@@ -5747,7 +5747,8 @@ call fput_int_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of se
 if (<xsl:value-of select="$currentidxpath"/>.NE.-9.D40) then
    call put_double_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:value-of select="$child_index"/>,<xsl:value-of select="$currentidxpath"/>)
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put <xsl:value-of select="$currentidxpath"/>',<xsl:value-of select="$currentidxpath"/>
+      'Put <xsl:value-of select="$currentidxpath"/>', &amp;
+      <xsl:value-of select="$currentidxpath"/>
 endif
 <!-- -->
          </xsl:when>
