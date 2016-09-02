@@ -2973,7 +2973,8 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
        trim(longstring), status)
        ! should clean up longstring after that, or send to the put only the right length, which has been updated
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
+      'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',&amp;
+      IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
    </xsl:call-template>
@@ -2993,7 +2994,8 @@ if (associated(IDS%<xsl:value-of select="@name"/>)) then
    endif
    call put_string(idx,path, "<xsl:value-of select="@name"/>",trim(longstring), status)       ! should clean up longstring after that, or send to the put only the right length, which has been updated
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="@name"/>',IDS%<xsl:value-of select="@name"/>
+      'Put IDS%<xsl:value-of select="@name"/>',&amp;
+      IDS%<xsl:value-of select="@name"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
    </xsl:call-template>
@@ -3100,7 +3102,8 @@ if (IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>.NE.-999999999)
    call put_int(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
        IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>, status)
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
+      'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',&amp;
+      IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
    </xsl:call-template>
@@ -3189,7 +3192,8 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    call end_IDS_put_timed(idx, path)
    </xsl:if>
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
+      'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',&amp;
+      IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
    </xsl:call-template>
@@ -3219,7 +3223,8 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call end_IDS_put_timed(idx, path)
    </xsl:if>
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
+      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',&amp;
+      IDS%<xsl:value-of select="translate(@path,'/','%')"/>
 
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
@@ -3265,7 +3270,8 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    call end_IDS_put_timed(idx, path)
    </xsl:if>
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
+      'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',&amp;
+      IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
 
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
@@ -3296,7 +3302,8 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call end_IDS_put_timed(idx, path)
    </xsl:if>
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
+      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',&amp;
+      IDS%<xsl:value-of select="translate(@path,'/','%')"/>
 
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
@@ -3344,7 +3351,8 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    call end_IDS_put_timed(idx, path)
    </xsl:if>
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
+      'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',&amp;
+      IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
    </xsl:call-template>
@@ -3375,7 +3383,8 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call end_IDS_put_timed(idx, path)
    </xsl:if>
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
+      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',&amp;
+      IDS%<xsl:value-of select="translate(@path,'/','%')"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
    </xsl:call-template>
@@ -3422,7 +3431,8 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    call end_IDS_put_timed(idx, path)
    </xsl:if>
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
+      'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',&amp;
+      IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
    </xsl:call-template>
@@ -3453,7 +3463,8 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call end_IDS_put_timed(idx, path)
    </xsl:if>
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
+      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',&amp;
+      IDS%<xsl:value-of select="translate(@path,'/','%')"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
    </xsl:call-template>
@@ -3502,7 +3513,8 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    call end_IDS_put_timed(idx, path)
    </xsl:if>
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
+      'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',&amp;
+      IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
    </xsl:call-template>
@@ -3535,7 +3547,8 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call end_IDS_put_timed(idx, path)
    </xsl:if>
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
+      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',&amp;
+      IDS%<xsl:value-of select="translate(@path,'/','%')"/>
     <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
    </xsl:call-template>
@@ -3583,7 +3596,8 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    call end_IDS_put_timed(idx, path)
    </xsl:if>
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
+      'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',&amp;
+      IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
 
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
@@ -3617,7 +3631,8 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call end_IDS_put_timed(idx, path)
    </xsl:if>
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
+      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',&amp;
+      IDS%<xsl:value-of select="translate(@path,'/','%')"/>
 
  endif
 </xsl:otherwise>
@@ -3664,7 +3679,8 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    call end_IDS_put_timed(idx, path)
    </xsl:if>
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
+      'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',&amp;
+      IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
    </xsl:call-template>
@@ -3698,7 +3714,8 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call end_IDS_put_timed(idx, path)
    </xsl:if>
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
+      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',&amp;
+      IDS%<xsl:value-of select="translate(@path,'/','%')"/>
 
     <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
@@ -3750,7 +3767,8 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    call end_IDS_put_timed(idx, path)
    </xsl:if>
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
+      'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',&amp;
+      IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
    </xsl:call-template>
@@ -3785,7 +3803,8 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call end_IDS_put_timed(idx, path)
    </xsl:if>
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
+      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',&amp;
+      IDS%<xsl:value-of select="translate(@path,'/','%')"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
    </xsl:call-template>
@@ -3836,7 +3855,8 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    call end_IDS_put_timed(idx, path)
    </xsl:if>
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
+      'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',&amp;
+      IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
    </xsl:call-template>
@@ -3872,7 +3892,8 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    call end_IDS_put_timed(idx, path)
    </xsl:if>
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
+      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',&amp;
+      IDS%<xsl:value-of select="translate(@path,'/','%')"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put'"/>
    </xsl:call-template>
@@ -4097,7 +4118,8 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(1),&amp;
    IDS%time(1), status)
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
+      'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',&amp;
+      IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
 endif
 </xsl:when>
 <xsl:otherwise>
@@ -4107,7 +4129,8 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>(1),&amp;
    IDS%time(1), status)
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
+      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',&amp;
+      IDS%<xsl:value-of select="translate(@path,'/','%')"/>
 
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
@@ -4127,7 +4150,8 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(1),&amp;
    IDS%time(1), status)
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
+      'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',&amp;
+      IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
 
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
@@ -4142,7 +4166,8 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>(1),&amp;
    IDS%time(1), status)
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
+      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',&amp;
+      IDS%<xsl:value-of select="translate(@path,'/','%')"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
    </xsl:call-template>
@@ -4163,7 +4188,8 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,1),&amp;
    IDS%time(1), status)
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
+      'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',&amp;
+      IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
 
      <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
@@ -4178,7 +4204,8 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
    IDS%time(1), status)
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
+      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',&amp;
+      IDS%<xsl:value-of select="translate(@path,'/','%')"/>
 
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
@@ -4201,7 +4228,8 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,1),&amp;
    IDS%time(1), status)
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
+      'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',&amp;
+      IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
 
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
@@ -4216,7 +4244,8 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
    IDS%time(1), status)
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
+      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',&amp;
+      IDS%<xsl:value-of select="translate(@path,'/','%')"/>
 
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
@@ -4239,7 +4268,8 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,2),&amp;
    IDS%time(1), status)
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
+      'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',&amp;
+      IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
    </xsl:call-template>
@@ -4254,7 +4284,8 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,2),&amp;
    IDS%time(1), status)
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
+      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',&amp;
+      IDS%<xsl:value-of select="translate(@path,'/','%')"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
    </xsl:call-template>
@@ -4275,7 +4306,8 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,2),&amp;
    IDS%time(1), status)
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
+      'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',&amp;
+      IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
    </xsl:call-template>
@@ -4290,7 +4322,8 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,2),&amp;
    IDS%time(1), status)
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
+      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',&amp;
+      IDS%<xsl:value-of select="translate(@path,'/','%')"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
    </xsl:call-template>
@@ -4312,7 +4345,8 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,3),&amp;
    IDS%time(1), status)
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
+      'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',&amp;
+      IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
 
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
@@ -4329,7 +4363,8 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,3),&amp;
    IDS%time(1), status)
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
+      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',&amp;
+      IDS%<xsl:value-of select="translate(@path,'/','%')"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
    </xsl:call-template>
@@ -4352,7 +4387,8 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,4),&amp;
    IDS%time(1), status)
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
+      'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',&amp;
+      IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
 
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
@@ -4370,7 +4406,8 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,4),&amp;
    IDS%time(1), status)
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
+      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',&amp;
+      IDS%<xsl:value-of select="translate(@path,'/','%')"/>
 
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
@@ -4395,7 +4432,8 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
    size(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,5),&amp;
    IDS%time(1), status)
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
+      'Put IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',&amp;
+      IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
    <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
    </xsl:call-template>
@@ -4413,7 +4451,8 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,5),&amp;
    IDS%time(1), status)
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
+      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',&amp;
+      IDS%<xsl:value-of select="translate(@path,'/','%')"/>
 
 
      <xsl:call-template name="checkError">
@@ -4590,7 +4629,8 @@ if (status.EQ.0) then
       enddo
    endif
    if (ual_debug =='yes') write(*,*) &amp;
-      'Get IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
+      'Get IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>',&amp;
+      IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>
 endif
 <!-- -->
 </xsl:when>
@@ -4608,7 +4648,8 @@ if (status.EQ.0) then
       enddo
    endif
    if (ual_debug =='yes') write(*,*) &amp;
-      'Get IDS%<xsl:value-of select="@name"/>',IDS%<xsl:value-of select="@name"/>
+      'Get IDS%<xsl:value-of select="@name"/>',&amp;
+      IDS%<xsl:value-of select="@name"/>
 endif
 <!-- -->
 </xsl:otherwise>
@@ -5470,7 +5511,8 @@ if (IDS%<xsl:value-of select="translate(@path,'/','%')"/>.NE.-999999999) then
    call put_int_slice(idx,path, "<xsl:value-of select="@path"/>",IDS%<xsl:value-of select="translate(@path,'/','%')"/>,&amp;
    IDS%time, status)
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
+      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',&amp;
+      IDS%<xsl:value-of select="translate(@path,'/','%')"/>
 
      <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
@@ -5485,7 +5527,8 @@ if (IDS%<xsl:value-of select="translate(@path,'/','%')"/>.NE.-9.D40) then
    call put_double_slice(idx,path, "<xsl:value-of select="@path"/>",IDS%<xsl:value-of select="translate(@path,'/','%')"/>,&amp;
    IDS%time, status)
    if (ual_debug =='yes') write(*,*) &amp;
-       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
+       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',&amp;
+       IDS%<xsl:value-of select="translate(@path,'/','%')"/>
      <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
    </xsl:call-template>
@@ -5516,7 +5559,8 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    IDS%<xsl:value-of select="translate(@path,'/','%')"/>,&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>),IDS%time, status)
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
+      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',&amp;
+      IDS%<xsl:value-of select="translate(@path,'/','%')"/>
            <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
    </xsl:call-template>endif
@@ -5531,7 +5575,8 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,1),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,2),IDS%time, status)
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
+      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',&amp;
+      IDS%<xsl:value-of select="translate(@path,'/','%')"/>
          <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
    </xsl:call-template>
@@ -5547,7 +5592,8 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,1), &amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,2),IDS%time, status)
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
+      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',&amp;
+      IDS%<xsl:value-of select="translate(@path,'/','%')"/>
      <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
    </xsl:call-template>
@@ -5581,7 +5627,8 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,2),&amp;
    size(IDS%<xsl:value-of select="translate(@path,'/','%')"/>,3),IDS%time, status)
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
+      'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',&amp;
+      IDS%<xsl:value-of select="translate(@path,'/','%')"/>
 
      <xsl:call-template name="checkError">
         <xsl:with-param name="method" select="'put_slice'"/>
@@ -5718,7 +5765,8 @@ if (associated(<xsl:value-of select="$currentidxpath"/>)) then
    endif
    call put_string_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:value-of select="$child_index"/>,trim(longstring))       ! should clean up longstring after that, or send to the put only the right length, which has been updated
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put <xsl:value-of select="$currentidxpath"/>',<xsl:value-of select="$currentidxpath"/>
+      'Put <xsl:value-of select="$currentidxpath"/>',&amp;
+      <xsl:value-of select="$currentidxpath"/>
 endif
 <!-- -->
          </xsl:when>
@@ -5793,7 +5841,8 @@ if (associated(<xsl:value-of select="$currentidxpath"/>)) then
    size(<xsl:value-of select="$currentidxpath"/>,1), &amp;
    size(<xsl:value-of select="$currentidxpath"/>,2))
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put <xsl:value-of select="$currentidxpath"/>',<xsl:value-of select="$currentidxpath"/>
+      'Put <xsl:value-of select="$currentidxpath"/>',&amp;
+      <xsl:value-of select="$currentidxpath"/>
 endif
 <!-- -->
          </xsl:when>
@@ -5821,7 +5870,8 @@ if (associated(<xsl:value-of select="$currentidxpath"/>)) then
    size(<xsl:value-of select="$currentidxpath"/>,2),&amp;
    size(<xsl:value-of select="$currentidxpath"/>,3))
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put <xsl:value-of select="$currentidxpath"/>',<xsl:value-of select="$currentidxpath"/>
+      'Put <xsl:value-of select="$currentidxpath"/>',&amp;
+      <xsl:value-of select="$currentidxpath"/>
 endif
 <!-- -->
          </xsl:when>
@@ -5833,7 +5883,8 @@ if (associated(<xsl:value-of select="$currentidxpath"/>)) then
    size(<xsl:value-of select="$currentidxpath"/>,1),size(<xsl:value-of select="$currentidxpath"/>,2),&amp;
    size(<xsl:value-of select="$currentidxpath"/>,3),size(<xsl:value-of select="$currentidxpath"/>,4))
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put <xsl:value-of select="$currentidxpath"/>',<xsl:value-of select="$currentidxpath"/>
+      'Put <xsl:value-of select="$currentidxpath"/>',&amp;
+      <xsl:value-of select="$currentidxpath"/>
 endif
 <!-- -->
          </xsl:when>
@@ -5846,7 +5897,8 @@ if (associated(<xsl:value-of select="$currentidxpath"/>)) then
    size(<xsl:value-of select="$currentidxpath"/>,3),size(<xsl:value-of select="$currentidxpath"/>,4),&amp;
    size(<xsl:value-of select="$currentidxpath"/>,5))
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put <xsl:value-of select="$currentidxpath"/>',<xsl:value-of select="$currentidxpath"/>
+      'Put <xsl:value-of select="$currentidxpath"/>',&amp;
+      <xsl:value-of select="$currentidxpath"/>
 endif
 <!-- -->
          </xsl:when>
@@ -5861,7 +5913,8 @@ if (associated(<xsl:value-of select="$currentidxpath"/>)) then
    size(<xsl:value-of select="$currentidxpath"/>,3),size(<xsl:value-of select="$currentidxpath"/>,4),&amp;
    size(<xsl:value-of select="$currentidxpath"/>,5),size(<xsl:value-of select="$currentidxpath"/>,6))
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put <xsl:value-of select="$currentidxpath"/>',<xsl:value-of select="$currentidxpath"/>
+      'Put <xsl:value-of select="$currentidxpath"/>',&amp;
+      <xsl:value-of select="$currentidxpath"/>
 endif
 <!-- -->
          </xsl:when>
