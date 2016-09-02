@@ -5765,10 +5765,11 @@ call fput_vect1d_double_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:v
             <!-- for comment only -->
 if (associated(<xsl:value-of select="$currentidxpath"/>)) then
    call put_vect1d_int_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:value-of select="$child_index"/>,&amp;
-   <xsl:value-of select="$currentidxpath"/>,&amp;
-   size(<xsl:value-of select="$currentidxpath"/>))
+      <xsl:value-of select="$currentidxpath"/>,&amp;
+      size(<xsl:value-of select="$currentidxpath"/>))
    if (ual_debug =='yes') write(*,*) &amp;
-      'Put <xsl:value-of select="$currentidxpath"/>',<xsl:value-of select="$currentidxpath"/>
+      'Put <xsl:value-of select="$currentidxpath"/>',&amp;
+      <xsl:value-of select="$currentidxpath"/>
 endif
 <!-- -->
          </xsl:when>
