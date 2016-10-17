@@ -10,7 +10,7 @@ else
 
 IDSDEF	= ../xml/IDSDef.xml
 
-all: makefile-gen
+all: makefile-gen ids_routines.f90 ids_schemas.f90
 	$(MAKE) -f makefile-gen
 
 ids_routines.f90: makefile-gen
