@@ -10,10 +10,13 @@ else
 
 IDSDEF	= ../xml/IDSDef.xml
 
-all: makefile-gen pkgconfig
-	$(MAKE) -f makefile-gen ids_schemas.f90
-	$(MAKE) -f makefile-gen ids_routines.f90
+all: makefile-gen ids_routines.f90 ids_schemas.f90
 	$(MAKE) -f makefile-gen
+
+ids_routines.f90: makefile-gen
+	$(MAKE) -f makefile-gen ids_routines.f90
+ids_schemas.f90: makefile-gen
+	$(MAKE) -f makefile-gen ids_schemas.f90
 
 makefile-gen: IDSDef2F90Makefile.xsl
 	xsltproc IDSDef2F90Makefile.xsl $(IDSDEF)
