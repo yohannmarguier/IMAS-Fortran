@@ -7,6 +7,6 @@ Name: imas-g95
 Version: __DD_GIT_DESCRIBE__-__UAL_GIT_DESCRIBE__
 Description: IMAS Fortran Libraries (g95)
 URL: https://imas.iter.org
-Requires.private: imas-lowlevel = __DD_GIT_DESCRIBE__-__UAL_GIT_DESCRIBE__
+Requires: imas-lowlevel = __DD_GIT_DESCRIBE__-__UAL_GIT_DESCRIBE__
 Cflags: -I${includedir}/g95
 Libs: -L${libdir} -limas-g95

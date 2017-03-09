@@ -7,6 +7,6 @@ Name: imas-gfortran
 Version: __DD_GIT_DESCRIBE__-__UAL_GIT_DESCRIBE__
 Description: IMAS Fortran Libraries (gfortran)
 URL: https://imas.iter.org
-Requires.private: imas-lowlevel = __DD_GIT_DESCRIBE__-__UAL_GIT_DESCRIBE__
+Requires: imas-lowlevel = __DD_GIT_DESCRIBE__-__UAL_GIT_DESCRIBE__
 Cflags: -I${includedir}/gfortran
 Libs: -L${libdir} -limas-gfortran
