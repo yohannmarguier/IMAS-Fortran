@@ -33,9 +33,13 @@ Possible way to extend the types to single precision floats, c_int, etc
 
   integer(ids_int), parameter :: ids_data_dictionary_version(3) = (/ ids_int_invalid , ids_int_invalid , ids_int_invalid /)  !! NOTE: to be filled with e.g. (/3,7,4/).
 
-  ! ids_is_valid - Function for testing the validity of either integers or real numbers
+  ! ids_is_valid - Function for testing the validity of scalar and arrays of integers and real numbers
   interface ids_is_valid
-     module procedure ids_is_valid_int, ids_is_valid_ids_real, ids_is_all_valid_int, ids_is_all_valid_real
+     module procedure &amp;
+          ids_is_valid_int, &amp;
+          ids_is_valid_ids_real, &amp;
+          ids_is_valid_array_of_int, &amp;
+          ids_is_valid_array_of_real
   end interface
 
 contains
@@ -48,25 +52,22 @@ contains
   end function ids_is_valid_int
 
   logical function ids_is_valid_ids_real(in)
-    implicit none
     real(ids_real) :: in
-    ids_is_valid_ids_real = abs(in - ids_real_invalid) .gt. abs(ids_real_invalid) * 1.0e-15_ids_real
+    ids_is_valid_ids_real = abs(in - ids_real_invalid) .gt. tiny(ids_real_invalid)
     return
   end function ids_is_valid_ids_real
 
-  logical function ids_is_all_valid_int(in)
-    implicit none
+  logical function ids_is_valid_array_of_int(in)
     integer(ids_int) :: in(:)
-    ids_is_all_valid_int= .not. any( in(:) .eq. ids_int_invalid )
+    ids_is_valid_array_of_int = .not. any( in(:) .eq. ids_int_invalid )
     return
-  end function ids_is_all_valid_int
+  end function ids_is_valid_array_of_int
 
-  logical function ids_is_all_valid_real(in)
-    implicit none
+  logical function ids_is_valid_array_of_real(in)
     real(ids_real) :: in(:)
-    ids_is_all_valid_real= .not. any( abs(in(:) - ids_real_invalid) .le. abs(ids_real_invalid) * 1.0e-15_ids_real )
+    ids_is_valid_array_of_real = .not. any( abs(in(:) - ids_real_invalid) .le. tiny(ids_real_invalid) )
     return
-  end function ids_is_all_valid_real
+  end function ids_is_valid_array_of_real
 
 end module ids_types
 <!-- ======================= ====   End :Common Types definition ==== =====================-->
