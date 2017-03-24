@@ -47,10 +47,9 @@ subroutine ids_copy_struct_<xsl:value-of select="local:unique_name(@name)"/>(str
 
 use ids_schemas
 implicit none
-!integer, parameter :: DP=kind(1.0D0)
 
-integer :: itime, lentime, lenstring, istring
-integer :: i1,i2,i3,i4,i5,i6,i7
+integer(ids_int) :: itime, lentime, lenstring, istring
+integer(ids_int) :: i1,i2,i3,i4,i5,i6,i7
 
 type(ids_<xsl:value-of select="@name"/>) :: struct_in, struct_out
 
@@ -74,10 +73,9 @@ subroutine ids_copy_struct_<xsl:value-of select="local:unique_name(@name)"/>(str
 
 use ids_schemas
 implicit none
-!integer, parameter :: DP=kind(1.0D0)
 
-integer :: itime, lentime, lenstring, istring
-integer :: i1,i2,i3,i4,i5,i6,i7
+integer(ids_int) :: itime, lentime, lenstring, istring
+integer(ids_int) :: i1,i2,i3,i4,i5,i6,i7
 
 type(ids_<xsl:value-of select="@name"/>) :: struct_in, struct_out
 
@@ -158,7 +156,7 @@ endif
 					</xsl:when>
 					<xsl:when test="@type='int_type' or ./xs:complexType/xs:group[@ref='INT_0D']">
 ! Copy <xsl:value-of select="$currentidxpath"/>
-if (struct_in<xsl:value-of select="$currentidxpath"/>/=-999999999)  then
+if (struct_in<xsl:value-of select="$currentidxpath"/>/=ids_int_invalid)  then
    struct_out<xsl:value-of select="$currentidxpath"/> = &amp;
    struct_in<xsl:value-of select="$currentidxpath"/>
 endif
@@ -166,7 +164,7 @@ endif
 					</xsl:when>
 					<xsl:when test="@type='flt_type' or ./xs:complexType/xs:group[@ref='FLT_0D']">
 ! Copy <xsl:value-of select="$currentidxpath"/>
-if (struct_in<xsl:value-of select="$currentidxpath"/>.NE.-9.D40) then
+if (struct_in<xsl:value-of select="$currentidxpath"/>.NE.ids_real_invalid) then
    struct_out<xsl:value-of select="$currentidxpath"/> = &amp;
    struct_in<xsl:value-of select="$currentidxpath"/>
 endif

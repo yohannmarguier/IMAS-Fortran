@@ -47,7 +47,7 @@ subroutine ids_deallocate_struct_<xsl:value-of select="local:unique_name(@name)"
 use ids_schemas
 implicit none
 
-integer :: i1,i2,i3,i4,i5,i6,i7
+integer(ids_int) :: i1,i2,i3,i4,i5,i6,i7
 
 type(ids_<xsl:value-of select="@name"/>) :: struct_in
 
@@ -71,7 +71,7 @@ subroutine ids_deallocate_struct_<xsl:value-of select="local:unique_name(@name)"
 use ids_schemas
 implicit none
 
-integer :: i1,i2,i3,i4,i5,i6,i7
+integer(ids_int) :: i1,i2,i3,i4,i5,i6,i7
 
 type(ids_<xsl:value-of select="@name"/>) :: struct_in
 

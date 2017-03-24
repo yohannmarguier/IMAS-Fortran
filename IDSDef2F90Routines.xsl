@@ -35,13 +35,12 @@ contains
 
 subroutine ids_get_times(idx,path,time)
 implicit none
-integer, parameter :: DP=kind(1.0D0)
 
-integer :: idx, status
+integer(ids_int) :: idx, status
 character*(*) :: path
-real(DP), pointer :: time(:)
+real(ids_real), pointer :: time(:)
 
-integer :: ndims,dim1,dim2,dim3,dim4,dum1,dum2,dum3,dum4, dim5, dim6, dim7, lentime
+integer(ids_int) :: ndims,dim1,dim2,dim3,dim4,dum1,dum2,dum3,dum4, dim5, dim6, dim7, lentime
 
 call get_dimension(idx,path,"time",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 lentime = dim1
@@ -86,7 +85,7 @@ character(len=3)::ual_debug
 contains
 
 character(10) function int2str(num)
-   integer, intent(in):: num
+   integer(ids_int), intent(in):: num
    character(10) :: str
    ! convert integer to string using formatted write
    write(str, '(i10)') num
@@ -96,7 +95,7 @@ end function int2str
 
 
 FUNCTION isErrorCritical(status, fieldPath) RESULT (exitRequest)
-	integer :: status
+	integer(ids_int) :: status
 	character*(*) :: fieldPath
 	logical :: exitRequest
 	character(len=100000)::longstring
@@ -123,12 +122,12 @@ subroutine fput_int_in_object(idx, obj, path_in_object, index_in_object, variabl
 
 use ids_schemas
 implicit none
-integer :: variable
-integer :: idx, obj, index_in_object
+integer(ids_int) :: variable
+integer(ids_int) :: idx, obj, index_in_object
 character*(*) :: path_in_object, variable_name
 character(len=3) :: ual_debug
 
-if (variable.NE.-999999999) then
+if (variable.NE.ids_int_invalid) then
    call put_int_in_object(idx, obj, path_in_object, index_in_object, variable)
    if (ual_debug =='yes') write(*,*) 'Put ', trim(variable_name), variable
 endif
@@ -139,8 +138,8 @@ subroutine fput_vect1d_double_in_object(idx, obj, path_in_object, index_in_objec
 
 use ids_schemas
 implicit none
-real(DP), pointer :: variable(:)
-integer :: idx, obj, index_in_object
+real(ids_real), pointer :: variable(:)
+integer(ids_int) :: idx, obj, index_in_object
 character*(*) :: path_in_object, variable_name
 character(len=3) :: ual_debug
 
@@ -155,8 +154,8 @@ subroutine fput_vect2d_double_in_object(idx, obj, path_in_object, index_in_objec
 
 use ids_schemas
 implicit none
-real(DP), pointer :: variable(:,:)
-integer :: idx, obj, index_in_object
+real(ids_real), pointer :: variable(:,:)
+integer(ids_int) :: idx, obj, index_in_object
 character*(*) :: path_in_object, variable_name
 character(len=3) :: ual_debug
 
@@ -176,31 +175,30 @@ subroutine ids_put_<xsl:value-of select="local:unique_name(@name)"/>(idx, path, 
 use ids_schemas
 use <xsl:value-of select="local:unique_name(@name)"/>_copy  ! Needed since the _copy module contains the ids_delete routines
 implicit none
-!integer, parameter :: DP=kind(1.0D0)
-integer :: status = 0, retStatus = 0
+integer(ids_int) :: status = 0, retStatus = 0
 
 character*(*) :: path
-integer :: idx, lentime
+integer(ids_int) :: idx, lentime
 
 type(ids_<xsl:value-of select="@name"/>) :: IDS
 
 ! internal variables declaration
 
-integer :: itime
-integer :: int0D
-integer,pointer :: vect1DInt(:), vect2DInt(:,:), vect3DInt(:,:,:) => null()
-integer :: i,dim1,dim2,dim3,dim4,dim5,dim6,dim7, lenstring, istring
-integer, pointer :: dimtab(:) => null()
-real(DP) :: double0D
-real(DP), pointer :: vect1DDouble(:), time(:), vect2DDouble(:,:), vect3DDouble(:,:,:), vect4DDouble(:,:,:,:) => null()
-real(DP), pointer :: vect5DDouble(:,:,:,:,:), vect6DDouble(:,:,:,:,:,:) => null()
-character(len=132), dimension(:), pointer :: stri => null()
+integer(ids_int) :: itime
+integer(ids_int) :: int0D
+integer(ids_int),pointer :: vect1DInt(:), vect2DInt(:,:), vect3DInt(:,:,:) => null()
+integer(ids_int) :: i,dim1,dim2,dim3,dim4,dim5,dim6,dim7, lenstring, istring
+integer(ids_int), pointer :: dimtab(:) => null()
+real(ids_real) :: double0D
+real(ids_real), pointer :: vect1DDouble(:), time(:), vect2DDouble(:,:), vect3DDouble(:,:,:), vect4DDouble(:,:,:,:) => null()
+real(ids_real), pointer :: vect5DDouble(:,:,:,:,:), vect6DDouble(:,:,:,:,:,:) => null()
+character(len=ids_string_length), dimension(:), pointer :: stri => null()
 character(len=100000)::longstring
 character(len=300) :: timepath
-integer :: obj_all_times,obj1,obj2,obj3,obj4,obj5,obj6,obj7
-integer :: i1,i2,i3,i4,i5,i6,i7
+integer(ids_int) :: obj_all_times,obj1,obj2,obj3,obj4,obj5,obj6,obj7
+integer(ids_int) :: i1,i2,i3,i4,i5,i6,i7
 <xsl:for-each select=".//field[@data_type='struct_array' and @maxoccur!='unbounded']">
-integer :: i<xsl:value-of select="concat(@name,generate-id(.))"/>
+integer(ids_int) :: i<xsl:value-of select="concat(@name,generate-id(.))"/>
 </xsl:for-each>
 
 call getenv('ual_debug',ual_debug) ! Debug flag
@@ -237,8 +235,7 @@ subroutine ids_flush_<xsl:value-of select="@name"/>(idx,IDSpath,IDS) --> <!-- sy
 use ids_schemas
 implicit none
 character*(*) :: IDSpath
-integer :: idx
-integer, parameter :: DP=kind(1.0D0)
+integer(ids_int) :: idx
 
   <xsl:choose>
 			<xsl:when test="@timed = 'yes'">
@@ -264,11 +261,11 @@ end subroutine ids_flush_<xsl:value-of select="@name"/>
 use ids_schemas
 implicit none
 character*(*) :: IDSpath
-integer :: idx
+integer(ids_int) :: idx
 
 type(ids_<xsl:value-of select="@name"/>) :: IDS
 <xsl:for-each select=".//field[@data_type='struct_array' and @maxoccur!='unbounded']">
-integer :: i<xsl:value-of select="concat(@name,generate-id(.))"/>
+integer(ids_int) :: i<xsl:value-of select="concat(@name,generate-id(.))"/>
 </xsl:for-each>
 
 call getenv('ual_debug',ual_debug) ! Debug flag
@@ -297,7 +294,7 @@ character(len=3)::ual_debug
 contains
 
 character(10) function int2str(num)
-   integer, intent(in):: num
+   integer(ids_int), intent(in):: num
    character(10) :: str
    ! convert integer to string using formatted write
    write(str, '(i10)') num
@@ -307,7 +304,7 @@ end function int2str
 
 
 FUNCTION isErrorCritical(status, fieldPath) RESULT (exitRequest)
-	integer :: status
+	integer(ids_int) :: status
 	character*(*) :: fieldPath
 	logical :: exitRequest
 	character(len=100000)::longstring
@@ -343,16 +340,16 @@ use <xsl:value-of select="local:unique_name(@name)"/>_copy  ! Needed since the _
 implicit none
 
 character*(*) :: path
-integer :: idx
-integer :: status = 0, retStatus = 0
-integer :: i,dim1,dim2,dim3,dim4,dim5,dim6,dim7, lenstring, istring
-integer, pointer :: dimtab(:) => null()
+integer(ids_int) :: idx
+integer(ids_int) :: status = 0, retStatus = 0
+integer(ids_int) :: i,dim1,dim2,dim3,dim4,dim5,dim6,dim7, lenstring, istring
+integer(ids_int), pointer :: dimtab(:) => null()
 character(len=100000)::longstring
 character(len=300) :: timepath
-integer :: obj1,obj2,obj3,obj4,obj5,obj6,obj7
-integer :: i1,i2,i3,i4,i5,i6,i7
+integer(ids_int) :: obj1,obj2,obj3,obj4,obj5,obj6,obj7
+integer(ids_int) :: i1,i2,i3,i4,i5,i6,i7
 <xsl:for-each select=".//field[@data_type='struct_array' and @maxoccur!='unbounded']">
-integer :: i<xsl:value-of select="concat(@name,generate-id(.))"/>
+integer(ids_int) :: i<xsl:value-of select="concat(@name,generate-id(.))"/>
 </xsl:for-each>
 
 type(ids_<xsl:value-of select="@name"/>) :: IDS       ! real declaration of the IDS for the put
@@ -398,7 +395,7 @@ character(len=3)::ual_debug
 contains
 
 character(10) function int2str(num)
-   integer, intent(in):: num
+   integer(ids_int), intent(in):: num
    character(10) :: str
    ! convert integer to string using formatted write
    write(str, '(i10)') num
@@ -408,7 +405,7 @@ end function int2str
 
 
 FUNCTION isErrorCritical(status, fieldPath) RESULT (exitRequest)
-	integer :: status
+	integer(ids_int) :: status
 	character*(*) :: fieldPath
 	logical :: exitRequest
 	character(len=100000)::longstring
@@ -436,12 +433,12 @@ subroutine fput_int_in_object(idx, obj, path_in_object, index_in_object, variabl
 
 use ids_schemas
 implicit none
-integer :: variable
-integer :: idx, obj, index_in_object
+integer(ids_int) :: variable
+integer(ids_int) :: idx, obj, index_in_object
 character*(*) :: path_in_object, variable_name
 character(len=3) :: ual_debug
 
-if (variable.NE.-999999999) then
+if (variable.NE.ids_int_invalid) then
    call put_int_in_object(idx, obj, path_in_object, index_in_object, variable)
    if (ual_debug =='yes') write(*,*) 'Put ', trim(variable_name), variable
 endif
@@ -452,8 +449,8 @@ subroutine fput_vect1d_double_in_object(idx, obj, path_in_object, index_in_objec
 
 use ids_schemas
 implicit none
-real(DP), pointer :: variable(:)
-integer :: idx, obj, index_in_object
+real(ids_real), pointer :: variable(:)
+integer(ids_int) :: idx, obj, index_in_object
 character*(*) :: path_in_object, variable_name
 character(len=3) :: ual_debug
 
@@ -468,8 +465,8 @@ subroutine fput_vect2d_double_in_object(idx, obj, path_in_object, index_in_objec
 
 use ids_schemas
 implicit none
-real(DP), pointer :: variable(:,:)
-integer :: idx, obj, index_in_object
+real(ids_real), pointer :: variable(:,:)
+integer(ids_int) :: idx, obj, index_in_object
 character*(*) :: path_in_object, variable_name
 character(len=3) :: ual_debug
 
@@ -494,27 +491,27 @@ use ids_schemas
 implicit none
 
 character*(*) :: path
-integer :: idx, lentime
-integer :: status = 0, retStatus = 0
+integer(ids_int) :: idx, lentime
+integer(ids_int) :: status = 0, retStatus = 0
 
 type(ids_<xsl:value-of select="@name"/>) :: IDS
 
 ! internal variables declaration
-integer :: itime
-integer :: int0D
-integer,pointer :: vect1DInt(:), vect2DInt(:,:), vect3DInt(:,:,:) => null()
-integer :: i,dim1,dim2,dim3,dim4,dim5,dim6,dim7, lenstring, istring
-integer, pointer :: dimtab(:) => null()
-real(DP) :: double0D
-real(DP), pointer :: vect1DDouble(:), time(:), vect2DDouble(:,:), vect3DDouble(:,:,:), vect4DDouble(:,:,:,:) => null()
-real(DP), pointer :: vect5DDouble(:,:,:,:,:), vect6DDouble(:,:,:,:,:,:) => null()
-character(len=132), dimension(:), pointer :: stri => null()
+integer(ids_int) :: itime
+integer(ids_int) :: int0D
+integer(ids_int),pointer :: vect1DInt(:), vect2DInt(:,:), vect3DInt(:,:,:) => null()
+integer(ids_int) :: i,dim1,dim2,dim3,dim4,dim5,dim6,dim7, lenstring, istring
+integer(ids_int), pointer :: dimtab(:) => null()
+real(ids_real) :: double0D
+real(ids_real), pointer :: vect1DDouble(:), time(:), vect2DDouble(:,:), vect3DDouble(:,:,:), vect4DDouble(:,:,:,:) => null()
+real(ids_real), pointer :: vect5DDouble(:,:,:,:,:), vect6DDouble(:,:,:,:,:,:) => null()
+character(len=ids_string_length), dimension(:), pointer :: stri => null()
 character(len=100000)::longstring
 character(len=300)::timepath
-integer :: obj_single_time,obj1,obj2,obj3,obj4,obj5,obj6,obj7
-integer :: i1,i2,i3,i4,i5,i6,i7
+integer(ids_int) :: obj_single_time,obj1,obj2,obj3,obj4,obj5,obj6,obj7
+integer(ids_int) :: i1,i2,i3,i4,i5,i6,i7
 <xsl:for-each select=".//field[@data_type='struct_array' and @maxoccur!='unbounded']">
-integer :: i<xsl:value-of select="concat(@name,generate-id(.))"/>
+integer(ids_int) :: i<xsl:value-of select="concat(@name,generate-id(.))"/>
 </xsl:for-each>
 
 call getenv('ual_debug',ual_debug) ! Debug flag
@@ -563,7 +560,7 @@ character(len=3)::ual_debug
 contains
 
 character(10) function int2str(num)
-   integer, intent(in):: num
+   integer(ids_int), intent(in):: num
    character(10) :: str
    ! convert integer to string using formatted write
    write(str, '(i10)') num
@@ -573,7 +570,7 @@ end function int2str
 
 
 FUNCTION isErrorCritical(status, fieldPath) RESULT (exitRequest)
-	integer :: status
+	integer(ids_int) :: status
 	character*(*) :: fieldPath
 	logical :: exitRequest
 	character(len=100000)::longstring
@@ -600,11 +597,11 @@ subroutine fget_vect1d_double_from_object(idx, obj, path_in_object, index_in_obj
 
 use ids_schemas
 implicit none
-real(DP), pointer :: variable(:)
-integer :: idx, obj, index_in_object
+real(ids_real), pointer :: variable(:)
+integer(ids_int) :: idx, obj, index_in_object
 character*(*) :: path_in_object, variable_name
 character(len=3) :: ual_debug
-integer :: ndims,dim1,dum1,dim2,dim3,dim4,dim5,dim6,dim7,status
+integer(ids_int) :: ndims,dim1,dum1,dim2,dim3,dim4,dim5,dim6,dim7,status
 
 call get_dimension_from_object(idx,obj,path_in_object,index_in_object,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
@@ -620,11 +617,11 @@ subroutine fget_vect2d_double_from_object(idx, obj, path_in_object, index_in_obj
 
 use ids_schemas
 implicit none
-real(DP), pointer :: variable(:,:)
-integer :: idx, obj, index_in_object
+real(ids_real), pointer :: variable(:,:)
+integer(ids_int) :: idx, obj, index_in_object
 character*(*) :: path_in_object, variable_name
 character(len=3) :: ual_debug
-integer :: ndims,dim1,dum1,dim2,dum2,dim3,dim4,dim5,dim6,dim7,status
+integer(ids_int) :: ndims,dim1,dum1,dim2,dum2,dim3,dim4,dim5,dim6,dim7,status
 
 call get_dimension_from_object(idx,obj,path_in_object,index_in_object,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
@@ -640,11 +637,11 @@ subroutine fget_double_from_object(idx, obj, path_in_object, index_in_object, va
 
 use ids_schemas
 implicit none
-real(DP) :: variable, double0d
-integer :: idx, obj, index_in_object
+real(ids_real) :: variable, double0d
+integer(ids_int) :: idx, obj, index_in_object
 character*(*) :: path_in_object, variable_name
 character(len=3) :: ual_debug
-integer :: status
+integer(ids_int) :: status
 
 call get_double_from_object(idx,obj,path_in_object,index_in_object,double0d,status)
 if (status.EQ.0) then
@@ -658,11 +655,11 @@ subroutine fget_int_from_object(idx, obj, path_in_object, index_in_object, varia
 
 use ids_schemas
 implicit none
-integer :: variable, int0d
-integer :: idx, obj, index_in_object
+integer(ids_int) :: variable, int0d
+integer(ids_int) :: idx, obj, index_in_object
 character*(*) :: path_in_object, variable_name
 character(len=3) :: ual_debug
-integer :: status
+integer(ids_int) :: status
 
 call get_int_from_object(idx,obj,path_in_object,index_in_object,int0d,status)
 if (status.EQ.0) then
@@ -681,22 +678,22 @@ use ids_schemas
 implicit none
 
 character*(*) :: path
-integer :: idx, retStatus = 0, status = 0, lenstring, istring, itime, lentime
-integer :: ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7,dum1,dum2,dum3,dum4,dum5,dum6,dum7
+integer(ids_int) :: idx, retStatus = 0, status = 0, lenstring, istring, itime, lentime
+integer(ids_int) :: ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7,dum1,dum2,dum3,dum4,dum5,dum6,dum7
 
-character(len=132)::stringans      ! Temporary way of getting short strings
+character(len=ids_string_length)::stringans      ! Temporary way of getting short strings
 character(len=100000)::longstring
 character(len=300) :: timepath
-character(len=132), dimension(:), pointer ::stringpointer   => null()
-integer :: obj_all_times,obj1,obj2,obj3,obj4,obj5,obj6,obj7
-integer :: dimObj0,dimObj1,dimObj2,dimObj3,dimObj4,dimObj5,dimObj6,dimObj7
-integer :: i1,i2,i3,i4,i5,i6,i7
+character(len=ids_string_length), dimension(:), pointer ::stringpointer   => null()
+integer(ids_int) :: obj_all_times,obj1,obj2,obj3,obj4,obj5,obj6,obj7
+integer(ids_int) :: dimObj0,dimObj1,dimObj2,dimObj3,dimObj4,dimObj5,dimObj6,dimObj7
+integer(ids_int) :: i1,i2,i3,i4,i5,i6,i7
 <xsl:for-each select=".//field[@data_type='struct_array' and @maxoccur!='unbounded']">
-integer :: i<xsl:value-of select="concat(@name,generate-id(.))"/>
+integer(ids_int) :: i<xsl:value-of select="concat(@name,generate-id(.))"/>
 </xsl:for-each>
 
-integer :: int0d
-real(DP) :: double0d
+integer(ids_int) :: int0d
+real(ids_real) :: double0d
 
 
 type(ids_<xsl:value-of select="@name"/>) :: IDS
@@ -731,7 +728,7 @@ character(len=3)::ual_debug
 contains
 
 character(10) function int2str(num)
-   integer, intent(in):: num
+   integer(ids_int), intent(in):: num
    character(10) :: str
    ! convert integer to string using formatted write
    write(str, '(i10)') num
@@ -741,7 +738,7 @@ end function int2str
 
 
 FUNCTION isErrorCritical(status, fieldPath) RESULT (exitRequest)
-	integer :: status
+	integer(ids_int) :: status
 	character*(*) :: fieldPath
 	logical :: exitRequest
 	character(len=100000)::longstring
@@ -768,11 +765,11 @@ subroutine fget_vect1d_double_from_object(idx, obj, path_in_object, index_in_obj
 
 use ids_schemas
 implicit none
-real(DP), pointer :: variable(:)
-integer :: idx, obj, index_in_object
+real(ids_real), pointer :: variable(:)
+integer(ids_int) :: idx, obj, index_in_object
 character*(*) :: path_in_object, variable_name
 character(len=3) :: ual_debug
-integer :: ndims,dim1,dum1,dim2,dim3,dim4,dim5,dim6,dim7,status
+integer(ids_int) :: ndims,dim1,dum1,dim2,dim3,dim4,dim5,dim6,dim7,status
 
 call get_dimension_from_object(idx,obj,path_in_object,index_in_object,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
@@ -788,11 +785,11 @@ subroutine fget_vect2d_double_from_object(idx, obj, path_in_object, index_in_obj
 
 use ids_schemas
 implicit none
-real(DP), pointer :: variable(:,:)
-integer :: idx, obj, index_in_object
+real(ids_real), pointer :: variable(:,:)
+integer(ids_int) :: idx, obj, index_in_object
 character*(*) :: path_in_object, variable_name
 character(len=3) :: ual_debug
-integer :: ndims,dim1,dum1,dim2,dum2,dim3,dim4,dim5,dim6,dim7,status
+integer(ids_int) :: ndims,dim1,dum1,dim2,dum2,dim3,dim4,dim5,dim6,dim7,status
 
 call get_dimension_from_object(idx,obj,path_in_object,index_in_object,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
@@ -808,11 +805,11 @@ subroutine fget_double_from_object(idx, obj, path_in_object, index_in_object, va
 
 use ids_schemas
 implicit none
-real(DP) :: variable, double0d
-integer :: idx, obj, index_in_object
+real(ids_real) :: variable, double0d
+integer(ids_int) :: idx, obj, index_in_object
 character*(*) :: path_in_object, variable_name
 character(len=3) :: ual_debug
-integer :: status
+integer(ids_int) :: status
 
 call get_double_from_object(idx,obj,path_in_object,index_in_object,double0d,status)
 if (status.EQ.0) then
@@ -826,11 +823,11 @@ subroutine fget_int_from_object(idx, obj, path_in_object, index_in_object, varia
 
 use ids_schemas
 implicit none
-integer :: variable, int0d
-integer :: idx, obj, index_in_object
+integer(ids_int) :: variable, int0d
+integer(ids_int) :: idx, obj, index_in_object
 character*(*) :: path_in_object, variable_name
 character(len=3) :: ual_debug
-integer :: status
+integer(ids_int) :: status
 
 call get_int_from_object(idx,obj,path_in_object,index_in_object,int0d,status)
 if (status.EQ.0) then
@@ -851,23 +848,23 @@ use ids_schemas
 implicit none
 
 character*(*) :: path
-integer :: status = 0, interpol, idx, lenstring, istring
-real(DP) :: twant,tret
+integer(ids_int) :: status = 0, interpol, idx, lenstring, istring
+real(ids_real) :: twant,tret
 
-integer :: int0D
-integer,pointer :: vect1DInt(:), vect2DInt(:,:), vect3DInt(:,:,:) => null()
-integer :: ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7,dum1,dum2,dum3,dum4,dum5,dum6,dum7
-real(DP) :: double0D
-real(DP), pointer :: vect1DDouble(:), time(:), vect2DDouble(:,:), vect3DDouble(:,:,:), vect4DDouble(:,:,:,:) => null()
-real(DP), pointer :: vect5DDouble(:,:,:,:,:), vect6DDouble(:,:,:,:,:,:) => null()
-character(len=132), dimension(:), pointer :: stringans => null()
+integer(ids_int) :: int0D
+integer(ids_int),pointer :: vect1DInt(:), vect2DInt(:,:), vect3DInt(:,:,:) => null()
+integer(ids_int) :: ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7,dum1,dum2,dum3,dum4,dum5,dum6,dum7
+real(ids_real) :: double0D
+real(ids_real), pointer :: vect1DDouble(:), time(:), vect2DDouble(:,:), vect3DDouble(:,:,:), vect4DDouble(:,:,:,:) => null()
+real(ids_real), pointer :: vect5DDouble(:,:,:,:,:), vect6DDouble(:,:,:,:,:,:) => null()
+character(len=ids_string_length), dimension(:), pointer :: stringans => null()
 character(len=100000)::longstring
 character(len=300) :: timepath
-integer :: obj_single_time,obj1,obj2,obj3,obj4,obj5,obj6,obj7
-integer :: dimObj1,dimObj2,dimObj3,dimObj4,dimObj5,dimObj6,dimObj7
-integer :: i1,i2,i3,i4,i5,i6,i7
+integer(ids_int) :: obj_single_time,obj1,obj2,obj3,obj4,obj5,obj6,obj7
+integer(ids_int) :: dimObj1,dimObj2,dimObj3,dimObj4,dimObj5,dimObj6,dimObj7
+integer(ids_int) :: i1,i2,i3,i4,i5,i6,i7
 <xsl:for-each select=".//field[@data_type='struct_array' and @maxoccur!='unbounded']">
-integer :: i<xsl:value-of select="concat(@name,generate-id(.))"/>
+integer(ids_int) :: i<xsl:value-of select="concat(@name,generate-id(.))"/>
 </xsl:for-each>
 
 type(ids_<xsl:value-of select="@name"/>) :: IDS
@@ -917,7 +914,7 @@ character(len=3)::ual_debug
 contains
 
 character(10) function int2str(num)
-   integer, intent(in):: num
+   integer(ids_int), intent(in):: num
    character(10) :: str
    ! convert integer to string using formatted write
    write(str, '(i10)') num
@@ -927,7 +924,7 @@ end function int2str
 
 
 FUNCTION isErrorCritical(status, fieldPath) RESULT (exitRequest)
-	integer :: status
+	integer(ids_int) :: status
 	character*(*) :: fieldPath
 	logical :: exitRequest
 	character(len=100000)::longstring
@@ -954,7 +951,7 @@ END FUNCTION isErrorCritical
 subroutine copy_flt1d(in, out)
 use ids_schemas
 implicit none
-real(DP), pointer :: in(:), out(:)
+real(ids_real), pointer :: in(:), out(:)
 
 if (associated(in)) then
    allocate(out(size(in)))
@@ -970,11 +967,11 @@ subroutine ids_delete_<xsl:value-of select="local:unique_name(@name)"/>(idx,IDSp
 use ids_schemas
 implicit none
 character*(*) :: IDSpath
-integer :: idx
+integer(ids_int) :: idx
 
 type(ids_<xsl:value-of select="@name"/>) :: IDS
 <xsl:for-each select=".//field[@data_type='struct_array' and @maxoccur!='unbounded']">
-integer :: i<xsl:value-of select="concat(@name,generate-id(.))"/>
+integer(ids_int) :: i<xsl:value-of select="concat(@name,generate-id(.))"/>
 </xsl:for-each>
 
 call getenv('ual_debug',ual_debug) ! Debug flag
@@ -993,7 +990,7 @@ subroutine ids_deallocate_<xsl:value-of select="local:unique_name(@name)"/>(IDS)
 use ids_schemas
 implicit none
 
-integer :: i1,i2,i3,i4,i5,i6,i7
+integer(ids_int) :: i1,i2,i3,i4,i5,i6,i7
 
 type(ids_<xsl:value-of select="@name"/>) :: IDS
     <xsl:apply-templates select="field" mode="DEALLOCATE">
@@ -1011,10 +1008,9 @@ subroutine ids_copy_<xsl:value-of select="local:unique_name(@name)"/>(IDSin,  ID
 
 use ids_schemas
 implicit none
-!integer, parameter :: DP=kind(1.0D0)
 
-integer :: itime, lentime, lenstring, istring
-integer :: i1,i2,i3,i4,i5,i6,i7
+integer(ids_int) :: itime, lentime, lenstring, istring
+integer(ids_int) :: i1,i2,i3,i4,i5,i6,i7
 
 type(ids_<xsl:value-of select="@name"/>) :: IDSin, IDSout
 
@@ -1548,12 +1544,12 @@ call get_String(idx,path, "<xsl:value-of select="@path"/>",longstring, status)
 if (status.EQ.0) then
    do itime=1,lentime
       lenstring = len_trim(longstring)
-      allocate(IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(floor(real(lenstring/132))+1))
-      if (lenstring &lt;= 132) then
+      allocate(IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(floor(real(lenstring/ids_string_length))+1))
+      if (lenstring &lt;= ids_string_length) then
          IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(1) = trim(longstring)
       else
-         do istring=1,floor(real(lenstring/132))+1
-             IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(istring) = trim(longstring(1+(istring-1)*132 : istring*132))
+         do istring=1,floor(real(lenstring/ids_string_length))+1
+             IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(istring) = trim(longstring(1+(istring-1)*ids_string_length : istring*ids_string_length))
          enddo
       endif
    enddo
@@ -1816,12 +1812,12 @@ longstring = ' '
 call get_string(idx,path, "<xsl:value-of select="@path"/>",longstring,status)
 if (status.EQ.0) then
    lenstring = len_trim(longstring)
-   allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(floor(real(lenstring/132))+1))
-   if (lenstring &lt;= 132) then
+   allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(floor(real(lenstring/ids_string_length))+1))
+   if (lenstring &lt;= ids_string_length) then
       IDS%<xsl:value-of select="translate(@path,'/','%')"/> = trim(longstring)
    else
-      do istring=1,floor(real(lenstring/132))+1
-          IDS%<xsl:value-of select="translate(@path,'/','%')"/>(istring) = trim(longstring(1+(istring-1)*132 : istring*132))
+      do istring=1,floor(real(lenstring/ids_string_length))+1
+          IDS%<xsl:value-of select="translate(@path,'/','%')"/>(istring) = trim(longstring(1+(istring-1)*ids_string_length : istring*ids_string_length))
       enddo
    endif
    if (ual_debug =='yes') write(*,*) &amp;
@@ -2103,12 +2099,12 @@ longstring = ' '
 call get_string_from_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:choose><xsl:when test="$timed='yes'">1</xsl:when><xsl:otherwise>i<xsl:value-of select="$level"/></xsl:otherwise></xsl:choose>,longstring,status)
 if (status.EQ.0) then
    lenstring = len_trim(longstring)
-   allocate(<xsl:value-of select="$currentidxpath"/>(floor(real(lenstring/132))+1))
-   if (lenstring &lt;= 132) then
+   allocate(<xsl:value-of select="$currentidxpath"/>(floor(real(lenstring/ids_string_length))+1))
+   if (lenstring &lt;= ids_string_length) then
       <xsl:value-of select="$currentidxpath"/> = trim(longstring)
    else
-      do istring=1,floor(real(lenstring/132))+1
-          <xsl:value-of select="$currentidxpath"/>(istring) = trim(longstring(1+(istring-1)*132 : istring*132))
+      do istring=1,floor(real(lenstring/ids_string_length))+1
+          <xsl:value-of select="$currentidxpath"/>(istring) = trim(longstring(1+(istring-1)*ids_string_length : istring*ids_string_length))
       enddo
    endif
    if (ual_debug =='yes') write(*,*) &amp;
@@ -2273,7 +2269,7 @@ endif
 				<xsl:choose>
 					<xsl:when test="@data_type='int_type' or @data_type='INT_0D'">
 ! Put <xsl:value-of select="@path"/>
-if (any(IDSs(1:lentime)%<xsl:value-of select="translate(@path,'/','%')"/>/=-999999999))  then
+if (any(IDSs(1:lentime)%<xsl:value-of select="translate(@path,'/','%')"/>/=ids_int_invalid))  then
    allocate(vect1Dint(lentime))
    vect1DInt(1:lentime) = IDSs(1:lentime)%<xsl:value-of select="translate(@path,'/','%')"/>
    call put_vect1D_int(idx,path, "<xsl:value-of select="@path"/>",&amp;
@@ -2289,7 +2285,7 @@ endif
 					</xsl:when>
 					<xsl:when test="@data_type='flt_type' or @data_type='FLT_0D'">
 ! Put <xsl:value-of select="@path"/>
-if (any(IDSs(1:lentime)%<xsl:value-of select="translate(@path,'/','%')"/>/=-9.D40))  then
+if (any(IDSs(1:lentime)%<xsl:value-of select="translate(@path,'/','%')"/>/=ids_real_invalid))  then
    allocate(vect1DDouble(lentime))
    vect1DDouble(1:lentime) = IDSs(1:lentime)%<xsl:value-of select="translate(@path,'/','%')"/>
    call put_vect1D_double(idx,path, "<xsl:value-of select="@path"/>",vect1DDouble,lentime,1, status)
@@ -2522,7 +2518,7 @@ if (associated(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>)) then
       longstring = trim(IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>(1))
    else
       do istring=1,lenstring
-          longstring(1+(istring-1)*132 : istring*132) = IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>(istring)
+          longstring(1+(istring-1)*ids_string_length : istring*ids_string_length) = IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>(istring)
       enddo
    endif
    call put_string(idx,path, "<xsl:value-of select="@path"/>",trim(longstring), status)
@@ -2557,7 +2553,7 @@ endif
 					<xsl:when test="@data_type='int_type' or @data_type='INT_0D'">
 ! Put <xsl:value-of select="@path"/>
 						<!-- for comment only -->
-if (IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>.NE.-999999999) then
+if (IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>.NE.ids_int_invalid) then
    call put_int(idx,path, "<xsl:value-of select="@path"/>",IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>, status)
    if (ual_debug =='yes') write(*,*) &amp;
       'Put IDSs%<xsl:value-of select="translate(@path,'/','%')"/>'
@@ -2571,7 +2567,7 @@ endif
 					<xsl:when test="@data_type='flt_type' or @data_type='FLT_0D'">
 ! Put <xsl:value-of select="@path"/>
 						<!-- for comment only -->
-if (IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>.NE.-9.D40) then
+if (IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>.NE.ids_real_invalid) then
    call put_double(idx,path, "<xsl:value-of select="@path"/>",IDSs(1)%<xsl:value-of select="translate(@path,'/','%')"/>, status)
    if (ual_debug =='yes') write(*,*) &amp;
       'Put IDSs%<xsl:value-of select="translate(@path,'/','%')"/>'
@@ -2832,7 +2828,7 @@ if (associated(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>))
    ! A temporary "time" vector is filled then put as a regular variable (outside of the object) as AoS%time
    allocate(time(size(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>)))
 
-   if (IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>(1)%time.EQ.-9.D40) then ! Check the presence of a time vector at the root of the AoS (on the first index only)
+   if (IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>(1)%time.EQ.ids_real_invalid) then ! Check the presence of a time vector at the root of the AoS (on the first index only)
       if (IDS%IDS_Properties%homogeneous_time.EQ.1) then
          time = ids%time ! Use the general time vector of the IDS to fill time
 <!--then  ! For an homogeneous IDS, force the time of the AoS to be equal to the general one
@@ -2888,7 +2884,7 @@ if (associated(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)) then
    ! Store time of the array of structure (hidden variable for the user, but used by the UAL for future get_slice operations)
     allocate(time(size(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)))
 
-   if (IDS%<xsl:value-of select = "translate(@path,'/','%')"/>(1)%time.EQ.-9.D40) then ! Check the presence of a time vector at the root of the AoS (on the first index only)
+   if (IDS%<xsl:value-of select = "translate(@path,'/','%')"/>(1)%time.EQ.ids_real_invalid) then ! Check the presence of a time vector at the root of the AoS (on the first index only)
       if (IDS%IDS_Properties%homogeneous_time.EQ.1) then
          time = ids%time ! Use the general time vector of the IDS to fill time
       else
@@ -2965,7 +2961,7 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
       longstring = trim(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(1))
    else
       do istring=1,lenstring
-          longstring(1+(istring-1)*132 : istring*132) = IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(istring)
+          longstring(1+(istring-1)*ids_string_length : istring*ids_string_length) = IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(istring)
       enddo
    endif
    call put_string(idx,path,&amp;
@@ -2989,7 +2985,7 @@ if (associated(IDS%<xsl:value-of select="@name"/>)) then
       longstring = trim(IDS%<xsl:value-of select="@name"/>(1))
    else
       do istring=1,lenstring
-          longstring(1+(istring-1)*132 : istring*132) = IDS%<xsl:value-of select="@name"/>(istring)
+          longstring(1+(istring-1)*ids_string_length : istring*ids_string_length) = IDS%<xsl:value-of select="@name"/>(istring)
       enddo
    endif
    call put_string(idx,path, "<xsl:value-of select="@name"/>",trim(longstring), status)       ! should clean up longstring after that, or send to the put only the right length, which has been updated
@@ -3098,7 +3094,7 @@ endif
 ! Put <xsl:value-of select="@path"/>
 <xsl:choose>
 <xsl:when test="$variable_path">
-if (IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>.NE.-999999999) then
+if (IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>.NE.ids_int_invalid) then
    call put_int(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
        IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>, status)
    if (ual_debug =='yes') write(*,*) &amp;
@@ -3110,7 +3106,7 @@ if (IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>.NE.-999999999)
 endif
 </xsl:when>
 <xsl:otherwise>
-if (IDS%<xsl:value-of select="translate(@path,'/','%')"/>.NE.-999999999) then
+if (IDS%<xsl:value-of select="translate(@path,'/','%')"/>.NE.ids_int_invalid) then
    call put_int(idx,path, "<xsl:value-of select="@path"/>",IDS%<xsl:value-of select="translate(@path,'/','%')"/>, status)
    if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
@@ -3127,7 +3123,7 @@ endif
 ! Put <xsl:value-of select="@path"/>
 <xsl:choose>
 <xsl:when test="$variable_path">
-if (IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>.NE.-9.D40) then
+if (IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>.NE.ids_real_invalid) then
    call put_double(idx,path,&amp;
        <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
        IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>,&amp;
@@ -3142,7 +3138,7 @@ endif
 <!-- -->
 </xsl:when>
 <xsl:otherwise>
-if (IDS%<xsl:value-of select="@name"/>.NE.-9.D40) then
+if (IDS%<xsl:value-of select="@name"/>.NE.ids_real_invalid) then
    call put_double(idx,path, "<xsl:value-of select="@path"/>",IDS%<xsl:value-of select="translate(@path,'/','%')"/>, status)
    if (ual_debug =='yes') write(*,*) &amp;
       'Put IDS%<xsl:value-of select="translate(@path,'/','%')"/>',IDS%<xsl:value-of select="translate(@path,'/','%')"/>
@@ -3995,7 +3991,7 @@ if (associated(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>))
 
    ! Store time of the array of structure (hidden variable for the user, but used by the UAL for future get_slice operations)
    allocate(time(1))
-   if (IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>(1)%time.EQ.-9.D40) then ! Check the presence of a time vector at the root of the AoS (on the first index only)
+   if (IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>(1)%time.EQ.ids_real_invalid) then ! Check the presence of a time vector at the root of the AoS (on the first index only)
       if (IDS%IDS_Properties%homogeneous_time.EQ.1) then
          time = ids%time ! Use the general time vector of the IDS to fill time
 <!--then  ! For an homogeneous IDS, force the time of the AoS to be equal to the general one
@@ -4047,7 +4043,7 @@ if (associated(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)) then
 
    ! Store time of the array of structure (hidden variable for the user, but used by the UAL for future get_slice operations)
    allocate(time(1))
-   if (IDS%<xsl:value-of select = "translate(@path,'/','%')"/>(1)%time.EQ.-9.D40) then ! Check the presence of a time vector at the root of the AoS (on the first index only)
+   if (IDS%<xsl:value-of select = "translate(@path,'/','%')"/>(1)%time.EQ.ids_real_invalid) then ! Check the presence of a time vector at the root of the AoS (on the first index only)
       if (IDS%IDS_Properties%homogeneous_time.EQ.1) then
          time = ids%time ! Use the general time vector of the IDS to fill time
       else
@@ -4620,12 +4616,12 @@ longstring = ' '    <!-- Initialisation of longstring, otherwise strange problem
 call get_string(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,longstring, status)
 if (status.EQ.0) then
    lenstring = len_trim(longstring)
-   allocate(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(floor(real(lenstring/132))+1))
-   if (lenstring &lt;= 132) then
+   allocate(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(floor(real(lenstring/ids_string_length))+1))
+   if (lenstring &lt;= ids_string_length) then
       IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/> = trim(longstring)
    else
-      do istring=1,floor(real(lenstring/132))+1
-          IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(istring) = trim(longstring(1+(istring-1)*132 : istring*132))
+      do istring=1,floor(real(lenstring/ids_string_length))+1
+          IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(istring) = trim(longstring(1+(istring-1)*ids_string_length : istring*ids_string_length))
       enddo
    endif
    if (ual_debug =='yes') write(*,*) &amp;
@@ -4639,12 +4635,12 @@ longstring = ' '    <!-- Initialisation of longstring, otherwise strange problem
 call get_string(idx,path, "<xsl:value-of select="@name"/>",longstring, status)
 if (status.EQ.0) then
    lenstring = len_trim(longstring)
-   allocate(IDS%<xsl:value-of select="@name"/>(floor(real(lenstring/132))+1))
-   if (lenstring &lt;= 132) then
+   allocate(IDS%<xsl:value-of select="@name"/>(floor(real(lenstring/ids_string_length))+1))
+   if (lenstring &lt;= ids_string_length) then
       IDS%<xsl:value-of select="@name"/> = trim(longstring)
    else
-      do istring=1,floor(real(lenstring/132))+1
-          IDS%<xsl:value-of select="@name"/>(istring) = trim(longstring(1+(istring-1)*132 : istring*132))
+      do istring=1,floor(real(lenstring/ids_string_length))+1
+          IDS%<xsl:value-of select="@name"/>(istring) = trim(longstring(1+(istring-1)*ids_string_length : istring*ids_string_length))
       enddo
    endif
    if (ual_debug =='yes') write(*,*) &amp;
@@ -5507,7 +5503,7 @@ call put_object_slice(idx,path,"<xsl:value-of select="@path"/>",IDS%time,obj_sin
 			<xsl:when test="@name='xs:integer'  and @timed='yes'">
 ! Put <xsl:value-of select="@path"/>
 				<!-- for comment only -->
-if (IDS%<xsl:value-of select="translate(@path,'/','%')"/>.NE.-999999999) then
+if (IDS%<xsl:value-of select="translate(@path,'/','%')"/>.NE.ids_int_invalid) then
    call put_int_slice(idx,path, "<xsl:value-of select="@path"/>",IDS%<xsl:value-of select="translate(@path,'/','%')"/>,&amp;
    IDS%time, status)
    if (ual_debug =='yes') write(*,*) &amp;
@@ -5523,7 +5519,7 @@ endif
 			<xsl:when test="@name='xs:float'  and @timed='yes'">
 ! Put <xsl:value-of select="@path"/>
 				<!-- for comment only -->
-if (IDS%<xsl:value-of select="translate(@path,'/','%')"/>.NE.-9.D40) then
+if (IDS%<xsl:value-of select="translate(@path,'/','%')"/>.NE.ids_real_invalid) then
    call put_double_slice(idx,path, "<xsl:value-of select="@path"/>",IDS%<xsl:value-of select="translate(@path,'/','%')"/>,&amp;
    IDS%time, status)
    if (ual_debug =='yes') write(*,*) &amp;
@@ -5760,7 +5756,7 @@ if (associated(<xsl:value-of select="$currentidxpath"/>)) then
       longstring = trim(<xsl:value-of select="$currentidxpath"/>(1))
    else
       do istring=1,lenstring
-          longstring(1+(istring-1)*132 : istring*132) = <xsl:value-of select="$currentidxpath"/>(istring)
+          longstring(1+(istring-1)*ids_string_length : istring*ids_string_length) = <xsl:value-of select="$currentidxpath"/>(istring)
       enddo
    endif
    call put_string_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:value-of select="$child_index"/>,trim(longstring))       ! should clean up longstring after that, or send to the put only the right length, which has been updated
@@ -5796,7 +5792,7 @@ call fput_int_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of se
          <xsl:when test="@data_type='flt_type' or @data_type='FLT_0D'">
 ! Put <xsl:value-of select="@path"/>
             <!-- for comment only -->
-if (<xsl:value-of select="$currentidxpath"/>.NE.-9.D40) then
+if (<xsl:value-of select="$currentidxpath"/>.NE.ids_real_invalid) then
    call put_double_in_object(idx,obj<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>",<xsl:value-of select="$child_index"/>,<xsl:value-of select="$currentidxpath"/>)
    if (ual_debug =='yes') write(*,*) &amp;
       'Put <xsl:value-of select="$currentidxpath"/>', &amp;

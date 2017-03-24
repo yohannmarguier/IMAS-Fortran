@@ -11,9 +11,58 @@
 
 <!-- -->
 <!-- ======================= ====   Begin : Common Types definition ==== =====================-->
+module ids_types    ! declare the size of real and integer variables to be used in all sub-trees, along with the invalid numbers.
+
+  use iso_c_binding, only: ids_real => c_double, &amp;
+                           ids_int  => c_long
+<!--
+Possible way to extend the types to single precision floats, c_int, etc 
+  !!use iso_c_binding, only:  &amp;
+  !!                        ids_c_double => c_double, &amp;
+  !!                        ids_c_float  => c_float, &amp;
+  !!                        ids_c_int    => c_int
+  !! real(ids_c_float), parameter :: ids_c_float_invalid = -9.0E30_ids_c_float
+ -->
+
+  implicit none
+
+  integer(ids_int), parameter :: ids_data_dictionary_version(3) = (/ ids_int_invalid , ids_int_invalid , ids_int_invalid /)  !! NOTE: to be filled with e.g. (/3,7,4/).
+
+  integer(ids_int), parameter :: ids_string_length = 132    ! 
+
+  integer(ids_int), parameter :: ids_int_invalid  = -999999999_ids_int
+  real(ids_real),   parameter :: ids_real_invalid = -9.0E40_ids_real
+
+  ! ids_is_valid - Function for testing the validity of either integers or real numbers
+  interface ids_is_valid
+     module procedure ids_is_valid_int, ids_is_valid_ids_real
+  end interface
+
+contains
+
+  logical function ids_is_valid_int(in)
+    implicit none
+    integer(ids_int) :: in
+    ids_is_valid_int = in .ne. ids_int_invalid
+    return
+  end function ids_is_valid_int
+
+  logical function ids_is_valid_ids_real(in)
+    implicit none
+    real(ids_real) :: in
+    ids_is_valid_ids_real = abs(in - ids_real_invalid) .gt. abs(ids_real_invalid) * 1.0e-15_ids_real
+    return
+  end function ids_is_valid_ids_real
+
+end module ids_types
+<!-- ======================= ====   End :Common Types definition ==== =====================-->
+<!-- -->
+
+<!-- -->
+<!-- ======================= ====   Begin : Common Utility definition ==== =====================-->
 module ids_utilities    ! declare the set of types common to all sub-trees
 
-integer, parameter, public :: DP = kind(1.0d0)
+use ids_types
 <!-- This method to find all elements and Complex types in Utilities is not clean at all !!! Check when adding additional levels in utilities !-->
 <!--
 <xsl:apply-templates select="document('utilities/dd_support.xsd')/*/*/xs:complexType/*/*/xs:complexType/*/*/xs:complexType/*/*/xs:complexType"/> --><!-- Original IDS structure -->
@@ -53,7 +102,7 @@ integer, parameter, public :: DP = kind(1.0d0)
 <xsl:apply-templates select="document('utilities/dd_support.xsd')/*/xs:element"/> <!-- INDUCES SPURIOUS TEXT IF A SPECIFIC ELEMENT TEMPLATE IS NOT DECLARED ! -->
 
 end module ! end of the utilities module
-<!-- ======================= ====   End :Common Types definition ==== =====================-->
+<!-- ======================= ====   End :Common Utility definition ==== =====================-->
 <!-- -->
 <!-- Now we declare this schema module -->
 
@@ -62,9 +111,9 @@ module ids_schemas       ! declaration of all IDSs
 <!-- declare that utilities is an external  module -->
 use ids_utilities
 
-integer, parameter :: NON_TIMED=0
-integer, parameter :: TIMED=1
-integer, parameter :: TIMED_CLEAR=2
+integer(ids_int), parameter :: NON_TIMED=0
+integer(ids_int), parameter :: TIMED=1
+integer(ids_int), parameter :: TIMED_CLEAR=2
 
 <!-- -->
 <!-- do the work on the entry file includes -->
@@ -175,52 +224,52 @@ type ids_<xsl:for-each select="ancestor::xs:element"><xsl:value-of select="@name
 </xsl:choose>
 <xsl:choose>
 <xsl:when test="@type='str_type' or @type='str_1d_type' or ./xs:complexType/xs:sequence/xs:group[@ref='STR_0D'] or ./xs:complexType/xs:sequence/xs:group[@ref='STR_1D']" >
-  character(len=132), dimension(:), pointer ::data => null()     <xsl:call-template name="printnode"/>
+  character(len=ids_string_length), dimension(:), pointer ::data => null()     <xsl:call-template name="printnode"/>
 </xsl:when>
       <xsl:when test="@type='int_1d_type' or ./xs:complexType/xs:sequence/xs:group[@ref='INT_1D']">
-  integer, pointer  :: data(:) => null()    <xsl:call-template name="printnode"/>
+  integer(ids_int), pointer  :: data(:) => null()    <xsl:call-template name="printnode"/>
 </xsl:when>
       <xsl:when test="@type='flt_1d_type' or ./xs:complexType/xs:sequence/xs:group[@ref='FLT_1D']">
-  real(DP), pointer  :: data(:) => null()   <xsl:call-template name="printnode"/>
-  real(DP), pointer  :: data_error_upper(:) => null()
-  real(DP), pointer  :: data_error_lower(:) => null()
-  integer  :: data_error_index=-999999999
+  real(ids_real), pointer  :: data(:) => null()   <xsl:call-template name="printnode"/>
+  real(ids_real), pointer  :: data_error_upper(:) => null()
+  real(ids_real), pointer  :: data_error_lower(:) => null()
+  integer(ids_int)  :: data_error_index=ids_int_invalid
 </xsl:when>
       <xsl:when test="@type='int_2d_type' or ./xs:complexType/xs:sequence/xs:group[@ref='INT_2D']">
-  integer, pointer  :: data(:,:) => null()   <xsl:call-template name="printnode"/>
+  integer(ids_int), pointer  :: data(:,:) => null()   <xsl:call-template name="printnode"/>
 </xsl:when>
       <xsl:when test="@type='flt_2d_type' or ./xs:complexType/xs:sequence/xs:group[@ref='FLT_2D']">
-  real(DP), pointer  :: data(:,:) => null()   <xsl:call-template name="printnode"/>
-  real(DP), pointer  :: data_error_upper(:,:) => null()
-  real(DP), pointer  :: data_error_lower(:,:) => null()
-  integer  :: data_error_index=-999999999
+  real(ids_real), pointer  :: data(:,:) => null()   <xsl:call-template name="printnode"/>
+  real(ids_real), pointer  :: data_error_upper(:,:) => null()
+  real(ids_real), pointer  :: data_error_lower(:,:) => null()
+  integer(ids_int)  :: data_error_index=ids_int_invalid
   </xsl:when>
   <xsl:when test="./xs:complexType/xs:sequence/xs:group[@ref='FLT_3D']">
-  real(DP), pointer  :: data(:,:,:) => null()   <xsl:call-template name="printnode"/>
-  real(DP), pointer  :: data_error_upper(:,:,:) => null()
-  real(DP), pointer  :: data_error_lower(:,:,:) => null()
-  integer  :: data_error_index=-999999999
+  real(ids_real), pointer  :: data(:,:,:) => null()   <xsl:call-template name="printnode"/>
+  real(ids_real), pointer  :: data_error_upper(:,:,:) => null()
+  real(ids_real), pointer  :: data_error_lower(:,:,:) => null()
+  integer(ids_int)  :: data_error_index=ids_int_invalid
 </xsl:when>
   <xsl:when test="./xs:complexType/xs:sequence/xs:group[@ref='INT_3D'] ">
-  integer, pointer  :: data(:,:,:) => null()   <xsl:call-template name="printnode"/>
+  integer(ids_int), pointer  :: data(:,:,:) => null()   <xsl:call-template name="printnode"/>
 </xsl:when>
 <xsl:when test="./xs:complexType/xs:sequence/xs:group[@ref='FLT_4D'] ">
-  real(DP), pointer  :: data(:,:,:,:) => null()   <xsl:call-template name="printnode"/>
-  real(DP), pointer  :: data_error_upper(:,:,:,:) => null()
-  real(DP), pointer  :: data_error_lower(:,:,:,:) => null()
-  integer  :: data_error_index=-999999999
+  real(ids_real), pointer  :: data(:,:,:,:) => null()   <xsl:call-template name="printnode"/>
+  real(ids_real), pointer  :: data_error_upper(:,:,:,:) => null()
+  real(ids_real), pointer  :: data_error_lower(:,:,:,:) => null()
+  integer(ids_int)  :: data_error_index=ids_int_invalid
   </xsl:when>
   <xsl:when test="./xs:complexType/xs:sequence/xs:group[@ref='FLT_5D']">
-  real(DP), pointer  :: data(:,:,:,:,:) => null()   <xsl:call-template name="printnode"/>
-  real(DP), pointer  :: data_error_upper(:,:,:,:,:) => null()
-  real(DP), pointer  :: data_error_lower(:,:,:,:,:) => null()
-  integer  :: data_error_index=-999999999
+  real(ids_real), pointer  :: data(:,:,:,:,:) => null()   <xsl:call-template name="printnode"/>
+  real(ids_real), pointer  :: data_error_upper(:,:,:,:,:) => null()
+  real(ids_real), pointer  :: data_error_lower(:,:,:,:,:) => null()
+  integer(ids_int)  :: data_error_index=ids_int_invalid
   </xsl:when>
   <xsl:when test="./xs:complexType/xs:sequence/xs:group[@ref='FLT_6D'] ">
-  real(DP), pointer  :: data(:,:,:,:,:,:) => null()   <xsl:call-template name="printnode"/>
-  real(DP), pointer  :: data_error_upper(:,:,:,:,:,:) => null()
-  real(DP), pointer  :: data_error_lower(:,:,:,:,:,:) => null()
-  integer  :: data_error_index=-999999999
+  real(ids_real), pointer  :: data(:,:,:,:,:,:) => null()   <xsl:call-template name="printnode"/>
+  real(ids_real), pointer  :: data_error_upper(:,:,:,:,:,:) => null()
+  real(ids_real), pointer  :: data_error_lower(:,:,:,:,:,:) => null()
+  integer(ids_int)  :: data_error_index=ids_int_invalid
   </xsl:when>
 </xsl:choose>
 <xsl:for-each select="xs:complexType/xs:sequence/xs:element"><xsl:call-template name="declare"/></xsl:for-each>
@@ -294,7 +343,7 @@ endtype
   type (ids_<xsl:value-of select="@name"/>_mask)<xsl:if test="@maxOccurs &gt; 1 or @maxOccurs ='unbounded'">,pointer</xsl:if> :: <xsl:value-of select="@name"/>  <xsl:if test="@maxOccurs &gt; 1 or @maxOccurs ='unbounded'">(:) => null()</xsl:if>     <xsl:call-template name="printnode"/>
 </xsl:when>
 <xsl:when test="@type='xs:string' or @type='vecstring_type' or @type='vecint_type' or @type='vecflt_type' or @type='matint_type' or @type='matflt_type'  or @type='array3dflt_type' or  @type='array3dint_type' or @type='array4dflt_type' or @type='array5dflt_type' or @type='array6dflt_type' or @type='array7dflt_type' or @type='xs:integer' or @type='xs:float' ">
-  integer  :: <xsl:value-of select="@name"/>=0     <xsl:call-template name="printnode"/>
+  integer(ids_int)  :: <xsl:value-of select="@name"/>=0     <xsl:call-template name="printnode"/>
 </xsl:when>
 <xsl:otherwise>
    <!-- assume this is a complex type defined somewhere else, likely in utilities or at the beginning of the xsd file -->
@@ -308,7 +357,7 @@ endtype
       <xsl:when test="@ref">
       <xsl:choose>
 <xsl:when test="@ref='time'">  <!-- time is a reserved name and case-->
-  real(DP), pointer  :: time(:) => null()  ! time</xsl:when>
+  real(ids_real), pointer  :: time(:) => null()  ! time</xsl:when>
 <xsl:otherwise>
   type (ids_<xsl:value-of select="@ref"/>)<xsl:if test="@maxOccurs &gt; 1or @maxOccurs ='unbounded'">,pointer</xsl:if> :: <xsl:value-of select="@ref"/> <xsl:if test="@maxOccurs &gt; 1or @maxOccurs ='unbounded'">(:) => null()</xsl:if>       <xsl:call-template name="printnode"/>
 </xsl:otherwise>
@@ -319,61 +368,61 @@ endtype
   type (ids_<xsl:value-of select="@name"/>)<xsl:if test="@maxOccurs &gt; 1 or @maxOccurs ='unbounded'">,pointer</xsl:if> :: <xsl:value-of select="@name"/>  <xsl:if test="@maxOccurs &gt; 1 or @maxOccurs ='unbounded'">(:) => null()</xsl:if>     <xsl:call-template name="printnode"/>
 </xsl:when> -->
 <xsl:when test="@type='str_type' or @type='str_1d_type' or ./xs:complexType/xs:group[@ref='STR_0D'] or ./xs:complexType/xs:group[@ref='STR_1D']" >
-  character(len=132), dimension(:), pointer ::<xsl:value-of select="@name"/> => null()     <xsl:call-template name="printnode"/>
+  character(len=ids_string_length), dimension(:), pointer ::<xsl:value-of select="@name"/> => null()     <xsl:call-template name="printnode"/>
 </xsl:when>
       <xsl:when test="@type='int_1d_type' or ./xs:complexType/xs:group[@ref='INT_1D']">
-  integer,pointer  :: <xsl:value-of select="@name"/>(:) => null()    <xsl:call-template name="printnode"/>
+  integer(ids_int),pointer  :: <xsl:value-of select="@name"/>(:) => null()    <xsl:call-template name="printnode"/>
 </xsl:when>
       <xsl:when test="@type='flt_1d_type' or ./xs:complexType/xs:group[@ref='FLT_1D']">
-  real(DP),pointer  :: <xsl:value-of select="@name"/>(:) => null()   <xsl:call-template name="printnode"/>
-  real(DP),pointer  :: <xsl:value-of select="@name"/>_error_upper(:) => null()   
-  real(DP),pointer  :: <xsl:value-of select="@name"/>_error_lower(:) => null()   
-  integer :: <xsl:value-of select="@name"/>_error_index=-999999999
+  real(ids_real),pointer  :: <xsl:value-of select="@name"/>(:) => null()   <xsl:call-template name="printnode"/>
+  real(ids_real),pointer  :: <xsl:value-of select="@name"/>_error_upper(:) => null()   
+  real(ids_real),pointer  :: <xsl:value-of select="@name"/>_error_lower(:) => null()   
+  integer(ids_int) :: <xsl:value-of select="@name"/>_error_index=ids_int_invalid
 </xsl:when>
       <xsl:when test="@type='int_2d_type' or ./xs:complexType/xs:group[@ref='INT_2D']">
-  integer,pointer  :: <xsl:value-of select="@name"/>(:,:) => null()   <xsl:call-template name="printnode"/>
+  integer(ids_int),pointer  :: <xsl:value-of select="@name"/>(:,:) => null()   <xsl:call-template name="printnode"/>
 </xsl:when>
       <xsl:when test="@type='flt_2d_type' or ./xs:complexType/xs:group[@ref='FLT_2D']">
-  real(DP),pointer  :: <xsl:value-of select="@name"/>(:,:) => null()   <xsl:call-template name="printnode"/>
-  real(DP),pointer  :: <xsl:value-of select="@name"/>_error_upper(:,:) => null()   
-  real(DP),pointer  :: <xsl:value-of select="@name"/>_error_lower(:,:) => null()   
-  integer :: <xsl:value-of select="@name"/>_error_index=-999999999
+  real(ids_real),pointer  :: <xsl:value-of select="@name"/>(:,:) => null()   <xsl:call-template name="printnode"/>
+  real(ids_real),pointer  :: <xsl:value-of select="@name"/>_error_upper(:,:) => null()   
+  real(ids_real),pointer  :: <xsl:value-of select="@name"/>_error_lower(:,:) => null()   
+  integer(ids_int) :: <xsl:value-of select="@name"/>_error_index=ids_int_invalid
   </xsl:when>
   <xsl:when test="./xs:complexType/xs:group[@ref='FLT_3D']">
-  real(DP),pointer  :: <xsl:value-of select="@name"/>(:,:,:) => null()   <xsl:call-template name="printnode"/>
-  real(DP),pointer  :: <xsl:value-of select="@name"/>_error_upper(:,:,:) => null()   
-  real(DP),pointer  :: <xsl:value-of select="@name"/>_error_lower(:,:,:) => null()   
-  integer :: <xsl:value-of select="@name"/>_error_index=-999999999
+  real(ids_real),pointer  :: <xsl:value-of select="@name"/>(:,:,:) => null()   <xsl:call-template name="printnode"/>
+  real(ids_real),pointer  :: <xsl:value-of select="@name"/>_error_upper(:,:,:) => null()   
+  real(ids_real),pointer  :: <xsl:value-of select="@name"/>_error_lower(:,:,:) => null()   
+  integer(ids_int) :: <xsl:value-of select="@name"/>_error_index=ids_int_invalid
 </xsl:when>
   <xsl:when test="./xs:complexType/xs:group[@ref='INT_3D'] ">
-  integer,pointer  :: <xsl:value-of select="@name"/>(:,:,:) => null()   <xsl:call-template name="printnode"/>
+  integer(ids_int),pointer  :: <xsl:value-of select="@name"/>(:,:,:) => null()   <xsl:call-template name="printnode"/>
 </xsl:when>
 <xsl:when test="./xs:complexType/xs:group[@ref='FLT_4D'] ">
-  real(DP),pointer  :: <xsl:value-of select="@name"/>(:,:,:,:) => null()   <xsl:call-template name="printnode"/>
-  real(DP),pointer  :: <xsl:value-of select="@name"/>_error_upper(:,:,:,:) => null()   
-  real(DP),pointer  :: <xsl:value-of select="@name"/>_error_lower(:,:,:,:) => null()   
-  integer :: <xsl:value-of select="@name"/>_error_index=-999999999
+  real(ids_real),pointer  :: <xsl:value-of select="@name"/>(:,:,:,:) => null()   <xsl:call-template name="printnode"/>
+  real(ids_real),pointer  :: <xsl:value-of select="@name"/>_error_upper(:,:,:,:) => null()   
+  real(ids_real),pointer  :: <xsl:value-of select="@name"/>_error_lower(:,:,:,:) => null()   
+  integer(ids_int) :: <xsl:value-of select="@name"/>_error_index=ids_int_invalid
   </xsl:when>
   <xsl:when test="./xs:complexType/xs:group[@ref='FLT_5D']">
-  real(DP),pointer  :: <xsl:value-of select="@name"/>(:,:,:,:,:) => null()   <xsl:call-template name="printnode"/>
-  real(DP),pointer  :: <xsl:value-of select="@name"/>_error_upper(:,:,:,:,:) => null()   
-  real(DP),pointer  :: <xsl:value-of select="@name"/>_error_lower(:,:,:,:,:) => null()   
-  integer :: <xsl:value-of select="@name"/>_error_index=-999999999
+  real(ids_real),pointer  :: <xsl:value-of select="@name"/>(:,:,:,:,:) => null()   <xsl:call-template name="printnode"/>
+  real(ids_real),pointer  :: <xsl:value-of select="@name"/>_error_upper(:,:,:,:,:) => null()   
+  real(ids_real),pointer  :: <xsl:value-of select="@name"/>_error_lower(:,:,:,:,:) => null()   
+  integer(ids_int) :: <xsl:value-of select="@name"/>_error_index=ids_int_invalid
   </xsl:when>
   <xsl:when test="./xs:complexType/xs:group[@ref='FLT_6D'] ">
-  real(DP),pointer  :: <xsl:value-of select="@name"/>(:,:,:,:,:,:) => null()   <xsl:call-template name="printnode"/>
-  real(DP),pointer  :: <xsl:value-of select="@name"/>_error_upper(:,:,:,:,:,:) => null()   
-  real(DP),pointer  :: <xsl:value-of select="@name"/>_error_lower(:,:,:,:,:,:) => null()   
-  integer :: <xsl:value-of select="@name"/>_error_index=-999999999
+  real(ids_real),pointer  :: <xsl:value-of select="@name"/>(:,:,:,:,:,:) => null()   <xsl:call-template name="printnode"/>
+  real(ids_real),pointer  :: <xsl:value-of select="@name"/>_error_upper(:,:,:,:,:,:) => null()   
+  real(ids_real),pointer  :: <xsl:value-of select="@name"/>_error_lower(:,:,:,:,:,:) => null()   
+  integer(ids_int) :: <xsl:value-of select="@name"/>_error_index=ids_int_invalid
   </xsl:when>
       <xsl:when test="@type='int_type' or ./xs:complexType/xs:group[@ref='INT_0D']">
-  integer  :: <xsl:value-of select="@name"/>=-999999999     <xsl:call-template name="printnode"/>
+  integer(ids_int)  :: <xsl:value-of select="@name"/>=ids_int_invalid     <xsl:call-template name="printnode"/>
 </xsl:when>
       <xsl:when test="@type='flt_type' or ./xs:complexType/xs:group[@ref='FLT_0D']">
-  real(DP)  :: <xsl:value-of select="@name"/>=-9.0D40     <xsl:call-template name="printnode"/>
-  real(DP)  :: <xsl:value-of select="@name"/>_error_upper=-9.0D40     
-  real(DP)  :: <xsl:value-of select="@name"/>_error_lower=-9.0D40     
-  integer :: <xsl:value-of select="@name"/>_error_index=-999999999
+  real(ids_real)  :: <xsl:value-of select="@name"/>=ids_real_invalid     <xsl:call-template name="printnode"/>
+  real(ids_real)  :: <xsl:value-of select="@name"/>_error_upper=ids_real_invalid     
+  real(ids_real)  :: <xsl:value-of select="@name"/>_error_lower=ids_real_invalid     
+  integer(ids_int) :: <xsl:value-of select="@name"/>_error_index=ids_int_invalid
 </xsl:when>
 <!--<xsl:when test="@type and contains(string(xs:annotation/xs:documentation), 'IDS')"> --><!-- Special case of IDSs defined in the schemas with a generic type defined somewhere else, e.g. utilities : like interfdiag, polardiag -->
  <!--  type (ids_<xsl:value-of select="@name"/>) -->   <!-- IDS declaration with its explicit name -->
