@@ -14,7 +14,7 @@
 module ids_types    ! declare the size of real and integer variables to be used in all sub-trees, along with the invalid numbers.
 
   use iso_c_binding, only: ids_real => c_double, &amp;
-                           ids_int  => c_long
+                           ids_int  => c_int32_t
 <!--
 Possible way to extend the types to single precision floats, c_int, etc 
   !!use iso_c_binding, only:  &amp;
@@ -26,16 +26,16 @@ Possible way to extend the types to single precision floats, c_int, etc
 
   implicit none
 
-  integer(ids_int), parameter :: ids_data_dictionary_version(3) = (/ ids_int_invalid , ids_int_invalid , ids_int_invalid /)  !! NOTE: to be filled with e.g. (/3,7,4/).
-
-  integer(ids_int), parameter :: ids_string_length = 132    ! 
+  integer(ids_int), parameter :: ids_string_length = 132_ids_int
 
   integer(ids_int), parameter :: ids_int_invalid  = -999999999_ids_int
   real(ids_real),   parameter :: ids_real_invalid = -9.0E40_ids_real
 
+  integer(ids_int), parameter :: ids_data_dictionary_version(3) = (/ ids_int_invalid , ids_int_invalid , ids_int_invalid /)  !! NOTE: to be filled with e.g. (/3,7,4/).
+
   ! ids_is_valid - Function for testing the validity of either integers or real numbers
   interface ids_is_valid
-     module procedure ids_is_valid_int, ids_is_valid_ids_real
+     module procedure ids_is_valid_int, ids_is_valid_ids_real, ids_is_all_valid_int, ids_is_all_valid_real
   end interface
 
 contains
@@ -53,6 +53,20 @@ contains
     ids_is_valid_ids_real = abs(in - ids_real_invalid) .gt. abs(ids_real_invalid) * 1.0e-15_ids_real
     return
   end function ids_is_valid_ids_real
+
+  logical function ids_is_all_valid_int(in)
+    implicit none
+    integer(ids_int) :: in(:)
+    ids_is_all_valid_int= .not. any( in(:) .eq. ids_int_invalid )
+    return
+  end function ids_is_all_valid_int
+
+  logical function ids_is_all_valid_real(in)
+    implicit none
+    real(ids_real) :: in(:)
+    ids_is_all_valid_real= .not. any( abs(in(:) - ids_real_invalid) .le. abs(ids_real_invalid) * 1.0e-15_ids_real )
+    return
+  end function ids_is_all_valid_real
 
 end module ids_types
 <!-- ======================= ====   End :Common Types definition ==== =====================-->
