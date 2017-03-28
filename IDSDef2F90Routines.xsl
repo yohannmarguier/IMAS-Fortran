@@ -85,6 +85,7 @@ character(len=3)::ual_debug
 contains
 
 character(10) function int2str(num)
+   use ids_types
    integer(ids_int), intent(in):: num
    character(10) :: str
    ! convert integer to string using formatted write
@@ -95,6 +96,7 @@ end function int2str
 
 
 FUNCTION isErrorCritical(status, fieldPath) RESULT (exitRequest)
+        use ids_types
 	integer(ids_int) :: status
 	character*(*) :: fieldPath
 	logical :: exitRequest
@@ -294,6 +296,7 @@ character(len=3)::ual_debug
 contains
 
 character(10) function int2str(num)
+   use ids_types
    integer(ids_int), intent(in):: num
    character(10) :: str
    ! convert integer to string using formatted write
@@ -304,6 +307,7 @@ end function int2str
 
 
 FUNCTION isErrorCritical(status, fieldPath) RESULT (exitRequest)
+        use ids_types
 	integer(ids_int) :: status
 	character*(*) :: fieldPath
 	logical :: exitRequest
@@ -395,6 +399,7 @@ character(len=3)::ual_debug
 contains
 
 character(10) function int2str(num)
+   use ids_types
    integer(ids_int), intent(in):: num
    character(10) :: str
    ! convert integer to string using formatted write
@@ -405,6 +410,7 @@ end function int2str
 
 
 FUNCTION isErrorCritical(status, fieldPath) RESULT (exitRequest)
+        use ids_types
 	integer(ids_int) :: status
 	character*(*) :: fieldPath
 	logical :: exitRequest
@@ -560,6 +566,7 @@ character(len=3)::ual_debug
 contains
 
 character(10) function int2str(num)
+   use ids_types
    integer(ids_int), intent(in):: num
    character(10) :: str
    ! convert integer to string using formatted write
@@ -570,6 +577,7 @@ end function int2str
 
 
 FUNCTION isErrorCritical(status, fieldPath) RESULT (exitRequest)
+        use ids_types
 	integer(ids_int) :: status
 	character*(*) :: fieldPath
 	logical :: exitRequest
@@ -728,6 +736,7 @@ character(len=3)::ual_debug
 contains
 
 character(10) function int2str(num)
+   use ids_types
    integer(ids_int), intent(in):: num
    character(10) :: str
    ! convert integer to string using formatted write
@@ -738,6 +747,7 @@ end function int2str
 
 
 FUNCTION isErrorCritical(status, fieldPath) RESULT (exitRequest)
+        use ids_types
 	integer(ids_int) :: status
 	character*(*) :: fieldPath
 	logical :: exitRequest
@@ -914,6 +924,7 @@ character(len=3)::ual_debug
 contains
 
 character(10) function int2str(num)
+   use ids_types
    integer(ids_int), intent(in):: num
    character(10) :: str
    ! convert integer to string using formatted write
@@ -924,6 +935,7 @@ end function int2str
 
 
 FUNCTION isErrorCritical(status, fieldPath) RESULT (exitRequest)
+        use ids_types
 	integer(ids_int) :: status
 	character*(*) :: fieldPath
 	logical :: exitRequest
