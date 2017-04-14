@@ -21,9 +21,13 @@
 <xsl:result-document href="{substring-before(@schemaLocation,'/')}_copy_struct.f90"> <!-- Create separate documents otherwise compiler explodes -->
 module <xsl:value-of select="local:unique_name(substring-before(@schemaLocation,'/'))"/>_copy_struct
 
-<xsl:if test="not(substring-before(@schemaLocation,'/')='utilities')">
+<!--<xsl:if test="not(substring-before(@schemaLocation,'/')='utilities')">
 use <xsl:value-of select="local:unique_name('utilities')"/>_copy_struct
-</xsl:if>
+</xsl:if> -->
+
+<xsl:for-each select="document(@schemaLocation)/*/xs:include"> <!-- Use copy_struct module for every included schema -->
+use <xsl:value-of select="local:unique_name(substring-before(substring-after(@schemaLocation,'../'),'/'))"/>_copy_struct
+</xsl:for-each>
 
 interface ids_copy
 <xsl:for-each select="document(@schemaLocation)/*/xs:complexType"> <!-- Scan all structures within the schema -->
