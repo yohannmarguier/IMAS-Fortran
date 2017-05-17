@@ -106,7 +106,6 @@ end module
     <xsl:param name="currentidxpath" select="concat($idxpath,'%',@name)"/>
 
     <xsl:choose>
-<!-- xs:integer and xs:float are not deallocated (they are not allocatable !) -->
 			<xsl:when test="@type='str_type' or ./xs:complexType/xs:group[@ref='STR_0D'] or @type='str_1d_type' or ./xs:complexType/xs:group[@ref='STR_1D'] or @type='flt_1d_type' or ./xs:complexType/xs:group[@ref='FLT_1D'] or @type='int_1d_type' or ./xs:complexType/xs:group[@ref='INT_1D'] or ./xs:complexType/xs:group[@ref='FLT_2D'] or ./xs:complexType/xs:group[@ref='INT_2D'] or ./xs:complexType/xs:group[@ref='FLT_3D'] or ./xs:complexType/xs:group[@ref='INT_3D'] or ./xs:complexType/xs:group[@ref='FLT_4D'] or ./xs:complexType/xs:group[@ref='INT_4D'] or ./xs:complexType/xs:group[@ref='FLT_5D'] or ./xs:complexType/xs:group[@ref='FLT_6D'] ">
    ! deallocate <xsl:value-of select="$currentidxpath"/>
    if (associated(struct_in<xsl:value-of select="$currentidxpath"/>)) then
@@ -144,7 +143,7 @@ if (associated(struct_in<xsl:value-of select="$currentidxpath"/>%data)) &amp;
 if (associated(struct_in<xsl:value-of select="$currentidxpath"/>%time)) &amp;
    deallocate(struct_in<xsl:value-of select="$currentidxpath"/>%time)
 </xsl:when>
-
+<xsl:when test="@type='flt_type' or ./xs:complexType/xs:group[@ref='FLT_0D'] or @type='int_type' or ./xs:complexType/xs:group[@ref='INT_0D']"/>  <!-- scalar integers and floats are not deallocated (they are not allocatable !), so just skip the node -->
 			<xsl:otherwise>
  ! Deallocate <xsl:value-of select="$currentidxpath"/> : PROBLEM : UNIDENTIFIED TYPE !!! <!-- for comment only -->
 			</xsl:otherwise>
