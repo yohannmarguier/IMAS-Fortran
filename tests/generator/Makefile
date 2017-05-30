@@ -1,4 +1,7 @@
 #!/bin/bash
+# "make install" should have been run at the installer level before running "make test"
+# Until the testSuite is made modular (one test program per IDS), it is recommended to avoid running the IFORT case (huge source file, takes ages to compile)
+# To detect if an error has been reported, search for "ERROR:" strings in the result file (fortraninterface/tests/generator/gfortran_testSuite.results)
 
 include ../../../Makefile.common
 
