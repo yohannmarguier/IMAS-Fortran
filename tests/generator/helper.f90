@@ -17,7 +17,7 @@ CHARACTER (LEN=*), PARAMETER ::PRINTABLE = '0123456789abcdef'
 
 CONTAINS
     FUNCTION getTime() RESULT (outValue)
-        REAL(DP):: outValue
+        REAL(ids_real):: outValue
 
         outValue = 1.0
         RETURN
@@ -52,7 +52,7 @@ cpoField(1) = PRINTABLE
 	END FUNCTION getStringArray
 
     FUNCTION getDouble() RESULT (outValue)
-        REAL(DP):: outValue
+        REAL(ids_real):: outValue
 
    !     outValue=rand() *1000.00
      call random_number(outValue)
@@ -63,7 +63,7 @@ cpoField(1) = PRINTABLE
 
     FUNCTION getDoubleArray(sizeOfArray) RESULT (outArray)
     INTEGER, INTENT(in)::sizeOfArray
-    REAL(DP),DIMENSION(:), POINTER :: outArray
+    REAL(ids_real),DIMENSION(:), POINTER :: outArray
     INTEGER::I
 
     ALLOCATE(outArray(sizeofArray))
@@ -78,7 +78,7 @@ END FUNCTION getDoubleArray
 
     FUNCTION getInteger() RESULT (outValue)
         INTEGER:: outValue
-	        REAL(DP):: randValue
+	        REAL(ids_real):: randValue
 
      !   outValue=rand() * 1000.0
          call random_number(randValue)
@@ -198,8 +198,8 @@ END FUNCTION getInteger3DArray
 FUNCTION getDouble1DArray(dim1) RESULT (outArray)
     INTEGER, INTENT(in) :: dim1
     INTEGER ::sizeOfArray
-    REAL(DP),DIMENSION(:), POINTER :: outArray
-    REAL(DP),DIMENSION(:), POINTER :: flatArray
+    REAL(ids_real),DIMENSION(:), POINTER :: outArray
+    REAL(ids_real),DIMENSION(:), POINTER :: flatArray
     INTEGER::I
 
     !sizeOfArray = dim1
@@ -219,8 +219,8 @@ END FUNCTION getDouble1DArray
 FUNCTION getDouble2DArray(dim1, dim2) RESULT (outArray)
     INTEGER, INTENT(in) :: dim1, dim2
     INTEGER ::sizeOfArray
-    REAL(DP),DIMENSION(:), POINTER :: flatArray
-    REAL(DP),DIMENSION(:,:), POINTER :: outArray
+    REAL(ids_real),DIMENSION(:), POINTER :: flatArray
+    REAL(ids_real),DIMENSION(:,:), POINTER :: outArray
     INTEGER::I
 
     !sizeOfArray = dim1 * dim2
@@ -241,8 +241,8 @@ FUNCTION getDouble3DArray(dim1, dim2, dim3) RESULT (outArray)
     INTEGER, INTENT(in) :: dim1, dim2, dim3
 
     INTEGER ::sizeOfArray
-    REAL(DP),DIMENSION(:), POINTER :: flatArray
-    REAL(DP),DIMENSION(:,:,:), POINTER :: outArray
+    REAL(ids_real),DIMENSION(:), POINTER :: flatArray
+    REAL(ids_real),DIMENSION(:,:,:), POINTER :: outArray
     INTEGER :: I
 
 
@@ -263,8 +263,8 @@ END FUNCTION getDouble3DArray
 FUNCTION getDouble4DArray(dim1, dim2, dim3, dim4) RESULT (outArray)
     INTEGER, INTENT(in) :: dim1, dim2, dim3, dim4
     INTEGER ::sizeOfArray
-        REAL(DP),DIMENSION(:), POINTER :: flatArray
-    REAL(DP),DIMENSION(:,:,:, :), POINTER :: outArray
+        REAL(ids_real),DIMENSION(:), POINTER :: flatArray
+    REAL(ids_real),DIMENSION(:,:,:, :), POINTER :: outArray
     INTEGER::I
 
     !sizeOfArray = dim1 * dim2 * dim3 * dim4
@@ -282,8 +282,8 @@ END FUNCTION getDouble4DArray
 FUNCTION getDouble5DArray(dim1, dim2, dim3, dim4, dim5) RESULT (outArray)
     INTEGER, INTENT(in) :: dim1, dim2, dim3, dim4, dim5
     INTEGER ::sizeOfArray
-        REAL(DP),DIMENSION(:), POINTER :: flatArray
-    REAL(DP),DIMENSION(:,:,:,:,:), POINTER :: outArray
+    REAL(ids_real),DIMENSION(:), POINTER :: flatArray
+    REAL(ids_real),DIMENSION(:,:,:,:,:), POINTER :: outArray
     INTEGER::I
 
     !sizeOfArray = dim1 * dim2 * dim3 * dim4 * dim5
@@ -303,8 +303,8 @@ FUNCTION getDouble6DArray(dim1, dim2, dim3, dim4, dim5, dim6) RESULT (outArray)
     INTEGER, INTENT(in) :: dim1, dim2, dim3, dim4, dim5, dim6
 
     INTEGER ::sizeOfArray
-    REAL(DP),DIMENSION(:), POINTER :: flatArray
-    REAL(DP),DIMENSION(:,:,:,:,:,:), POINTER :: outArray
+    REAL(ids_real),DIMENSION(:), POINTER :: flatArray
+    REAL(ids_real),DIMENSION(:,:,:,:,:,:), POINTER :: outArray
     INTEGER::I
 
     !sizeOfArray = dim1 * dim2 * dim3 * dim4 * dim5 * dim6
@@ -320,10 +320,50 @@ END FUNCTION getDouble6DArray
 
 ! =================================================================
 ! =================================================================
+! BEGINNING OF A SUBROUTINE HAS BEEN LOST HERE ???
+!IF(ALL(ARRAY1.EQ.ARRAY1)) THEN
+!CALL DOEQUAL
+!ELSE
+!CALL DOUNEQUAL
+!ENDIF
 
-!IF(ALL(ARRAY1.EQ.ARRAY1)) THENCALL DOEQUALELSECALL DOUNEQUALENDIFwhich works for all types of array1 and array2 as long as they have the same type and length,but I think it isslow because an array of logicals is created first. So much faster would beDO I=1,SIZE(ARRAY1)IF(ARRAY1(1).EQ.ARRAY2(I)) EXITENDDOIF(I.GT.N) THENCALL DOEQUALELSECALL DOUNEQUALENDIF
+!which works for all types of array1 and array2 as long as they have the same type and length,but I think it isslow because an array of logicals is created first. So much faster would be
 
-!!  SUBROUTINE f(N)   IMPLICIT NONE   INTEGER N   REAL, DIMENSION(N) :: A	!! You can define arrays using                                !! VARIABLES in Fortran 90.... like Ada       INTEGER i   DO i = 1, N      A(i) = i   END DO   print *, A			!! Print an entire array  END SUBROUTINE  PROGRAM main   IMPLICIT NONE   CALL f(2)			!! Create array of size 2   CALL f(3)			!! Create array of size 3  END
+!DO I=1,SIZE(ARRAY1)
+!IF(ARRAY1(1).EQ.ARRAY2(I)) EXIT
+!ENDDO
+!IF(I.GT.N) THEN
+!CALL DOEQUAL
+!ELSE
+!CALL DOUNEQUAL
+!ENDIF
+
+!!
+!  SUBROUTINE f(N)
+!   IMPLICIT NONE
+
+!   INTEGER N
+
+!   REAL, DIMENSION(N) :: A	!! You can define arrays using
+                                !! VARIABLES in Fortran 90.... like Ada    
+
+!   INTEGER i
+
+!   DO i = 1, N
+!      A(i) = i
+!   END DO
+
+!   print *, A			!! Print an entire array
+
+!  END SUBROUTINE
+
+!  PROGRAM main
+!   IMPLICIT NONE
+
+!   CALL f(2)			!! Create array of size 2
+
+!   CALL f(3)			!! Create array of size 3
+!  END
 
 
 

@@ -1,20 +1,23 @@
 #!/bin/bash
+# "make install" should have been run at the installer level before running "make test"
+# Until the testSuite is made modular (one test program per IDS), it is recommended to avoid running the IFORT case (huge source file, takes ages to compile)
+# To detect if an error has been reported, search for "ERROR:" strings in the result file (fortraninterface/tests/generator/gfortran_testSuite.results)
 
 include ../../../Makefile.common
 
-ifeq (,$(INSTALL))
+ifeq (,$(IMAS_INSTALL_DIR))
 $(error Please supply a variable INSTALL that is the prefix of your IMAS installation.)
 endif
 
 #------------------------- gfortran ----------------------------
 F90_gfortran = gfortran
-COPTS_gfortran = -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none -I$(INSTALL)/fortraninterface/gfortran
-LIBS_gfortran = -L$(INSTALL)/lib -limas-gfortran -limas -lm
+COPTS_gfortran = -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none -I$(IMAS_INSTALL_DIR)/include/gfortran
+LIBS_gfortran = -L$(IMAS_INSTALL_DIR)/lib -limas-gfortran -limas -lm
 
 #------------------------- ifort ----------------------------
 F90_ifort = ifort
-COPTS_ifort = -r8 -assume no2underscore  -fPIC -module $(INSTALL)/fortraninterface/ifort -shared-intel
-LIBS_ifort = -L$(INSTALL)/lib -limas-ifort -limas -lm
+COPTS_ifort = -r8 -assume no2underscore  -fPIC -module $(IMAS_INSTALL_DIR)/include/ifort -shared-intel
+LIBS_ifort = -L$(IMAS_INSTALL_DIR)/lib -limas-ifort -limas -lm
 
 
 IDSDEF = $(UAL)/xml/IDSDef.xml
@@ -45,7 +48,7 @@ comp: $(TARGETS)
 
 .PHONY: test ifort_test gfortran_test
 cmd_test = ( cp -av $(ids_path) idspath-$@ ; \
-	export LD_LIBRARY_PATH=$(INSTALL)/lib:$$LD_LIBRARY_PATH \
+	export LD_LIBRARY_PATH=$(IMAS_INSTALL_DIR)/lib:$$LD_LIBRARY_PATH \
 		ids_path=$$PWD/idspath-$@ \
 		ual_debug=yes; \
 	./$@Suite | tee $@Suite.results )

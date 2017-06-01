@@ -31,7 +31,7 @@ contains
 	if(observed == expected) then
 		if (debugMode) write(*,*) fieldName, " : OK "
 	else
-		write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+		write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
 		outValue = .FALSE.
 		return
 	end if
@@ -49,19 +49,19 @@ FUNCTION assertField_INT1DArray(observed, expected, fieldName) RESULT (outValue)
   	outValue = .TRUE.
 
 	IF(.not. associated(observed)) then
-		write(*,*) fieldName, " : ERROR, field is not associated!!!"
+		write(*,*) fieldName, " : ERROR: field is not associated!!!"
 		outValue = .FALSE.
 		return
 	END IF
 
 	IF(.NOT. ALL(shape(observed).EQ.shape( expected))) then
-		write(*,*) fieldName, " : ERROR! Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
+		write(*,*) fieldName, " : ERROR: Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
 		outValue = .FALSE.
 		return
 	end if
 
         IF(size(observed) .NE. size(expected)) then
-		write(*,*) fieldName, " : ERROR! Array size differs!"
+		write(*,*) fieldName, " : ERROR: Array size differs!"
 		outValue = .FALSE.
 		return
 	end if
@@ -69,7 +69,7 @@ FUNCTION assertField_INT1DArray(observed, expected, fieldName) RESULT (outValue)
 	IF(ALL(observed.EQ.expected)) then
 		if(debugMode) write(*,*) fieldName, " : OK "
 	else
-		write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+		write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
 		outValue = .FALSE.
 		return
 	end if
@@ -87,19 +87,19 @@ FUNCTION assertField_INT2DArray(observed, expected, fieldName) RESULT (outValue)
   	outValue = .TRUE.
 
 	IF(.not. associated(observed)) then
-		write(*,*) fieldName, " : ERROR, field is not associated!!!"
+		write(*,*) fieldName, " : ERROR: field is not associated!!!"
 		outValue = .FALSE.
 		return
 	END IF
 
 	IF(.NOT. ALL(shape(observed).EQ.shape( expected))) then
-		write(*,*) fieldName, " : ERROR! Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
+		write(*,*) fieldName, " : ERROR: Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
 		outValue = .FALSE.
 		return
 	end if
 
         IF(size(observed) .NE. size(expected)) then
-		write(*,*) fieldName, " : ERROR! Array size differs!"
+		write(*,*) fieldName, " : ERROR: Array size differs!"
 		outValue = .FALSE.
 		return
 	end if
@@ -108,7 +108,7 @@ FUNCTION assertField_INT2DArray(observed, expected, fieldName) RESULT (outValue)
 	IF(ALL(observed.EQ.expected)) then
 		if(debugMode) write(*,*) fieldName, " : OK "
 	else
-		write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+		write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
 		outValue = .FALSE.
 		return
 	end if
@@ -126,19 +126,19 @@ FUNCTION assertField_INT3DArray(observed, expected, fieldName) RESULT (outValue)
        	outValue = .TRUE.
 
 	IF(.not. associated(observed)) then
-		write(*,*) fieldName, " : ERROR, field is not associated!!!"
+		write(*,*) fieldName, " : ERROR: field is not associated!!!"
 		outValue = .FALSE.
 		return
 	END IF
 
 	IF(.NOT. ALL(shape(observed).EQ.shape( expected))) then
-		write(*,*) fieldName, " : ERROR! Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
+		write(*,*) fieldName, " : ERROR: Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
 		outValue = .FALSE.
 		return
 	end if
 
         IF(size(observed) .NE. size(expected)) then
-		write(*,*) fieldName, " : ERROR! Array size differs!"
+		write(*,*) fieldName, " : ERROR: Array size differs!"
 		outValue = .FALSE.
 		return
 	end if
@@ -146,7 +146,7 @@ FUNCTION assertField_INT3DArray(observed, expected, fieldName) RESULT (outValue)
 	IF(ALL(observed.EQ.expected)) then
 		if(debugMode) write(*,*) fieldName, " : OK "
 	else
-		write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+		write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
 		outValue = .FALSE.
 		return
 	end if
@@ -163,19 +163,19 @@ FUNCTION assertField_INT4DArray(observed, expected, fieldName) RESULT (outValue)
        	outValue = .TRUE.
 
 	IF(.not. associated(observed)) then
-		write(*,*) fieldName, " : ERROR, field is not associated!!!"
+		write(*,*) fieldName, " : ERROR: field is not associated!!!"
 		outValue = .FALSE.
 		return
 	END IF
 
 	IF(.NOT. ALL(shape(observed).EQ.shape( expected))) then
-		write(*,*) fieldName, " : ERROR! Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
+		write(*,*) fieldName, " : ERROR: Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
 		outValue = .FALSE.
 		return
 	end if
 
         IF(size(observed) .NE. size(expected)) then
-		write(*,*) fieldName, " : ERROR! Array size differs!"
+		write(*,*) fieldName, " : ERROR: Array size differs!"
 		outValue = .FALSE.
 		return
 	end if
@@ -183,7 +183,7 @@ FUNCTION assertField_INT4DArray(observed, expected, fieldName) RESULT (outValue)
 	IF(ALL(observed.EQ.expected)) then
 		if(debugMode) write(*,*) fieldName, " : OK "
 	else
-		write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+		write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
 		outValue = .FALSE.
 		return
 	end if
@@ -201,19 +201,19 @@ END FUNCTION assertField_INT4DArray
        	outValue = .TRUE.
 
 	IF(.not. associated(observed)) then
-		write(*,*) fieldName, " : ERROR, field is not associated!!!"
+		write(*,*) fieldName, " : ERROR: field is not associated!!!"
 		outValue = .FALSE.
 		return
 	END IF
 
 	IF(.NOT. ALL(shape(observed).EQ.shape( expected))) then
-		write(*,*) fieldName, " : ERROR! Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
+		write(*,*) fieldName, " : ERROR: Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
 		outValue = .FALSE.
 		return
 	end if
 
         IF(size(observed) .NE. size(expected)) then
-		write(*,*) fieldName, " : ERROR! Array size differs!"
+		write(*,*) fieldName, " : ERROR: Array size differs!"
 		outValue = .FALSE.
 		return
 	end if
@@ -221,7 +221,7 @@ END FUNCTION assertField_INT4DArray
 	IF(ALL(observed.EQ.expected)) then
 		if(debugMode) write(*,*) fieldName, " : OK "
 	else
-		write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+		write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
 		outValue = .FALSE.
 		return
 	end if
@@ -238,20 +238,20 @@ FUNCTION assertField_INT6DArray(observed, expected, fieldName) RESULT (outValue)
        	outValue = .TRUE.
 
 	IF(.not. associated(observed)) then
-		write(*,*) fieldName, " : ERROR, field is not associated!!!"
+		write(*,*) fieldName, " : ERROR: field is not associated!!!"
 		outValue = .FALSE.
 		return
 	END IF
 
 
 	IF(.NOT. ALL(shape(observed).EQ.shape( expected))) then
-		write(*,*) fieldName, " : ERROR! Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
+		write(*,*) fieldName, " : ERROR: Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
 		outValue = .FALSE.
 		return
 	end if
 
         IF(size(observed) .NE. size(expected)) then
-		write(*,*) fieldName, " : ERROR! Array size differs!"
+		write(*,*) fieldName, " : ERROR: Array size differs!"
 		outValue = .FALSE.
 		return
 	end if
@@ -259,7 +259,7 @@ FUNCTION assertField_INT6DArray(observed, expected, fieldName) RESULT (outValue)
 	IF(ALL(observed.EQ.expected)) then
 		if(debugMode) write(*,*) fieldName, " : OK "
 	else
-		write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+		write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
 		outValue = .FALSE.
 		return
 	end if
@@ -272,7 +272,7 @@ END FUNCTION assertField_INT6DArray
 FUNCTION assertField_FLT(observed, expected, fieldName) RESULT (outValue)
        IMPLICIT NONE
 
-       REAL(DP), INTENT (IN)      :: observed, expected
+       REAL(ids_real), INTENT (IN)      :: observed, expected
        CHARACTER*(*),INTENT(IN) :: fieldName
 
        	LOGICAL    :: outValue
@@ -283,7 +283,7 @@ FUNCTION assertField_FLT(observed, expected, fieldName) RESULT (outValue)
 	if(observed == expected) then
 		if(debugMode) write(*,*) fieldName, " : OK "
 	else
-		write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+		write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
 		outValue = .FALSE.
 		return
 	end if
@@ -295,27 +295,27 @@ END FUNCTION assertField_FLT
 FUNCTION assertField_FLT1DArray(observed, expected, fieldName) RESULT (outValue)
        IMPLICIT NONE
 
-       REAL(DP), DIMENSION(:), POINTER      :: observed, expected
+       REAL(ids_real), DIMENSION(:), POINTER      :: observed, expected
        CHARACTER*(*),INTENT(IN) :: fieldName
 	LOGICAL    :: outValue
 
        	outValue = .TRUE.
 
         IF(.NOT. associated(observed)) then
-		write(*,*) "Error! ", fieldName, " is not associated!"
+		write(*,*) "ERROR: ", fieldName, " is not associated!"
 		outValue = .FALSE.
 		return
 	end if
 
 
 	IF(.NOT. ALL(shape(observed).EQ.shape( expected))) then
-		write(*,*) fieldName, " : ERROR! Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
+		write(*,*) fieldName, " : ERROR: Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
 		outValue = .FALSE.
 		return
 	end if
 
         IF(size(observed) .NE. size(expected)) then
-		write(*,*) fieldName, " : ERROR! Array size differs!"
+		write(*,*) fieldName, " : ERROR: Array size differs!"
 		outValue = .FALSE.
 		return
 	end if
@@ -323,7 +323,7 @@ FUNCTION assertField_FLT1DArray(observed, expected, fieldName) RESULT (outValue)
 	IF(ALL(observed.EQ.expected)) then
 		if(debugMode) write(*,*) fieldName, " : OK "
 	else
-		write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+		write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
 		outValue = .FALSE.
 		return
 	end if
@@ -333,7 +333,7 @@ END FUNCTION assertField_FLT1DArray
         ! =================================================================
   FUNCTION assertField_FLT2DArray(observed, expected, fieldName) RESULT (outValue)
        IMPLICIT NONE
-              REAL(DP), DIMENSION(:,:), POINTER      :: observed, expected
+              REAL(ids_real), DIMENSION(:,:), POINTER      :: observed, expected
        CHARACTER*(*),INTENT(IN) :: fieldName
 	LOGICAL    :: outValue
 
@@ -341,19 +341,19 @@ END FUNCTION assertField_FLT1DArray
 
 
 	IF(.not. associated(observed)) then
-		write(*,*) fieldName, " : ERROR, field is not associated!!!"
+		write(*,*) fieldName, " : ERROR: field is not associated!!!"
 		outValue = .FALSE.
 		return
 	END IF
 
 	IF(.NOT. ALL(shape(observed).EQ.shape( expected))) then
-		write(*,*) fieldName, " : ERROR! Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
+		write(*,*) fieldName, " : ERROR: Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
 		outValue = .FALSE.
 		return
 	end if
 
         IF(size(observed) .NE. size(expected)) then
-		write(*,*) fieldName, " : ERROR! Array size differs!"
+		write(*,*) fieldName, " : ERROR: Array size differs!"
 		outValue = .FALSE.
 		return
 	end if
@@ -361,7 +361,7 @@ END FUNCTION assertField_FLT1DArray
 	IF(ALL(observed.EQ.expected)) then
 		if(debugMode) write(*,*) fieldName, " : OK "
 	else
-		write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+		write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
 		outValue = .FALSE.
 		return
 	end if
@@ -372,7 +372,7 @@ END FUNCTION assertField_FLT2DArray
         ! =================================================================
   FUNCTION assertField_FLT3DArray(observed, expected, fieldName) RESULT (outValue)
        IMPLICIT NONE
-              REAL(DP), DIMENSION(:,:,:), POINTER      :: observed, expected
+              REAL(ids_real), DIMENSION(:,:,:), POINTER      :: observed, expected
 
        CHARACTER*(*),INTENT(IN) :: fieldName
 	LOGICAL    :: outValue
@@ -381,20 +381,20 @@ END FUNCTION assertField_FLT2DArray
 
 
 	IF(.not. associated(observed)) then
-		write(*,*) fieldName, " : ERROR! Field is not associated!!!"
+		write(*,*) fieldName, " : ERROR: Field is not associated!!!"
 		outValue = .FALSE.
 		return
 	END IF
 
 
 	IF(.NOT. ALL(shape(observed).EQ.shape( expected))) then
-		write(*,*) fieldName, " : ERROR! Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
+		write(*,*) fieldName, " : ERROR: Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
 		outValue = .FALSE.
 		return
 	end if
 
         IF(size(observed) .NE. size(expected)) then
-		write(*,*) fieldName, " : ERROR! Array size differs!"
+		write(*,*) fieldName, " : ERROR: Array size differs!"
 		outValue = .FALSE.
 		return
 	end if
@@ -402,7 +402,7 @@ END FUNCTION assertField_FLT2DArray
 	IF(ALL(observed.EQ.expected)) then
 		if(debugMode) write(*,*) fieldName, " : OK "
 	else
-		write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+		write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
 		outValue = .FALSE.
 		return
 	end if
@@ -412,7 +412,7 @@ END FUNCTION assertField_FLT3DArray
          ! =================================================================
   FUNCTION assertField_FLT4DArray(observed, expected, fieldName) RESULT (outValue)
        IMPLICIT NONE
-              REAL(DP), DIMENSION(:,:,:,:), POINTER      :: observed, expected
+              REAL(ids_real), DIMENSION(:,:,:,:), POINTER      :: observed, expected
        CHARACTER*(*),INTENT(IN) :: fieldName
 	LOGICAL    :: outValue
 
@@ -420,19 +420,19 @@ END FUNCTION assertField_FLT3DArray
 
 
 	IF(.not. associated(observed)) then
-		write(*,*) fieldName, " : ERROR, field is not associated!!!"
+		write(*,*) fieldName, " : ERROR: field is not associated!!!"
 		outValue = .FALSE.
 		return
 	END IF
 
 	IF(.NOT. ALL(shape(observed).EQ.shape( expected))) then
-		write(*,*) fieldName, " : ERROR! Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
+		write(*,*) fieldName, " : ERROR: Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
 		outValue = .FALSE.
 		return
 	end if
 
         IF(size(observed) .NE. size(expected)) then
-		write(*,*) fieldName, " : ERROR! Array size differs!"
+		write(*,*) fieldName, " : ERROR: Array size differs!"
 		outValue = .FALSE.
 		return
 	end if
@@ -440,7 +440,7 @@ END FUNCTION assertField_FLT3DArray
 	IF(ALL(observed.EQ.expected)) then
 		if(debugMode) write(*,*) fieldName, " : OK "
 	else
-		write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+		write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
 		outValue = .FALSE.
 		return
 	end if
@@ -450,26 +450,26 @@ END FUNCTION assertField_FLT4DArray
       ! =================================================================
 FUNCTION assertField_FLT5DArray(observed, expected, fieldName) RESULT (outValue)
        IMPLICIT NONE
-              REAL(DP), DIMENSION(:,:,:, :,:), POINTER      :: observed, expected
+              REAL(ids_real), DIMENSION(:,:,:, :,:), POINTER      :: observed, expected
        CHARACTER*(*),INTENT(IN) :: fieldName
        	LOGICAL    :: outValue
 
        	outValue = .TRUE.
 
 	IF(.not. associated(observed)) then
-		write(*,*) fieldName, " : ERROR, field is not associated!!!"
+		write(*,*) fieldName, " : ERROR: field is not associated!!!"
 		outValue = .FALSE.
 		return
 	END IF
 
 	IF(.NOT. ALL(shape(observed).EQ.shape( expected))) then
-		write(*,*) fieldName, " : ERROR! Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
+		write(*,*) fieldName, " : ERROR: Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
 		outValue = .FALSE.
 		return
 	end if
 
         IF(size(observed) .NE. size(expected)) then
-		write(*,*) fieldName, " : ERROR! Array size differs!"
+		write(*,*) fieldName, " : ERROR: Array size differs!"
 		outValue = .FALSE.
 		return
 	end if
@@ -477,7 +477,7 @@ FUNCTION assertField_FLT5DArray(observed, expected, fieldName) RESULT (outValue)
 	IF(ALL(observed.EQ.expected)) then
 		if(debugMode) write(*,*) fieldName, " : OK "
 	else
-		write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+		write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
 		outValue = .FALSE.
 		return
 	end if
@@ -487,7 +487,7 @@ END FUNCTION assertField_FLT5DArray
 
   FUNCTION assertField_FLT6DArray(observed, expected, fieldName) RESULT (outValue)
        IMPLICIT NONE
-              REAL(DP), DIMENSION(:,:,:, :,:,:), POINTER      :: observed, expected
+              REAL(ids_real), DIMENSION(:,:,:, :,:,:), POINTER      :: observed, expected
        CHARACTER*(*),INTENT(IN) :: fieldName
 	LOGICAL    :: outValue
 
@@ -495,19 +495,19 @@ END FUNCTION assertField_FLT5DArray
 
 
 	IF(.not. associated(observed)) then
-		write(*,*) fieldName, " : ERROR, field is not associated!!!"
+		write(*,*) fieldName, " : ERROR: field is not associated!!!"
 		outValue = .FALSE.
 		return
 	END IF
 
 	IF(.NOT. ALL(shape(observed).EQ.shape( expected))) then
-		write(*,*) fieldName, " : ERROR! Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
+		write(*,*) fieldName, " : ERROR: Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
 		outValue = .FALSE.
 		return
 	end if
 
         IF(size(observed) .NE. size(expected)) then
-		write(*,*) fieldName, " : ERROR! Array size differs!"
+		write(*,*) fieldName, " : ERROR: Array size differs!"
 		outValue = .FALSE.
 		return
 	end if
@@ -515,7 +515,7 @@ END FUNCTION assertField_FLT5DArray
 	IF(ALL(observed.EQ.expected)) then
 		if(debugMode) write(*,*) fieldName, " : OK "
 	else
-		write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+		write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
 		outValue = .FALSE.
 		return
 	end if
@@ -529,7 +529,7 @@ END FUNCTION assertField_FLT6DArray
        FUNCTION assertField_CPLX(observed, expected, fieldName) RESULT (outValue)
        IMPLICIT NONE
 
-       COMPLEX(DP), INTENT (IN)      :: observed, expected
+       COMPLEX(ids_real), INTENT (IN)      :: observed, expected
        CHARACTER*(*),INTENT(IN) :: fieldName
        LOGICAL    :: outValue
      	outValue = .TRUE.
@@ -537,7 +537,7 @@ END FUNCTION assertField_FLT6DArray
 	if(observed == expected) then
 		if(debugMode) write(*,*) fieldName, " : OK "
 	else
-		write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+		write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
 		outValue = .FALSE.
 		return
 	end if
@@ -548,7 +548,7 @@ END FUNCTION assertField_FLT6DArray
        FUNCTION assertField_CPLX1DArray(observed, expected, fieldName) RESULT (outValue)
        IMPLICIT NONE
 
-       COMPLEX(DP), DIMENSION(:), POINTER   :: observed, expected
+       COMPLEX(ids_real), DIMENSION(:), POINTER   :: observed, expected
        CHARACTER*(*),INTENT(IN) :: fieldName
        LOGICAL    :: outValue
 
@@ -556,19 +556,19 @@ END FUNCTION assertField_FLT6DArray
 
 
 	IF(.not. associated(observed)) then
-		write(*,*) fieldName, " : ERROR, field is not associated!!!"
+		write(*,*) fieldName, " : ERROR: field is not associated!!!"
 		outValue = .FALSE.
 		return
 	END IF
 
 	IF(.NOT. ALL(shape(observed).EQ.shape( expected))) then
-		write(*,*) fieldName, " : ERROR! Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
+		write(*,*) fieldName, " : ERROR: Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
 		outValue = .FALSE.
 		return
 	end if
 
         IF(size(observed) .NE. size(expected)) then
-		write(*,*) fieldName, " : ERROR! Array size differs!"
+		write(*,*) fieldName, " : ERROR: Array size differs!"
 		outValue = .FALSE.
 		return
 	end if
@@ -576,7 +576,7 @@ END FUNCTION assertField_FLT6DArray
 	IF(ALL(observed.EQ.expected)) then
 		if(debugMode) write(*,*) fieldName, " : OK "
 	else
-		write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+		write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
 		outValue = .FALSE.
 		return
 	end if
@@ -586,7 +586,7 @@ END FUNCTION assertField_FLT6DArray
        FUNCTION assertField_CPLX2DArray(observed, expected, fieldName) RESULT (outValue)
        IMPLICIT NONE
 
-       COMPLEX(DP), DIMENSION(:,:), POINTER    :: observed, expected
+       COMPLEX(ids_real), DIMENSION(:,:), POINTER    :: observed, expected
        CHARACTER*(*),INTENT(IN) :: fieldName
        LOGICAL    :: outValue
 
@@ -594,19 +594,19 @@ END FUNCTION assertField_FLT6DArray
 
 
 	IF(.not. associated(observed)) then
-		write(*,*) fieldName, " : ERROR, field is not associated!!!"
+		write(*,*) fieldName, " : ERROR: field is not associated!!!"
 		outValue = .FALSE.
 		return
 	END IF
 
 	IF(.NOT. ALL(shape(observed).EQ.shape( expected))) then
-		write(*,*) fieldName, " : ERROR! Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
+		write(*,*) fieldName, " : ERROR: Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
 		outValue = .FALSE.
 		return
 	end if
 
         IF(size(observed) .NE. size(expected)) then
-		write(*,*) fieldName, " : ERROR! Array size differs!"
+		write(*,*) fieldName, " : ERROR: Array size differs!"
 		outValue = .FALSE.
 		return
 	end if
@@ -614,7 +614,7 @@ END FUNCTION assertField_FLT6DArray
 	IF(ALL(observed.EQ.expected)) then
 		if(debugMode) write(*,*) fieldName, " : OK "
 	else
-		write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+		write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
 		outValue = .FALSE.
 		return
 	end if
@@ -625,7 +625,7 @@ END FUNCTION assertField_FLT6DArray
        FUNCTION assertField_CPLX3DArray(observed, expected, fieldName) RESULT (outValue)
        IMPLICIT NONE
 
-       COMPLEX(DP), DIMENSION(:,:,:), POINTER    :: observed, expected
+       COMPLEX(ids_real), DIMENSION(:,:,:), POINTER    :: observed, expected
        CHARACTER*(*),INTENT(IN) :: fieldName
        LOGICAL    :: outValue
 
@@ -633,19 +633,19 @@ END FUNCTION assertField_FLT6DArray
 
 
 	IF(.not. associated(observed)) then
-		write(*,*) fieldName, " : ERROR, field is not associated!!!"
+		write(*,*) fieldName, " : ERROR: field is not associated!!!"
 		outValue = .FALSE.
 		return
 	END IF
 
 	IF(.NOT. ALL(shape(observed).EQ.shape( expected))) then
-		write(*,*) fieldName, " : ERROR! Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
+		write(*,*) fieldName, " : ERROR: Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
 		outValue = .FALSE.
 		return
 	end if
 
         IF(size(observed) .NE. size(expected)) then
-		write(*,*) fieldName, " : ERROR! Array size differs!"
+		write(*,*) fieldName, " : ERROR: Array size differs!"
 		outValue = .FALSE.
 		return
 	end if
@@ -653,7 +653,7 @@ END FUNCTION assertField_FLT6DArray
 	IF(ALL(observed.EQ.expected)) then
 		if(debugMode) write(*,*) fieldName, " : OK "
 	else
-		write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+		write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
 		outValue = .FALSE.
 		return
 	end if
@@ -664,7 +664,7 @@ END FUNCTION assertField_FLT6DArray
        FUNCTION assertField_CPLX4DArray(observed, expected, fieldName) RESULT (outValue)
        IMPLICIT NONE
        ! =================================================================
-       COMPLEX(DP), DIMENSION(:,:,:,:), POINTER  :: observed, expected
+       COMPLEX(ids_real), DIMENSION(:,:,:,:), POINTER  :: observed, expected
        CHARACTER*(*),INTENT(IN) :: fieldName
        LOGICAL :: outValue
 
@@ -673,19 +673,19 @@ END FUNCTION assertField_FLT6DArray
 
 
 	IF(.not. associated(observed)) then
-		write(*,*) fieldName, " : ERROR, field is not associated!!!"
+		write(*,*) fieldName, " : ERROR: field is not associated!!!"
 		outValue = .FALSE.
 		return
 	END IF
 
 	IF(.NOT. ALL(shape(observed).EQ.shape( expected))) then
-		write(*,*) fieldName, " : ERROR! Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
+		write(*,*) fieldName, " : ERROR: Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
 		outValue = .FALSE.
 		return
 	end if
 
         IF(size(observed) .NE. size(expected)) then
-		write(*,*) fieldName, " : ERROR! Array size differs!"
+		write(*,*) fieldName, " : ERROR: Array size differs!"
 		outValue = .FALSE.
 		return
 	end if
@@ -693,7 +693,7 @@ END FUNCTION assertField_FLT6DArray
 	IF(ALL(observed.EQ.expected)) then
 		if(debugMode) write(*,*) fieldName, " : OK "
 	else
-		write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+		write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
 		outValue = .FALSE.
 		return
 	end if
@@ -704,7 +704,7 @@ END FUNCTION assertField_FLT6DArray
        FUNCTION assertField_CPLX5DArray(observed, expected, fieldName) RESULT (outValue)
        IMPLICIT NONE
 
-       COMPLEX(DP), DIMENSION(:,:,:, :,:), POINTER    :: observed, expected
+       COMPLEX(ids_real), DIMENSION(:,:,:, :,:), POINTER    :: observed, expected
        CHARACTER*(*),INTENT(IN) :: fieldName
        	LOGICAL    :: outValue
 
@@ -712,19 +712,19 @@ END FUNCTION assertField_FLT6DArray
 
 
 	IF(.not. associated(observed)) then
-		write(*,*) fieldName, " : ERROR, field is not associated!!!"
+		write(*,*) fieldName, " : ERROR: field is not associated!!!"
 		outValue = .FALSE.
 		return
 	END IF
 
 	IF(.NOT. ALL(shape(observed).EQ.shape( expected))) then
-		write(*,*) fieldName, " : ERROR! Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
+		write(*,*) fieldName, " : ERROR: Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
 		outValue = .FALSE.
 		return
 	end if
 
         IF(size(observed) .NE. size(expected)) then
-		write(*,*) fieldName, " : ERROR! Array size differs!"
+		write(*,*) fieldName, " : ERROR: Array size differs!"
 		outValue = .FALSE.
 		return
 	end if
@@ -732,7 +732,7 @@ END FUNCTION assertField_FLT6DArray
 	IF(ALL(observed.EQ.expected)) then
 		if(debugMode) write(*,*) fieldName, " : OK "
 	else
-		write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+		write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
 		outValue = .FALSE.
 		return
 	end if
@@ -742,7 +742,7 @@ END FUNCTION assertField_FLT6DArray
        FUNCTION assertField_CPLX6DArray(observed, expected, fieldName) RESULT (outValue)
        IMPLICIT NONE
 
-       COMPLEX(DP), DIMENSION(:,:,:, :,:,:), POINTER    :: observed, expected
+       COMPLEX(ids_real), DIMENSION(:,:,:, :,:,:), POINTER    :: observed, expected
        CHARACTER*(*),INTENT(IN) :: fieldName
        LOGICAL    :: outValue
 
@@ -750,19 +750,19 @@ END FUNCTION assertField_FLT6DArray
 
 
 	IF(.not. associated(observed)) then
-		write(*,*) fieldName, " : ERROR, field is not associated!!!"
+		write(*,*) fieldName, " : ERROR: field is not associated!!!"
 		outValue = .FALSE.
 		return
 	END IF
 
 	IF(.NOT. ALL(shape(observed).EQ.shape( expected))) then
-		write(*,*) fieldName, " : ERROR! Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
+		write(*,*) fieldName, " : ERROR: Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
 		outValue = .FALSE.
 		return
 	end if
 
         IF(size(observed) .NE. size(expected)) then
-		write(*,*) fieldName, " : ERROR! Array size differs!"
+		write(*,*) fieldName, " : ERROR: Array size differs!"
 		outValue = .FALSE.
 		return
 	end if
@@ -770,7 +770,7 @@ END FUNCTION assertField_FLT6DArray
 	IF(ALL(observed.EQ.expected)) then
 		if(debugMode) write(*,*) fieldName, " : OK "
 	else
-		write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+		write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
 		outValue = .FALSE.
 		return
 	end if
@@ -789,7 +789,7 @@ FUNCTION assertField_STR(observed, expected, fieldName) RESULT (outValue)
        	outValue = .TRUE.
 
 	IF(.not. associated(observed)) then
-		write(*,*) fieldName, " : ERROR, field is not associated!!!"
+		write(*,*) fieldName, " : ERROR: field is not associated!!!"
 		outValue = .FALSE.
 		return
 	END IF
@@ -797,7 +797,7 @@ FUNCTION assertField_STR(observed, expected, fieldName) RESULT (outValue)
 	if(observed(1) == expected(1)) then
 		if(debugMode) write(*,*) fieldName, " : OK "
 	else
-		write(*,*) fieldName, " : error, observed=", observed,  ", expected=", expected
+		write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
 	end if
 
 END FUNCTION assertField_STR
