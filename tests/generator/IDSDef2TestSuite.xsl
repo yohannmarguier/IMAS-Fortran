@@ -18,7 +18,11 @@
 
     <xsl:text>&#9;INTEGER :: idx;&#10;</xsl:text>
     <xsl:text>&#9;INTEGER, PARAMETER :: IDS_PATH_LEN = 30;&#10;</xsl:text>
-
+    <xsl:text>&#9;INTEGER :: N_SEED&#10;</xsl:text>
+    <xsl:text>&#9;call random_seed(SIZE=N_SEED)&#10;</xsl:text>
+    <xsl:text>&#9;ALLOCATE(SEED(N_SEED))&#10;</xsl:text>
+    
+    
         <xsl:text>&#10;</xsl:text>
 
 
