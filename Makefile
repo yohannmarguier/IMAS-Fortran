@@ -30,11 +30,13 @@ COPTS_ifort     = -r8 -O0 -assume no2underscore -fPIC -module $(MODDIR_ifort) -g
 INCDIR_ifort    = -I$(MODDIR_ifort)
 
 IDSDEF          = ../xml/IDSDef.xml
+IDSDEFXSD       = ../xml/dd_physics_data_dictionary.xsd
 
 LIBS            =  -L../lowlevel -limas -lm
 
-# Get a list of IDS based on generated files
-IDSNAMES=$(patsubst %_put.f90,%,$(wildcard *_put.f90))
+# Get a list of IDS from IDSDEF file
+IDSNAMES:=$(shell sed '/<IDS name=/!d;s/.*name="\(.*\)"/\1/' $(IDSDEF))
+
 IDSNAMES_FUNC=$(addsuffix _put,$(IDSNAMES))
 IDSNAMES_FUNC+=$(addsuffix _put_slice,$(IDSNAMES))
 IDSNAMES_FUNC+=$(addsuffix _put_non_timed,$(IDSNAMES))
@@ -43,6 +45,9 @@ IDSNAMES_FUNC+=$(addsuffix _get_slice,$(IDSNAMES))
 IDSNAMES_FUNC+=$(addsuffix _copy,$(IDSNAMES))
 IDSNAMES_FUNC+=$(addsuffix _copy_struct,$(IDSNAMES))
 IDSNAMES_FUNC+=$(addsuffix _deallocate_struct,$(IDSNAMES))
+
+# IDS routines
+IDSROUTINES=$(addsuffix .f90,$(IDSNAMES_FUNC))
 
 ifeq "$(strip $(G95))" "yes"
 TARGETS += libimas-g95.so libimas-g95.a
@@ -215,10 +220,21 @@ $(filter %_deallocate_struct_ifort.o,$(IDSOBJECTS)): %_ifort.o:%.f90 ids_schemas
 	$(F90_ifort) -c $(COPTS_ifort) $(INCDIR_ifort) $< -o $@
 
 #----------------------- xslt ---------------------
-ids_routines.f90: IDSDef2F90Routines.xsl xsd2copy_structures.xsl
+# Test if all idsroutines are found to exist as files.
+ifeq ($(words $(IDSROUTINES)), $(words $(wildcard $(IDSROUTINES))))
+ids_routines.f90 utilities_copy_struct.f90 utilities_deallocate_struct.f90 $(IDSROUTINES): IDSDef2F90Routines.xsl xsd2copy_structures.xsl
 	java net.sf.saxon.Transform -t -s:$(IDSDEF) -xsl:IDSDef2F90Routines.xsl
-	java net.sf.saxon.Transform -t -s:../xml/dd_physics_data_dictionary.xsd -xsl:xsd2copy_structures.xsl
-	java net.sf.saxon.Transform -t -s:../xml/dd_physics_data_dictionary.xsd -xsl:xsd2deallocate_structures.xsl
+	java net.sf.saxon.Transform -t -s:$(IDSDEFXSD) -xsl:xsd2copy_structures.xsl
+	java net.sf.saxon.Transform -t -s:$(IDSDEFXSD) -xsl:xsd2deallocate_structures.xsl
+idsroutines:
+else
+# Need to generate, use an intermediate target idsroutines to force non-parallel execution.
+ids_routines.f90 utilities_copy_struct.f90 utilities_deallocate_struct.f90 $(IDSROUTINES): idsroutines
+idsroutines: IDSDef2F90Routines.xsl xsd2copy_structures.xsl
+	java net.sf.saxon.Transform -t -s:$(IDSDEF) -xsl:IDSDef2F90Routines.xsl
+	java net.sf.saxon.Transform -t -s:$(IDSDEFXSD) -xsl:xsd2copy_structures.xsl
+	java net.sf.saxon.Transform -t -s:$(IDSDEFXSD) -xsl:xsd2deallocate_structures.xsl
+endif
 
 ids_schemas.f90: xsd2F90TypeDef.xsl
 	(cp xsd2F90TypeDef.xsl ../xml/ ; cd ../xml/ ; \
