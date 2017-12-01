@@ -90,6 +90,9 @@ install: all $(addprefix install_,$(INSTALL_TARGETS)) pkgconfig_install
 	done
 
 sources: $(SOURCES)
+sources_install: $(SOURCES)
+	install -d $(INSTALL)/share/src/fortraninterface
+	install -m 644 $^ $(INSTALL)/share/src/fortraninterface
 
 install_pgi:
 	mkdir -p $(INSTALL)/include/pgi
