@@ -4,6 +4,7 @@ include ../Makefile.common
 ifeq ("no","$(FORTRAN)")
 $(warning "Ignoring fortraninterface (FORTRAN=no).")
 all:
+sources:
 clean:
 clean-src:
 install:
@@ -48,6 +49,7 @@ IDSNAMES_FUNC+=$(addsuffix _deallocate_struct,$(IDSNAMES))
 
 # IDS routines
 IDSROUTINES=$(addsuffix .f90,$(IDSNAMES_FUNC))
+SOURCES=ids_routines.f90 utilities_copy_struct.f90 utilities_deallocate_struct.f90 $(IDSROUTINES)
 
 ifeq "$(strip $(G95))" "yes"
 TARGETS += libimas-g95.so libimas-g95.a
@@ -76,7 +78,7 @@ endif
 # Concatenated list
 IDSOBJECTS=$(IDSOBJECTS_g95) $(IDSOBJECTS_gfortran) $(IDSOBJECTS_pgi) $(IDSOBJECTS_ifort)
 
-all: ids_routines.f90 ids_schemas.f90 $(TARGETS)
+all: $(SOURCES) $(TARGETS)
 
 install: all $(addprefix install_,$(INSTALL_TARGETS)) pkgconfig_install
 	mkdir -p $(INSTALL)/lib
@@ -86,6 +88,8 @@ install: all $(addprefix install_,$(INSTALL_TARGETS)) pkgconfig_install
 		ln -svfT $$OBJECT.$(IMAS_MAJOR).$(IMAS_MINOR).$(IMAS_MICRO)  $(INSTALL)/lib/$$OBJECT.$(IMAS_MAJOR); \
 		ln -svfT $$OBJECT.$(IMAS_MAJOR).$(IMAS_MINOR).$(IMAS_MICRO)  $(INSTALL)/lib/$$OBJECT; \
 	done
+
+sources: $(SOURCES)
 
 install_pgi:
 	mkdir -p $(INSTALL)/include/pgi
@@ -104,7 +108,7 @@ clean:
 	rm -rf *.o *.mod  *.so *~ g95/ gfortran/ pgi/ ifort/ *.a
 
 clean-src: clean
-	rm -f ids_schemas.f90 ids_routines.f90 $(addsuffix .f90,$(IDSNAMES_FUNC))
+	rm -f $(SOURCES)
 
 test:
 	$(MAKE) -C tests/generator test
@@ -222,14 +226,14 @@ $(filter %_deallocate_struct_ifort.o,$(IDSOBJECTS)): %_ifort.o:%.f90 ids_schemas
 #----------------------- xslt ---------------------
 # Test if all idsroutines are found to exist as files.
 ifeq ($(words $(IDSROUTINES)), $(words $(wildcard $(IDSROUTINES))))
-ids_routines.f90 utilities_copy_struct.f90 utilities_deallocate_struct.f90 $(IDSROUTINES): IDSDef2F90Routines.xsl xsd2copy_structures.xsl
+$(SOURCES): IDSDef2F90Routines.xsl xsd2copy_structures.xsl
 	java net.sf.saxon.Transform -t -s:$(IDSDEF) -xsl:IDSDef2F90Routines.xsl
 	java net.sf.saxon.Transform -t -s:$(IDSDEFXSD) -xsl:xsd2copy_structures.xsl
 	java net.sf.saxon.Transform -t -s:$(IDSDEFXSD) -xsl:xsd2deallocate_structures.xsl
 idsroutines:
 else
 # Need to generate, use an intermediate target idsroutines to force non-parallel execution.
-ids_routines.f90 utilities_copy_struct.f90 utilities_deallocate_struct.f90 $(IDSROUTINES): idsroutines
+$(SOURCES): idsroutines
 idsroutines: IDSDef2F90Routines.xsl xsd2copy_structures.xsl
 	java net.sf.saxon.Transform -t -s:$(IDSDEF) -xsl:IDSDef2F90Routines.xsl
 	java net.sf.saxon.Transform -t -s:$(IDSDEFXSD) -xsl:xsd2copy_structures.xsl
