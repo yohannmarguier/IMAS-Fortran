@@ -9,7 +9,6 @@
 
    	<xsl:apply-templates select="child::IDS" mode="test"/>
 
-     
     </xsl:template>
 
  <!-- ============================= END OF GENRATED FILE ============================== -->
@@ -66,9 +65,7 @@
         <xsl:text>&#10;</xsl:text>
         <xsl:text>&#9;! --- IDS: </xsl:text><xsl:value-of select="@name"/><xsl:text> ---&#10;</xsl:text>
 
-
-
-       <xsl:text>&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_put()&#10;</xsl:text>
+	<xsl:text>&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_put()&#10;</xsl:text>
        <xsl:text>&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_get()&#10;</xsl:text>
        <!--   -->
        <!-- Procedure put_slice should exist only for time-dependent IDSs -->

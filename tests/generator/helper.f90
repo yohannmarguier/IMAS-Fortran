@@ -9,6 +9,9 @@ INTEGER, PARAMETER :: TESTSHOT = 9998
 INTEGER, PARAMETER :: TESTRUN = 9998
 INTEGER, DIMENSION(:),allocatable :: SEED
 
+	CHARACTER(len=:), ALLOCATABLE :: dataVersion
+	CHARACTER(len=:), ALLOCATABLE :: userName
+
 
 
 
@@ -319,80 +322,80 @@ FUNCTION getDouble6DArray(dim1, dim2, dim3, dim4, dim5, dim6) RESULT (outArray)
 END FUNCTION getDouble6DArray
 
 ! =================================================================
-! =================================================================
-! BEGINNING OF A SUBROUTINE HAS BEEN LOST HERE ???
-!IF(ALL(ARRAY1.EQ.ARRAY1)) THEN
-!CALL DOEQUAL
-!ELSE
-!CALL DOUNEQUAL
-!ENDIF
 
-!which works for all types of array1 and array2 as long as they have the same type and length,but I think it isslow because an array of logicals is created first. So much faster would be
+SUBROUTINE getUser(userName) 
+   	CHARACTER(len=:), ALLOCATABLE, INTENT(OUT) :: userName
+	CHARACTER(len=255) :: buffer
+	integer :: userNameSize
+	
+	if(allocated(userName)) then
+		return
+	endif
+	
+	CALL getenv("USER", buffer)
+	userNameSize = LEN_TRIM(buffer)
+	if(userNameSize < 1) then
+		write(*,*) "PANIC: $USER not found! Exiting..."
+		CALL exit(1)
+	endif
 
-!DO I=1,SIZE(ARRAY1)
-!IF(ARRAY1(1).EQ.ARRAY2(I)) EXIT
-!ENDDO
-!IF(I.GT.N) THEN
-!CALL DOEQUAL
-!ELSE
-!CALL DOUNEQUAL
-!ENDIF
-
-!!
-!  SUBROUTINE f(N)
-!   IMPLICIT NONE
-
-!   INTEGER N
-
-!   REAL, DIMENSION(N) :: A	!! You can define arrays using
-                                !! VARIABLES in Fortran 90.... like Ada    
-
-!   INTEGER i
-
-!   DO i = 1, N
-!      A(i) = i
-!   END DO
-
-!   print *, A			!! Print an entire array
-
-!  END SUBROUTINE
-
-!  PROGRAM main
-!   IMPLICIT NONE
-
-!   CALL f(2)			!! Create array of size 2
-
-!   CALL f(3)			!! Create array of size 3
-!  END
+	allocate(character(userNameSize):: userName)
+	username = trim(buffer)
+END SUBROUTINE getUser
+!	
+SUBROUTINE getDataVersion(dataVersion) 
+   	CHARACTER(len=:), ALLOCATABLE, INTENT(OUT) :: dataVersion
+	CHARACTER(len=255) :: buffer
+	integer :: dataVersionSize
+	
+	if(allocated(dataVersion)) then
+		return
+	endif
+	
+	CALL getenv("IMAS_VERSION", buffer)
+	dataVersionSize = LEN_TRIM(buffer)
+	
+	if(dataVersionSize < 1) then
+		write(*,*) "PANIC: $IMAS_VERSION not found! Exiting..."
+		CALL exit(1)
+	endif
+	
+	allocate(character(dataVersionSize):: dataVersion)
+	dataVersion = trim(buffer)
+END SUBROUTINE getDataVersion
 
 
+SUBROUTINE initEnv()
+	CALL getDataVersion(dataVersion) 
+	CALL getUser(userName)
+END SUBROUTINE initEnv
 
-
-	SUBROUTINE init(idx)
+SUBROUTINE create(idx)
 	INTEGER, INTENT(OUT) :: idx
 
-  		CALL imas_create('ids',TESTSHOT,TESTRUN, TESTSHOT,TESTRUN,idx)
-		print *, "IDX:", idx
+	CALL imas_create_env('ids',TESTSHOT,TESTRUN, TESTSHOT,TESTRUN,idx, userName, 'test', dataVersion)
 
-        END SUBROUTINE init
+	print *, "IDX:", idx
+
+END SUBROUTINE create
 
 
 
-	SUBROUTINE open(idx)
+SUBROUTINE open(idx)
 	INTEGER, INTENT(OUT) :: idx
 
-  		CALL imas_open('ids',TESTSHOT,TESTRUN, idx)
-		print *, "IDX:", idx
+	CALL imas_open_env('ids',TESTSHOT,TESTRUN, idx, userName, 'test', dataVersion)
+	print *, "IDX:", idx
 
-        END SUBROUTINE open
+END SUBROUTINE open
 	
 
-        SUBROUTINE finish(idx)
+SUBROUTINE close(idx)
 	   INTEGER, INTENT(IN) :: idx
 	  
 	   call imas_close(idx)
 
-        END SUBROUTINE finish
+END SUBROUTINE close
 
 END MODULE helper
 
