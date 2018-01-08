@@ -6,8 +6,11 @@
 include ../../../Makefile.common
 
 ifeq (,$(IMAS_INSTALL_DIR))
-$(error Please supply a variable INSTALL that is the prefix of your IMAS installation.)
+$(error Please supply a variable IMAS_INSTALL_DIR that is the prefix of your IMAS installation.)
 endif
+
+# Check that "saxon9he.jar" utility is set in CLASSPATH
+SAXONICAJAR=$(wildcard $(filter %saxon9he.jar,$(subst :, ,$(CLASSPATH))))
 
 #------------------------- gfortran ----------------------------
 F90_gfortran = gfortran
@@ -26,45 +29,73 @@ ids_path = $(UAL)/models/mdsplus
 
 ifeq "$(strip $(GFORTRAN))" "yes"
     TARGETS += gfortran_testSuite
+    TESTS += gfortran_test
 endif
 
 ifeq "$(strip $(IFORT))" "yes"
     TARGETS += ifort_testSuite
+    TESTS += ifort_test
 endif
 
-all : testSuite.f90 comp
+
+IFORT_BIN_DIR:=./bin/ifort
+GFORTRAN_BIN_DIR:=./bin/gfortran
+TEST_SRC_DIR=./src
+
+
+TEST_IDS_FILES=$(wildcard $(TEST_SRC_DIR)/*.f90)
+
+TEST_FILES= helper.f90 comparator.f90 $(TEST_IDS_FILES)
+
+IFORT_BIN_FILES=$(patsubst %.f90,$(IFORT_BIN_DIR)/%.exe,$(notdir $(TEST_IDS_FILES)))
+GFORTRAN_BIN_FILES=$(patsubst %.f90,$(GFORTRAN_BIN_DIR)/%.exe,$(notdir $(TEST_IDS_FILES)))
+
+# Sets a path where make will search for files
+VPATH = $(TEST_SRC_DIR) 
+
+
+
+
+ifeq ($(strip $(TEST_IDS_FILES)),)
+all:  
+	@echo "Error: Source files have been not created. Please run 'make sources' first"
+	@exit 1	
+else
+all :   $(TARGETS)
+endif
+
 
 .PHONY: clean clean-src
 clean: ifort_clean gfortran_clean
 	rm -rf build *~ *.o *.mod
+	rm -rf idspath-*
+	rm -rf *.results
 
 clean-src: clean
-	rm -f testSuite.f90
+	rm -rf $(TEST_IDS_FILES) 
 
-testSuite.f90: IDSDef2TestSuite.xsl
-	xsltproc IDSDef2TestSuite.xsl $(IDSDEF)  > testSuite.f90
 
-comp: $(TARGETS)
+#################################################
+#                 INIT: SOURCE GENERATION
+#################################################
+sources: IDSDef2TestSuite.xsl $(IDSDEF)
+	mkdir -p $(IFORT_BIN_DIR)
+	mkdir -p $(GFORTRAN_BIN_DIR)
 
-.PHONY: test ifort_test gfortran_test
-cmd_test = ( cp -av $(ids_path) idspath-$@ ; \
-	export LD_LIBRARY_PATH=$(IMAS_INSTALL_DIR)/lib:$$LD_LIBRARY_PATH \
-		ids_path=$$PWD/idspath-$@ \
-		ual_debug=yes; \
-	./$@Suite | tee $@Suite.results )
+ifeq (,$(SAXONICAJAR))
+	$(error Invalid /path/to/saxon9he.jar in CLASSPATH. Forgot to load module?)
+endif
+	java net.sf.saxon.Transform -t -s:$(IDSDEF) -xsl:IDSDef2TestSuite.xsl   
 
-gfortran_test: testSuite.f90 comp
-	$(call cmd_test)
 
-ifort_test: testSuite.f90 comp
-	$(call cmd_test)
-
-test : gfortran_test ifort_test
+#################################################
+#              BUILD
+#################################################
 
 #------------------------- gfortran ----------------------------
 .PHONY: gfortran_clean
 gfortran_clean:
-	rm -rf gfortran_testSuite
+	rm -rf ${GFORTRAN_BIN_DIR}
 
 gfortran_helper.o: helper.f90
 	$(F90_gfortran) $(COPTS_gfortran) -c $< -o $@
@@ -72,13 +103,17 @@ gfortran_helper.o: helper.f90
 gfortran_comparator.o: comparator.f90
 	$(F90_gfortran) $(COPTS_gfortran) -c $< -o $@
 
-gfortran_testSuite: testSuite.f90 gfortran_helper.o gfortran_comparator.o
-	$(F90_gfortran) $(COPTS_gfortran) -o $@ $^ $(LIBS_gfortran)
+gfortran_testSuite:  $(GFORTRAN_BIN_FILES)
+
+
+$(GFORTRAN_BIN_DIR)/%.exe: %.f90 gfortran_helper.o gfortran_comparator.o
+	$(F90_gfortran) $(COPTS_gfortran) -o $@ $< gfortran_helper.o gfortran_comparator.o $(LIBS_gfortran)
+
 
 #------------------------- ifort ----------------------------
 .PHONY: ifort_clean
 ifort_clean:
-	rm -rf ifort_testSuite
+	rm -rf ${IFORT_BIN_DIR}
 
 ifort_helper.o: helper.f90
 	$(F90_ifort) $(COPTS_ifort) -c $< -o $@
@@ -86,6 +121,22 @@ ifort_helper.o: helper.f90
 ifort_comparator.o: comparator.f90
 	$(F90_ifort) $(COPTS_ifort) -c $< -o $@
 
-ifort_testSuite: testSuite.f90 ifort_helper.o ifort_comparator.o
-	$(F90_ifort) $(COPTS_ifort) -o $@ $^ $(LIBS_ifort)
+ifort_testSuite: $(IFORT_BIN_FILES)
+	
+
+$(IFORT_BIN_DIR)/%.exe: %.f90 ifort_helper.o ifort_comparator.o
+	$(F90_ifort) $(COPTS_ifort) -o $@ $< ifort_helper.o ifort_comparator.o $(LIBS_ifort)
+
+#################################################
+#              TEST
+#################################################
+:.PHONY: test ifort_test gfortran_test
+
+%_test: %_testSuite
+	( cp -av $(ids_path) idspath-$@ ; \
+	./test.sh -c $* | tee test_$*.results )
+
+test : $(TESTS)
+
+
 
