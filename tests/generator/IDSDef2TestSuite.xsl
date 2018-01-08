@@ -6,58 +6,10 @@
     <!-- Initial c ode -->
     <xsl:template match="IDSs">
 
-	 <!-- ================================ MAIN PROGRAM ================================= -->
-        <xsl:text>PROGRAM test&#10;</xsl:text>
-	<xsl:text>&#9;use comparator &#10;</xsl:text>
-	<xsl:text>&#9;use ids_schemas &#10;</xsl:text>
 
-	<xsl:text>&#9;use helper&#10;</xsl:text>
-        <xsl:text>&#9;implicit none&#10;   </xsl:text>
+   	<xsl:apply-templates select="child::IDS" mode="test"/>
 
-
-
-    <xsl:text>&#9;INTEGER :: idx;&#10;</xsl:text>
-    <xsl:text>&#9;INTEGER, PARAMETER :: IDS_PATH_LEN = 30;&#10;</xsl:text>
-    <xsl:text>&#9;INTEGER :: N_SEED&#10;</xsl:text>
-    <xsl:text>&#9;call random_seed(SIZE=N_SEED)&#10;</xsl:text>
-    <xsl:text>&#9;ALLOCATE(SEED(N_SEED))&#10;</xsl:text>
-    
-    
-        <xsl:text>&#10;</xsl:text>
-
-
-	<!-- READ args
-
-	integer::narg,cptArg !#of arg & counter of arg character(len=20)::name !Arg name !Check if any arguments are found narg=command_argument_count()!Loop over the arguments if(narg>0)then!loop across options do cptArg=1,narg
-	  call get_command_argument(cptArg,name)   select case(adjustl(name))    case("-help","-h")     write(*,*)"This is program TestArg : Version 0.1"    case default     write(*,*)"Option ",adjustl(name),"unknown"   end select end do end ifend program TestArg
-        PROGRAM test_getarg INTEGER :: i CHARACTER(len=32) :: arg DO i = 1, iargc() CALL getarg(i, arg) WRITE (*,*) arg END DO END PROGRAMRead more: http://www.physicsforums.com
-	-->
-        <xsl:text>&#9;call init(idx);&#10;</xsl:text>
-  <!-- <xsl:apply-templates select="child::IDS[@name='temporary']" mode="test"/>   -->
-   <xsl:apply-templates select="child::IDS" mode="test"/>
-
-        <xsl:text>&#9;call finish(idx);&#10;</xsl:text>
-
-    <xsl:text>CONTAINS&#10;</xsl:text>
-
-<!-- sdd       <xsl:call-template name="getArrayGenerator"/> -->
- <!--      <xsl:apply-templates select="child::IDS[@name='temporary' or @name='sdn']" mode="put"/>
-        <xsl:apply-templates select="child::IDS[@name='temporary' or @name='sdn']" mode="get"/>
--->
-          <xsl:apply-templates select="child::IDS" mode="put"/>
-        <xsl:apply-templates select="child::IDS" mode="get"/>
-
-<!--
-         <xsl:apply-templates select="child::IDS[.//field[@type='dynamic'] and @name='temporary']" mode="putSlice"/>
-        <xsl:apply-templates select="child::IDS[@name='temporary']" mode="getSlice"/>
--->
-
-    <xsl:apply-templates select="child::IDS[.//field[@type='dynamic']]" mode="putSlice"/>
-        <xsl:apply-templates select="child::IDS" mode="getSlice"/>
-
-        <xsl:text>END PROGRAM test&#10;</xsl:text>
-        <xsl:text>&#10;</xsl:text>
-	<!-- ================================ MAIN PROGRAM (end)================================= -->
+     
     </xsl:template>
 
  <!-- ============================= END OF GENRATED FILE ============================== -->
@@ -110,7 +62,7 @@
 
 
     <!-- IDS perform the tests -->
- <xsl:template match="IDS" mode="test">
+ <xsl:template match="IDS" mode="testCalls">
         <xsl:text>&#10;</xsl:text>
         <xsl:text>&#9;! --- IDS: </xsl:text><xsl:value-of select="@name"/><xsl:text> ---&#10;</xsl:text>
 
@@ -126,9 +78,68 @@
        		<xsl:text>&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_putSlice()&#10;</xsl:text>
        </xsl:if>
        <xsl:text>&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_getSlice()&#10;</xsl:text>
-
     </xsl:template>
 
+
+    <!-- IDS perform the tests -->
+ <xsl:template match="IDS" mode="test">
+	<xsl:result-document href="src/{@name}_test.f90" standalone="yes" method="text">
+
+
+
+	 <!-- ================================ MAIN PROGRAM ================================= -->
+         <xsl:text>PROGRAM </xsl:text><xsl:value-of select="@name"/><xsl:text>_test&#10;</xsl:text>
+	<xsl:text>&#9;use comparator &#10;</xsl:text>
+	<xsl:text>&#9;use ids_schemas &#10;</xsl:text>
+
+	<xsl:text>&#9;use helper&#10;</xsl:text>
+        <xsl:text>&#9;implicit none&#10;   </xsl:text>
+
+
+
+    <xsl:text>&#9;INTEGER :: idx;&#10;</xsl:text>
+    <xsl:text>&#9;INTEGER, PARAMETER :: IDS_PATH_LEN = 30;&#10;</xsl:text>
+    <xsl:text>&#9;INTEGER :: N_SEED&#10;</xsl:text>
+    <xsl:text>&#9;call random_seed(SIZE=N_SEED)&#10;</xsl:text>
+    <xsl:text>&#9;ALLOCATE(SEED(N_SEED))&#10;</xsl:text>
+    
+    
+        <xsl:text>&#10;</xsl:text>
+
+
+	
+        <xsl:text>&#9;call init(idx);&#10;</xsl:text>
+  <!-- <xsl:apply-templates select="child::IDS[@name='temporary']" mode="test"/>   -->
+   <xsl:apply-templates select="." mode="testCalls"/>
+
+        <xsl:text>&#9;call finish(idx);&#10;</xsl:text>
+
+    <xsl:text>CONTAINS&#10;</xsl:text>
+<!-- sdd       <xsl:call-template name="getArrayGenerator"/> -->
+ <!--      <xsl:apply-templates select="child::IDS[@name='temporary' or @name='sdn']" mode="put"/>
+        <xsl:apply-templates select="child::IDS[@name='temporary' or @name='sdn']" mode="get"/>
+-->
+          <xsl:apply-templates select="." mode="put"/>
+        <xsl:apply-templates select="." mode="get"/>
+
+<!--
+         <xsl:apply-templates select="child::IDS[.//field[@type='dynamic'] and @name='temporary']" mode="putSlice"/>
+        <xsl:apply-templates select="child::IDS[@name='temporary']" mode="getSlice"/>
+-->
+
+    <xsl:apply-templates select=".[.//field[@type='dynamic']]" mode="putSlice"/>
+        <xsl:apply-templates select="." mode="getSlice"/>
+
+          <xsl:text>END PROGRAM </xsl:text><xsl:value-of select="@name"/><xsl:text>_test&#10;</xsl:text>
+        <xsl:text>&#10;</xsl:text>
+	<!-- ================================ MAIN PROGRAM (end)================================= -->
+
+
+
+
+
+</xsl:result-document>
+    </xsl:template>
 
     <!-- IDS put()-->
     <xsl:template match="IDS" mode="put">
