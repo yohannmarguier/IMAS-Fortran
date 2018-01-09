@@ -34,13 +34,19 @@ done
 #========================================================================#
 #                          ENVIRONMENT
 #========================================================================#
-if [ ${IMAS_INSTALL_DIR} = "" ] 
+if [ "${IMAS_INSTALL_DIR}" = "" ] 
 then
 	echo Please supply a variable IMAS_INSTALL_DIR that is the prefix of your IMAS installation.
 	exit 1
 fi
 
 export LD_LIBRARY_PATH=${IMAS_INSTALL_DIR}/lib:${LD_LIBRARY_PATH}
+export ids_path="${PWD}/tmp;${IMAS_INSTALL_DIR}/models/mdsplus"
+
+mkdir -p tmp
+rm -rf ${PWD}/tmp/*
+
+
 
 #========================================================================#
 #                          RUNNING TESTS
@@ -53,7 +59,7 @@ do
 	if [ "${compiler}" = "" ] || [ "${compiler}" = "${dirName}" ]
 	then
      		echo =========  ${dirName}  ================
-		export ids_path="${PWD}/idspath-${dirName}_test"
+		
 		for idsTestPath in ${dir}*.exe
 		do
     

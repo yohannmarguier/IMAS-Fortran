@@ -51,7 +51,7 @@ IFORT_BIN_FILES=$(patsubst %.f90,$(IFORT_BIN_DIR)/%.exe,$(notdir $(TEST_IDS_FILE
 GFORTRAN_BIN_FILES=$(patsubst %.f90,$(GFORTRAN_BIN_DIR)/%.exe,$(notdir $(TEST_IDS_FILES)))
 
 # Sets a path where make will search for files
-VPATH = $(TEST_SRC_DIR) 
+VPATH = ./src $(TEST_SRC_DIR) 
 
 
 
@@ -133,8 +133,7 @@ $(IFORT_BIN_DIR)/%.exe: %.f90 ifort_helper.o ifort_comparator.o
 :.PHONY: test ifort_test gfortran_test
 
 %_test: %_testSuite
-	( cp -av $(ids_path) idspath-$@ ; \
-	./test.sh -c $* | tee test_$*.results )
+	./test.sh -c $* | tee test_$*.results 
 
 test : $(TESTS)
 
