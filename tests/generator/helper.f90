@@ -4,10 +4,13 @@ use ids_routines
 
 implicit none
 
-INTEGER, PARAMETER :: DIM_SIZE = 2
+INTEGER, PARAMETER :: DIM_SIZE = 4
+
+INTEGER, PARAMETER :: noOfSlices = DIM_SIZE
 INTEGER, PARAMETER :: TESTSHOT = 9998
 INTEGER, PARAMETER :: TESTRUN = 9998
 INTEGER, DIMENSION(:),allocatable :: SEED
+REAL(ids_real), DIMENSION(DIM_SIZE) :: timeVector
 
 
 
@@ -16,12 +19,40 @@ CHARACTER (LEN=*), PARAMETER ::PRINTABLE = '0123456789abcdef'
 !CHARACTER(LEN=*), PARAMETER :: PRINTABLE = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!\\"#$%&amp;\'()*+,-./:;&lt;=&gt;?@[\\]^_`{|}~\t\n\r"
 
 CONTAINS
-    FUNCTION getTime() RESULT (outValue)
-        REAL(ids_real):: outValue
+	SUBROUTINE initTime
+	INTEGER :: I
+		 do I = 1, DIM_SIZE
+        		timeVector(I) = I
+    		end do
+	END SUBROUTINE initTime
 
-        outValue = 1.0
+    FUNCTION getTime(idxTime) RESULT (outArray)
+        REAL(ids_real), DIMENSION(:), pointer :: outArray
+	INTEGER :: idxTime
+	
+	allocate(outArray(1))
+        outArray = timeVector(idxTime:idxTime)
         RETURN
     END FUNCTION getTime
+
+    FUNCTION getTimeScalar(idxTime) RESULT (outValue)
+        REAL(ids_real):: outValue
+	INTEGER :: idxTime
+	
+        outValue = timeVector(idxTime)
+        RETURN
+    END FUNCTION getTimeScalar
+
+
+    FUNCTION getTimeVector() RESULT (outArray)
+   	REAL(ids_real), DIMENSION(:), POINTER      :: outArray
+
+	allocate(outArray(DIM_SIZE))
+	outArray = timeVector
+
+        RETURN
+    END FUNCTION getTimeVector
+
 
     FUNCTION getString() RESULT (outValue)
         CHARACTER(LEN=132), dimension(:), POINTER :: outValue
@@ -370,7 +401,7 @@ END FUNCTION getDouble6DArray
 
 	SUBROUTINE init(idx)
 	INTEGER, INTENT(OUT) :: idx
-
+		CALL initTime
   		CALL imas_create('ids',TESTSHOT,TESTRUN, TESTSHOT,TESTRUN,idx)
 		print *, "IDX:", idx
 
