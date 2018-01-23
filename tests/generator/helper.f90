@@ -403,16 +403,11 @@ END SUBROUTINE initEnv
 
 SUBROUTINE create(idx)
 	INTEGER, INTENT(OUT) :: idx
-<<<<<<< HEAD
-		CALL initTime
-  		CALL imas_create('ids',TESTSHOT,TESTRUN, TESTSHOT,TESTRUN,idx)
-		print *, "IDX:", idx
-=======
 
+	CALL initTime
 	CALL imas_create_env('ids',TESTSHOT,TESTRUN, TESTSHOT,TESTRUN,idx, userName, 'test', dataVersion)
 
 	print *, "IDX:", idx
->>>>>>> iter/develop
 
 END SUBROUTINE create
 

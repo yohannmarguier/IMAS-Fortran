@@ -85,7 +85,7 @@ sources: IDSDef2TestSuite.xsl $(IDSDEF)
 ifeq (,$(SAXONICAJAR))
 	$(error Invalid /path/to/saxon9he.jar in CLASSPATH. Forgot to load module?)
 endif
-	java net.sf.saxon.Transform -t -s:$(IDSDEF) -xsl:IDSDef2TestSuite.xsl   
+	java net.sf.saxon.Transform newLowLevel=$(NEW_LOW_LEVEL) -t -s:$(IDSDEF) -xsl:IDSDef2TestSuite.xsl   
 
 
 #################################################

@@ -3,9 +3,15 @@
     <xsl:output method="text"/>
     <xsl:strip-space elements="*"/>
 
+	<xsl:param name="newLowLevel" select="'no'" />
+
     <!-- Initial c ode -->
     <xsl:template match="IDSs">
 
+
+	<xsl:if test="$newLowLevel ='yes'">
+	######### GENERATION FOR NEW LOW LEVEL #####
+       </xsl:if>
 
    	<xsl:apply-templates select="child::IDS" mode="test"/>
 
@@ -70,11 +76,11 @@
 
 
 	
-        <xsl:text>&#9;call init(idx);&#10;</xsl:text>
+        <xsl:text>&#9;call create(idx);&#10;</xsl:text>
   <!-- <xsl:apply-templates select="child::IDS[@name='temporary']" mode="test"/>   -->
    <xsl:apply-templates select="." mode="testCalls"/>
 
-        <xsl:text>&#9;call finish(idx);&#10;</xsl:text>
+        <xsl:text>&#9;call close(idx);&#10;</xsl:text>
 
     <xsl:text>CONTAINS&#10;</xsl:text>
 <!-- sdd       <xsl:call-template name="getArrayGenerator"/> -->
@@ -90,6 +96,7 @@
         <xsl:apply-templates select="child::IDS[@name='temporary']" mode="getSlice"/>
 -->
     <xsl:apply-templates select=".[.//field[@type='dynamic']]" mode="assign_non_timed"/>
+   <xsl:apply-templates select=".[.//field[@type='dynamic']]" mode="assign_timed"/>
     <xsl:apply-templates select=".[.//field[@type='dynamic']]" mode="putSlice"/>
         <xsl:apply-templates select="." mode="getSlice"/>
           <xsl:text>END PROGRAM </xsl:text><xsl:value-of select="@name"/><xsl:text>_test&#10;</xsl:text>
@@ -146,46 +153,32 @@
         <xsl:text>!==================================================================&#10;</xsl:text>
        <xsl:text>!&#9;&#9; PUT SLICE </xsl:text><xsl:value-of select="@name"/> <xsl:text> &#10;</xsl:text>
        <xsl:text>!==================================================================&#10;</xsl:text>
-	<xsl:text>SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_assign_non_timed&#10;</xsl:text>
-	<xsl:text>&#9;CHARACTER (LEN = *), parameter :: idsName = "</xsl:text><xsl:value-of select="@name"/><xsl:text>"&#10;</xsl:text>
-	<xsl:text>&#9;TYPE (ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>) :: ids &#10;</xsl:text>
-	<xsl:text>&#9;CHARACTER (LEN=IDS_PATH_LEN) :: idspath &#10;</xsl:text>
-	<xsl:text>&#9;CHARACTER (LEN=2) :: occurence = "" &#10;</xsl:text>
-	<xsl:text>&#9;INTEGER :: i, j &#10;</xsl:text>
-	<xsl:text>&#9;INTEGER :: tmpInt = -1 &#10;</xsl:text>
-        <xsl:text>&#9;WRITE(*,*) "Testing putSlice() on </xsl:text><xsl:value-of select="@name"/><xsl:text>"&#10;</xsl:text>
-        <xsl:text>&#9;CALL random_seed(PUT = seed)&#10;</xsl:text>
-        <xsl:text>&#9;do i = 0, </xsl:text><xsl:value-of select="@maxoccur"/><xsl:text> - 1 &#10;</xsl:text>
-	 <xsl:text>&#9;WRITE(*,*) "--- occurence: ", i&#10;</xsl:text>
- 	<xsl:text>&#9;&#9;do j = 1, noOfSlices &#10;</xsl:text>
- 	<xsl:text>&#9;WRITE(*,*) "--- --- slice : ", j&#10;</xsl:text>
-<xsl:text>&#9;&#9;&#9;!------------&#10;</xsl:text>
-	<xsl:text>&#9;&#9;&#9;if (i == 0) then &#10;</xsl:text>
-	<xsl:text>&#9;&#9;&#9;&#9;idspath = idsName  &#10;</xsl:text>
-	<xsl:text>&#9;&#9;&#9;else&#10;</xsl:text>
-	<xsl:text>&#9;&#9;&#9;&#9;WRITE( occurence, '(i2)' )  i &#10;</xsl:text>
-        <xsl:text>&#9;&#9;&#9;&#9;idspath = idsName//'/'//ADJUSTL(occurence)&#10;</xsl:text>
-	<xsl:text>&#9;&#9;&#9;end if &#10;</xsl:text>
-	<xsl:text>  &#10;</xsl:text>
+	<xsl:text>SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_assign_non_timed( ids )&#10;</xsl:text>
+	<xsl:text>&#9;TYPE (ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>), INTENT(INOUT) :: ids &#10;</xsl:text>
+	<xsl:text>&#9;&#10;</xsl:text>
 
-	
-	<xsl:text>&#9;&#9;&#9;if (j == 1) then &#10;</xsl:text>
-<xsl:text>&#9;&#9;&#9;! =================== PUT STATIC DATA (ONCE) ================  &#10;</xsl:text>
- <xsl:apply-templates select="field" mode="putStatic"/>
-         <xsl:text>&#9;&#9;&#9;&#9;call ids_put_non_timed(idx ,idspath, ids);&#10;</xsl:text> 
-	<xsl:text>&#9;&#9;&#9;! =================== PUT STATIC DATA (ONCE) ================  &#10;</xsl:text>
-	<xsl:text>&#9;&#9;&#9;end if &#10;</xsl:text>
-
-	<xsl:text>&#9;&#9;! ======================== PUT DYNAMIC DATA (LOOP) =====================  &#10;</xsl:text>
-       <xsl:apply-templates select="field" mode="putDynamic"/>
-	<xsl:text>&#9;&#9;! ======================== PUT DYNAMIC DATA (LOOP) =====================  &#10;</xsl:text>
-	<xsl:text>&#9;&#9;&#9;call ids_put_slice(idx ,idspath, ids);&#10;</xsl:text>
-
-	 <xsl:text>&#9;&#9;&#9;call ids_deallocate(ids)&#10;</xsl:text>
-	  <xsl:text>&#9;&#9;end do ! === SLICE ==&#10;</xsl:text>
-	  <xsl:text>&#9;end do ! === OCCURENCE == &#10;</xsl:text>
+	<xsl:text>&#9;&#9;! =================== PUT STATIC DATA (BEGIN) ================  &#10;</xsl:text>
+	 <xsl:apply-templates select="field" mode="putStatic"/>
+	<xsl:text>&#9;&#9;! =================== PUT STATIC DATA (END) ================  &#10;</xsl:text>
         <xsl:text>&#10;</xsl:text>
         <xsl:text>END SUBROUTINE </xsl:text> <xsl:value-of select="@name"/><xsl:text>_assign_non_timed &#10;</xsl:text>
+        <xsl:text>&#10;</xsl:text>
+    </xsl:template>
+
+ <xsl:template match="IDS" mode="assign_timed">
+        <xsl:text>!==================================================================&#10;</xsl:text>
+       <xsl:text>!&#9;&#9; PUT SLICE </xsl:text><xsl:value-of select="@name"/> <xsl:text> &#10;</xsl:text>
+       <xsl:text>!==================================================================&#10;</xsl:text>
+	<xsl:text>SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_assign_timed( ids, j )&#10;</xsl:text>
+	<xsl:text>&#9;TYPE (ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>), INTENT(INOUT) :: ids &#10;</xsl:text>
+	<xsl:text>&#9;INTEGER, INTENT(IN) :: j &#10;</xsl:text>
+	<xsl:text>&#9;&#10;</xsl:text>
+
+	<xsl:text>&#9;&#9;! =================== PUT STATIC DATA (BEGIN) ================  &#10;</xsl:text>
+	 <xsl:apply-templates select="field" mode="putDynamic"/>
+	<xsl:text>&#9;&#9;! =================== PUT STATIC DATA (END) ================  &#10;</xsl:text>
+        <xsl:text>&#10;</xsl:text>
+        <xsl:text>END SUBROUTINE </xsl:text> <xsl:value-of select="@name"/><xsl:text>_assign_timed &#10;</xsl:text>
         <xsl:text>&#10;</xsl:text>
     </xsl:template>
 
@@ -200,9 +193,7 @@
 	<xsl:text>&#9;CHARACTER (LEN=IDS_PATH_LEN) :: idspath &#10;</xsl:text>
 	<xsl:text>&#9;CHARACTER (LEN=2) :: occurence = "" &#10;</xsl:text>
 	<xsl:text>&#9;INTEGER :: i, j &#10;</xsl:text>
-	<xsl:text>&#9;INTEGER :: tmpInt = -1 &#10;</xsl:text>
         <xsl:text>&#9;WRITE(*,*) "Testing putSlice() on </xsl:text><xsl:value-of select="@name"/><xsl:text>"&#10;</xsl:text>
-        <xsl:text>&#9;!CALL srand(seed)&#10;</xsl:text>
         <xsl:text>&#9;CALL random_seed(PUT = seed)&#10;</xsl:text>
         <xsl:text>&#9;do i = 0, </xsl:text><xsl:value-of select="@maxoccur"/><xsl:text> - 1 &#10;</xsl:text>
 	 <xsl:text>&#9;WRITE(*,*) "--- occurence: ", i&#10;</xsl:text>
@@ -217,18 +208,30 @@
 	<xsl:text>&#9;&#9;&#9;end if &#10;</xsl:text>
 	<xsl:text>  &#10;</xsl:text>
 
-	
-	<xsl:text>&#9;&#9;&#9;if (j == 1) then &#10;</xsl:text>
-<xsl:text>&#9;&#9;&#9;! =================== PUT STATIC DATA (ONCE) ================  &#10;</xsl:text>
-	      <xsl:text>&#9;&#9;&#9;&#9;call assign_non_timed(idx ,idspath, ids);&#10;</xsl:text> 
-         <xsl:text>&#9;&#9;&#9;&#9;call ids_put_non_timed(idx ,idspath, ids);&#10;</xsl:text> 
-	<xsl:text>&#9;&#9;&#9;! =================== PUT STATIC DATA (ONCE) ================  &#10;</xsl:text>
-	<xsl:text>&#9;&#9;&#9;end if &#10;</xsl:text>
+	<xsl:choose>
+            <xsl:when test="$newLowLevel!='yes'">
+		<xsl:text>&#9;&#9;&#9;if (j == 1) then &#10;</xsl:text>
+		<xsl:text>&#9;&#9;&#9;! ------ PUT STATIC DATA (ONCE)   &#10;</xsl:text>
+		<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_assign_non_timed(ids);&#10;</xsl:text> 
+        	<xsl:text>&#9;&#9;&#9;&#9;call ids_put_non_timed(idx ,idspath, ids);&#10;</xsl:text> 
+		<xsl:text>&#9;&#9;&#9;end if &#10;</xsl:text>
 
-	<xsl:text>&#9;&#9;! ======================== PUT DYNAMIC DATA (LOOP) =====================  &#10;</xsl:text>
-       <xsl:apply-templates select="field" mode="putDynamic"/>
-	<xsl:text>&#9;&#9;! ======================== PUT DYNAMIC DATA (LOOP) =====================  &#10;</xsl:text>
-	<xsl:text>&#9;&#9;&#9;call ids_put_slice(idx ,idspath, ids);&#10;</xsl:text>
+		<xsl:text>&#9;&#9;&#9;! ------ PUT DYNAMIC DATA (LOOP) &#10;</xsl:text>
+       		<xsl:text>&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_assign_timed(ids, j);&#10;</xsl:text> 
+
+		<xsl:text>&#9;&#9;&#9;call ids_put_slice(idx ,idspath, ids);&#10;</xsl:text>
+            </xsl:when>
+	    <xsl:otherwise>
+		<xsl:text>&#9;&#9;&#9;if (j == 1) then &#10;</xsl:text>
+		<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_assign_non_timed(ids);&#10;</xsl:text> 
+       		<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_assign_timed(ids, j);&#10;</xsl:text> 
+        	<xsl:text>&#9;&#9;&#9;&#9;call ids_put(idx ,idspath, ids);&#10;</xsl:text> 
+		<xsl:text>&#9;&#9;else&#10;</xsl:text>
+       		<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_assign_timed(ids, j);&#10;</xsl:text> 
+		<xsl:text>&#9;&#9;&#9;&#9;call ids_put_slice(idx ,idspath, ids);&#10;</xsl:text>
+		<xsl:text>&#9;&#9;&#9;end if &#10;</xsl:text>
+	   </xsl:otherwise>
+	</xsl:choose>
 
 	 <xsl:text>&#9;&#9;&#9;call ids_deallocate(ids)&#10;</xsl:text>
 	  <xsl:text>&#9;&#9;end do ! === SLICE ==&#10;</xsl:text>
@@ -295,7 +298,6 @@
 	<xsl:text>&#9;CHARACTER (LEN=2) :: occurence = "" &#10;</xsl:text>
 	<xsl:text>&#9;INTEGER :: i, j &#10;</xsl:text>
         <xsl:text>&#9;WRITE(*,*) "Testing getSlice() on </xsl:text><xsl:value-of select="@name"/><xsl:text>"&#10;</xsl:text>
-        <xsl:text>&#9;!CALL srand(seed)&#10;</xsl:text>
 	<xsl:text>&#9;CALL random_seed(PUT = seed)&#10;</xsl:text>
         <xsl:text>&#9;do i = 0, </xsl:text><xsl:value-of select="@maxoccur"/><xsl:text> - 1  &#10;</xsl:text>
 	<xsl:text>&#9;WRITE(*,*) "---  occurence: ", i&#10;</xsl:text>
