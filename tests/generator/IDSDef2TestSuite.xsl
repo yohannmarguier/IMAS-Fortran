@@ -97,11 +97,9 @@
 	<!-- ================================ MAIN PROGRAM (end)================================= -->
 
 
-
-
-
 </xsl:result-document>
     </xsl:template>
+
 
     <!-- IDS put()-->
     <xsl:template match="IDS" mode="put">
