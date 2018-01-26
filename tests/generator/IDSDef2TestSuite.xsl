@@ -417,7 +417,9 @@ or
 
 
         <xsl:if test="$resize">
-		<xsl:text>&#9;&#9;&#9;allocate(ids%</xsl:text><xsl:value-of select="substring($path, 1, string-length($path) - 3)"/><xsl:text> (1))&#10; </xsl:text>
+		<xsl:text>&#9;&#9;&#9;if ( .NOT. associated(ids%</xsl:text><xsl:value-of select="substring($path, 1, string-length($path) - 3)"/><xsl:text>)) then&#10; </xsl:text>
+		<xsl:text>&#9;&#9;&#9;&#9;allocate(ids%</xsl:text><xsl:value-of select="substring($path, 1, string-length($path) - 3)"/><xsl:text> (1))&#10; </xsl:text>
+		<xsl:text>&#9;&#9;&#9;endif&#10; </xsl:text>
 	</xsl:if>
         <xsl:for-each select="field[not(@data_type='struct_array' or @data_type='structure')]">
 	<xsl:if test="(not($dynamicOnly) and (@type !='dynamic' or not(@type) or @data_type='structure' or (@data_type='struct_array' and @type !='dynamic')))
