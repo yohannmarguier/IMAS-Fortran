@@ -404,7 +404,8 @@ END SUBROUTINE initEnv
 SUBROUTINE create(idx)
 	INTEGER, INTENT(OUT) :: idx
 
-	CALL initTime
+	CALL initTime()
+        CALL initEnv()
 	CALL imas_create_env('ids',TESTSHOT,TESTRUN, TESTSHOT,TESTRUN,idx, userName, 'test', dataVersion)
 
 	print *, "IDX:", idx
