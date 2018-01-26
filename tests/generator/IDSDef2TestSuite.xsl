@@ -489,7 +489,7 @@ or
 		<xsl:text>&#9;&#9;&#9; isEqual = assertField(ids%</xsl:text><xsl:value-of select="translate(@path, '/', '%')"/><xsl:text>, </xsl:text>
 		<xsl:call-template name="type2value">
 			 <xsl:with-param name="lastDimSize" select="'DIM_SIZE'"/>
-			 	 <xsl:with-param name="slice" select="true()"/>
+			 	 <xsl:with-param name="slice" select="false()"/>
 		</xsl:call-template>
 	<xsl:text>, "</xsl:text><xsl:value-of select="ancestor::IDS/@name"/><xsl:text>/</xsl:text><xsl:value-of select="@path"/><xsl:text>");&#10;</xsl:text>
 	</xsl:otherwise>
@@ -563,8 +563,8 @@ or
 	<xsl:call-template name="COMMENT_FIELD"/>
 
 	     <xsl:choose>
-                <xsl:when test="$slice and @type='dynamic' and not(ancestor::field[@data_type='struct_array' and @maxoccur='unbounded'])  ">
-
+     <!--           <xsl:when test="$slice and @type='dynamic' and not(ancestor::field[@data_type='struct_array' and @maxoccur='unbounded'])  ">
+--> <xsl:when test="$slice and @type='dynamic'  ">
      		<xsl:text>&#9;&#9;&#9; isEqual = assertField(ids%</xsl:text><xsl:value-of select="concat($path, '%', @name)"/><xsl:text>, </xsl:text>
 	    	<xsl:call-template name="type2value">
 			 <xsl:with-param name="lastDimSize" select="1"/>
@@ -627,86 +627,98 @@ or
             <xsl:param name="fieldPath"/>
 	          <xsl:param name="slice"/>
 
+
+	<xsl:variable name="lastDimSize">
+	        <xsl:choose>
+		        <xsl:when test="$slice and @type ='dynamic'" >
+	                	<xsl:value-of select="'1'" />
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:value-of select="'DIM_SIZE'" />
+	                </xsl:otherwise>
+	        </xsl:choose>
+	</xsl:variable>
+
         <xsl:choose>
 
 	      <xsl:when test="@name='homogeneous_time'">
-	    		<xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/> <xsl:text>= 1&#10;</xsl:text>
+	    		<xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/> <xsl:text>= </xsl:text>
 	    </xsl:when>
 
           <xsl:when test="@name='time' and $slice and (@data_type='flt_1d_type' or @data_type='FLT_1D')">
 	    		
 
     			<xsl:text>&#9;&#9;&#9;allocate(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>(1)) &#10;</xsl:text>
-	             	<xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text> = getTime(j)&#10;</xsl:text>
+	             	<xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text> = </xsl:text>
 	    </xsl:when>
     	<xsl:when test="@name='time' and not($slice) and (@data_type='flt_1d_type' or @data_type='FLT_1D')">
 	    		
 
-    			<xsl:text>&#9;&#9;&#9;allocate(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>(DIM_SIZE)) &#10;</xsl:text>
-	             	<xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text> = getTimeVector()&#10;</xsl:text>
+    			<xsl:text>&#9;&#9;&#9;allocate(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>(</xsl:text><xsl:value-of select="$lastDimSize"/><xsl:text>)) &#10;</xsl:text>
+	             	<xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text> = </xsl:text>
 	    </xsl:when>
 
             <xsl:when test="@data_type='str_type' or @data_type='STR_0D'">
 	        	     <xsl:text>&#9;&#9;&#9;allocate(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>(1)) &#10;</xsl:text>
-	    		 <xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/> <xsl:text> = getString()&#10;</xsl:text>
+	    		 <xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/> <xsl:text> = </xsl:text>
 	    		<!-- <xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/> <xsl:text>(1) = 'abc123' &#10;</xsl:text> -->
 	    </xsl:when>
             <xsl:when test="@data_type='str_1d_type' or @data_type='STR_1D'">
     	<xsl:text>&#9;&#9;&#9;allocate(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>(1)) &#10;</xsl:text>
-	    <xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/>     <xsl:text> = getString()&#10;</xsl:text>
+	    <xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/>     <xsl:text> = </xsl:text>
 	   </xsl:when>
 
             <xsl:when test="@data_type='flt_type' or @data_type='FLT_0D'">
-	   	<xsl:text>&#9;&#9;&#9;</xsl:text>  <xsl:value-of select="$fieldPath"/> <xsl:text> = getDouble()&#10;</xsl:text>
+	   	<xsl:text>&#9;&#9;&#9;</xsl:text>  <xsl:value-of select="$fieldPath"/> <xsl:text> = </xsl:text>
 	    </xsl:when>
 
 
           <xsl:when test="@data_type='flt_1d_type' or @data_type='FLT_1D'">
-	    	     	<xsl:text>&#9;&#9;&#9;allocate(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>(DIM_SIZE)) &#10;</xsl:text>
-	             	<xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text> = getDouble1DArray(DIM_SIZE)&#10;</xsl:text>
+	    	     	<xsl:text>&#9;&#9;&#9;allocate(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>(</xsl:text><xsl:value-of select="$lastDimSize"/><xsl:text>)) &#10;</xsl:text>
+	             	<xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text> = </xsl:text>
 	    </xsl:when>
              <xsl:when test="@data_type='flt_2d_type' or @data_type='FLT_2D'">
-	    	<xsl:text>&#9;&#9;&#9;allocate(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>(DIM_SIZE, DIM_SIZE)) &#10;</xsl:text>
-	       		<xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text> = getDouble2DArray(DIM_SIZE, DIM_SIZE)&#10;</xsl:text>
+	    	<xsl:text>&#9;&#9;&#9;allocate(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>(DIM_SIZE, </xsl:text><xsl:value-of select="$lastDimSize"/><xsl:text>)) &#10;</xsl:text>
+	       		<xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text> = </xsl:text>
 	</xsl:when>
 
 	   <xsl:when test="@data_type='FLT_3D'">
-	    	    	<xsl:text>&#9;&#9;&#9;allocate(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>(DIM_SIZE, DIM_SIZE, DIM_SIZE)) &#10;</xsl:text>
-	    		<xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text> = getDouble3DArray(DIM_SIZE, DIM_SIZE, DIM_SIZE)&#10;</xsl:text>
+	    	    	<xsl:text>&#9;&#9;&#9;allocate(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>(DIM_SIZE, DIM_SIZE, </xsl:text><xsl:value-of select="$lastDimSize"/><xsl:text>)) &#10;</xsl:text>
+	    		<xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text> = </xsl:text>
 		</xsl:when>
             <xsl:when test="@data_type='FLT_4D'">
-	    	    	    	<xsl:text>&#9;&#9;&#9;allocate(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>(DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE)) &#10;</xsl:text>
-	    	<xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text> = getDouble4DArray(DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE)&#10;</xsl:text>
+	    	    	    	<xsl:text>&#9;&#9;&#9;allocate(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>(DIM_SIZE, DIM_SIZE, DIM_SIZE, </xsl:text><xsl:value-of select="$lastDimSize"/><xsl:text>)) &#10;</xsl:text>
+	    	<xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text> = </xsl:text>
 	    </xsl:when>
             <xsl:when test="@data_type='FLT_5D'">
-	    	   	 <xsl:text>&#9;&#9;&#9;allocate(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>(DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE)) &#10;</xsl:text>
-	    		<xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/> <xsl:text> = getDouble5DArray(DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE)&#10;</xsl:text>
+	    	   	 <xsl:text>&#9;&#9;&#9;allocate(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>(DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE, </xsl:text><xsl:value-of select="$lastDimSize"/><xsl:text>)) &#10;</xsl:text>
+	    		<xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/> <xsl:text> = </xsl:text>
 	    </xsl:when>
             <xsl:when test="@data_type='FLT_6D'">
-	    	    	    	    	    	<xsl:text>&#9;&#9;&#9;allocate(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>(DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE)) &#10;</xsl:text>
-	    		<xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text> = getDouble6DArray(DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE)&#10;</xsl:text>
+	    	    	    	    	    	<xsl:text>&#9;&#9;&#9;allocate(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>(DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE, </xsl:text><xsl:value-of select="$lastDimSize"/><xsl:text>)) &#10;</xsl:text>
+	    		<xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text> = </xsl:text>
 	    </xsl:when>
 
              <xsl:when test="@data_type='int_type' or @data_type='INT_0D'">
-			 <xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/> <xsl:text>= getInteger()&#10;</xsl:text>
+			 <xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text> = </xsl:text>
 	    </xsl:when>
 
              <xsl:when test="@data_type='int_1d_type' or @data_type='INT_1D'">
-	        	     	<xsl:text>&#9;&#9;&#9;allocate(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>(DIM_SIZE)) &#10;</xsl:text>
-	      		<xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text> = getInteger1DArray(DIM_SIZE)&#10;</xsl:text>
+	        	     	<xsl:text>&#9;&#9;&#9;allocate(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>(</xsl:text><xsl:value-of select="$lastDimSize"/><xsl:text>)) &#10;</xsl:text>
+	      		<xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text> = </xsl:text>
 	    </xsl:when>
 
 	    <xsl:when test="@data_type='INT_2D'">
-	    <xsl:text>&#9;&#9;&#9;allocate(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>(DIM_SIZE, DIM_SIZE)) &#10;</xsl:text>
-	    		<xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text> = getInteger2DArray(DIM_SIZE, DIM_SIZE)&#10;</xsl:text>
+	    <xsl:text>&#9;&#9;&#9;allocate(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>(DIM_SIZE, </xsl:text><xsl:value-of select="$lastDimSize"/><xsl:text>)) &#10;</xsl:text>
+	    		<xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text> = </xsl:text>
 	    </xsl:when>
              <xsl:when test="@data_type='INT_3D'">
-	    	    	    	<xsl:text>&#9;&#9;&#9;allocate(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>(DIM_SIZE, DIM_SIZE, DIM_SIZE)) &#10;</xsl:text>
-	    		<xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text> = getInteger3DArray(DIM_SIZE, DIM_SIZE, DIM_SIZE)&#10;</xsl:text>
+	    	    	    	<xsl:text>&#9;&#9;&#9;allocate(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>(DIM_SIZE, DIM_SIZE, </xsl:text><xsl:value-of select="$lastDimSize"/><xsl:text>)) &#10;</xsl:text>
+	    		<xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text> = </xsl:text>
 	    </xsl:when>
             <xsl:when test="@data_type='INT_4D'">
-	    	    	    	    	<xsl:text>&#9;&#9;&#9;allocate(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>(DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE)) &#10;</xsl:text>
-	    		<xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text> = getInteger4DArray(DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE)&#10;</xsl:text>
+	    	    	    	    	<xsl:text>&#9;&#9;&#9;allocate(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>(DIM_SIZE, DIM_SIZE, DIM_SIZE, </xsl:text><xsl:value-of select="$lastDimSize"/><xsl:text>)) &#10;</xsl:text>
+	    		<xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text> = </xsl:text>
 	    </xsl:when>
 
             <xsl:otherwise>
@@ -714,6 +726,13 @@ or
 	    <xsl:message terminate='no'> ERROR! Unknown type: <xsl:value-of select="@data_type"/>  (<xsl:value-of select="ancestor::IDS/@name"/>:  <xsl:value-of select="@path" />)</xsl:message>
 	    </xsl:otherwise>
         </xsl:choose>
+	     <xsl:call-template name="type2value">
+			<xsl:with-param name="slice" select="$slice"/>
+	    		<xsl:with-param name="lastDimSize" select="$lastDimSize"/>
+
+            </xsl:call-template>
+<xsl:text>&#9;&#10;</xsl:text>
+
     </xsl:template>
 
     <xsl:template name="type2value">
