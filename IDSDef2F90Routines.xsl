@@ -2840,22 +2840,21 @@ if (associated(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>))
    ! A temporary "time" vector is filled then put as a regular variable (outside of the object) as AoS%time
    allocate(time(size(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>)))
 
-   if (IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>(1)%time.EQ.ids_real_invalid) then ! Check the presence of a time vector at the root of the AoS (on the first index only)
-      if (IDS%IDS_Properties%homogeneous_time.EQ.1) then
-         time = ids%time ! Use the general time vector of the IDS to fill time
-<!--then  ! For an homogeneous IDS, force the time of the AoS to be equal to the general one
-         do i1 = 1,size(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>)
-            IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>(i1)%time = ids%time(i1)
-            time(
-         enddo -->
-      else
-         write(*,*) "ERROR : the time vector of the type 3 array of structure <xsl:value-of select = "concat($variable_path,'%',@name)"/> must be filled"
-         return
-      endif
+
+   if (IDS%IDS_Properties%homogeneous_time.EQ.1) then
+           ! Use the general time vector of the IDS to fill time
+      		do i1 = 1,size(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>) 
+         		time(i1) = ids%time(i1) 
+      		enddo
    else
-      do i1 = 1,size(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>) ! the AoS time vector is there, fill time with it
-         time(i1) = IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>(i1)%time
-      enddo
+   	if (IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>(1)%time.EQ.ids_real_invalid) then ! Check the presence of a time vector at the root of the AoS (on the first index only)
+	         write(*,*) "ERROR : the time vector of the type 3 array of structure <xsl:value-of select = "concat($variable_path,'%',@name)"/> must be filled"
+        	 return
+   	else
+      		do i1 = 1,size(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>) ! the AoS time vector is there, fill time with it
+         		time(i1) = IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>(i1)%time
+      		enddo
+	endif
    endif
 
    timepath=<xsl:value-of select="concat($mds_path,'//&quot;/',@name,'/time')"/>" ! Start to put time
@@ -2893,20 +2892,20 @@ if (associated(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)) then
          </xsl:apply-templates>
       call put_object_in_object(idx,obj_all_times,"ALLTIMES",i1,obj1)
    enddo
-   ! Store time of the array of structure (hidden variable for the user, but used by the UAL for future get_slice operations)
-    allocate(time(size(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)))
 
-   if (IDS%<xsl:value-of select = "translate(@path,'/','%')"/>(1)%time.EQ.ids_real_invalid) then ! Check the presence of a time vector at the root of the AoS (on the first index only)
-      if (IDS%IDS_Properties%homogeneous_time.EQ.1) then
-         time = ids%time ! Use the general time vector of the IDS to fill time
-      else
-         write(*,*) "ERROR : the time vector of the type 3 array of structure <xsl:value-of select = "translate(@path,'/','%')"/> must be filled"
-         return
-      endif
+   ! Store time of the array of structure (hidden variable for the user, but used by the UAL for future get_slice operations)
+  allocate(time(size(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)))
+   if (IDS%IDS_Properties%homogeneous_time.EQ.1) then
+           time = ids%time ! Use the general time vector of the IDS to fill time
    else
-      do i1 = 1,size(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>) ! the AoS time vector is there, fill time with it
-         time(i1) = IDS%<xsl:value-of select = "translate(@path,'/','%')"/>(i1)%time
-      enddo
+         if (IDS%<xsl:value-of select = "translate(@path,'/','%')"/>(1)%time.EQ.ids_real_invalid) then ! Check the presence of a time vector at the root of the AoS (on the first index only)
+                 write(*,*) "ERROR : the time vector of the type 3 array of structure <xsl:value-of select = "translate(@path,'/','%')"/> must be filled"
+                 return
+         else
+     		 do i1 = 1,size(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>) ! the AoS time vector is there, fill time with it
+         		time(i1) = IDS%<xsl:value-of select = "translate(@path,'/','%')"/>(i1)%time
+      		 enddo
+         endif
    endif
 
     timepath=&quot;<xsl:call-template name="printtimepath"/>&quot;
@@ -4003,23 +4002,17 @@ if (associated(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>))
 
    ! Store time of the array of structure (hidden variable for the user, but used by the UAL for future get_slice operations)
    allocate(time(1))
-   if (IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>(1)%time.EQ.ids_real_invalid) then ! Check the presence of a time vector at the root of the AoS (on the first index only)
-      if (IDS%IDS_Properties%homogeneous_time.EQ.1) then
-         time = ids%time ! Use the general time vector of the IDS to fill time
-<!--then  ! For an homogeneous IDS, force the time of the AoS to be equal to the general one
-         do i1 = 1,size(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>)
-            IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>(i1)%time = ids%time(i1)
-            time(
-         enddo -->
-      else
-         write(*,*) "ERROR : the time vector of the type 3 array of structure <xsl:value-of select = "concat($variable_path,'%',@name)"/> must be filled"
-         return
-      endif
+   if (IDS%IDS_Properties%homogeneous_time.EQ.1) then
+           time(1) = ids%time(1) ! Use the general time vector of the IDS to fill time
    else
-      do i1 = 1,size(IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>) ! the AoS time vector is there, fill time with it
-         time(i1) = IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>(i1)%time
-      enddo
+         if (IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>(1)%time.EQ.ids_real_invalid) then ! Check the presence of a time vector at the root of the AoS (on the first index only)
+                 write(*,*) "ERROR : the time vector of the type 3 array of structure <xsl:value-of select = "concat($variable_path,'%',@name)"/> must be filled"
+                 return
+         else
+                 time(1) = IDS%<xsl:value-of select = "concat($variable_path,'%',@name)"/>(1)%time
+         endif
    endif
+
 
    timepath=<xsl:value-of select="concat($mds_path,'//&quot;/',@name,'/time')"/>" ! Start to put time
    call put_double_slice(idx,path, trim(timepath),&amp;
@@ -4055,18 +4048,17 @@ if (associated(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>)) then
 
    ! Store time of the array of structure (hidden variable for the user, but used by the UAL for future get_slice operations)
    allocate(time(1))
-   if (IDS%<xsl:value-of select = "translate(@path,'/','%')"/>(1)%time.EQ.ids_real_invalid) then ! Check the presence of a time vector at the root of the AoS (on the first index only)
-      if (IDS%IDS_Properties%homogeneous_time.EQ.1) then
-         time = ids%time ! Use the general time vector of the IDS to fill time
-      else
-         write(*,*) "ERROR : the time vector of the type 3 array of structure <xsl:value-of select = "translate(@path,'/','%')"/> must be filled"
-         return
-      endif
+   if (IDS%IDS_Properties%homogeneous_time.EQ.1) then
+           time(1) = ids%time(1) ! Use the general time vector of the IDS to fill time
    else
-      do i1 = 1,size(IDS%<xsl:value-of select = "translate(@path,'/','%')"/>) ! the AoS time vector is there, fill time with it
-         time(i1) = IDS%<xsl:value-of select = "translate(@path,'/','%')"/>(i1)%time
-      enddo
+         if (IDS%<xsl:value-of select = "translate(@path,'/','%')"/>(1)%time.EQ.ids_real_invalid) then ! Check the presence of a time vector at the root of the AoS (on the first index only)
+                 write(*,*) "ERROR : the time vector of the type 3 array of structure <xsl:value-of select = "translate(@path,'/','%')"/> must be filled"
+                 return
+         else
+                 time(1) = IDS%<xsl:value-of select = "translate(@path,'/','%')"/>(1)%time
+         endif
    endif
+
 
    timepath=&quot;<xsl:call-template name="printtimepath"/>&quot;
    call put_double_slice(idx,path,trim(timepath),&amp;
