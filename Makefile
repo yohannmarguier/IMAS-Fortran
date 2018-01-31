@@ -89,8 +89,8 @@ install: all $(addprefix install_,$(INSTALL_TARGETS)) pkgconfig_install
 		ln -svfT $$OBJECT.$(IMAS_MAJOR).$(IMAS_MINOR).$(IMAS_MICRO)  $(INSTALL)/lib/$$OBJECT; \
 	done
 
-sources: $(SOURCES)
-sources_install: $(SOURCES)
+sources: $(SOURCES) ids_schemas.f90
+sources_install: $(SOURCES) ids_schemas.f90
 	install -d $(INSTALL)/share/src/fortraninterface
 	install -m 644 $^ $(INSTALL)/share/src/fortraninterface
 
