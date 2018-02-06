@@ -309,7 +309,7 @@
 	<xsl:text>&#9;&#9;end if &#10;</xsl:text>
 
 	<xsl:text>&#9;&#9;do j = 1, noOfSlices &#10;</xsl:text>
-	<xsl:text>&#9;WRITE(*,*) "--- --- slice : ", j&#10;</xsl:text>
+	<xsl:text>&#9;WRITE(*,*) "--- --- slice:", j&#10;</xsl:text>
 
 	<xsl:text>&#9;&#9;&#9;call ids_get_slice(idx ,idspath, ids, getTimeScalar(j), 1);&#10;</xsl:text>
 
@@ -356,7 +356,7 @@
 
  <xsl:template match="field" mode="putStatic">
 
-<xsl:if test="@type !='dynamic' or not(@type) or @data_type='structure' or (@data_type='struct_array' and @type !='dynamic')"> <!-- This skips the routine for timed fields when using this template in PUT_NON_TIMED mode -->
+<xsl:if test="@type !='dynamic' or not(@type) or @data_type='structure' or (@data_type='struct_array' and @type !='dynamic') or .[.//field[@type='static']]"> <!-- This skips the routine for timed fields when using this template in PUT_NON_TIMED mode -->
 
 	<xsl:text>&#10;&#9;&#9;&#9;!!!STATIC!! </xsl:text><xsl:value-of select="@name"/> : <xsl:value-of select="@path"/> : <xsl:value-of select="@data_type"/> : :<xsl:value-of select="@type"/>:<xsl:text>&#10;</xsl:text>
 
@@ -374,9 +374,9 @@
 	<xsl:param name="staticOnly"/>
 	  <xsl:variable name="IDS_FIELD_PATH">  <xsl:text>&#9;&#9;ids%</xsl:text><xsl:value-of select="translate(@path, '/', '%')"/></xsl:variable>
 <!--	<xsl:value-of select="@name"/><xsl:text>YYYY &#10;</xsl:text>
-	-->	<xsl:if test="(not($dynamicOnly) and (@type !='dynamic' or not(@type) or @data_type='structure' or (@data_type='struct_array' and @type !='dynamic')))
+	-->	<xsl:if test="(not($dynamicOnly) and not(ancestor::field[@type='dynamic']) and (@type !='dynamic' or not(@type) or @data_type='structure' or (@data_type='struct_array' and @type !='dynamic')))
 or
-(not($staticOnly) and (@type ='dynamic' or @data_type='structure' or @data_type='struct_array'))"> 
+(not($staticOnly) and (@type ='dynamic' or @data_type='structure' or @data_type='struct_array' or (ancestor::field[@type='dynamic'])))"> 
 
 	<xsl:text>&#10;&#9;&#9;&#9;!!X!</xsl:text><xsl:value-of select="@name"/> : <xsl:value-of select="@path"/> : <xsl:value-of select="@data_type"/> : <xsl:value-of select="@type"/>:<xsl:text>&#10;</xsl:text>
             <xsl:call-template name="setValue">
@@ -411,9 +411,9 @@ or
 
 	
 	<!-- This skips the routine for timed fields when using this template in staticOnly mode -->
-	<xsl:if test="(not($dynamicOnly) and (@type !='dynamic' or not(@type) or @data_type='structure' or (@data_type='struct_array' and @type !='dynamic')))
+	<xsl:if test="(not($dynamicOnly) and not(ancestor::field[@type='dynamic'])  and (@type !='dynamic' or not(@type) or @data_type='structure' or (@data_type='struct_array' and @type !='dynamic') ))
 or
-(not($staticOnly) and (@type ='dynamic' or @data_type='structure' or @data_type='struct_array'))"> 
+(not($staticOnly) and (@type ='dynamic' or @data_type='structure' or @data_type='struct_array' or (ancestor::field[@type='dynamic']) )   )"> 
 
 
         <xsl:if test="$resize">
@@ -422,9 +422,9 @@ or
 		<xsl:text>&#9;&#9;&#9;endif&#10; </xsl:text>
 	</xsl:if>
         <xsl:for-each select="field[not(@data_type='struct_array' or @data_type='structure')]">
-	<xsl:if test="(not($dynamicOnly) and (@type !='dynamic' or not(@type) or @data_type='structure' or (@data_type='struct_array' and @type !='dynamic')))
+	<xsl:if test="(not($dynamicOnly) and not(ancestor::field[@type='dynamic']) and (@type !='dynamic' or not(@type) or @data_type='structure' or (@data_type='struct_array' and @type !='dynamic')))
 or
-(not($staticOnly) and (@type ='dynamic' or @data_type='structure' or @data_type='struct_array'))"> 
+(not($staticOnly) and (@type ='dynamic' or @data_type='structure' or @data_type='struct_array'or (ancestor::field[@type='dynamic'])))"> 
 
 		<xsl:call-template name="COMMENT_FIELD"/>
 		
@@ -472,9 +472,9 @@ or
 	<xsl:param name="dynamicOnly"/>
 	<xsl:param name="staticOnly"/>
     	<xsl:call-template name="COMMENT_FIELD"/>
-	<xsl:if test="(not($dynamicOnly) and (@type !='dynamic' or not(@type) or @data_type='structure' or (@data_type='struct_array' and @type !='dynamic')))
+	<xsl:if test="(not($dynamicOnly) and not(ancestor::field[@type='dynamic']) and (@type !='dynamic' or not(@type) or @data_type='structure' or (@data_type='struct_array' and @type !='dynamic')))
 or
-(not($staticOnly) and (@type ='dynamic' or @data_type='structure' or @data_type='struct_array'))"> 
+(not($staticOnly) and (@type ='dynamic' or @data_type='structure' or @data_type='struct_array' or (ancestor::field[@type='dynamic'])))"> 
 
     <xsl:choose>
             <xsl:when test="@type='dynamic'">
@@ -551,20 +551,20 @@ or
 	<xsl:param name="slice"/>
 	<xsl:param name="dynamicOnly"/>
 	<xsl:param name="staticOnly"/>
-
-<xsl:if test="(not($dynamicOnly) and (@type !='dynamic' or not(@type) or @data_type='structure' or (@data_type='struct_array' and @type !='dynamic')))
+<xsl:call-template name="COMMENT_FIELD"/>
+<xsl:if test="(not($dynamicOnly) and (@type !='dynamic' or not(@type) or @data_type='structure' or (@data_type='struct_array' and @type !='dynamic')  ))
 or
-(not($staticOnly) and (@type ='dynamic' or @data_type='structure' or @data_type='struct_array'))"> 
+(not($staticOnly) and (@type ='dynamic' or @data_type='structure' or @data_type='struct_array' or (ancestor::field[@type='dynamic'])) )"> 
 
         <xsl:for-each select="field[not(@data_type='struct_array' or @data_type='structure')]">
-	<xsl:if test="(not($dynamicOnly) and (@type !='dynamic' or not(@type) or @data_type='structure' or (@data_type='struct_array' and @type !='dynamic')))
+	<xsl:if test="(not($dynamicOnly) and (@type !='dynamic' or not(@type) or @data_type='structure' or (@data_type='struct_array' and @type !='dynamic') ))
 or
-(not($staticOnly) and (@type ='dynamic' or @data_type='structure' or @data_type='struct_array'))"> 
+(not($staticOnly) and (@type ='dynamic' or @data_type='structure' or @data_type='struct_array' or (ancestor::field[@type='dynamic'])))"> 
 	<xsl:call-template name="COMMENT_FIELD"/>
 
 	     <xsl:choose>
-     <!--           <xsl:when test="$slice and @type='dynamic' and not(ancestor::field[@data_type='struct_array' and @maxoccur='unbounded'])  ">
---> <xsl:when test="$slice and @type='dynamic'  ">
+               <xsl:when test="$slice and @type='dynamic' and not(ancestor::field[@data_type='struct_array' and @maxoccur='unbounded'])  ">
+
      		<xsl:text>&#9;&#9;&#9; isEqual = assertField(ids%</xsl:text><xsl:value-of select="concat($path, '%', @name)"/><xsl:text>, </xsl:text>
 	    	<xsl:call-template name="type2value">
 			 <xsl:with-param name="lastDimSize" select="1"/>
@@ -630,7 +630,7 @@ or
 
 	<xsl:variable name="lastDimSize">
 	        <xsl:choose>
-		        <xsl:when test="$slice and @type ='dynamic'" >
+		        <xsl:when test="$slice and @type ='dynamic' and not(ancestor::field[@data_type='struct_array' and @maxoccur='unbounded'])" >
 	                	<xsl:value-of select="'1'" />
 			</xsl:when>
 			<xsl:otherwise>
