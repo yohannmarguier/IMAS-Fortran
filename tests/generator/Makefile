@@ -57,9 +57,8 @@ VPATH = ./src $(TEST_SRC_DIR)
 
 
 ifeq ($(strip $(TEST_IDS_FILES)),)
-all:  
-	@echo "Error: Source files have been not created. Please run 'make sources' first"
-	@exit 1	
+all:  sources
+	$(MAKE) all
 else
 all :   $(TARGETS)
 endif
