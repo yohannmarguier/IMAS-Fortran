@@ -36,7 +36,7 @@ IDSDEFXSD       = ../xml/dd_physics_data_dictionary.xsd
 LIBS            =  -L../lowlevel -limas -lm
 
 # Get a list of IDS from IDSDEF file
-IDSNAMES:=$(shell sed '/<IDS name=/!d;s/.*name="\(.*\)"/\1/' $(IDSDEF))
+IDSNAMES := $(shell sed '/<IDS name=/!d;s/.*name="\([^"]*\)".*/\1/' $(IDSDEF))
 
 IDSNAMES_FUNC=$(addsuffix _put,$(IDSNAMES))
 IDSNAMES_FUNC+=$(addsuffix _put_slice,$(IDSNAMES))
