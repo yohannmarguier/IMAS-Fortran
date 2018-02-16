@@ -43,7 +43,9 @@ GFORTRAN_BIN_DIR:=./bin/gfortran
 TEST_SRC_DIR=./src
 
 
-TEST_IDS_FILES=$(wildcard $(TEST_SRC_DIR)/*.f90)
+# Get a list of IDS from IDSDEF file
+IDSNAMES := $(shell sed '/<IDS name=/!d;s/.*name="\([^"]*\)".*/\1/' $(IDSDEF))
+TEST_IDS_FILES = $(patsubst %,$(TEST_SRC_DIR)/%_test.f90,$(IDSNAMES))
 
 TEST_FILES= helper.f90 comparator.f90 $(TEST_IDS_FILES)
 
@@ -56,11 +58,14 @@ VPATH = ./src $(TEST_SRC_DIR)
 
 
 
-ifeq ($(strip $(TEST_IDS_FILES)),)
-all:  sources
-	$(MAKE) all
-else
 all :   $(TARGETS)
+
+# Test if all generated sources are found to exist as files to
+# gracefully skip generation if not needed.
+ifeq ($(words $(TEST_IDS_FILES)), $(words $(wildcard $(TEST_IDS_FILES))))
+$(TEST_IDS_FILES):
+else
+$(TEST_IDS_FILES): sources
 endif
 
 
@@ -105,7 +110,7 @@ gfortran_comparator.o: comparator.f90
 gfortran_testSuite:  $(GFORTRAN_BIN_FILES)
 
 
-$(GFORTRAN_BIN_DIR)/%.exe: %.f90 gfortran_helper.o gfortran_comparator.o
+$(GFORTRAN_BIN_FILES): $(GFORTRAN_BIN_DIR)/%.exe : $(TEST_SRC_DIR)/%.f90 gfortran_helper.o gfortran_comparator.o
 	$(F90_gfortran) $(COPTS_gfortran) -o $@ $< gfortran_helper.o gfortran_comparator.o $(LIBS_gfortran)
 
 
@@ -121,9 +126,9 @@ ifort_comparator.o: comparator.f90
 	$(F90_ifort) $(COPTS_ifort) -c $< -o $@
 
 ifort_testSuite: $(IFORT_BIN_FILES)
-	
 
-$(IFORT_BIN_DIR)/%.exe: %.f90 ifort_helper.o ifort_comparator.o
+
+$(IFORT_BIN_FILES): $(IFORT_BIN_DIR)/%.exe: $(TEST_SRC_DIR)/%.f90 ifort_helper.o ifort_comparator.o
 	$(F90_ifort) $(COPTS_ifort) -o $@ $< ifort_helper.o ifort_comparator.o $(LIBS_ifort)
 
 #################################################
