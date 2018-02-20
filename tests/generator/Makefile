@@ -1,12 +1,12 @@
 #!/bin/bash
-# "make install" should have been run at the installer level before running "make test"
+# You should have already installed imas and loaded it (IMAS_PREFIX variable) before running "make test".
 # Until the testSuite is made modular (one test program per IDS), it is recommended to avoid running the IFORT case (huge source file, takes ages to compile)
 # To detect if an error has been reported, search for "ERROR:" strings in the result file (fortraninterface/tests/generator/gfortran_testSuite.results)
 
 include ../../../Makefile.common
 
-ifeq (,$(IMAS_INSTALL_DIR))
-$(error Please supply a variable IMAS_INSTALL_DIR that is the prefix of your IMAS installation.)
+ifeq (,$(IMAS_PREFIX))
+$(error Please supply a variable IMAS_PREFIX that is the prefix of your IMAS installation.)
 endif
 
 # Check that "saxon9he.jar" utility is set in CLASSPATH
@@ -14,17 +14,17 @@ SAXONICAJAR=$(wildcard $(filter %saxon9he.jar,$(subst :, ,$(CLASSPATH))))
 
 #------------------------- gfortran ----------------------------
 F90_gfortran = gfortran
-COPTS_gfortran = -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none -I$(IMAS_INSTALL_DIR)/include/gfortran
-LIBS_gfortran = -L$(IMAS_INSTALL_DIR)/lib -limas-gfortran -limas -lm
+COPTS_gfortran = -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none -I$(IMAS_PREFIX)/include/gfortran
+LIBS_gfortran = -L$(IMAS_PREFIX)/lib -limas-gfortran -limas -lm
 
 #------------------------- ifort ----------------------------
 F90_ifort = ifort
-COPTS_ifort = -r8 -assume no2underscore  -fPIC -module $(IMAS_INSTALL_DIR)/include/ifort -shared-intel
-LIBS_ifort = -L$(IMAS_INSTALL_DIR)/lib -limas-ifort -limas -lm
+COPTS_ifort = -r8 -assume no2underscore  -fPIC -module $(IMAS_PREFIX)/include/ifort -shared-intel
+LIBS_ifort = -L$(IMAS_PREFIX)/lib -limas-ifort -limas -lm
 
 
-IDSDEF = $(UAL)/xml/IDSDef.xml
-ids_path = $(UAL)/models/mdsplus
+IDSDEF = $(IMAS_PREFIX)/include/IDSDef.xml
+ids_path = $(IMAS_PREFIX)/models/mdsplus
 
 
 ifeq "$(strip $(GFORTRAN))" "yes"
@@ -108,7 +108,6 @@ gfortran_comparator.o: comparator.f90
 	$(F90_gfortran) $(COPTS_gfortran) -c $< -o $@
 
 gfortran_testSuite:  $(GFORTRAN_BIN_FILES)
-
 
 $(GFORTRAN_BIN_FILES): $(GFORTRAN_BIN_DIR)/%.exe : $(TEST_SRC_DIR)/%.f90 gfortran_helper.o gfortran_comparator.o
 	$(F90_gfortran) $(COPTS_gfortran) -o $@ $< gfortran_helper.o gfortran_comparator.o $(LIBS_gfortran)
