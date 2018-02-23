@@ -2,12 +2,8 @@
 include ../Makefile.common
 
 ifeq ("no","$(FORTRAN)")
-$(warning "Ignoring fortraninterface (FORTRAN=no).")
-all:
-sources:
-clean:
-clean-src:
-install:
+all sources sources_install install clean clean-src:
+	$(warning "Ignoring fortraninterface (FORTRAN=no).")
 else
 
 F90_g95         = g95
