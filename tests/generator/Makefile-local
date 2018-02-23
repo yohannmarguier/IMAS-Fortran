@@ -1,85 +1,30 @@
 #!/bin/bash
+# You should have already installed imas and loaded it (IMAS_PREFIX variable) before running "make test".
+# Until the testSuite is made modular (one test program per IDS), it is recommended to avoid running the IFORT case (huge source file, takes ages to compile)
+# To detect if an error has been reported, search for "ERROR:" strings in the result file (fortraninterface/tests/generator/gfortran_testSuite.results)
 
 include ../../../Makefile.common
 
-ifeq (,$(ids_path))
-$(error Please first install imas and then module load imas/... to populate environment.)
+ifeq (,$(IMAS_PREFIX))
+$(error Please supply a variable IMAS_PREFIX that is the prefix of your IMAS installation.)
 endif
 
-#------------------------------- gfortran ----------------------------------
-F90_gfortran=gfortran
-COPTS_gfortran = -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none `pkg-config imas-gfortran --cflags`
-LIBS_gfortran = `pkg-config imas-gfortran imas-lowlevel --libs` -lm
-
-F90_ifort=ifort
-COPTS_ifort = -g -r8 -assume no2underscore  -fPIC `pkg-config imas-ifort --cflags` -shared-intel
-LIBS_ifort= `pkg-config imas-ifort imas-lowlevel --libs` -lm
-
-IDSDEF = $(UAL)/xml/IDSDef.xml
-
-
-ifeq "$(strip $(GFORTRAN))" "yes"
-    TARGETS += gfortran_testSuite
-endif
-
-ifeq "$(strip $(IFORT))" "yes"
-    TARGETS += ifort_testSuite
-endif
-
-all : testSuite.f90 comp
-
-.PHONY: clean clean-src
-clean: ifort_clean gfortran_clean
-	rm -rf build *~ *.o *.mod
-
-clean-src: clean
-	rm -f testSuite.f90
-
-testSuite.f90: IDSDef2TestSuite.xsl
-	xsltproc IDSDef2TestSuite.xsl $(IDSDEF)  > testSuite.f90
-
-comp: $(TARGETS)
-
-.PHONY: test ifort_test gfortran_test
-cmd_test = ( for N in 0 1 2 3 4 5 6 7 8 9 ; do \
-		export `echo MDSPLUS_TREE_BASE_$$N`=$$PWD/imasdb-$@/$$N ual_debug=yes;\
-		mkdir -p $$PWD/imasdb-$@/$$N ;\
-	done ; \
-	./$@Suite 2>&1 | tee $@.results )
-
-gfortran_test: testSuite.f90 comp
-	$(call cmd_test)
-
-ifort_test: testSuite.f90 comp
-	$(call cmd_test)
-
-test : gfortran_test ifort_test
+# Check that "saxon9he.jar" utility is set in CLASSPATH
+SAXONICAJAR=$(wildcard $(filter %saxon9he.jar,$(subst :, ,$(CLASSPATH))))
 
 #------------------------- gfortran ----------------------------
-.PHONY: gfortran_clean
-gfortran_clean:
-	rm -rf gfortran_testSuite
-
-gfortran_helper.o: helper.f90
-	$(F90_gfortran) $(COPTS_gfortran) -c $< -o $@
-
-gfortran_comparator.o: comparator.f90
-	$(F90_gfortran) $(COPTS_gfortran) -c $< -o $@
-
-gfortran_testSuite: testSuite.f90 gfortran_helper.o gfortran_comparator.o
-	$(F90_gfortran) $(COPTS_gfortran) -o $@ $^ $(LIBS_gfortran)
+F90_gfortran = gfortran
+COPTS_gfortran = -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none -I$(IMAS_PREFIX)/include/gfortran
+LIBS_gfortran = -L$(IMAS_PREFIX)/lib -limas-gfortran -limas -lm
 
 #------------------------- ifort ----------------------------
-.PHONY: ifort_clean
-ifort_clean:
-	rm -rf ifort_testSuite
+F90_ifort = ifort
+COPTS_ifort = -r8 -assume no2underscore  -fPIC -module $(IMAS_PREFIX)/include/ifort -shared-intel
+LIBS_ifort = -L$(IMAS_PREFIX)/lib -limas-ifort -limas -lm
 
-ifort_helper.o: helper.f90
-	$(F90_ifort) $(COPTS_ifort) -c $< -o $@
 
-ifort_comparator.o: comparator.f90
-	$(F90_ifort) $(COPTS_ifort) -c $< -o $@
+IDSDEF = $(IMAS_PREFIX)/include/IDSDef.xml
+ids_path = $(IMAS_PREFIX)/models/mdsplus
 
-ifort_testSuite: testSuite.f90 ifort_helper.o ifort_comparator.o
-	$(F90_ifort) $(COPTS_ifort) -o $@ $^ $(LIBS_ifort)
 
+include Makefile.tests
