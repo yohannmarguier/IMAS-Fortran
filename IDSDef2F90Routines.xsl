@@ -5,7 +5,7 @@
 <xsl:output method="text" version="1.0" encoding="UTF-8" indent="yes"/>	<!-- This XSL translates the list of IMAS IDSDefs to Fortran 90 GET/PUT Routines for IDSs -->
 
 <xsl:function name="local:unique_name" as="xs:string">
-  <!-- Provides unique 12 characters reference to arbitrary long field name  -->
+  <!-- Provides pseudo-unique 16 characters reference to arbitrary long field name  -->
   <xsl:param name="FullName" as="xs:string"/>
 <!--  <xsl:variable name="result" as="xs:string">-->
     <xsl:choose>
@@ -43,13 +43,13 @@ contains
 
 subroutine ids_get_times(pulseCtx,path,time)
 use ual_low_level_wrap
+use ids_types
 implicit none
-integer, parameter :: DP=kind(1.0D0)
 
-integer :: pulsectx, opctx, status
+integer(ids_int) :: pulsectx, opctx, status
 character*(*) :: path
-real(DP), pointer :: time(:)
-integer :: dim1
+real(ids_real), pointer :: time(:)
+integer(ids_int) :: dim1
 
 call begin_IDS_get(pulsectx, path, opctx) 
 if (opctx.lt.0) then
@@ -121,7 +121,7 @@ subroutine ids_deallocate_struct_<xsl:value-of select="local:unique_name($this-t
   use ids_schemas
   implicit none
 
-  integer :: i
+  integer(ids_int) :: i
   logical, intent(in) :: c_data
   type(ids_<xsl:value-of select="$this-type"/>) :: struct_in
 
@@ -178,7 +178,7 @@ subroutine ids_deallocate_struct_<xsl:value-of select="@name"/>(struct_in)
   use ids_schemas
   implicit none
 
-  integer :: i
+  integer(ids_int) :: i
   logical :: c_data
   type(ids_<xsl:value-of select="@name"/>) :: struct_in
 
@@ -211,7 +211,7 @@ subroutine ids_deallocate_struct_<xsl:value-of select="local:unique_name($this-t
   use ids_schemas
   implicit none
 
-  integer :: i
+  integer(ids_int) :: i
   logical, intent(in) :: c_data
   type(ids_<xsl:value-of select="$this-type"/>) :: struct_in
 
@@ -273,7 +273,7 @@ subroutine ids_copy_struct_<xsl:value-of select="local:unique_name($this-type)"/
   use ids_schemas
   implicit none
 
-  integer :: i
+  integer(ids_int) :: i
 
   type(ids_<xsl:value-of select="$this-type"/>) :: struct_in, struct_out
 
@@ -331,7 +331,7 @@ subroutine ids_copy_struct_<xsl:value-of select="@name"/>(struct_in, struct_out)
   use ids_schemas
   implicit none
 
-  integer :: i
+  integer(ids_int) :: i
 
   type(ids_<xsl:value-of select="@name"/>) :: struct_in, struct_out
 
@@ -362,7 +362,7 @@ subroutine ids_copy_struct_<xsl:value-of select="local:unique_name($this-type)"/
   use ids_schemas
   implicit none
 
-  integer :: i
+  integer(ids_int) :: i
 
   type(ids_<xsl:value-of select="$this-type"/>) :: struct_in, struct_out
 
@@ -479,7 +479,7 @@ end module
     <!-- 0D scalar, integer data -->
     <xsl:when test="@data_type='int_type' or @data_type='INT_0D'">
   ! Copy <xsl:value-of select="$currentidxpath"/>
-  if (struct_in<xsl:value-of select="$currentidxpath"/>/=-999999999)  then
+  if (struct_in<xsl:value-of select="$currentidxpath"/>/=ids_int_invalid)  then
     struct_out<xsl:value-of select="$currentidxpath"/> = &amp;
     struct_in<xsl:value-of select="$currentidxpath"/>
   endif
@@ -488,7 +488,7 @@ end module
     <!-- 0D scalar, float data -->
     <xsl:when test="@data_type='flt_type' or @data_type='FLT_0D'">
   ! Copy <xsl:value-of select="$currentidxpath"/>
-  if (struct_in<xsl:value-of select="$currentidxpath"/>.NE.-9.D40) then
+  if (struct_in<xsl:value-of select="$currentidxpath"/>.NE.ids_real_invalid) then
     struct_out<xsl:value-of select="$currentidxpath"/> = &amp;
     struct_in<xsl:value-of select="$currentidxpath"/>
   endif
@@ -605,7 +605,8 @@ character(len=3)::ual_debug
 contains
 
   character(10) function int2str(num)
-    integer, intent(in):: num
+    use ids_types
+    integer(ids_int), intent(in):: num
     character(10) :: str
     ! convert integer to string using formatted write
     write(str, '(i10)') num
@@ -621,17 +622,17 @@ use ids_schemas
 use ual_low_level_wrap
 use <xsl:value-of select="@name"/>_copy  ! Needed since the _copy module contains the ids_delete routines
 implicit none
-integer :: status = 0
+integer(ids_int) :: status = 0
 character*(*) :: path
-integer :: pulsectx, opctx
+integer(ids_int) :: pulsectx, opctx
 type(ids_<xsl:value-of select="@name"/>) :: IDS
 ! internal variables declaration
-integer :: homogeneous_time
-integer :: dim1,dim2,dim3,dim4,dim5,dim6,dim7, lenstring
+integer(ids_int) :: homogeneous_time
+integer(ids_int) :: dim1,dim2,dim3,dim4,dim5,dim6,dim7, lenstring
 character(len=100000)::longstring
 character(len=300) :: timepath
-integer :: aosctx1,aosctx2,aosctx3,aosctx4,aosctx5,aosctx6,aosctx7
-integer :: i1,i2,i3,i4,i5,i6,i7
+integer(ids_int) :: aosctx1,aosctx2,aosctx3,aosctx4,aosctx5,aosctx6,aosctx7
+integer(ids_int) :: i1,i2,i3,i4,i5,i6,i7
 
 call getenv('ual_debug',ual_debug) ! Debug flag
 
@@ -640,7 +641,7 @@ call ids_delete(pulsectx,path,IDS)
 
 <xsl:if test=".//field[@type='dynamic']"> <!-- if there is dynamic data in the IDS, check that the the IDS%time vector of an homogeneous_time IDS is associated -->
 homogeneous_time = IDS%ids_properties%homogeneous_time
-if (homogeneous_time.EQ.-999999999) then
+if (homogeneous_time.EQ.ids_int_invalid) then
    write(*,*) "ERROR : the IDS%ids_properties%homogeneous_time property of this IDS must be provided"
    return
 endif
@@ -692,13 +693,13 @@ use <xsl:value-of select="@name"/>_copy  ! Needed since the _copy module contain
 implicit none
 
 character*(*) :: path
-integer :: pulsectx, opctx
-integer :: status = 0
-integer :: dim1,dim2,dim3,dim4,dim5,dim6,dim7, lenstring
+integer(ids_int) :: pulsectx, opctx
+integer(ids_int) :: status = 0
+integer(ids_int) :: dim1,dim2,dim3,dim4,dim5,dim6,dim7, lenstring
 character(len=100000)::longstring
 character(len=300) :: timepath
-integer :: aosctx1,aosctx2,aosctx3,aosctx4,aosctx5,aosctx6,aosctx7
-integer :: i1,i2,i3,i4,i5,i6,i7
+integer(ids_int) :: aosctx1,aosctx2,aosctx3,aosctx4,aosctx5,aosctx6,aosctx7
+integer(ids_int) :: i1,i2,i3,i4,i5,i6,i7
 type(ids_<xsl:value-of select="@name"/>) :: IDS       ! real declaration of the IDS for the put
 
 call getenv('ual_debug',ual_debug) ! Debug flag
@@ -707,7 +708,7 @@ call getenv('ual_debug',ual_debug) ! Debug flag
 call ids_delete(pulsectx,path,IDS)
 
 <xsl:if test=".//field[@type='dynamic']"> <!-- if there is dynamic data in the IDS, check that the the IDS%ids_properties%time is provided (since it will be filled by this put_non_timed routine !) -->
-if (IDS%ids_properties%homogeneous_time.EQ.-999999999) then
+if (IDS%ids_properties%homogeneous_time.EQ.ids_int_invalid) then
    write(*,*) "ERROR : the IDS%ids_properties%homogeneous_time property of this IDS must be provided"
    return
 endif
@@ -759,16 +760,16 @@ use ual_low_level_wrap
 implicit none
 
 character*(*) :: path
-integer :: pulsectx, opctx
-integer :: status = 0
+integer(ids_int) :: pulsectx, opctx
+integer(ids_int) :: status = 0
 type(ids_<xsl:value-of select="@name"/>) :: IDS
 ! internal variables declaration
-integer :: homogeneous_time
-integer :: i,dim1,dim2,dim3,dim4,dim5,dim6,dim7, lenstring
+integer(ids_int) :: homogeneous_time
+integer(ids_int) :: i,dim1,dim2,dim3,dim4,dim5,dim6,dim7, lenstring
 character(len=100000)::longstring
 character(len=300)::timepath
-integer :: aosctx1,aosctx2,aosctx3,aosctx4,aosctx5,aosctx6,aosctx7
-integer :: i1,i2,i3,i4,i5,i6,i7
+integer(ids_int) :: aosctx1,aosctx2,aosctx3,aosctx4,aosctx5,aosctx6,aosctx7
+integer(ids_int) :: i1,i2,i3,i4,i5,i6,i7
 
 call getenv('ual_debug',ual_debug) ! Debug flag
 
@@ -832,14 +833,14 @@ use ual_low_level_wrap
 implicit none
 
 character*(*) :: path
-integer :: pulsectx, opctx, status = 0, lenstring 
+integer(ids_int) :: pulsectx, opctx, status = 0, lenstring 
 character(len=100000)::longstring
 character(len=300) :: timepath
-integer :: homogeneous_time
-integer :: aosctx1,aosctx2,aosctx3,aosctx4,aosctx5,aosctx6,aosctx7
-integer :: dim1,dim2,dim3,dim4,dim5,dim6,dim7
-integer :: size1,size2,size3,size4,size5,size6,size7
-integer :: i1,i2,i3,i4,i5,i6,i7
+integer(ids_int) :: homogeneous_time
+integer(ids_int) :: aosctx1,aosctx2,aosctx3,aosctx4,aosctx5,aosctx6,aosctx7
+integer(ids_int) :: dim1,dim2,dim3,dim4,dim5,dim6,dim7
+integer(ids_int) :: size1,size2,size3,size4,size5,size6,size7
+integer(ids_int) :: i1,i2,i3,i4,i5,i6,i7
 type(ids_<xsl:value-of select="@name"/>) :: IDS
 
 call getenv('ual_debug',ual_debug) ! Debug flag
@@ -881,7 +882,8 @@ character(len=3)::ual_debug
 contains
 
   character(10) function int2str(num)
-    integer, intent(in):: num
+    use ids_types
+    integer(ids_int), intent(in):: num
     character(10) :: str
     ! convert integer to string using formatted write
     write(str, '(i10)') num
@@ -898,15 +900,15 @@ use ual_low_level_wrap
 implicit none
 
 character*(*) :: path
-integer :: status = 0, interpol, pulsectx, opctx, lenstring
-real(DP) :: twant
+integer(ids_int) :: status = 0, interpol, pulsectx, opctx, lenstring
+real(ids_real) :: twant
 character(len=100000)::longstring
 character(len=300) :: timepath
-integer :: homogeneous_time
-integer :: aosctx1,aosctx2,aosctx3,aosctx4,aosctx5,aosctx6,aosctx7
-integer :: dim1,dim2,dim3,dim4,dim5,dim6,dim7
-integer :: size1,size2,size3,size4,size5,size6,size7
-integer :: i1,i2,i3,i4,i5,i6,i7
+integer(ids_int) :: homogeneous_time
+integer(ids_int) :: aosctx1,aosctx2,aosctx3,aosctx4,aosctx5,aosctx6,aosctx7
+integer(ids_int) :: dim1,dim2,dim3,dim4,dim5,dim6,dim7
+integer(ids_int) :: size1,size2,size3,size4,size5,size6,size7
+integer(ids_int) :: i1,i2,i3,i4,i5,i6,i7
 type(ids_<xsl:value-of select="@name"/>) :: IDS
 
 call getenv('ual_debug',ual_debug)
@@ -953,7 +955,7 @@ contains
 subroutine copy_flt1d(in, out)
 use ids_schemas
 implicit none
-real(DP), pointer :: in(:), out(:)
+real(ids_real), pointer :: in(:), out(:)
 
 if (associated(in)) then
    allocate(out(size(in)))
@@ -968,11 +970,11 @@ use ids_schemas
 use ual_low_level_wrap
 implicit none
 character*(*) :: IDSpath
-integer :: pulsectx, opctx, status
+integer(ids_int) :: pulsectx, opctx, status
 type(ids_<xsl:value-of select="@name"/>) :: IDS
 
 <xsl:for-each select=".//field[@data_type='struct_array' and @maxoccur!='unbounded']">
-integer :: i<xsl:value-of select="concat(@name,generate-id(.))"/>
+integer(ids_int) :: i<xsl:value-of select="concat(@name,generate-id(.))"/>
 </xsl:for-each>
 
 call getenv('ual_debug',ual_debug) ! Debug flag
@@ -1703,7 +1705,7 @@ endif
 
 <xsl:when test="@data_type='int_type' or @data_type='INT_0D'">
 ! Put <xsl:value-of select="@path"/>
-if (<xsl:value-of select="$new_path"/>.NE.-999999999) then
+if (<xsl:value-of select="$new_path"/>.NE.ids_int_invalid) then
    call put_int(opctx, <xsl:value-of select="$new_mds_path"/>,&amp;
        '', <xsl:value-of select="$new_path"/>, status)
    if (ual_debug =='yes') write(*,*) &amp;
@@ -1717,7 +1719,7 @@ endif
 
 <xsl:when test="@data_type='flt_type' or @data_type='FLT_0D'">
 ! Put <xsl:value-of select="@path"/>
-if (<xsl:value-of select="$new_path"/>.NE.-9.D40) then
+if (<xsl:value-of select="$new_path"/>.NE.ids_real_invalid) then
    call put_double(opctx,<xsl:value-of select="$new_mds_path"/>,&amp;
        '', <xsl:value-of select="$new_path"/>,&amp;
        status)
@@ -2363,7 +2365,7 @@ endif
 <!-- -->
          <xsl:when test="@data_type='int_type' or @data_type='INT_0D'">
 ! Put <xsl:value-of select="@path"/>
-if (<xsl:value-of select="$currentvariablename"/>.NE.-999999999) then
+if (<xsl:value-of select="$currentvariablename"/>.NE.ids_int_invalid) then
    call put_int(aosctx<xsl:value-of select="$level"/>, "<xsl:value-of select="$currentobjpath"/>", "", &amp;
         <xsl:value-of select="$currentvariablename"/>, status)
    if (ual_debug =='yes') write(*,*) &amp;
@@ -2376,7 +2378,7 @@ endif
          <xsl:when test="@data_type='flt_type' or @data_type='FLT_0D'">
 ! Put <xsl:value-of select="@path"/>
             <!-- for comment only -->
-if (<xsl:value-of select="$currentvariablename"/>.NE.-9.D40) then
+if (<xsl:value-of select="$currentvariablename"/>.NE.ids_real_invalid) then
    call put_double(aosctx<xsl:value-of select="$level"/>,"<xsl:value-of select="$currentobjpath"/>", "", &amp;
         <xsl:value-of select="$currentvariablename"/>, status)
    if (ual_debug =='yes') write(*,*) &amp;
@@ -3061,7 +3063,8 @@ call ids_discard_cache(pulsectx,IDSpath,"<xsl:value-of select="@path"/>")       
 
 <xsl:template name="isCriticalFunc">
 FUNCTION isErrorCritical(status, fieldPath) RESULT (exitRequest)
-	integer :: status
+        use ids_types
+	integer(ids_int) :: status
 	character*(*) :: fieldPath
 	logical :: exitRequest
 	character(len=100000)::longstring
