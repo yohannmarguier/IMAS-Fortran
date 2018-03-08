@@ -1,13 +1,16 @@
 MODULE helper
-use ids_schemas
-use ids_routines
+  use ids_schemas
+  use ids_routines
+  use ual_low_level_wrap
+  implicit none
 
-implicit none
+INTEGER, PARAMETER :: DIM_SIZE = 4
 
-INTEGER, PARAMETER :: DIM_SIZE = 2
+INTEGER, PARAMETER :: noOfSlices = DIM_SIZE
 INTEGER, PARAMETER :: TESTSHOT = 9998
 INTEGER, PARAMETER :: TESTRUN = 9998
 INTEGER, DIMENSION(:),allocatable :: SEED
+REAL(ids_real), DIMENSION(DIM_SIZE) :: timeVector
 
 	CHARACTER(len=:), ALLOCATABLE :: dataVersion
 	CHARACTER(len=:), ALLOCATABLE :: userName
@@ -19,30 +22,58 @@ CHARACTER (LEN=*), PARAMETER ::PRINTABLE = '0123456789abcdef'
 !CHARACTER(LEN=*), PARAMETER :: PRINTABLE = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!\\"#$%&amp;\'()*+,-./:;&lt;=&gt;?@[\\]^_`{|}~\t\n\r"
 
 CONTAINS
-    FUNCTION getTime() RESULT (outValue)
+	SUBROUTINE initTime
+	INTEGER :: I
+		 do I = 1, DIM_SIZE
+        		timeVector(I) = I
+    		end do
+	END SUBROUTINE initTime
+
+    FUNCTION getTime(idxTime) RESULT (outArray)
+        REAL(ids_real), DIMENSION(:), pointer :: outArray
+	INTEGER :: idxTime
+	
+	allocate(outArray(1))
+        outArray = timeVector(idxTime:idxTime)
+    RETURN
+  END FUNCTION getTime
+
+    FUNCTION getTimeScalar(idxTime) RESULT (outValue)
         REAL(ids_real):: outValue
-
-        outValue = 1.0
+	INTEGER :: idxTime
+	
+        outValue = timeVector(idxTime)
         RETURN
-    END FUNCTION getTime
+    END FUNCTION getTimeScalar
 
-    FUNCTION getString() RESULT (outValue)
-        CHARACTER(LEN=132), dimension(:), POINTER :: outValue
 
-        allocate(outValue(1))
-        outValue(1) = PRINTABLE
+    FUNCTION getTimeVector() RESULT (outArray)
+   	REAL(ids_real), DIMENSION(:), POINTER      :: outArray
+
+	allocate(outArray(DIM_SIZE))
+	outArray = timeVector
+
         RETURN
-    END FUNCTION getString
+    END FUNCTION getTimeVector
 
- subroutine setString_(cpoField)
-character(len=132), dimension(:), pointer :: cpoField
 
-allocate(cpoField(1))
-cpoField(1) = PRINTABLE
-        RETURN
-    END subroutine setString_
+  FUNCTION getString() RESULT (outValue)
+    CHARACTER(LEN=132), dimension(:), POINTER :: outValue
 
-    FUNCTION getStringArray(sizeOfArray) RESULT (outArray)
+    allocate(outValue(1))
+    outValue(1) = PRINTABLE
+    RETURN
+  END FUNCTION getString
+
+  subroutine setString_(cpoField)
+    character(len=132), dimension(:), pointer :: cpoField
+
+    allocate(cpoField(1))
+    cpoField(1) = PRINTABLE
+    RETURN
+  END subroutine setString_
+
+  FUNCTION getStringArray(sizeOfArray) RESULT (outArray)
     INTEGER, INTENT(in)::sizeOfArray
     CHARACTER(len=132),DIMENSION(:), POINTER :: outArray
     INTEGER::I
@@ -373,7 +404,9 @@ END SUBROUTINE initEnv
 SUBROUTINE create(idx)
 	INTEGER, INTENT(OUT) :: idx
 
-	CALL imas_create_env('ids',TESTSHOT,TESTRUN, TESTSHOT,TESTRUN,idx, userName, 'test', dataVersion)
+    CALL initTime()
+    CALL initEnv()
+    CALL imas_create_env('ids',TESTSHOT,TESTRUN, TESTSHOT,TESTRUN,idx, userName, 'test', dataVersion)
 
 	print *, "IDX:", idx
 

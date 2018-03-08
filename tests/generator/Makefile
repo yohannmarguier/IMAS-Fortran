@@ -19,7 +19,7 @@ LIBS_gfortran = -L$(IMAS_INSTALL_DIR)/lib -limas-gfortran -limas -lm
 
 #------------------------- ifort ----------------------------
 F90_ifort = ifort
-COPTS_ifort = -r8 -assume no2underscore  -fPIC -module $(IMAS_INSTALL_DIR)/include/ifort -shared-intel
+COPTS_ifort = -g -r8 -assume no2underscore  -fPIC -module $(IMAS_INSTALL_DIR)/include/ifort -shared-intel
 LIBS_ifort = -L$(IMAS_INSTALL_DIR)/lib -limas-ifort -limas -lm
 
 
@@ -85,7 +85,7 @@ sources: IDSDef2TestSuite.xsl $(IDSDEF)
 ifeq (,$(SAXONICAJAR))
 	$(error Invalid /path/to/saxon9he.jar in CLASSPATH. Forgot to load module?)
 endif
-	java net.sf.saxon.Transform -t -s:$(IDSDEF) -xsl:IDSDef2TestSuite.xsl   
+	java net.sf.saxon.Transform newLowLevel=$(NEW_LOW_LEVEL) -t -s:$(IDSDEF) -xsl:IDSDef2TestSuite.xsl   
 
 
 #################################################
