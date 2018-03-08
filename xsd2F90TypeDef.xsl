@@ -126,9 +126,15 @@ module ids_schemas       ! declaration of all IDSs
 <!-- declare that utilities is an external  module -->
 use ids_utilities
 
-integer(ids_int), parameter :: NON_TIMED=0
-integer(ids_int), parameter :: TIMED=1
-integer(ids_int), parameter :: TIMED_CLEAR=2
+
+
+interface set_c_data
+<xsl:apply-templates select="//*/xs:include" mode="declare_set_c_data"/>
+end interface
+
+interface is_c_data
+<xsl:apply-templates select="//*/xs:include" mode="declare_is_c_data"/>
+end interface
 
 <!-- -->
 <!-- do the work on the entry file includes -->
@@ -140,6 +146,11 @@ integer(ids_int), parameter :: TIMED_CLEAR=2
 <xsl:apply-templates select="/*/*/xs:complexType/*/*/xs:complexType/*/*/xs:complexType"/>
 <xsl:apply-templates select="/*/*/xs:complexType/*/*/xs:complexType"/>
 -->
+
+contains 
+
+<xsl:apply-templates select="//*/xs:include" mode="sbrt_c_data"/>
+
 end module
 
 </xsl:template>
@@ -214,6 +225,41 @@ end module
 
 
 <!-- ===================== Begin Template : xs:include =======================================-->
+ <xsl:template match="xs:include" mode="declare_set_c_data">
+   <xsl:variable name="myschema">
+     <xsl:value-of select="@schemaLocation"/>
+   </xsl:variable>
+   <xsl:if test="$myschema != 'utilities/dd_support.xsd'">
+     <xsl:apply-templates select="document($myschema)/*/xs:element" mode="declare_set_c_data">
+       <xsl:with-param name="level" select="'ids'"/>
+     </xsl:apply-templates> 
+  </xsl:if>
+</xsl:template>
+
+<xsl:template match="xs:include" mode="declare_is_c_data">
+  <xsl:variable name="myschema">
+    <xsl:value-of select="@schemaLocation"/>
+  </xsl:variable>
+  <xsl:if test="$myschema != 'utilities/dd_support.xsd'">
+    <xsl:apply-templates select="document($myschema)/*/xs:element" mode="declare_is_c_data">
+      <xsl:with-param name="level" select="'ids'"/>
+    </xsl:apply-templates> 
+  </xsl:if>
+</xsl:template> 
+
+<xsl:template match="xs:include" mode="sbrt_c_data">
+  <xsl:variable name="myschema">
+    <xsl:value-of select="@schemaLocation"/>
+  </xsl:variable>
+  <xsl:if test="$myschema != 'utilities/dd_support.xsd'">
+    <xsl:apply-templates select="document($myschema)/*/xs:element" mode="sbrt_c_data">
+      <xsl:with-param name="level" select="'ids'"/>
+    </xsl:apply-templates> 
+  </xsl:if>
+</xsl:template> 
+
+
+
 <!-- XS:INCLUDE template to handle the top include files -->
 <!-- -->
   <xsl:template match="xs:include">
@@ -320,9 +366,40 @@ endtype
 <!-- ===================== End Template :ComplexType =======================================-->
 
 <!-- ===================== Begin Template: Element in Utilities=======================================-->
+  <xsl:template match="xs:element" mode="declare_set_c_data">
+    <xsl:param name="level"/>
+    <xsl:if test="$level='ids'">
+      module procedure set_c_data_<xsl:value-of select="@name"/>
+    </xsl:if>
+  </xsl:template>
+
+  <xsl:template match="xs:element" mode="declare_is_c_data">
+    <xsl:param name="level"/>
+    <xsl:if test="$level='ids'">
+      module procedure is_c_data_<xsl:value-of select="@name"/>
+    </xsl:if>
+  </xsl:template>
+
+  <xsl:template match="xs:element" mode="sbrt_c_data">
+    <xsl:param name="level"/>
+    <xsl:if test="$level='ids'">
+      subroutine set_c_data_<xsl:value-of select="@name"/>(ids, bool)
+        type(ids_<xsl:value-of select="@name"/>), intent(inout) :: ids
+	logical, intent(in) :: bool
+	ids%c_data = bool
+      end subroutine
+      subroutine is_c_data_<xsl:value-of select="@name"/>(ids, bool)
+        type(ids_<xsl:value-of select="@name"/>), intent(in) :: ids
+	logical, intent(out) :: bool
+	bool = ids%c_data
+      end subroutine
+    </xsl:if>
+  </xsl:template>
+
 <!-- -->
   <xsl:template name="declare_element" match="xs:element">
   <xsl:param name="mask"/>
+    <xsl:param name="level"/>
   <xsl:if test="not(./xs:group) and not(@name='time')">  <!-- if there is a group below, means this is a leaf, do not declare it as a structure, so skip all the template. Skip also the time, which is a reserved name-->
   <xsl:choose>
 	<xsl:when test="$mask">
@@ -330,6 +407,8 @@ type ids_<xsl:value-of select="../@name"/><xsl:value-of select="@name"/>_mask  !
 	</xsl:when>
   <xsl:otherwise>
 type ids_<xsl:value-of select="../@name"/><xsl:value-of select="@name"/>  !    <xsl:value-of select="substring(./xs:annotation/xs:documentation,1,130)"/> <!-- some compilers do not like too long lines, thus limit the documentation to 130 characters -->
+  <xsl:if test="$level='ids'">&#xA;  logical, private :: c_data = .FALSE. ! Fortran specific metadata telling whether the IDS has been populated from the C low level or not
+  </xsl:if>  <!-- At this stage, if $level='ids, we are writing at the IDS root -->
 </xsl:otherwise>
 </xsl:choose>
 <xsl:for-each select="./xs:complexType/xs:sequence/xs:element"><xsl:call-template name="declare"><xsl:with-param name="mask" select="$mask"/></xsl:call-template></xsl:for-each>
