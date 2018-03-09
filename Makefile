@@ -2,12 +2,8 @@
 include ../Makefile.common
 
 ifeq ("no","$(FORTRAN)")
-$(warning "Ignoring fortraninterface (FORTRAN=no).")
-all:
-sources:
-clean:
-clean-src:
-install:
+all sources sources_install install clean clean-src:
+	$(warning "Ignoring fortraninterface (FORTRAN=no).")
 else
 
 F90_g95         = g95
@@ -36,7 +32,7 @@ IDSDEFXSD       = ../xml/dd_physics_data_dictionary.xsd
 LIBS            =  -L../lowlevel -limas -lm
 
 # Get a list of IDS from IDSDEF file
-IDSNAMES:=$(shell sed '/<IDS name=/!d;s/.*name="\(.*\)"/\1/' $(IDSDEF))
+IDSNAMES := $(shell sed '/<IDS name=/!d;s/.*name="\([^"]*\)".*/\1/' $(IDSDEF))
 
 IDSNAMES_FUNC=$(addsuffix _put,$(IDSNAMES))
 IDSNAMES_FUNC+=$(addsuffix _put_slice,$(IDSNAMES))
@@ -89,8 +85,8 @@ install: all $(addprefix install_,$(INSTALL_TARGETS)) pkgconfig_install
 		ln -svfT $$OBJECT.$(IMAS_MAJOR).$(IMAS_MINOR).$(IMAS_MICRO)  $(INSTALL)/lib/$$OBJECT; \
 	done
 
-sources: $(SOURCES)
-sources_install: $(SOURCES)
+sources: $(SOURCES) ids_schemas.f90
+sources_install: $(SOURCES) ids_schemas.f90
 	install -d $(INSTALL)/share/src/fortraninterface
 	install -m 644 $^ $(INSTALL)/share/src/fortraninterface
 
