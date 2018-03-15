@@ -15,6 +15,7 @@ module ual_defs
   integer, parameter :: MDSPLUS_BACKEND    = BACKEND_ID_0+2
   integer, parameter :: HDF5_BACKEND       = BACKEND_ID_0+3
   integer, parameter :: MEMORY_BACKEND     = BACKEND_ID_0+4
+  integer, parameter :: UDA_BACKEND        = BACKEND_ID_0+5
 
   integer, parameter :: TIMED              = 1
   integer, parameter :: NON_TIMED          = 0
