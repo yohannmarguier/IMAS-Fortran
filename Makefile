@@ -47,25 +47,25 @@ IDSNAMES_FUNC+=$(addsuffix _deallocate_struct,$(IDSNAMES))
 IDSROUTINES=$(addsuffix .f90,$(IDSNAMES_FUNC))
 SOURCES=ids_routines.f90 utilities_copy_struct.f90 utilities_deallocate_struct.f90 $(IDSROUTINES)
 
-ifneq ("no","$(strip $(G95))")
+ifneq ("no","$(strip $(IMAS_G95))")
 TARGETS += libimas-g95.so libimas-g95.a
 INSTALL_TARGETS += g95
 IDSOBJECTS_g95=$(addsuffix _g95.o,$(IDSNAMES_FUNC))
 endif
 
-ifneq ("no","$(strip $(GFORTRAN))")
+ifneq ("no","$(strip $(IMAS_GFORTRAN))")
 TARGETS += libimas-gfortran.so libimas-gfortran.a
 INSTALL_TARGETS += gfortran
 IDSOBJECTS_gfortran=$(addsuffix _gfortran.o,$(IDSNAMES_FUNC))
 endif
 
-ifneq ("no","$(strip $(PGI))")
+ifneq ("no","$(strip $(IMAS_PGI))")
 TARGETS += libimas-pgi.so libimas-pgi.a
 INSTALL_TARGETS += pgi
 IDSOBJECTS_pgi=$(addsuffix _pgi.o,$(IDSNAMES_FUNC))
 endif
 
-ifneq ("no","$(strip $(IFORT))")
+ifneq ("no","$(strip $(IMAS_IFORT))")
 TARGETS += libimas-ifort.so libimas-ifort.a
 INSTALL_TARGETS += ifort
 IDSOBJECTS_ifort=$(addsuffix _ifort.o,$(IDSNAMES_FUNC))
