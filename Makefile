@@ -1,9 +1,9 @@
 # -*- makefile -*- #
 include ../Makefile.common
 
-ifeq ("no","$(strip $(FORTRAN))")
+ifeq ("no","$(strip $(IMAS_FORTRAN))")
 all sources sources_install install clean clean-src:
-	$(warning "Ignoring fortraninterface (FORTRAN=no).")
+	$(warning "Ignoring fortraninterface (IMAS_FORTRAN=no).")
 else
 
 F90_g95         = g95
@@ -249,4 +249,4 @@ ids_schemas.f90: xsd2F90TypeDef.xsl
 PC_FILES = imas-ifort.pc imas-gfortran.pc imas-pgi.pc imas-g95.pc
 
 include ../Makefile.pkgconfig
-endif # FORTRAN=no?
+endif # IMAS_FORTRAN=no?
