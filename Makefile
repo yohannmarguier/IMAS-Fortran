@@ -77,31 +77,31 @@ IDSOBJECTS=$(IDSOBJECTS_g95) $(IDSOBJECTS_gfortran) $(IDSOBJECTS_pgi) $(IDSOBJEC
 all: $(SOURCES) $(TARGETS)
 
 install: all $(addprefix install_,$(INSTALL_TARGETS)) pkgconfig_install
-	mkdir -p $(INSTALL)/lib
+	install -d $(libdir)
 	for OBJECT in *.so ;do \
-		cp -vT $$OBJECT $(INSTALL)/lib/$$OBJECT.$(IMAS_MAJOR).$(IMAS_MINOR).$(IMAS_MICRO); \
-		ln -svfT $$OBJECT.$(IMAS_MAJOR).$(IMAS_MINOR).$(IMAS_MICRO)  $(INSTALL)/lib/$$OBJECT.$(IMAS_MAJOR).$(IMAS_MINOR); \
-		ln -svfT $$OBJECT.$(IMAS_MAJOR).$(IMAS_MINOR).$(IMAS_MICRO)  $(INSTALL)/lib/$$OBJECT.$(IMAS_MAJOR); \
-		ln -svfT $$OBJECT.$(IMAS_MAJOR).$(IMAS_MINOR).$(IMAS_MICRO)  $(INSTALL)/lib/$$OBJECT; \
+		install -m644 -T $$OBJECT $(libdir)/$$OBJECT.$(IMAS_MAJOR).$(IMAS_MINOR).$(IMAS_MICRO); \
+		ln -svfT $$OBJECT.$(IMAS_MAJOR).$(IMAS_MINOR).$(IMAS_MICRO) $(libdir)/$$OBJECT.$(IMAS_MAJOR).$(IMAS_MINOR); \
+		ln -svfT $$OBJECT.$(IMAS_MAJOR).$(IMAS_MINOR).$(IMAS_MICRO) $(libdir)/$$OBJECT.$(IMAS_MAJOR); \
+		ln -svfT $$OBJECT.$(IMAS_MAJOR).$(IMAS_MINOR).$(IMAS_MICRO) $(libdir)/$$OBJECT; \
 	done
 
 sources: $(SOURCES) ids_schemas.f90
 sources_install: $(SOURCES) ids_schemas.f90
-	install -d $(INSTALL)/share/src/fortraninterface
-	install -m 644 $^ $(INSTALL)/share/src/fortraninterface
+	install -d $(datadir)/src/fortraninterface
+	install -m 644 $^ $(datadir)/src/fortraninterface
 
 install_pgi:
-	mkdir -p $(INSTALL)/include/pgi
-	cp pgi/*.mod $(INSTALL)/include/pgi
+	install -d $(includedir)/pgi
+	install -m644 pgi/*.mod $(includedir)/pgi
 install_g95:
-	mkdir -p $(INSTALL)/include/g95
-	cp g95/*.mod $(INSTALL)/include/g95
+	install -d $(includedir)/g95
+	install -m644 g95/*.mod $(includedir)/g95
 install_ifort:
-	mkdir -p $(INSTALL)/include/ifort
-	cp ifort/*.mod $(INSTALL)/include/ifort
+	install -d $(includedir)/ifort
+	install -m644 ifort/*.mod $(includedir)/ifort
 install_gfortran:
-	mkdir -p $(INSTALL)/include/gfortran
-	cp gfortran/*.mod $(INSTALL)/include/gfortran
+	install -d $(includedir)/gfortran
+	install -m644 gfortran/*.mod $(includedir)/gfortran
 
 clean:
 	rm -rf *.o *.mod  *.so *~ g95/ gfortran/ pgi/ ifort/ *.a
