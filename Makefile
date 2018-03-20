@@ -77,9 +77,9 @@ IDSOBJECTS=$(IDSOBJECTS_g95) $(IDSOBJECTS_gfortran) $(IDSOBJECTS_pgi) $(IDSOBJEC
 all: $(SOURCES) $(TARGETS)
 
 install: all $(addprefix install_,$(INSTALL_TARGETS)) pkgconfig_install
-	install -d $(libdir)
+	$(mkdir_p) $(libdir)
 	for OBJECT in *.so ;do \
-		install -m644 -T $$OBJECT $(libdir)/$$OBJECT.$(IMAS_MAJOR).$(IMAS_MINOR).$(IMAS_MICRO); \
+		$(INSTALL_DATA) -T $$OBJECT $(libdir)/$$OBJECT.$(IMAS_MAJOR).$(IMAS_MINOR).$(IMAS_MICRO); \
 		ln -svfT $$OBJECT.$(IMAS_MAJOR).$(IMAS_MINOR).$(IMAS_MICRO) $(libdir)/$$OBJECT.$(IMAS_MAJOR).$(IMAS_MINOR); \
 		ln -svfT $$OBJECT.$(IMAS_MAJOR).$(IMAS_MINOR).$(IMAS_MICRO) $(libdir)/$$OBJECT.$(IMAS_MAJOR); \
 		ln -svfT $$OBJECT.$(IMAS_MAJOR).$(IMAS_MINOR).$(IMAS_MICRO) $(libdir)/$$OBJECT; \
@@ -87,21 +87,21 @@ install: all $(addprefix install_,$(INSTALL_TARGETS)) pkgconfig_install
 
 sources: $(SOURCES) ids_schemas.f90
 sources_install: $(SOURCES) ids_schemas.f90
-	install -d $(datadir)/src/fortraninterface
-	install -m 644 $^ $(datadir)/src/fortraninterface
+	$(mkdir_p) $(datadir)/src/fortraninterface
+	$(INSTALL_DATA) $^ $(datadir)/src/fortraninterface
 
 install_pgi:
-	install -d $(includedir)/pgi
-	install -m644 pgi/*.mod $(includedir)/pgi
+	$(mkdir_p) $(includedir)/pgi
+	$(INSTALL_DATA) pgi/*.mod $(includedir)/pgi
 install_g95:
-	install -d $(includedir)/g95
-	install -m644 g95/*.mod $(includedir)/g95
+	$(mkdir_p) $(includedir)/g95
+	$(INSTALL_DATA) g95/*.mod $(includedir)/g95
 install_ifort:
-	install -d $(includedir)/ifort
-	install -m644 ifort/*.mod $(includedir)/ifort
+	$(mkdir_p) $(includedir)/ifort
+	$(INSTALL_DATA) ifort/*.mod $(includedir)/ifort
 install_gfortran:
-	install -d $(includedir)/gfortran
-	install -m644 gfortran/*.mod $(includedir)/gfortran
+	$(mkdir_p) $(includedir)/gfortran
+	$(INSTALL_DATA) gfortran/*.mod $(includedir)/gfortran
 
 clean:
 	rm -rf *.o *.mod  *.so *~ g95/ gfortran/ pgi/ ifort/ *.a
