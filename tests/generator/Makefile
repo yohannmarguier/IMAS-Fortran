@@ -13,12 +13,12 @@ endif
 SAXONICAJAR=$(wildcard $(filter %saxon9he.jar,$(subst :, ,$(CLASSPATH))))
 
 #------------------------- gfortran ----------------------------
-F90_gfortran = gfortran
+FC_gfortran = gfortran
 COPTS_gfortran = -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none -I$(UAL_BUILD)/fortraninterface/gfortran
 LIBS_gfortran = -L$(UAL_BUILD)/fortraninterface -limas-gfortran -L$(UAL_BUILD)/lowlevel -limas -lm
 
 #------------------------- ifort ----------------------------
-F90_ifort = ifort
+FC_ifort = ifort
 COPTS_ifort = -r8 -assume no2underscore  -fPIC -module $(UAL_BUILD)/fortraninterface/ifort -shared-intel
 LIBS_ifort = -L$(UAL_BUILD)/fortraninterface -limas-ifort -L$(UAL_BUILD)/lowlevel -limas -lm
 
