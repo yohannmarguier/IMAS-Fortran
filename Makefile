@@ -107,7 +107,7 @@ clean:
 	rm -rf *.o *.mod  *.so *~ g95/ gfortran/ pgi/ ifort/ *.a
 
 clean-src: clean
-	rm -f $(SOURCES)
+	rm -f $(SOURCES) ids_schemas.f90
 
 test:
 	$(MAKE) -C tests/generator test
