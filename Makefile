@@ -13,7 +13,7 @@ INCDIR_g95      = -I$(MODDIR_g95)
 
 FC_gfortran    = gfortran
 MODDIR_gfortran = gfortran
-COPTS_gfortran  = -D__USE_XOPEN2K8 -fdefault-real-8 -fdefault-double-8 -fPIC -fno-second-underscore -ffree-line-length-none -g -J$(MODDIR_gfortran)
+COPTS_gfortran  = -O0 -D__USE_XOPEN2K8 -fdefault-real-8 -fdefault-double-8 -fPIC -fno-second-underscore -ffree-line-length-none -g -J$(MODDIR_gfortran)
 INCDIR_gfortran = -I$(MODDIR_gfortran)
 
 FC_pgi         = pgf90
