@@ -745,7 +745,7 @@ or
 
 	  <xsl:when test="@name='time' and $slice and (@data_type='flt_1d_type' or @data_type='FLT_1D')"><xsl:text>getTime(j)</xsl:text></xsl:when>
   <xsl:when test="@name='time' and not($slice) and (@data_type='flt_1d_type' or @data_type='FLT_1D')"><xsl:text>getTimeVector()</xsl:text></xsl:when>
-		<xsl:when test="@name='homogeneous_time'">              <xsl:text>1</xsl:text></xsl:when>
+		<xsl:when test="@name='homogeneous_time'"><xsl:text>getHomogeneousTime()</xsl:text></xsl:when>
             <xsl:when test="@data_type='str_type' or @data_type='STR_0D'">         <xsl:text>getString()</xsl:text></xsl:when>
             <xsl:when test="@data_type='str_1d_type' or @data_type='STR_1D'">   <xsl:text> getString()</xsl:text></xsl:when>
 

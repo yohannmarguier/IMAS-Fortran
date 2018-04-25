@@ -12,22 +12,42 @@ INTEGER, PARAMETER :: TESTRUN = 9998
 INTEGER, DIMENSION(:),allocatable :: SEED
 REAL(ids_real), DIMENSION(DIM_SIZE) :: timeVector
 
-	CHARACTER(len=:), ALLOCATABLE :: dataVersion
-	CHARACTER(len=:), ALLOCATABLE :: userName
-
-
-
+CHARACTER(len=:), ALLOCATABLE :: dataVersion
+CHARACTER(len=:), ALLOCATABLE :: userName
 
 CHARACTER (LEN=*), PARAMETER ::PRINTABLE = '0123456789abcdef'
 !CHARACTER(LEN=*), PARAMETER :: PRINTABLE = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!\\"#$%&amp;\'()*+,-./:;&lt;=&gt;?@[\\]^_`{|}~\t\n\r"
 
 CONTAINS
-	SUBROUTINE initTime
-	INTEGER :: I
-		 do I = 1, DIM_SIZE
-        		timeVector(I) = I
-    		end do
-	END SUBROUTINE initTime
+  SUBROUTINE initTime
+    INTEGER :: I
+    do I = 1, DIM_SIZE
+       timeVector(I) = I
+    end do
+  END SUBROUTINE initTime
+ 
+  function getHomogeneousTime() result(homogeneousTime)
+    integer :: homogeneousTime
+    character(len=255) :: buffer
+    integer :: bufferSize, stat
+    
+    call getenv("TESTHOMOGENEOUS", buffer)
+    bufferSize = LEN_TRIM(buffer)
+    if(bufferSize < 1) then
+       homogeneousTime = 1
+    else
+       read(buffer,*,iostat=stat) homogeneousTime 
+       if (stat .eq. 0) then
+          print *,"selected homogeneousTime = ",homogeneousTime
+       else
+          print *,"wrong homogeneousTime read as ",homogeneousTime
+          STOP
+       end if
+    endif
+    RETURN
+  end function getHomogeneousTime
+
+
 
     FUNCTION getTime(idxTime) RESULT (outArray)
         REAL(ids_real), DIMENSION(:), pointer :: outArray
