@@ -44,7 +44,7 @@ IDSNAMES_FUNC+=$(addsuffix _get_slice,$(IDSNAMES))
 
 # IDS routines
 IDSROUTINES=$(addsuffix .f90,$(IDSNAMES_FUNC))
-SOURCES=ids_routines.f90 utilities_copy_struct.f90 utilities_deallocate_struct.f90 utilities_put_struct.f90 $(IDSROUTINES)
+SOURCES=ids_routines.f90 utilities_copy_struct.f90 utilities_deallocate_struct.f90 utilities_put_struct.f90 utilities_get_struct.f90 $(IDSROUTINES)
 
 ifeq "$(strip $(G95))" "yes"
 TARGETS += libimas-g95.so libimas-g95.a
@@ -119,13 +119,13 @@ test-clean-src:
 	$(MAKE) -C tests/generator clean-src
 
 #--------------------- g95 --------------
-libimas-g95.so: ids_schemas_g95.o ual_defs_g95.o ual_low_level_wrap_g95.o utilities_copy_struct_g95.o utilities_deallocate_struct_g95.o utilities_put_struct_g95.o $(IDSOBJECTS_g95) ids_routines_g95.o $(DEP_g95)
+libimas-g95.so: ids_schemas_g95.o ual_defs_g95.o ual_low_level_wrap_g95.o utilities_copy_struct_g95.o utilities_deallocate_struct_g95.o utilities_put_struct_g95.o utilities_get_struct_g95.o $(IDSOBJECTS_g95) ids_routines_g95.o $(DEP_g95)
 	$(F90_g95) $(COPTS_g95) -o $@ -shared -Wl,-soname,$@.$(IMAS_MAJOR).$(IMAS_MINOR) $^ $(LIBS)
 
-libimas-g95.a: ids_schemas_g95.o ual_defs_g95.o ual_low_level_wrap_g95.o utilities_copy_struct_g95.o utilities_deallocate_struct_g95.o utilities_put_struct_g95.o $(IDSOBJECTS_g95) ids_routines_g95.o $(DEP_g95)
+libimas-g95.a: ids_schemas_g95.o ual_defs_g95.o ual_low_level_wrap_g95.o utilities_copy_struct_g95.o utilities_deallocate_struct_g95.o utilities_put_struct_g95.o utilities_get_struct_g95.o $(IDSOBJECTS_g95) ids_routines_g95.o $(DEP_g95)
 	ar rvs $@ $^
 
-ids_routines_g95.o: ids_routines.f90 ual_defs_g95.o ual_low_level_wrap_g95.o utilities_copy_struct_g95.o utilities_deallocate_struct_g95.o utilities_put_struct_g95.o $(IDSOBJECTS_g95)
+ids_routines_g95.o: ids_routines.f90 ual_defs_g95.o ual_low_level_wrap_g95.o utilities_copy_struct_g95.o utilities_deallocate_struct_g95.o utilities_put_struct_g95.o utilities_get_struct_g95.o $(IDSOBJECTS_g95)
 	$(F90_g95) -c $(COPTS_g95) $(INCDIR_g95) ids_routines.f90 -o $@
 
 ual_defs_g95.o: %_g95.o:wrapper/%.f90
@@ -141,12 +141,14 @@ utilities_deallocate_struct_g95.o: utilities_deallocate_struct.f90 ids_schemas_g
 	$(F90_g95) -c $(COPTS_g95) $(INCDIR_g95) $< -o $@
 utilities_put_struct_g95.o : utilities_put_struct.f90 ids_schemas_g95.o 
 	$(F90_g95) -c $(COPTS_g95) $(INCDIR_g95) $< -o $@
+utilities_get_struct_g95.o : utilities_get_struct.f90 ids_schemas_g95.o 
+	$(F90_g95) -c $(COPTS_g95) $(INCDIR_g95) $< -o $@
 
 $(filter %_put_g95.o,$(IDSOBJECTS)): %_put_g95.o : %_put.f90 %_copy_g95.o ids_schemas_g95.o utilities_put_struct_g95.o ual_defs_g95.o ual_low_level_wrap_g95.o
 	$(F90_g95) -c $(COPTS_g95) $(INCDIR_g95) $< -o $@
 $(filter %_put_non_timed_g95.o,$(IDSOBJECTS)): %_put_non_timed_g95.o : %_put_non_timed.f90 %_copy_g95.o ids_schemas_g95.o ual_defs_g95.o ual_low_level_wrap_g95.o
 	$(F90_g95) -c $(COPTS_g95) $(INCDIR_g95) $< -o $@
-$(filter %_get_g95.o %_put_slice_g95.o %_get_slice_g95.o %_copy_g95.o,$(IDSOBJECTS)): %_g95.o:%.f90 ids_schemas_g95.o ual_defs_g95.o ual_low_level_wrap_g95.o
+$(filter %_get_g95.o %_put_slice_g95.o %_get_slice_g95.o %_copy_g95.o,$(IDSOBJECTS)): %_g95.o:%.f90 ids_schemas_g95.o  utilities_get_struct_g95.o ual_defs_g95.o ual_low_level_wrap_g95.o
 	$(F90_g95) -c $(COPTS_g95) $(INCDIR_g95) $< -o $@
 $(filter %_copy_struct_g95.o,$(IDSOBJECTS)): %_g95.o:%.f90 ids_schemas_g95.o utilities_copy_struct_g95.o ual_defs_g95.o ual_low_level_wrap_g95.o
 	$(F90_g95) -c $(COPTS_g95) $(INCDIR_g95) $< -o $@
@@ -154,13 +156,13 @@ $(filter %_deallocate_struct_g95.o,$(IDSOBJECTS)): %_g95.o:%.f90 ids_schemas_g95
 	$(F90_g95) -c $(COPTS_g95) $(INCDIR_g95) $< -o $@
 
 #--------------------- gfortran --------------
-libimas-gfortran.so: ids_schemas_gfortran.o ual_defs_gfortran.o ual_low_level_wrap_gfortran.o utilities_copy_struct_gfortran.o utilities_deallocate_struct_gfortran.o utilities_put_struct_gfortran.o $(IDSOBJECTS_gfortran) ids_routines_gfortran.o $(DEP_gfortran)
+libimas-gfortran.so: ids_schemas_gfortran.o ual_defs_gfortran.o ual_low_level_wrap_gfortran.o utilities_copy_struct_gfortran.o utilities_deallocate_struct_gfortran.o utilities_put_struct_gfortran.o utilities_get_struct_gfortran.o $(IDSOBJECTS_gfortran) ids_routines_gfortran.o $(DEP_gfortran)
 	$(F90_gfortran) $(COPTS_gfortran) -o $@ -shared -Wl,-soname,$@.$(IMAS_MAJOR).$(IMAS_MINOR) $^ $(LIBS)
 
-libimas-gfortran.a: ids_schemas_gfortran.o ual_defs_gfortran.o ual_low_level_wrap_gfortran.o utilities_copy_struct_gfortran.o utilities_deallocate_struct_gfortran.o utilities_put_struct_gfortran.o $(IDSOBJECTS_gfortran) ids_routines_gfortran.o $(DEP_gfortran)
+libimas-gfortran.a: ids_schemas_gfortran.o ual_defs_gfortran.o ual_low_level_wrap_gfortran.o utilities_copy_struct_gfortran.o utilities_deallocate_struct_gfortran.o utilities_put_struct_gfortran.o utilities_get_struct_gfortran.o $(IDSOBJECTS_gfortran) ids_routines_gfortran.o $(DEP_gfortran)
 	ar rvs $@ $^
 
-ids_routines_gfortran.o: ids_routines.f90 ual_defs_gfortran.o ual_low_level_wrap_gfortran.o utilities_copy_struct_gfortran.o utilities_deallocate_struct_gfortran.o utilities_put_struct_gfortran.o $(IDSOBJECTS_gfortran)
+ids_routines_gfortran.o: ids_routines.f90 ual_defs_gfortran.o ual_low_level_wrap_gfortran.o utilities_copy_struct_gfortran.o utilities_deallocate_struct_gfortran.o utilities_put_struct_gfortran.o utilities_get_struct_gfortran.o $(IDSOBJECTS_gfortran)
 	$(F90_gfortran) -c $(COPTS_gfortran) $(INCDIR_gfortran) ids_routines.f90 -o $@
 
 ual_defs_gfortran.o: %_gfortran.o:wrapper/%.f90
@@ -176,12 +178,14 @@ utilities_deallocate_struct_gfortran.o: utilities_deallocate_struct.f90 ids_sche
 	$(F90_gfortran) -c $(COPTS_gfortran) $(INCDIR_gfortran) $< -o $@
 utilities_put_struct_gfortran.o: utilities_put_struct.f90 ids_schemas_gfortran.o ual_defs_gfortran.o ual_low_level_wrap_gfortran.o
 	$(F90_gfortran) -c $(COPTS_gfortran) $(INCDIR_gfortran) $< -o $@
+utilities_get_struct_gfortran.o: utilities_get_struct.f90 ids_schemas_gfortran.o ual_defs_gfortran.o ual_low_level_wrap_gfortran.o
+	$(F90_gfortran) -c $(COPTS_gfortran) $(INCDIR_gfortran) $< -o $@
 
 $(filter %_put_gfortran.o,$(IDSOBJECTS)): %_put_gfortran.o : %_put.f90 %_copy_gfortran.o ids_schemas_gfortran.o utilities_put_struct_gfortran.o ual_defs_gfortran.o ual_low_level_wrap_gfortran.o
 	$(F90_gfortran) -c $(COPTS_gfortran) $(INCDIR_gfortran) $< -o $@
 $(filter %_put_non_timed_gfortran.o,$(IDSOBJECTS)): %_put_non_timed_gfortran.o : %_put_non_timed.f90 %_copy_gfortran.o ids_schemas_gfortran.o ual_defs_gfortran.o ual_low_level_wrap_gfortran.o
 	$(F90_gfortran) -c $(COPTS_gfortran) $(INCDIR_gfortran) $< -o $@
-$(filter %_get_gfortran.o %_put_slice_gfortran.o %_get_slice_gfortran.o %_copy_gfortran.o,$(IDSOBJECTS)): %_gfortran.o:%.f90 ids_schemas_gfortran.o ual_defs_gfortran.o ual_low_level_wrap_gfortran.o
+$(filter %_get_gfortran.o %_put_slice_gfortran.o %_get_slice_gfortran.o %_copy_gfortran.o,$(IDSOBJECTS)): %_gfortran.o:%.f90 ids_schemas_gfortran.o utilities_get_struct_gfortran.o ual_defs_gfortran.o ual_low_level_wrap_gfortran.o
 	$(F90_gfortran) -c $(COPTS_gfortran) $(INCDIR_gfortran) $< -o $@
 $(filter %_copy_struct_gfortran.o,$(IDSOBJECTS)): %_gfortran.o:%.f90 ids_schemas_gfortran.o utilities_copy_struct_gfortran.o ual_defs_gfortran.o ual_low_level_wrap_gfortran.o
 	$(F90_gfortran) -c $(COPTS_gfortran) $(INCDIR_gfortran) $< -o $@
@@ -189,13 +193,13 @@ $(filter %_deallocate_struct_gfortran.o,$(IDSOBJECTS)): %_gfortran.o:%.f90 ids_s
 	$(F90_gfortran) -c $(COPTS_gfortran) $(INCDIR_gfortran) $< -o $@
 
 #--------------------- pgi --------------
-libimas-pgi.so: ids_schemas_pgi.o ual_defs_pgi.o ual_low_level_wrap_pgi.o utilities_copy_struct_pgi.o utilities_deallocate_struct_pgi.o utilities_put_struct_pgi.o $(IDSOBJECTS_pgi) ids_routines_pgi.o $(DEP_pgi)
+libimas-pgi.so: ids_schemas_pgi.o ual_defs_pgi.o ual_low_level_wrap_pgi.o utilities_copy_struct_pgi.o utilities_deallocate_struct_pgi.o utilities_put_struct_pgi.o utilities_get_struct_pgi.o $(IDSOBJECTS_pgi) ids_routines_pgi.o $(DEP_pgi)
 	$(F90_pgi) $(COPTS_pgi) -o $@ -shared -Wl,-soname,$@.$(IMAS_MAJOR).$(IMAS_MINOR) $^ $(LIBS)
 
-libimas-pgi.a: ids_schemas_pgi.o ual_defs_pgi.o ual_low_level_wrap_pgi.o utilities_copy_struct_pgi.o utilities_deallocate_struct_pgi.o utilities_put_struct_pgi.o $(IDSOBJECTS_pgi) ids_routines_pgi.o $(DEP_pgi)
+libimas-pgi.a: ids_schemas_pgi.o ual_defs_pgi.o ual_low_level_wrap_pgi.o utilities_copy_struct_pgi.o utilities_deallocate_struct_pgi.o utilities_put_struct_pgi.o utilities_get_struct_pgi.o $(IDSOBJECTS_pgi) ids_routines_pgi.o $(DEP_pgi)
 	ar rvs $@ $^
 
-ids_routines_pgi.o: ids_routines.f90 ual_defs_pgi.o ual_low_level_wrap_pgi.o utilities_copy_struct_pgi.o utilities_deallocate_struct_pgi.o utilities_put_struct_pgi.o $(IDSOBJECTS_pgi)
+ids_routines_pgi.o: ids_routines.f90 ual_defs_pgi.o ual_low_level_wrap_pgi.o utilities_copy_struct_pgi.o utilities_deallocate_struct_pgi.o utilities_put_struct_pgi.o utilities_get_struct_pgi.o $(IDSOBJECTS_pgi)
 	$(F90_pgi) -c $(COPTS_pgi) $(INCDIR_pgi) ids_routines.f90 -o $@
 
 ual_defs_pgi.o: %_pgi.o:wrapper/%.f90
@@ -211,12 +215,14 @@ utilities_deallocate_struct_pgi.o: utilities_deallocate_struct.f90 ids_schemas_p
 	$(F90_pgi) -c $(COPTS_pgi) $(INCDIR_pgi) $< -o $@
 utilities_put_struct_pgi.o: utilities_put_struct.f90 ids_schemas_pgi.o ual_defs_pgi.o ual_low_level_wrap_pgi.o 
 	$(F90_pgi) -c $(COPTS_pgi) $(INCDIR_pgi) $< -o $@
+utilities_get_struct_pgi.o: utilities_get_struct.f90 ids_schemas_pgi.o ual_defs_pgi.o ual_low_level_wrap_pgi.o 
+	$(F90_pgi) -c $(COPTS_pgi) $(INCDIR_pgi) $< -o $@
 
 $(filter %_put_pgi.o,$(IDSOBJECTS)): %_put_pgi.o : %_put.f90 %_copy_pgi.o ids_schemas_pgi.o utilities_put_struct_pgi.o ual_defs_pgi.o ual_low_level_wrap_pgi.o 
 	$(F90_pgi) -c $(COPTS_pgi) $(INCDIR_pgi) $< -o $@
 $(filter %_put_non_timed_pgi.o,$(IDSOBJECTS)): %_put_non_timed_pgi.o : %_put_non_timed.f90 %_copy_pgi.o ids_schemas_pgi.o ual_defs_pgi.o ual_low_level_wrap_pgi.o 
 	$(F90_pgi) -c $(COPTS_pgi) $(INCDIR_pgi) $< -o $@
-$(filter %_get_pgi.o %_put_slice_pgi.o %_get_slice_pgi.o %_copy_pgi.o,$(IDSOBJECTS)): %_pgi.o:%.f90 ids_schemas_pgi.o ual_defs_pgi.o ual_low_level_wrap_pgi.o 
+$(filter %_get_pgi.o %_put_slice_pgi.o %_get_slice_pgi.o %_copy_pgi.o,$(IDSOBJECTS)): %_pgi.o:%.f90 ids_schemas_pgi.o  utilities_get_struct_pgi.o ual_defs_pgi.o ual_low_level_wrap_pgi.o 
 	$(F90_pgi) -c $(COPTS_pgi) $(INCDIR_pgi) $< -o $@
 $(filter %_copy_struct_pgi.o,$(IDSOBJECTS)): %_pgi.o:%.f90 ids_schemas_pgi.o utilities_copy_struct_pgi.o ual_defs_pgi.o ual_low_level_wrap_pgi.o 
 	$(F90_pgi) -c $(COPTS_pgi) $(INCDIR_pgi) $< -o $@
@@ -224,13 +230,13 @@ $(filter %_deallocate_struct_pgi.o,$(IDSOBJECTS)): %_pgi.o:%.f90 ids_schemas_pgi
 	$(F90_pgi) -c $(COPTS_pgi) $(INCDIR_pgi) $< -o $@
 
 #--------------------- ifort --------------
-libimas-ifort.so: ids_schemas_ifort.o ual_defs_ifort.o ual_low_level_wrap_ifort.o utilities_copy_struct_ifort.o utilities_deallocate_struct_ifort.o utilities_put_struct_ifort.o $(IDSOBJECTS_ifort) ids_routines_ifort.o $(DEP_ifort)
+libimas-ifort.so: ids_schemas_ifort.o ual_defs_ifort.o ual_low_level_wrap_ifort.o utilities_copy_struct_ifort.o utilities_deallocate_struct_ifort.o utilities_put_struct_ifort.o utilities_get_struct_ifort.o $(IDSOBJECTS_ifort) ids_routines_ifort.o $(DEP_ifort)
 	$(F90_ifort) $(COPTS_ifort) -o $@ -shared -Wl,-soname,$@.$(IMAS_MAJOR).$(IMAS_MINOR) $^ $(LIBS)
 
-libimas-ifort.a: ids_schemas_ifort.o ual_defs_ifort.o ual_low_level_wrap_ifort.o utilities_copy_struct_ifort.o utilities_deallocate_struct_ifort.o utilities_put_struct_ifort.o $(IDSOBJECTS_ifort) ids_routines_ifort.o $(DEP_ifort)
+libimas-ifort.a: ids_schemas_ifort.o ual_defs_ifort.o ual_low_level_wrap_ifort.o utilities_copy_struct_ifort.o utilities_deallocate_struct_ifort.o utilities_put_struct_ifort.o utilities_get_struct_ifort.o $(IDSOBJECTS_ifort) ids_routines_ifort.o $(DEP_ifort)
 	ar rvs $@ $^
 
-ids_routines_ifort.o: ids_routines.f90 ual_defs_ifort.o ual_low_level_wrap_ifort.o utilities_copy_struct_ifort.o utilities_deallocate_struct_ifort.o utilities_put_struct_ifort.o $(IDSOBJECTS_ifort)
+ids_routines_ifort.o: ids_routines.f90 ual_defs_ifort.o ual_low_level_wrap_ifort.o utilities_copy_struct_ifort.o utilities_deallocate_struct_ifort.o utilities_put_struct_ifort.o utilities_get_struct_ifort.o $(IDSOBJECTS_ifort)
 	$(F90_ifort) -c $(COPTS_ifort) $(INCDIR_ifort) ids_routines.f90 -o $@
 
 ual_defs_ifort.o: %_ifort.o:wrapper/%.f90
@@ -246,12 +252,14 @@ utilities_deallocate_struct_ifort.o: utilities_deallocate_struct.f90 ids_schemas
 	$(F90_ifort) -c $(COPTS_ifort) $(INCDIR_ifort) $< -o $@
 utilities_put_struct_ifort.o: utilities_put_struct.f90 ids_schemas_ifort.o ual_defs_ifort.o ual_low_level_wrap_ifort.o
 	$(F90_ifort) -c $(COPTS_ifort) $(INCDIR_ifort) $< -o $@
+utilities_get_struct_ifort.o: utilities_get_struct.f90 ids_schemas_ifort.o ual_defs_ifort.o ual_low_level_wrap_ifort.o
+	$(F90_ifort) -c $(COPTS_ifort) $(INCDIR_ifort) $< -o $@
 
 $(filter %_put_ifort.o,$(IDSOBJECTS)): %_put_ifort.o : %_put.f90 %_copy_ifort.o ids_schemas_ifort.o utilities_put_struct_ifort.o ual_defs_ifort.o ual_low_level_wrap_ifort.o
 	$(F90_ifort) -c $(COPTS_ifort) $(INCDIR_ifort) $< -o $@
 $(filter %_put_non_timed_ifort.o,$(IDSOBJECTS)): %_put_non_timed_ifort.o : %_put_non_timed.f90 %_copy_ifort.o ids_schemas_ifort.o ual_defs_ifort.o ual_low_level_wrap_ifort.o
 	$(F90_ifort) -c $(COPTS_ifort) $(INCDIR_ifort) $< -o $@
-$(filter %_get_ifort.o %_put_slice_ifort.o %_get_slice_ifort.o %_copy_ifort.o,$(IDSOBJECTS)): %_ifort.o:%.f90 ids_schemas_ifort.o ual_defs_ifort.o ual_low_level_wrap_ifort.o
+$(filter %_get_ifort.o %_put_slice_ifort.o %_get_slice_ifort.o %_copy_ifort.o,$(IDSOBJECTS)): %_ifort.o:%.f90 ids_schemas_ifort.o utilities_get_struct_ifort.o ual_defs_ifort.o ual_low_level_wrap_ifort.o
 	$(F90_ifort) -c $(COPTS_ifort) $(INCDIR_ifort) $< -o $@
 $(filter %_copy_struct_ifort.o,$(IDSOBJECTS)): %_ifort.o:%.f90 ids_schemas_ifort.o utilities_copy_struct_ifort.o ual_defs_ifort.o ual_low_level_wrap_ifort.o
 	$(F90_ifort) -c $(COPTS_ifort) $(INCDIR_ifort) $< -o $@
