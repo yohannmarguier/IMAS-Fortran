@@ -32,8 +32,9 @@ use utilities_deallocate_struct
 use <xsl:value-of select="@name"/>_put_struct
 use <xsl:value-of select="@name"/>_put_slice_struct
 use <xsl:value-of select="@name"/>_get_struct
-<!--use <xsl:value-of select="@name"/>_ids_module_put_slice-->
-use <xsl:value-of select="@name"/>_ids_module_get_slice
+use <xsl:value-of select="@name"/>_get_slice_struct
+<!--use <xsl:value-of select="@name"/>_ids_module_put_slice
+use <xsl:value-of select="@name"/>_ids_module_get_slice-->
 use <xsl:value-of select="@name"/>_copy
 use <xsl:value-of select="@name"/>_copy_struct
 use <xsl:value-of select="@name"/>_deallocate_struct
@@ -78,6 +79,8 @@ end module
 
 <xsl:apply-templates select="/IDSs/utilities" mode="get_struct"/> 
 <xsl:apply-templates select="IDS" mode="get_struct"/> 
+
+<xsl:apply-templates select="IDS" mode="get_slice_struct"/> 
 
 <xsl:apply-templates select="IDS" mode="main"/>
 
@@ -970,6 +973,132 @@ end module
 
 
 
+<!--+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
+<!-- IDS_GET_SLICE MODULE, PER IDS                                           -->
+<!--+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
+<xsl:template match="IDS" mode="get_slice_struct">
+  <xsl:result-document href="{@name}_get_slice.f90">
+module <xsl:value-of select="@name"/>_get_slice_struct
+
+use utilities_get_struct
+use <xsl:value-of select="@name"/>_get_struct
+
+interface ids_get_slice
+  module procedure get_slice_struct_ids_<xsl:value-of select="@name"/> <!-- subroutine for the whole IDS -->
+<!--
+  <xsl:for-each select=".//field[@data_type='structure' or @data_type='struct_array']">
+    <xsl:variable name="this-type">
+      <xsl:choose>
+	<xsl:when test="@structure_reference='self'">
+	  <xsl:value-of select="@name"/>
+	</xsl:when>
+	<xsl:otherwise>
+	  <xsl:value-of select="@structure_reference"/>
+	</xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
+    <xsl:variable name="this-ids" select="ancestor::IDS/@name"/>
+    <xsl:if test="not (preceding::field[@structure_reference=$this-type and ancestor::IDS/@name=$this-ids] or /IDSs/utilities/field/@name=$this-type)">
+  module procedure get_slice_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>
+    </xsl:if>
+  </xsl:for-each>
+-->
+end interface
+
+ contains 
+
+<!-- subroutine for the whole IDS -->
+!!! Routines to GET one time slice of an IDS, with time interpolation !!!
+subroutine get_slice_struct_ids_<xsl:value-of select="@name"/>(pulsectx, path, IDS, twant, interpol)
+  use ids_schemas
+  use ual_low_level_wrap
+  implicit none
+
+  integer(ids_int) :: status = 0, retstatus
+  character*(*) :: path
+  real(ids_real), intent(in) :: twant
+  integer(ids_int), intent(in) :: interpol
+  integer(ids_int) :: pulsectx, opctx, aosctx
+  type(ids_<xsl:value-of select="@name"/>) :: IDS
+  ! internal variables declaration
+  logical :: homogeneous, timedparent
+  integer(ids_int) :: aoslen, i, lenstring
+  integer(ids_int) :: size1, size2, size3, size4, size5, size6, size7
+  character(len=100000) :: longstring
+  character(len=300) :: timepath
+
+  call begin_ids_get_slice(pulsectx, path, twant, interpol, opctx)
+  if (opctx.lt.0) then
+     !! error when trying to get new ctx => stop!
+     STOP 'Error in begin_ids_get_slice (from ids_get_slice for IDS <xsl:value-of select="@name"/>)'
+  end if
+
+  timedparent=.false.
+  <xsl:apply-templates select="./field" mode="GET_FIELD">
+    <xsl:with-param name="structvar" select="'IDS'"/>
+    <xsl:with-param name="contextvar" select="'opctx'"/>
+    <xsl:with-param name="timedparentexpr" select="''"/>
+  </xsl:apply-templates>
+
+  call ual_end_action(opctx, status)
+
+  call set_c_data(IDS,.true.)
+
+  return
+end subroutine get_slice_struct_ids_<xsl:value-of select="@name"/>
+
+<!--
+<xsl:for-each select=".//field[@data_type='structure' or @data_type='struct_array']">
+  <xsl:variable name="this-type">
+    <xsl:choose>
+      <xsl:when test="@structure_reference='self'">
+	<xsl:value-of select="@name"/>
+      </xsl:when>
+      <xsl:otherwise>
+	<xsl:value-of select="@structure_reference"/>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:variable>
+  <xsl:variable name="this-ids" select="ancestor::IDS/@name"/>
+  <xsl:if test="not (preceding::field[@structure_reference=$this-type and ancestor::IDS/@name=$this-ids] or /IDSs/utilities/field/@name=$this-type)">
+subroutine get_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>(ctx, path, struct, homogeneous, timedparent, retstatus)
+  use ids_schemas
+  use ual_low_level_wrap
+  implicit none
+
+  integer(ids_int), intent(in) :: ctx
+  character*(*), intent(in) :: path
+  type(ids_<xsl:value-of select="$this-type"/>), intent(inout) :: struct      
+  logical, intent(in) :: homogeneous, timedparent
+  integer(ids_int), intent(out) :: retstatus
+  integer(ids_int) :: i, aoslen, lenstring, aosctx
+  integer(ids_int) :: size1, size2, size3, size4, size5, size6, size7
+  integer :: status
+  character(len=100000) :: longstring
+  character(len=300) :: timepath
+
+  <xsl:apply-templates select="./field" mode="GET_FIELD">
+    <xsl:with-param name="structvar" select="'struct'"/>
+    <xsl:with-param name="contextvar" select="'ctx'"/>
+    <xsl:with-param name="timedparentexpr" select="'timedparent.or.'"/>
+  </xsl:apply-templates>      
+   retstatus = 0
+end subroutine get_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>
+
+  </xsl:if>
+</xsl:for-each>
+-->
+
+end module    
+  </xsl:result-document>
+</xsl:template>
+
+
+
+
+
+
+
 
 
 
@@ -1612,9 +1741,9 @@ end module
     <xsl:choose>
       <xsl:when test="@type='dynamic'">
        if (homogeneous) then
-          timepath = <xsl:value-of select="$fieldpath"/>//"/time"
+          timepath = "/time"
        else
-          timepath = "time"
+          timepath = <xsl:value-of select="$fieldpath"/>//"/time"
        endif
       </xsl:when>
       <xsl:otherwise>
@@ -2101,7 +2230,7 @@ end module <xsl:value-of select="@name"/>_ids_module_get
 
 
 <!-- ======================================  GET SLICE ======================================= -->
-<xsl:result-document href="{@name}_get_slice.f90">
+<xsl:result-document href="{@name}_get_slice_OLD.f90">
 module <xsl:value-of select="@name"/>_ids_module_get_slice
 ! Declaration of the generic IDS GET_SLICE routine
 interface ids_get_slice
