@@ -30,8 +30,9 @@ use utilities_deallocate_struct
 
 <xsl:for-each select="IDS">
 use <xsl:value-of select="@name"/>_put_struct
+use <xsl:value-of select="@name"/>_put_slice_struct
 use <xsl:value-of select="@name"/>_get_struct
-use <xsl:value-of select="@name"/>_ids_module_put_slice
+<!--use <xsl:value-of select="@name"/>_ids_module_put_slice-->
 use <xsl:value-of select="@name"/>_ids_module_get_slice
 use <xsl:value-of select="@name"/>_copy
 use <xsl:value-of select="@name"/>_copy_struct
@@ -71,6 +72,9 @@ end module
 
 <xsl:apply-templates select="/IDSs/utilities" mode="put_struct"/> 
 <xsl:apply-templates select="IDS" mode="put_struct"/> 
+
+<xsl:apply-templates select="/IDSs/utilities" mode="put_slice_struct"/> 
+<xsl:apply-templates select="IDS" mode="put_slice_struct"/> 
 
 <xsl:apply-templates select="/IDSs/utilities" mode="get_struct"/> 
 <xsl:apply-templates select="IDS" mode="get_struct"/> 
@@ -581,6 +585,201 @@ end module
 
 
 <!--+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
+<!-- IDS_PUT_SLICE MODULE, UTILITIES                                         -->
+<!--+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
+<xsl:template match="utilities" mode="put_slice_struct">
+  <xsl:result-document href="utilities_put_slice_struct.f90">
+module utilities_put_slice_struct
+
+interface ids_put_slice
+  <xsl:for-each select="/IDSs/utilities/field[@data_type='structure' or @data_type='struct_array']">  
+    <xsl:variable name="this-type">
+      <xsl:choose>
+	<xsl:when test="@structure_reference='self'">
+	  <xsl:value-of select="@name"/>
+	</xsl:when>
+	<xsl:otherwise>
+	  <xsl:value-of select="@structure_reference"/>
+	</xsl:otherwise>
+      </xsl:choose>
+      </xsl:variable>
+      module procedure put_slice_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>
+  </xsl:for-each>
+end interface
+
+ contains
+
+<xsl:call-template name="isCriticalFuncCtx"/>
+
+<xsl:for-each select="/IDSs/utilities//field[@data_type='structure' or @data_type='struct_array']">
+  <xsl:variable name="this-name" select="@name"/>
+  <xsl:variable name="this-type">
+    <xsl:choose>
+      <xsl:when test="@structure_reference='self'">
+	<xsl:value-of select="@name"/>
+      </xsl:when>
+      <xsl:otherwise>
+	<xsl:value-of select="@structure_reference"/>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:variable>
+  <xsl:if test="not (preceding::field[@structure_reference=$this-type or @name=$this-type])">
+
+subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>(ctx, path, struct, homogeneous, timedparent, retstatus)
+  use ids_schemas
+  use ual_low_level_wrap
+  implicit none
+
+  integer(ids_int), intent(in) :: ctx
+  character*(*), intent(in) :: path
+  type(ids_<xsl:value-of select="$this-type"/>), intent(in) :: struct
+  logical, intent(in) :: homogeneous, timedparent
+  integer(ids_int), intent(out) :: retstatus
+  integer(ids_int) :: i, aoslen, lenstring, aosctx, lastdimsize
+  integer :: status
+  character(len=100000) :: longstring
+  character(len=300) :: timepath
+
+  <xsl:apply-templates select="./field" mode="PUT_FIELD">
+    <xsl:with-param name="structvar" select="'struct'"/>
+    <xsl:with-param name="contextvar" select="'ctx'"/>
+    <xsl:with-param name="timedparentexpr" select="'timedparent.or.'"/>
+    <xsl:with-param name="slice" select="'yes'"/>
+  </xsl:apply-templates>      
+   retstatus = 0
+end subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>
+
+  </xsl:if>
+</xsl:for-each>
+
+end module 
+  </xsl:result-document>
+</xsl:template>
+
+
+<!--+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
+<!-- IDS_PUT_SLICE MODULE, PER IDS                                           -->
+<!--+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
+<xsl:template match="IDS" mode="put_slice_struct">
+  <xsl:result-document href="{@name}_put_slice.f90">
+module <xsl:value-of select="@name"/>_put_slice_struct
+
+use utilities_put_slice_struct
+
+interface ids_put_slice
+  module procedure put_slice_struct_ids_<xsl:value-of select="@name"/> <!-- subroutine for the whole IDS -->
+  <xsl:for-each select=".//field[@data_type='structure' or @data_type='struct_array']">
+    <xsl:variable name="this-type">
+      <xsl:choose>
+	<xsl:when test="@structure_reference='self'">
+	  <xsl:value-of select="@name"/>
+	</xsl:when>
+	<xsl:otherwise>
+	  <xsl:value-of select="@structure_reference"/>
+	</xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
+    <xsl:variable name="this-ids" select="ancestor::IDS/@name"/>
+    <xsl:if test="not (preceding::field[@structure_reference=$this-type and ancestor::IDS/@name=$this-ids] or /IDSs/utilities/field/@name=$this-type)">
+  module procedure put_slice_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>
+    </xsl:if>
+  </xsl:for-each>
+end interface
+
+ contains 
+
+<!-- subroutine for the whole IDS -->
+!!! Routines to PUT_SLICE one time slice of an IDS !!!
+subroutine put_slice_struct_ids_<xsl:value-of select="@name"/>(pulsectx, path, IDS)
+  use ids_schemas
+  use ual_low_level_wrap
+  implicit none
+
+  integer(ids_int) :: status = 0, retstatus
+  character*(*) :: path
+  integer(ids_int) :: pulsectx, opctx, aosctx
+  type(ids_<xsl:value-of select="@name"/>) :: IDS
+  ! internal variables declaration
+  logical :: homogeneous, timedparent
+  integer(ids_int) :: aoslen, i, lenstring, lastdimsize
+  character(len=100000) :: longstring
+  character(len=300) :: timepath
+
+  homogeneous = IDS%ids_properties%homogeneous_time.EQ.1
+  if (.not.homogeneous) then
+     write(*,*) "ERROR : the PUT_SLICE routine works only for homogeneous time IDS: check ids_properties%homogeneous_time"
+     return
+  endif
+  if (.NOT.(associated(IDS%time))) then
+     write(*,*) "ERROR : the ids%time vector of an homogeneous_time IDS must be associated"
+     return
+  endif
+
+  timepath = "time"
+  call begin_ids_put_slice(pulsectx, path, IDS%time(1), opctx)
+  if (opctx.lt.0) then
+     !! error when trying to get new ctx => stop!
+     STOP 'Error in begin_ids_put_slice (from ids_put_slice for IDS <xsl:value-of select="@name"/>)'
+  end if
+
+  timedparent=.false.
+  <xsl:apply-templates select="./field" mode="PUT_FIELD">
+    <xsl:with-param name="structvar" select="'IDS'"/>
+    <xsl:with-param name="contextvar" select="'opctx'"/>
+    <xsl:with-param name="timedparentexpr" select="''"/>
+    <xsl:with-param name="slice" select="'yes'"/>
+  </xsl:apply-templates>
+end subroutine put_slice_struct_ids_<xsl:value-of select="@name"/>
+
+<xsl:for-each select=".//field[@data_type='structure' or @data_type='struct_array']">
+  <xsl:variable name="this-type">
+    <xsl:choose>
+      <xsl:when test="@structure_reference='self'">
+	<xsl:value-of select="@name"/>
+      </xsl:when>
+      <xsl:otherwise>
+	<xsl:value-of select="@structure_reference"/>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:variable>
+  <xsl:variable name="this-ids" select="ancestor::IDS/@name"/>
+  <xsl:if test="not (preceding::field[@structure_reference=$this-type and ancestor::IDS/@name=$this-ids] or /IDSs/utilities/field/@name=$this-type)">
+subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>(ctx, path, struct, homogeneous, timedparent, retstatus)
+  use ids_schemas
+  use ual_low_level_wrap
+  implicit none
+
+  integer(ids_int), intent(in) :: ctx
+  character*(*), intent(in) :: path
+  type(ids_<xsl:value-of select="$this-type"/>), intent(in) :: struct      
+  logical, intent(in) :: homogeneous, timedparent
+  integer(ids_int), intent(out) :: retstatus
+  integer(ids_int) :: i, aoslen, lenstring, aosctx, lastdimsize
+  integer :: status
+  character(len=100000) :: longstring
+  character(len=300) :: timepath
+
+  <xsl:apply-templates select="./field" mode="PUT_FIELD">
+    <xsl:with-param name="structvar" select="'struct'"/>
+    <xsl:with-param name="contextvar" select="'ctx'"/>
+    <xsl:with-param name="timedparentexpr" select="'timedparent.or.'"/>
+    <xsl:with-param name="slice" select="'yes'"/>
+  </xsl:apply-templates>      
+   retstatus = 0
+end subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>
+
+  </xsl:if>
+</xsl:for-each>
+
+end module    
+  </xsl:result-document>
+</xsl:template>
+
+
+
+
+
+<!--+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
 <!-- IDS_GET MODULE, UTILITIES                                               -->
 <!--+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
 <xsl:template match="utilities" mode="get_struct">
@@ -1040,9 +1239,9 @@ end module
        <xsl:choose>
 	 <xsl:when test="@type='dynamic'">
        if (homogeneous) then
-          timepath = <xsl:value-of select="$fieldpath"/>//"/time"
+          timepath = "/time"
        else
-          timepath = "time"
+          timepath = <xsl:value-of select="$fieldpath"/>//"/time"
        endif
 	 </xsl:when>
 	 <xsl:otherwise>
@@ -1056,6 +1255,7 @@ end module
 	    <xsl:with-param name="structvar" select="$structvar"/>
 	    <xsl:with-param name="contextvar" select="'aosctx'"/>
 	    <xsl:with-param name="timedparentexpr" select="'timedparent.or.'"/>
+	    <xsl:with-param name="slice" select="$slice"/>
 	  </xsl:apply-templates> 
              call ual_iterate_over_arraystruct(aosctx, 1, status)
           enddo
@@ -1077,7 +1277,7 @@ end module
       </xsl:choose>
     </xsl:variable>
     ! Put <xsl:value-of select="@name"/>
-    call put_struct_ids_<xsl:value-of select="$this-type"/>(<xsl:value-of select="$contextvar"/>, &amp;
+    call put_<xsl:if test="$slice='yes'">slice_</xsl:if>struct_ids_<xsl:value-of select="$this-type"/>(<xsl:value-of select="$contextvar"/>, &amp;
     <xsl:choose>
       <xsl:when test="$contextvar='aosctx'">"", </xsl:when>
       <xsl:otherwise><xsl:value-of select="concat(substring($fieldpath,1,string-length($fieldpath)-1),'/&quot;')"/>, </xsl:otherwise>
@@ -1377,7 +1577,7 @@ end module
   <xsl:param name="timedparentexpr"/>
   <xsl:param name="slice"/>
 
-  <xsl:if test="$slice !='yes' or @type ='dynamic' or @data_type='structure' or (@data_type='struct_array' and .//field[@type='dynamic'])"> <!-- This skips the routine for non-timed fields when using this template in PUT_SLICE mode -->
+  <xsl:if test="$slice !='yes' or @type ='dynamic' or @data_type='structure' or (@data_type='struct_array' and .//field[@type='dynamic'])"> <!-- This skips the routine for non-timed fields when using this template in GET_SLICE mode -->
 
     <xsl:variable name="fieldvar"><xsl:value-of select="$structvar"/>%<xsl:value-of select="@name"/></xsl:variable>
     <xsl:variable name="timedexpr">
@@ -1767,7 +1967,7 @@ end module <xsl:value-of select="@name"/>_ids_module_put
 
 
 <!-- ======================================  PUT SLICE ======================================= -->
-<xsl:result-document href="{@name}_put_slice.f90">
+<xsl:result-document href="{@name}_put_slice_OLD.f90">
 module <xsl:value-of select="@name"/>_ids_module_put_slice
 <xsl:if test=".//field[@type='dynamic']"> <!-- Procedure put_slice should exist only for time-dependent IDSs -->
 ! Declaration of the generic IDS PUT_SLICE routine
@@ -4088,6 +4288,7 @@ call ids_discard_cache(pulsectx,IDSpath,"<xsl:value-of select="@path"/>")       
     <xsl:when test="@type='dynamic'">
       if (timedparent) then
          timepath=""
+	 lastdimsize = size(<xsl:value-of select="$fieldvar"/>,<xsl:value-of select="$rank"/>)
       else
          if (homogeneous) then
             timepath="/time"
@@ -4103,15 +4304,15 @@ call ids_discard_cache(pulsectx,IDSpath,"<xsl:value-of select="@path"/>")       
 	<xsl:when test="@name='time'">timepath=<xsl:value-of select="$fieldpath"/></xsl:when>
       </xsl:choose>
          endif
+	 <xsl:choose>
+	   <xsl:when test="$slice='yes'">
+         lastdimsize = 1
+	   </xsl:when>
+	   <xsl:otherwise>
+         lastdimsize = size(<xsl:value-of select="$fieldvar"/>,<xsl:value-of select="$rank"/>)
+	   </xsl:otherwise>
+	 </xsl:choose>
       endif
-      <xsl:choose>
-	<xsl:when test="$slice='yes'">
-      lastdimsize = 1
-	</xsl:when>
-	<xsl:otherwise>
-      lastdimsize = size(<xsl:value-of select="$fieldvar"/>,<xsl:value-of select="$rank"/>)
-	</xsl:otherwise>
-      </xsl:choose>
     </xsl:when>
     <xsl:otherwise>
       timepath = ""
