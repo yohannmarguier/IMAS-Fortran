@@ -357,7 +357,7 @@ use utilities_copy_struct
 
 interface ids_copy
   module procedure ids_copy_struct_<xsl:value-of select="@name"/>
-end ids_copy
+end interface 
 
 interface ids_copy_struct
   <xsl:for-each select=".//field[@data_type='structure' or @data_type='struct_array']">
@@ -551,7 +551,7 @@ end interface
 subroutine put_struct_ids_<xsl:value-of select="@name"/>(pulsectx, path, IDS)
   use ids_schemas
   use ual_low_level_wrap
-  use <xsl:value-of select="@name"/>_copy  ! Needed at the moment since the _copy module contains the ids_delete routines
+  use <xsl:value-of select="@name"/>_delete  
   implicit none
 
   integer(ids_int) :: status = 0, retstatus
@@ -1191,7 +1191,8 @@ end module
 	<xsl:with-param name ="field_path" select="$updated_field_path"/>
       </xsl:apply-templates>
     </xsl:when>
-    <xsl:otherwise>call delete_data(opctx, <xsl:value-of select="$updated_field_path"/>, status)</xsl:otherwise>
+    <xsl:otherwise>call delete_data(opctx, <xsl:value-of select="$updated_field_path"/>, status)
+    </xsl:otherwise>
   </xsl:choose>
 </xsl:template>
 
