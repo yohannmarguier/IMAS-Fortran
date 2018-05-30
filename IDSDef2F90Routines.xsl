@@ -399,7 +399,7 @@ end module
   <xsl:result-document href="utilities_put_struct.f90">
 module utilities_put_struct
 
-interface ids_put
+interface ids_put_struct
   <xsl:for-each select="/IDSs/utilities/field[@data_type='structure' or @data_type='struct_array']">  
     <xsl:variable name="this-type">
       <xsl:choose>
@@ -475,6 +475,9 @@ use utilities_put_struct
 
 interface ids_put
   module procedure put_struct_ids_<xsl:value-of select="@name"/> <!-- subroutine for the whole IDS -->
+end interface
+
+interface ids_put_struct
   <xsl:for-each select=".//field[@data_type='structure' or @data_type='struct_array']">
     <xsl:variable name="this-type">
       <xsl:choose>
@@ -594,7 +597,7 @@ end module
   <xsl:result-document href="utilities_put_slice_struct.f90">
 module utilities_put_slice_struct
 
-interface ids_put_slice
+interface ids_put_slice_struct
   <xsl:for-each select="/IDSs/utilities/field[@data_type='structure' or @data_type='struct_array']">  
     <xsl:variable name="this-type">
       <xsl:choose>
@@ -671,6 +674,9 @@ use utilities_put_slice_struct
 
 interface ids_put_slice
   module procedure put_slice_struct_ids_<xsl:value-of select="@name"/> <!-- subroutine for the whole IDS -->
+end interface 
+
+interface ids_put_slice_struct
   <xsl:for-each select=".//field[@data_type='structure' or @data_type='struct_array']">
     <xsl:variable name="this-type">
       <xsl:choose>
@@ -789,7 +795,7 @@ end module
   <xsl:result-document href="utilities_get_struct.f90">
 module utilities_get_struct
 
-interface ids_get
+interface ids_get_struct
   <xsl:for-each select="/IDSs/utilities/field[@data_type='structure' or @data_type='struct_array']">  
     <xsl:variable name="this-type">
       <xsl:choose>
@@ -866,6 +872,9 @@ use utilities_get_struct
 
 interface ids_get
   module procedure get_struct_ids_<xsl:value-of select="@name"/> <!-- subroutine for the whole IDS -->
+end interface 
+
+interface ids_get_struct
   <xsl:for-each select=".//field[@data_type='structure' or @data_type='struct_array']">
     <xsl:variable name="this-type">
       <xsl:choose>
@@ -1408,7 +1417,7 @@ end module
     ! Put <xsl:value-of select="@name"/>
     call put_<xsl:if test="$slice='yes'">slice_</xsl:if>struct_ids_<xsl:value-of select="$this-type"/>(<xsl:value-of select="$contextvar"/>, &amp;
     <xsl:choose>
-      <xsl:when test="$contextvar='aosctx'">"", </xsl:when>
+      <xsl:when test="$contextvar='aosctx'">'', </xsl:when>
       <xsl:otherwise><xsl:value-of select="concat(substring($fieldpath,1,string-length($fieldpath)-1),'/&quot;')"/>, </xsl:otherwise>
     </xsl:choose>
     <xsl:value-of select="$fieldvar"/><xsl:if test="@data_type='struct_array'">(i)</xsl:if>, homogeneous, <xsl:value-of select="$timedexpr"/>, status)
@@ -1416,6 +1425,7 @@ end module
       <xsl:with-param name="method" select="'put'"/>
       <xsl:with-param name="ctx" select="$contextvar"/>
       <xsl:with-param name="path" select="$fieldpath"/>
+      <xsl:with-param name="closectx" select="'yes'"/>
     </xsl:call-template>
   </xsl:when>
 
@@ -1780,7 +1790,7 @@ end module
     ! Get <xsl:value-of select="@name"/>
     call get_struct_ids_<xsl:value-of select="$this-type"/>(<xsl:value-of select="$contextvar"/>, &amp;
     <xsl:choose>
-      <xsl:when test="$contextvar='aosctx'">"", </xsl:when>
+      <xsl:when test="$contextvar='aosctx'">'', </xsl:when>
       <xsl:otherwise><xsl:value-of select="concat(substring($fieldpath,1,string-length($fieldpath)-1),'/&quot;')"/>, </xsl:otherwise>
     </xsl:choose>
     <xsl:value-of select="$fieldvar"/><xsl:if test="@data_type='struct_array'">(i)</xsl:if>, homogeneous, <xsl:value-of select="$timedexpr"/>, status)
@@ -1788,6 +1798,7 @@ end module
       <xsl:with-param name="method" select="'get'"/>
       <xsl:with-param name="ctx" select="$contextvar"/>
       <xsl:with-param name="path" select="$fieldpath"/>
+      <xsl:with-param name="closectx" select="'yes'"/>
     </xsl:call-template>
   </xsl:when>
 
@@ -4332,18 +4343,19 @@ call ids_discard_cache(pulsectx,IDSpath,"<xsl:value-of select="@path"/>")       
   <xsl:param name="method"/> 
   <xsl:param name="ctx"/>
   <xsl:param name="path"/>
+  <xsl:param name="closectx"/>
   <xsl:choose>
     <xsl:when test="$method='put'">
   if(isErrorCritical(status, <xsl:value-of select="$ctx"/>, <xsl:value-of select="$path"/>)) then
      retstatus = status
-     call ual_end_action(<xsl:value-of select="$ctx"/>, status)
+     <xsl:if test="$closectx='yes'">call ual_end_action(<xsl:value-of select="$ctx"/>, status)</xsl:if>
      return
   endif
     </xsl:when>
     <xsl:otherwise>
   if(isErrorCritical(status, <xsl:value-of select="$ctx"/>, <xsl:value-of select="$path"/>)) then
      retstatus = status
-     call ual_end_action(<xsl:value-of select="$ctx"/>, status)
+     <xsl:if test="$closectx='yes'">call ual_end_action(<xsl:value-of select="$ctx"/>, status)</xsl:if>
      return
   endif
     </xsl:otherwise>
