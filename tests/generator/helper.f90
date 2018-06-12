@@ -432,15 +432,37 @@ SUBROUTINE create(idx)
 
 END SUBROUTINE create
 
+SUBROUTINE createslice(idx)
+  INTEGER, INTENT(OUT) :: idx
+
+  CALL initTime()
+  CALL initEnv()
+  CALL imas_create_env('ids',TESTSHOT+1,TESTRUN+1, TESTSHOT+1,TESTRUN+1,idx, userName, 'test', dataVersion)
+
+  print *, "IDX:", idx
+
+END SUBROUTINE createslice
 
 
 SUBROUTINE open(idx)
 	INTEGER, INTENT(OUT) :: idx
 
+  CALL initTime()
+  CALL initEnv()
 	CALL imas_open_env('ids',TESTSHOT,TESTRUN, idx, userName, 'test', dataVersion)
 	print *, "IDX:", idx
 
 END SUBROUTINE open
+
+SUBROUTINE openslice(idx)
+  INTEGER, INTENT(OUT) :: idx
+
+  CALL initTime()
+  CALL initEnv()
+  CALL imas_open_env('ids',TESTSHOT+1,TESTRUN+1, idx, userName, 'test', dataVersion)
+  print *, "IDX:", idx
+
+END SUBROUTINE openslice
 	
 
 SUBROUTINE close(idx)

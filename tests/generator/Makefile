@@ -81,11 +81,19 @@ clean-src: clean
 sources: IDSDef2TestSuite.xsl $(IDSDEF)
 	mkdir -p $(IFORT_BIN_DIR)
 	mkdir -p $(GFORTRAN_BIN_DIR)
-
 ifeq (,$(SAXONICAJAR))
 	$(error Invalid /path/to/saxon9he.jar in CLASSPATH. Forgot to load module?)
 endif
 	java net.sf.saxon.Transform newLowLevel=$(NEW_LOW_LEVEL) -t -s:$(IDSDEF) -xsl:IDSDef2TestSuite.xsl   
+
+sources2: IDSDef2TestSuite.xsl $(IDSDEF)
+	mkdir -p $(IFORT_BIN_DIR)
+	mkdir -p $(GFORTRAN_BIN_DIR)
+ifeq (,$(SAXONICAJAR))
+	$(error Invalid /path/to/saxon9he.jar in CLASSPATH. Forgot to load module?)
+endif
+	java net.sf.saxon.Transform newLowLevel=$(NEW_LOW_LEVEL) sources2="yes" -t -s:$(IDSDEF) -xsl:IDSDef2TestSuite.xsl   
+
 
 
 #################################################
