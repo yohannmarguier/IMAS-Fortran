@@ -27,12 +27,12 @@ IDSDEF = $(UAL)/xml/IDSDef.xml
 ids_path = $(UAL)/models/mdsplus
 
 
-ifeq "$(strip $(GFORTRAN))" "yes"
+ifeq "$(strip $(IMAS_GFORTRAN))" "yes"
     TARGETS += gfortran_testSuite
     TESTS += gfortran_test
 endif
 
-ifeq "$(strip $(IFORT))" "yes"
+ifeq "$(strip $(IMAS_IFORT))" "yes"
     TARGETS += ifort_testSuite
     TESTS += ifort_test
 endif
