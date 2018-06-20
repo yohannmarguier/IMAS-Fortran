@@ -4,7 +4,7 @@ MODULE helper
   use ual_low_level_wrap
   implicit none
 
-INTEGER, PARAMETER :: DIM_SIZE = 4
+INTEGER, PARAMETER :: DIM_SIZE = 1
 
 INTEGER, PARAMETER :: noOfSlices = DIM_SIZE
 INTEGER, PARAMETER :: TESTSHOT = 9998
