@@ -1864,6 +1864,16 @@ end module
 	</xsl:otherwise>
       </xsl:choose>
     </xsl:variable>
+    <xsl:variable name="closectx">
+      <xsl:choose>
+	<xsl:when test="@data_type='structure'">
+	  <xsl:value-of select="'no'"/>
+	</xsl:when>
+	<xsl:otherwise>
+	  <xsl:value-of select="'yes'"/>
+	</xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
     ! Get <xsl:value-of select="@name"/>
     call get_struct_ids_<xsl:value-of select="$this-type"/>(<xsl:value-of select="$contextvar"/>, &amp;
     <xsl:choose>
@@ -1875,7 +1885,7 @@ end module
       <xsl:with-param name="method" select="'get'"/>
       <xsl:with-param name="ctx" select="$contextvar"/>
       <xsl:with-param name="path" select="$fieldpath"/>
-      <xsl:with-param name="closectx" select="'yes'"/>
+      <xsl:with-param name="closectx" select="$closectx"/>
     </xsl:call-template>
   </xsl:when>
 
@@ -2222,7 +2232,7 @@ FUNCTION isErrorCritical(status, ctx, path) RESULT (exitRequest)
       return
    else
       exitRequest = .TRUE.
-      write(*,*) "ERROR! with field ",path," from context:"
+      write(*,*) "ERROR! with field '",path,"' from context:"
       call ual_print_context(ctx)
       return
    endif
