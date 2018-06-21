@@ -975,6 +975,7 @@ subroutine get_struct_ids_<xsl:value-of select="@name"/>(pulsectx, name, IDS)
     <xsl:with-param name="structvar" select="'IDS'"/>
     <xsl:with-param name="contextvar" select="'opctx'"/>
     <xsl:with-param name="timedparentexpr" select="''"/>
+    <xsl:with-param name="root" select="'yes'"/>
   </xsl:apply-templates>
 
   call ual_end_action(opctx, status)
@@ -1097,6 +1098,7 @@ subroutine get_slice_struct_ids_<xsl:value-of select="@name"/>(pulsectx, name, I
     <xsl:with-param name="structvar" select="'IDS'"/>
     <xsl:with-param name="contextvar" select="'opctx'"/>
     <xsl:with-param name="timedparentexpr" select="''"/>
+    <xsl:with-param name="root" select="'yes'"/>
   </xsl:apply-templates>
 
   call ual_end_action(opctx, status)
@@ -1795,6 +1797,7 @@ end module
   <xsl:param name="contextvar"/>
   <xsl:param name="timedparentexpr"/>
   <xsl:param name="slice"/>
+  <xsl:param name="root"/>
 
   <xsl:if test="$slice !='yes' or @type ='dynamic' or @data_type='structure' or (@data_type='struct_array' and .//field[@type='dynamic'])"> <!-- This skips the routine for non-timed fields when using this template in GET_SLICE mode -->
 
@@ -1847,6 +1850,7 @@ end module
 	 <xsl:with-param name="structvar" select="$structvar"/>
 	 <xsl:with-param name="contextvar" select="'aosctx'"/>
 	 <xsl:with-param name="timedparentexpr" select="'timedparent.or.'"/>
+	 <xsl:with-param name="root" select="$root"/>
        </xsl:apply-templates> 
           call ual_iterate_over_arraystruct(aosctx, 1, status)
        enddo
@@ -1882,7 +1886,7 @@ end module
       <xsl:when test="$contextvar='aosctx'">'', </xsl:when>
       <xsl:otherwise><xsl:value-of select="concat(substring($fieldpath,1,string-length($fieldpath)-1),'/&quot;')"/>, </xsl:otherwise>
     </xsl:choose>
-    <xsl:value-of select="$fieldvar"/><xsl:if test="@data_type='struct_array'">(i)</xsl:if>, homogeneous, <xsl:value-of select="$timedexpr"/>, status)
+    <xsl:value-of select="$fieldvar"/><xsl:if test="@data_type='struct_array'">(i)</xsl:if>, <xsl:choose><xsl:when test="$root='yes'">IDS%ids_properties%homogeneous_time.eq.1</xsl:when><xsl:otherwise>homogeneous</xsl:otherwise></xsl:choose>, <xsl:value-of select="$timedexpr"/>, status)
     <xsl:call-template name="checkErrorCtx">
       <xsl:with-param name="method" select="'get'"/>
       <xsl:with-param name="ctx" select="$contextvar"/>
