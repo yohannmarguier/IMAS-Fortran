@@ -548,14 +548,14 @@ end interface
 
 <!-- subroutine for the whole IDS -->
 !!! Routines to PUT the full IDS !!!
-subroutine put_struct_ids_<xsl:value-of select="@name"/>(pulsectx, path, IDS)
+subroutine put_struct_ids_<xsl:value-of select="@name"/>(pulsectx, name, IDS)
   use ids_schemas
   use ual_low_level_wrap
   use <xsl:value-of select="@name"/>_delete  
   implicit none
 
   integer(ids_int) :: status = 0, retstatus
-  character*(*) :: path
+  character*(*), intent(in) :: name
   integer(ids_int) :: pulsectx, opctx, aosctx
   type(ids_<xsl:value-of select="@name"/>) :: IDS
   ! internal variables declaration
@@ -563,9 +563,10 @@ subroutine put_struct_ids_<xsl:value-of select="@name"/>(pulsectx, path, IDS)
   integer(ids_int) :: aoslen, i, lenstring, lastdimsize
   character(len=100000) :: longstring
   character(len=300) :: timepath
+  character(*), parameter :: path = ''
 
   ! Systematic delete of the previous IDS, in case it existed
-  call ids_delete(pulsectx, path, IDS)
+  call ids_delete(pulsectx, name, IDS)
 
   if (IDS%ids_properties%homogeneous_time.EQ.ids_int_invalid) then
      write(*,*) "ERROR : the IDS%ids_properties%homogeneous_time property of this IDS must be provided"
@@ -577,9 +578,9 @@ subroutine put_struct_ids_<xsl:value-of select="@name"/>(pulsectx, path, IDS)
      return
   endif
 
-  call begin_ids_put_timed(pulsectx, path, opctx)
+  call begin_ids_put_timed(pulsectx, name, opctx)
   if (opctx.lt.0) then
-     STOP 'Error in begin_ids_put_timed (from ids_put for IDS amns_data)'
+     STOP 'Error in begin_ids_put_timed (from ids_put for IDS <xsl:value-of select="@name"/>)'
   end if
 
   timedparent=.false.
@@ -745,13 +746,13 @@ end interface
 
 <!-- subroutine for the whole IDS -->
 !!! Routines to PUT_SLICE one time slice of an IDS !!!
-subroutine put_slice_struct_ids_<xsl:value-of select="@name"/>(pulsectx, path, IDS)
+subroutine put_slice_struct_ids_<xsl:value-of select="@name"/>(pulsectx, name, IDS)
   use ids_schemas
   use ual_low_level_wrap
   implicit none
 
   integer(ids_int) :: status = 0, retstatus
-  character*(*) :: path
+  character*(*) :: name
   integer(ids_int) :: pulsectx, opctx, aosctx
   type(ids_<xsl:value-of select="@name"/>) :: IDS
   ! internal variables declaration
@@ -759,6 +760,7 @@ subroutine put_slice_struct_ids_<xsl:value-of select="@name"/>(pulsectx, path, I
   integer(ids_int) :: aoslen, i, lenstring, lastdimsize
   character(len=100000) :: longstring
   character(len=300) :: timepath
+  character(*), parameter :: path = ''
 
   homogeneous = IDS%ids_properties%homogeneous_time.EQ.1
   if (.not.homogeneous) then
@@ -771,7 +773,7 @@ subroutine put_slice_struct_ids_<xsl:value-of select="@name"/>(pulsectx, path, I
   endif
 
   timepath = "time"
-  call begin_ids_put_slice(pulsectx, path, IDS%time(1), opctx)
+  call begin_ids_put_slice(pulsectx, name, IDS%time(1), opctx)
   if (opctx.lt.0) then
      !! error when trying to get new ctx => stop!
      STOP 'Error in begin_ids_put_slice (from ids_put_slice for IDS <xsl:value-of select="@name"/>)'
@@ -945,13 +947,13 @@ end interface
 
 <!-- subroutine for the whole IDS -->
 !!! Routines to GET the full IDS !!!
-subroutine get_struct_ids_<xsl:value-of select="@name"/>(pulsectx, path, IDS)
+subroutine get_struct_ids_<xsl:value-of select="@name"/>(pulsectx, name, IDS)
   use ids_schemas
   use ual_low_level_wrap
   implicit none
 
   integer(ids_int) :: status = 0, retstatus
-  character*(*) :: path
+  character*(*) :: name
   integer(ids_int) :: pulsectx, opctx, aosctx
   type(ids_<xsl:value-of select="@name"/>) :: IDS
   ! internal variables declaration
@@ -960,8 +962,9 @@ subroutine get_struct_ids_<xsl:value-of select="@name"/>(pulsectx, path, IDS)
   integer(ids_int) :: size1, size2, size3, size4, size5, size6, size7
   character(len=100000) :: longstring
   character(len=300) :: timepath
+  character(*), parameter :: path = ''
 
-  call begin_IDS_get(pulsectx, path, opctx) 
+  call begin_IDS_get(pulsectx, name, opctx) 
   if (opctx.lt.0) then
      !! error when trying to get new ctx => stop!
      STOP 'Error in begin_ids_get (from ids_get for IDS <xsl:value-of select="@name"/>)'
@@ -1064,13 +1067,13 @@ end interface
 
 <!-- subroutine for the whole IDS -->
 !!! Routines to GET one time slice of an IDS, with time interpolation !!!
-subroutine get_slice_struct_ids_<xsl:value-of select="@name"/>(pulsectx, path, IDS, twant, interpol)
+subroutine get_slice_struct_ids_<xsl:value-of select="@name"/>(pulsectx, name, IDS, twant, interpol)
   use ids_schemas
   use ual_low_level_wrap
   implicit none
 
   integer(ids_int) :: status = 0, retstatus
-  character*(*) :: path
+  character*(*) :: name
   real(ids_real), intent(in) :: twant
   integer(ids_int), intent(in) :: interpol
   integer(ids_int) :: pulsectx, opctx, aosctx
@@ -1081,8 +1084,9 @@ subroutine get_slice_struct_ids_<xsl:value-of select="@name"/>(pulsectx, path, I
   integer(ids_int) :: size1, size2, size3, size4, size5, size6, size7
   character(len=100000) :: longstring
   character(len=300) :: timepath
+  character(*), parameter :: path = ''
 
-  call begin_ids_get_slice(pulsectx, path, twant, interpol, opctx)
+  call begin_ids_get_slice(pulsectx, name, twant, interpol, opctx)
   if (opctx.lt.0) then
      !! error when trying to get new ctx => stop!
      STOP 'Error in begin_ids_get_slice (from ids_get_slice for IDS <xsl:value-of select="@name"/>)'
@@ -1426,12 +1430,11 @@ end module
 	<xsl:otherwise><xsl:value-of select="$timedparentexpr"/>.false.</xsl:otherwise>
       </xsl:choose>
     </xsl:variable>
-    <xsl:variable name="fieldpath">
-      <xsl:choose>
+    <xsl:variable name="fieldpath">path//"<xsl:value-of select="@name"/>"</xsl:variable>
+    <!--<xsl:choose>
 	<xsl:when test="$contextvar='aosctx' or $contextvar='opctx'">"<xsl:value-of select="@name"/>"</xsl:when>
 	<xsl:otherwise>path//"<xsl:value-of select="@name"/>"</xsl:otherwise>
-      </xsl:choose>
-    </xsl:variable>
+	</xsl:choose>-->
 
 <!-- Detect type of the field -->
 <xsl:choose>
@@ -1802,12 +1805,11 @@ end module
 	<xsl:otherwise><xsl:value-of select="$timedparentexpr"/>.false.</xsl:otherwise>
       </xsl:choose>
     </xsl:variable>
-    <xsl:variable name="fieldpath">
-      <xsl:choose>
+    <xsl:variable name="fieldpath">path//"<xsl:value-of select="@name"/>"</xsl:variable>
+    <!--<xsl:choose>
 	<xsl:when test="$contextvar='aosctx' or $contextvar='opctx'">"<xsl:value-of select="@name"/>"</xsl:when>
 	<xsl:otherwise>path//"<xsl:value-of select="@name"/>"</xsl:otherwise>
-      </xsl:choose>
-    </xsl:variable>
+	</xsl:choose>-->
 
 <!-- Detect type of the field -->
 <xsl:choose>
@@ -2150,16 +2152,17 @@ end module
          if (homogeneous) then
             timepath="/time"
          else
-      <xsl:choose>
-	<xsl:when test="@coordinate7_AosParent_relative">timepath="<xsl:value-of select="@coordinate7_AosParent_relative"/>"</xsl:when>
-	<xsl:when test="@coordinate6_AosParent_relative">timepath="<xsl:value-of select="@coordinate6_AosParent_relative"/>"</xsl:when>
-	<xsl:when test="@coordinate5_AosParent_relative">timepath="<xsl:value-of select="@coordinate5_AosParent_relative"/>"</xsl:when>
-	<xsl:when test="@coordinate4_AosParent_relative">timepath="<xsl:value-of select="@coordinate4_AosParent_relative"/>"</xsl:when>
-	<xsl:when test="@coordinate3_AosParent_relative">timepath="<xsl:value-of select="@coordinate3_AosParent_relative"/>"</xsl:when>
-	<xsl:when test="@coordinate2_AosParent_relative">timepath="<xsl:value-of select="@coordinate2_AosParent_relative"/>"</xsl:when>
-	<xsl:when test="@coordinate1_AosParent_relative">timepath="<xsl:value-of select="@coordinate1_AosParent_relative"/>"</xsl:when>
-	<xsl:when test="@name='time'">timepath=<xsl:value-of select="$fieldpath"/></xsl:when>
-      </xsl:choose>
+	    timepath=path//"<xsl:value-of select="@timebasepath"/>"
+	    <!--<xsl:choose>
+	    <xsl:when test="@coordinate7_AosParent_relative">timepath="<xsl:value-of select="@coordinate7_AosParent_relative"/>"</xsl:when>
+	    <xsl:when test="@coordinate6_AosParent_relative">timepath="<xsl:value-of select="@coordinate6_AosParent_relative"/>"</xsl:when>
+	    <xsl:when test="@coordinate5_AosParent_relative">timepath="<xsl:value-of select="@coordinate5_AosParent_relative"/>"</xsl:when>
+	    <xsl:when test="@coordinate4_AosParent_relative">timepath="<xsl:value-of select="@coordinate4_AosParent_relative"/>"</xsl:when>
+	    <xsl:when test="@coordinate3_AosParent_relative">timepath="<xsl:value-of select="@coordinate3_AosParent_relative"/>"</xsl:when>
+	    <xsl:when test="@coordinate2_AosParent_relative">timepath="<xsl:value-of select="@coordinate2_AosParent_relative"/>"</xsl:when>
+	    <xsl:when test="@coordinate1_AosParent_relative">timepath="<xsl:value-of select="@coordinate1_AosParent_relative"/>"</xsl:when>
+	    <xsl:when test="@name='time'">timepath=<xsl:value-of select="$fieldpath"/></xsl:when>
+	    </xsl:choose>-->
          endif
       endif
     </xsl:when>
@@ -2185,16 +2188,17 @@ end module
          if (homogeneous) then
             timepath="/time"
          else
-      <xsl:choose>
-	<xsl:when test="@coordinate7_AosParent_relative">timepath="<xsl:value-of select="@coordinate7_AosParent_relative"/>"</xsl:when>
-	<xsl:when test="@coordinate6_AosParent_relative">timepath="<xsl:value-of select="@coordinate6_AosParent_relative"/>"</xsl:when>
-	<xsl:when test="@coordinate5_AosParent_relative">timepath="<xsl:value-of select="@coordinate5_AosParent_relative"/>"</xsl:when>
-	<xsl:when test="@coordinate4_AosParent_relative">timepath="<xsl:value-of select="@coordinate4_AosParent_relative"/>"</xsl:when>
-	<xsl:when test="@coordinate3_AosParent_relative">timepath="<xsl:value-of select="@coordinate3_AosParent_relative"/>"</xsl:when>
-	<xsl:when test="@coordinate2_AosParent_relative">timepath="<xsl:value-of select="@coordinate2_AosParent_relative"/>"</xsl:when>
-	<xsl:when test="@coordinate1_AosParent_relative">timepath="<xsl:value-of select="@coordinate1_AosParent_relative"/>"</xsl:when>
-	<xsl:when test="@name='time'">timepath=<xsl:value-of select="$fieldpath"/></xsl:when>
-      </xsl:choose>
+	    timepath=path//"<xsl:value-of select="@timebasepath"/>"
+	    <!--<xsl:choose>
+	    <xsl:when test="@coordinate7_AosParent_relative">timepath="<xsl:value-of select="@coordinate7_AosParent_relative"/>"</xsl:when>
+	    <xsl:when test="@coordinate6_AosParent_relative">timepath="<xsl:value-of select="@coordinate6_AosParent_relative"/>"</xsl:when>
+	    <xsl:when test="@coordinate5_AosParent_relative">timepath="<xsl:value-of select="@coordinate5_AosParent_relative"/>"</xsl:when>
+	    <xsl:when test="@coordinate4_AosParent_relative">timepath="<xsl:value-of select="@coordinate4_AosParent_relative"/>"</xsl:when>
+	    <xsl:when test="@coordinate3_AosParent_relative">timepath="<xsl:value-of select="@coordinate3_AosParent_relative"/>"</xsl:when>
+	    <xsl:when test="@coordinate2_AosParent_relative">timepath="<xsl:value-of select="@coordinate2_AosParent_relative"/>"</xsl:when>
+	    <xsl:when test="@coordinate1_AosParent_relative">timepath="<xsl:value-of select="@coordinate1_AosParent_relative"/>"</xsl:when>
+	    <xsl:when test="@name='time'">timepath=<xsl:value-of select="$fieldpath"/></xsl:when>
+	    </xsl:choose>-->
          endif
 	 <xsl:choose>
 	   <xsl:when test="$slice='yes'">
