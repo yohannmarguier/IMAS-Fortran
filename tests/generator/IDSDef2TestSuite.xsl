@@ -609,44 +609,45 @@ or
 
 
     <xsl:template match="field[not(@data_type='structure' or @data_type='struct_array') ]" mode="get">
-    	<xsl:call-template name="COMMENT_FIELD"/>
-        <xsl:text>&#9;&#9;&#9; isEqual = assertField(ids%</xsl:text><xsl:value-of select="translate(@path, '/', '%')"/><xsl:text>, </xsl:text>
-		<xsl:call-template name="type2value">
-			 <xsl:with-param name="lastDimSize" select="'DIM_SIZE'"/>
-		</xsl:call-template>
-	<xsl:text>, "</xsl:text><xsl:value-of select="ancestor::IDS/@name"/><xsl:text>/</xsl:text><xsl:value-of select="@path"/><xsl:text>");&#10;</xsl:text>
+      <xsl:call-template name="COMMENT_FIELD"/>
+      <xsl:text>&#9;&#9;&#9; isEqual = assertField(ids%</xsl:text><xsl:value-of select="translate(@path, '/', '%')"/><xsl:text>, </xsl:text>
+      <xsl:call-template name="type2value">
+	<xsl:with-param name="lastDimSize" select="'DIM_SIZE'"/>
+      </xsl:call-template>
+      <xsl:text>, "</xsl:text><xsl:value-of select="ancestor::IDS/@name"/><xsl:text>/</xsl:text><xsl:value-of select="@path"/><xsl:text>");&#10;</xsl:text>
+      <xsl:text>&#9;&#9;&#9; if (.not.isEqual) STOP &#10;</xsl:text>
     </xsl:template>
 
 
     <!-- field get() -->
     <xsl:template match="field[not(@data_type='structure' or @data_type='struct_array')]" mode="getSlice">
-	<xsl:param name="dynamicOnly"/>
-	<xsl:param name="staticOnly"/>
-    	<xsl:call-template name="COMMENT_FIELD"/>
-	<xsl:if test="(not($dynamicOnly) and (@type !='dynamic' or not(@type) or @data_type='structure' or (@data_type='struct_array' and @type !='dynamic')))
-or
-(not($staticOnly) and (@type ='dynamic' or @data_type='structure' or @data_type='struct_array'))"> 
+      <xsl:param name="dynamicOnly"/>
+      <xsl:param name="staticOnly"/>
+      <xsl:call-template name="COMMENT_FIELD"/>
+      <xsl:if test="(not($dynamicOnly) and (@type !='dynamic' or not(@type) or @data_type='structure' or (@data_type='struct_array' and @type !='dynamic')))
+		    or
+		    (not($staticOnly) and (@type ='dynamic' or @data_type='structure' or @data_type='struct_array'))"> 
 
-    <xsl:choose>
-            <xsl:when test="@type='dynamic'">
+	<xsl:choose>
+          <xsl:when test="@type='dynamic'">
 
-           <xsl:text>&#9;&#9;&#9; isEqual = assertField(ids%</xsl:text><xsl:value-of select="translate(@path, '/', '%')"/><xsl:text>, </xsl:text>
-		<xsl:call-template name="type2value">
-			 <xsl:with-param name="lastDimSize" select="1"/>
-			  <xsl:with-param name="slice" select="true()"/>
-		</xsl:call-template>
-	<xsl:text>, "</xsl:text><xsl:value-of select="ancestor::IDS/@name"/><xsl:text>/</xsl:text><xsl:value-of select="@path"/><xsl:text>");&#10;</xsl:text>        </xsl:when>
-	    <xsl:otherwise>
-		<xsl:text>&#9;&#9;&#9; isEqual = assertField(ids%</xsl:text><xsl:value-of select="translate(@path, '/', '%')"/><xsl:text>, </xsl:text>
-		<xsl:call-template name="type2value">
-			 <xsl:with-param name="lastDimSize" select="'DIM_SIZE'"/>
-			 	 <xsl:with-param name="slice" select="false()"/>
-		</xsl:call-template>
-	<xsl:text>, "</xsl:text><xsl:value-of select="ancestor::IDS/@name"/><xsl:text>/</xsl:text><xsl:value-of select="@path"/><xsl:text>");&#10;</xsl:text>
-	</xsl:otherwise>
-    </xsl:choose>
-
-</xsl:if>
+            <xsl:text>&#9;&#9;&#9; isEqual = assertField(ids%</xsl:text><xsl:value-of select="translate(@path, '/', '%')"/><xsl:text>, </xsl:text>
+	    <xsl:call-template name="type2value">
+	      <xsl:with-param name="lastDimSize" select="1"/>
+	      <xsl:with-param name="slice" select="true()"/>
+	    </xsl:call-template>
+	  <xsl:text>, "</xsl:text><xsl:value-of select="ancestor::IDS/@name"/><xsl:text>/</xsl:text><xsl:value-of select="@path"/><xsl:text>");&#10;</xsl:text>        </xsl:when>
+	  <xsl:otherwise>
+	    <xsl:text>&#9;&#9;&#9; isEqual = assertField(ids%</xsl:text><xsl:value-of select="translate(@path, '/', '%')"/><xsl:text>, </xsl:text>
+	    <xsl:call-template name="type2value">
+	      <xsl:with-param name="lastDimSize" select="'DIM_SIZE'"/>
+	      <xsl:with-param name="slice" select="false()"/>
+	    </xsl:call-template>
+	    <xsl:text>, "</xsl:text><xsl:value-of select="ancestor::IDS/@name"/><xsl:text>/</xsl:text><xsl:value-of select="@path"/><xsl:text>");&#10;</xsl:text>
+	  </xsl:otherwise>
+	</xsl:choose>
+	<xsl:text>&#9;&#9;&#9; if (.not.isEqual) STOP &#10;</xsl:text>
+      </xsl:if>
     </xsl:template>
 
 
@@ -654,122 +655,122 @@ or
     <!-- field get() for array of structures -->
 
     <xsl:template match="field[@data_type='struct_array']" mode="get">
-	<xsl:param name="dynamicOnly"/>
-	<xsl:param name="staticOnly"/>
-        	<xsl:call-template name="COMMENT_FIELD"/>
-
-	<xsl:text>&#9;&#9;if(.not. associated(ids%</xsl:text>  <xsl:value-of select="translate(@path, '/', '%')" /> <xsl:text>)) then &#10;</xsl:text>
-		<xsl:text>&#9;&#9;&#9;write(*,*) "ERROR! IDS: </xsl:text> <xsl:value-of select="ancestor::IDS/@name"/> <xsl:text> Field: </xsl:text> <xsl:value-of select="translate(@path, '/', '%')" /> <xsl:text> is not associated!"&#10; </xsl:text>
-			<!-- <xsl:text>&#9;&#9;&#9;return &#10;</xsl:text> -->
-					<xsl:text>&#9;&#9;&#9;else &#10;</xsl:text>
-
-        <xsl:call-template name="getStructArray">
-            <xsl:with-param name="path" select="concat(translate(@path, '/', '%'), '(1)')"/>
-	     <xsl:with-param name="slice" select="false()"/>
-	    	<xsl:with-param name="dynamicOnly" select="$dynamicOnly"/>
-   	    	<xsl:with-param name="staticOnly" select="$staticOnly"/>
-        </xsl:call-template>
-		<xsl:text>&#9;&#9;end if &#10;</xsl:text>
+      <xsl:param name="dynamicOnly"/>
+      <xsl:param name="staticOnly"/>
+      <xsl:call-template name="COMMENT_FIELD"/>
+      
+      <xsl:text>&#9;&#9;if(.not. associated(ids%</xsl:text>  <xsl:value-of select="translate(@path, '/', '%')" /> <xsl:text>)) then &#10;</xsl:text>
+      <xsl:text>&#9;&#9;&#9; write(*,*) "ERROR! IDS: </xsl:text> <xsl:value-of select="ancestor::IDS/@name"/> <xsl:text> Field: </xsl:text> <xsl:value-of select="translate(@path, '/', '%')" /> <xsl:text> is not associated!"&#10; </xsl:text>
+      <!-- <xsl:text>&#9;&#9;&#9;return &#10;</xsl:text> -->
+      <xsl:text>&#9;&#9;&#9; STOP &#10;</xsl:text>
+      <xsl:text>&#9;&#9;else &#10;</xsl:text>
+      
+      <xsl:call-template name="getStructArray">
+        <xsl:with-param name="path" select="concat(translate(@path, '/', '%'), '(1)')"/>
+	<xsl:with-param name="slice" select="false()"/>
+	<xsl:with-param name="dynamicOnly" select="$dynamicOnly"/>
+   	<xsl:with-param name="staticOnly" select="$staticOnly"/>
+      </xsl:call-template>
+      <xsl:text>&#9;&#9;end if &#10;</xsl:text>
     </xsl:template>
+    
 
 
 
-
-        <xsl:template match="field[@data_type='struct_array']" mode="getSlice">
-	<xsl:param name="dynamicOnly"/>
-	<xsl:param name="staticOnly"/>
-        	<xsl:call-template name="COMMENT_FIELD"/>
-
-	<xsl:text>&#9;&#9;if(.not. associated(ids%</xsl:text>  <xsl:value-of select="translate(@path, '/', '%')" /> <xsl:text>)) then &#10;</xsl:text>
-		<xsl:text>&#9;&#9;&#9;write(*,*) "ERROR! IDS: </xsl:text> <xsl:value-of select="ancestor::IDS/@name"/> <xsl:text> Field: </xsl:text> <xsl:value-of select="translate(@path, '/', '%')" /> <xsl:text> is not associated!"&#10; </xsl:text>
-			<!-- <xsl:text>&#9;&#9;&#9;return &#10;</xsl:text> -->
-					<xsl:text>&#9;&#9;&#9;else &#10;</xsl:text>
-
-        <xsl:call-template name="getStructArray">
-            <xsl:with-param name="path" select="concat(translate(@path, '/', '%'), '(1)')"/>
-	     <xsl:with-param name="slice" select="true()"/>
-	    	<xsl:with-param name="dynamicOnly" select="$dynamicOnly"/>
-   	    	<xsl:with-param name="staticOnly" select="$staticOnly"/>
-
-        </xsl:call-template>
-		<xsl:text>&#9;&#9;end if &#10;</xsl:text>
+    <xsl:template match="field[@data_type='struct_array']" mode="getSlice">
+      <xsl:param name="dynamicOnly"/>
+      <xsl:param name="staticOnly"/>
+      <xsl:call-template name="COMMENT_FIELD"/>
+      
+      <xsl:text>&#9;&#9;if(.not. associated(ids%</xsl:text>  <xsl:value-of select="translate(@path, '/', '%')" /> <xsl:text>)) then &#10;</xsl:text>
+      <xsl:text>&#9;&#9;&#9; write(*,*) "ERROR! IDS: </xsl:text> <xsl:value-of select="ancestor::IDS/@name"/> <xsl:text> Field: </xsl:text> <xsl:value-of select="translate(@path, '/', '%')" /> <xsl:text> is not associated!"&#10; </xsl:text>
+      <!-- <xsl:text>&#9;&#9;&#9;return &#10;</xsl:text> -->
+      <xsl:text>&#9;&#9;&#9; STOP &#10;</xsl:text>
+      <xsl:text>&#9;&#9;else &#10;</xsl:text>
+      
+      <xsl:call-template name="getStructArray">
+        <xsl:with-param name="path" select="concat(translate(@path, '/', '%'), '(1)')"/>
+	<xsl:with-param name="slice" select="true()"/>
+	<xsl:with-param name="dynamicOnly" select="$dynamicOnly"/>
+   	<xsl:with-param name="staticOnly" select="$staticOnly"/>
+	
+      </xsl:call-template>
+      <xsl:text>&#9;&#9;end if &#10;</xsl:text>
     </xsl:template>
-
+    
 
 
     <xsl:template name="getStructArray">
-        <xsl:param name="path"/>
-	<xsl:param name="slice"/>
-	<xsl:param name="dynamicOnly"/>
-	<xsl:param name="staticOnly"/>
-
-<xsl:if test="(not($dynamicOnly) and (@type !='dynamic' or not(@type) or @data_type='structure' or (@data_type='struct_array' and @type !='dynamic')))
-or
-(not($staticOnly) and (@type ='dynamic' or @data_type='structure' or @data_type='struct_array'))"> 
-
+      <xsl:param name="path"/>
+      <xsl:param name="slice"/>
+      <xsl:param name="dynamicOnly"/>
+      <xsl:param name="staticOnly"/>
+      
+      <xsl:if test="(not($dynamicOnly) and (@type !='dynamic' or not(@type) or @data_type='structure' or (@data_type='struct_array' and @type !='dynamic')))
+		    or
+		    (not($staticOnly) and (@type ='dynamic' or @data_type='structure' or @data_type='struct_array'))"> 
+	
         <xsl:for-each select="field[not(@data_type='struct_array' or @data_type='structure')]">
-	<xsl:if test="(not($dynamicOnly) and (@type !='dynamic' or not(@type) or @data_type='structure' or (@data_type='struct_array' and @type !='dynamic')))
-or
-(not($staticOnly) and (@type ='dynamic' or @data_type='structure' or @data_type='struct_array'))"> 
-		<xsl:call-template name="COMMENT_FIELD"/>
-
-	     <xsl:choose>
-           <xsl:when test="$slice and @type='dynamic' and not(ancestor::field[@data_type='struct_array' and @maxoccur='unbounded'])  ">
+	  <xsl:if test="(not($dynamicOnly) and (@type !='dynamic' or not(@type) or @data_type='structure' or (@data_type='struct_array' and @type !='dynamic')))
+			or
+			(not($staticOnly) and (@type ='dynamic' or @data_type='structure' or @data_type='struct_array'))"> 
+	    <xsl:call-template name="COMMENT_FIELD"/>
+	    
+	    <xsl:choose>
+              <xsl:when test="$slice and @type='dynamic' and not(ancestor::field[@data_type='struct_array' and @maxoccur='unbounded'])  ">
      		<xsl:text>&#9;&#9;&#9; isEqual = assertField(ids%</xsl:text><xsl:value-of select="concat($path, '%', @name)"/><xsl:text>, </xsl:text>
 	    	<xsl:call-template name="type2value">
-			 <xsl:with-param name="lastDimSize" select="1"/>
-			 	<xsl:with-param name="slice" select="true()"/>
+		  <xsl:with-param name="lastDimSize" select="1"/>
+		  <xsl:with-param name="slice" select="true()"/>
 		</xsl:call-template>
 		<xsl:text>, "</xsl:text><xsl:value-of select="ancestor::IDS/@name"/><xsl:text>/</xsl:text><xsl:value-of select="@path"/><xsl:text>");&#10;</xsl:text>
-		           </xsl:when>
-	        <xsl:otherwise>
+	      </xsl:when>
+	      <xsl:otherwise>
 
-
+		
 		<xsl:text>&#9;&#9;&#9; isEqual =  assertField(ids%</xsl:text><xsl:value-of select="concat($path, '%', @name)"/><xsl:text>, </xsl:text>
 	    	<xsl:call-template name="type2value">
-			 <xsl:with-param name="lastDimSize" select="'DIM_SIZE'"/>
-				 <xsl:with-param name="slice" select="$slice"/>
+		  <xsl:with-param name="lastDimSize" select="'DIM_SIZE'"/>
+		  <xsl:with-param name="slice" select="$slice"/>
 		</xsl:call-template>
 		<xsl:text>, "</xsl:text><xsl:value-of select="ancestor::IDS/@name"/><xsl:text>/</xsl:text><xsl:value-of select="@path"/><xsl:text>");&#10;</xsl:text>
-
-
-		</xsl:otherwise>
+		
+		
+	      </xsl:otherwise>
             </xsl:choose>
 
-</xsl:if>
+	  </xsl:if>
+	  <xsl:text>&#9;&#9;&#9; if (.not.isEqual) STOP &#10;</xsl:text>
         </xsl:for-each>
-
 
 
         <xsl:for-each select="field[@data_type='structure']">
-	<xsl:call-template name="COMMENT_FIELD"/>
-            <xsl:call-template name="getStructArray">
-                <xsl:with-param name="path" select="concat($path, '%', @name)"/>
-			   <xsl:with-param name="slice" select="$slice"/>
-	    	<xsl:with-param name="dynamicOnly" select="$dynamicOnly"/>
-   	    	<xsl:with-param name="staticOnly" select="$staticOnly"/>
-            </xsl:call-template>
+	  <xsl:call-template name="COMMENT_FIELD"/>
+          <xsl:call-template name="getStructArray">
+            <xsl:with-param name="path" select="concat($path, '%', @name)"/>
+	    <xsl:with-param name="slice" select="$slice"/>
+	    <xsl:with-param name="dynamicOnly" select="$dynamicOnly"/>
+   	    <xsl:with-param name="staticOnly" select="$staticOnly"/>
+          </xsl:call-template>
         </xsl:for-each>
         <xsl:for-each select="field[@data_type='struct_array']">
-	<xsl:call-template name="COMMENT_FIELD"/>
-
-	<xsl:text>&#9;&#9;if(.not. associated(ids%</xsl:text>  <xsl:value-of select="concat($path, '%', @name)" /> <xsl:text>)) then &#10;</xsl:text>
-		<xsl:text>&#9;&#9;&#9;write(*,*) "ERROR! IDS: </xsl:text>  <xsl:value-of select="ancestor::IDS/@name"/> <xsl:text> Field: </xsl:text><xsl:value-of select="concat($path, '%', @name, '(1)')" /> <xsl:text> is not associated!"&#10; </xsl:text>
-		<!-- <xsl:text>&#9;&#9;&#9;return &#10;</xsl:text>  -->
-			<xsl:text>&#9;&#9;&#9;else &#10;</xsl:text>
-
-	     <xsl:call-template name="getStructArray">
-                <xsl:with-param name="path" select="concat($path, '%', @name, '(1)')"/>
-			   <xsl:with-param name="slice" select="$slice"/>
-	    	<xsl:with-param name="dynamicOnly" select="$dynamicOnly"/>
-   	    	<xsl:with-param name="staticOnly" select="$staticOnly"/>
-
-            </xsl:call-template>
-	<xsl:text>&#9;&#9;end if &#10;</xsl:text>
+	  <xsl:call-template name="COMMENT_FIELD"/>
+	  
+	  <xsl:text>&#9;&#9;if(.not. associated(ids%</xsl:text>  <xsl:value-of select="concat($path, '%', @name)" /> <xsl:text>)) then &#10;</xsl:text>
+	  <xsl:text>&#9;&#9;&#9; write(*,*) "ERROR! IDS: </xsl:text>  <xsl:value-of select="ancestor::IDS/@name"/> <xsl:text> Field: </xsl:text><xsl:value-of select="concat($path, '%', @name, '(1)')" /> <xsl:text> is not associated!"&#10; </xsl:text>
+	  <xsl:text>&#9;&#9;&#9; STOP &#10;</xsl:text>  
+	  <xsl:text>&#9;&#9;else &#10;</xsl:text>
+	  
+	  <xsl:call-template name="getStructArray">
+            <xsl:with-param name="path" select="concat($path, '%', @name, '(1)')"/>
+	    <xsl:with-param name="slice" select="$slice"/>
+	    <xsl:with-param name="dynamicOnly" select="$dynamicOnly"/>
+   	    <xsl:with-param name="staticOnly" select="$staticOnly"/>
+	    
+          </xsl:call-template>
+	  <xsl:text>&#9;&#9;end if &#10;</xsl:text>
         </xsl:for-each>
-
-
-</xsl:if>
+      </xsl:if>
     </xsl:template>
 
 
