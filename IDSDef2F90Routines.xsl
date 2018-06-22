@@ -207,7 +207,8 @@ call getenv('ual_debug',ual_debug) ! Debug flag
 
 
 if (IDS%IDS_Properties%homogeneous_time.EQ.ids_int_invalid) then
-    return
+	write(*,*) "Warning: IDS <xsl:value-of select="@name"/> is found to be EMPTY (homogeneous_time undefined). PUT quits with no action."
+	return
 endif
 
 
@@ -367,8 +368,10 @@ type(ids_<xsl:value-of select="@name"/>) :: IDS       ! real declaration of the 
 call getenv('ual_debug',ual_debug) ! Debug flag
 
 if (IDS%IDS_Properties%homogeneous_time.EQ.ids_int_invalid) then
-    return
+	write(*,*) "Warning: IDS <xsl:value-of select="@name"/> is found to be EMPTY (homogeneous_time undefined). PUTNONTIMED quits with no action."
+	return
 endif
+
 
 ! Systematic delete of the previous IDS, in case it existed; guarantees the time-dependent data is deleted
 call ids_delete(idx,path,IDS)
@@ -533,8 +536,10 @@ integer(ids_int) :: i<xsl:value-of select="concat(@name,generate-id(.))"/>
 call getenv('ual_debug',ual_debug) ! Debug flag
 
 if (IDS%IDS_Properties%homogeneous_time.EQ.ids_int_invalid) then
-    return
+	write(*,*) "Warning: IDS <xsl:value-of select="@name"/> is found to be EMPTY (homogeneous_time undefined). PUTSLICE quits with no action."
+	return
 endif
+
 
 if (IDS%IDS_Properties%homogeneous_time.NE.1) then
    write(*,*) "ERROR : the PUT_SLICE routine works only for homogeneous time IDS: check ids_properties%homogeneous_time"
