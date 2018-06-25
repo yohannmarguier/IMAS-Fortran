@@ -2156,7 +2156,7 @@ end module
          if (homogeneous) then
             timepath="/time"
          else
-	    timepath=path//"<xsl:value-of select="@timebasepath"/>"
+	    timepath=<xsl:if test="substring(@timebasepath,1,1)!='/'">path//</xsl:if>"<xsl:value-of select="@timebasepath"/>"
 	    <!--<xsl:choose>
 	    <xsl:when test="@coordinate7_AosParent_relative">timepath="<xsl:value-of select="@coordinate7_AosParent_relative"/>"</xsl:when>
 	    <xsl:when test="@coordinate6_AosParent_relative">timepath="<xsl:value-of select="@coordinate6_AosParent_relative"/>"</xsl:when>
@@ -2192,7 +2192,7 @@ end module
          if (homogeneous) then
             timepath="/time"
          else
-	    timepath=path//"<xsl:value-of select="@timebasepath"/>"
+	    timepath=<xsl:if test="substring(@timebasepath,1,1)!='/'">path//</xsl:if>"<xsl:value-of select="@timebasepath"/>"
 	    <!--<xsl:choose>
 	    <xsl:when test="@coordinate7_AosParent_relative">timepath="<xsl:value-of select="@coordinate7_AosParent_relative"/>"</xsl:when>
 	    <xsl:when test="@coordinate6_AosParent_relative">timepath="<xsl:value-of select="@coordinate6_AosParent_relative"/>"</xsl:when>
