@@ -1,4 +1,4 @@
-#!/bin/bash
+# !/bin/bash
 # "make install" should have been run at the installer level before running "make test"
 # Until the testSuite is made modular (one test program per IDS), it is recommended to avoid running the IFORT case (huge source file, takes ages to compile)
 # To detect if an error has been reported, search for "ERROR:" strings in the result file (fortraninterface/tests/generator/gfortran_testSuite.results)
@@ -28,13 +28,15 @@ ids_path = $(UAL)/models/mdsplus
 
 
 ifeq "$(strip $(IMAS_GFORTRAN))" "yes"
-    TARGETS += gfortran_testSuite
+    TARGETS += gfortran_testSuite gfortran_initpulse
     TESTS += gfortran_test
+    TESTS2 += gfortran_test2
 endif
 
 ifeq "$(strip $(IMAS_IFORT))" "yes"
-    TARGETS += ifort_testSuite
+    TARGETS += ifort_testSuite ifort_initpulse
     TESTS += ifort_test
+    TESTS2 += ifort_test2
 endif
 
 
@@ -45,10 +47,11 @@ TEST_SRC_DIR=./src
 
 TEST_IDS_FILES=$(wildcard $(TEST_SRC_DIR)/*.f90)
 
-TEST_FILES= helper.f90 comparator.f90 $(TEST_IDS_FILES)
+TEST_FILES= initpulse.f90 helper.f90 comparator.f90 $(TEST_IDS_FILES)
 
 IFORT_BIN_FILES=$(patsubst %.f90,$(IFORT_BIN_DIR)/%.exe,$(notdir $(TEST_IDS_FILES)))
 GFORTRAN_BIN_FILES=$(patsubst %.f90,$(GFORTRAN_BIN_DIR)/%.exe,$(notdir $(TEST_IDS_FILES)))
+
 
 # Sets a path where make will search for files
 VPATH = ./src $(TEST_SRC_DIR) 
@@ -61,7 +64,7 @@ all:
 	@echo "Error: Source files have been not created. Please run 'make sources' first"
 	@exit 1	
 else
-all :   $(TARGETS)
+all :   $(TARGETS) 
 endif
 
 
@@ -111,8 +114,10 @@ gfortran_helper.o: helper.f90
 gfortran_comparator.o: comparator.f90
 	$(F90_gfortran) $(COPTS_gfortran) -c $< -o $@
 
-gfortran_testSuite:  $(GFORTRAN_BIN_FILES)
+gfortran_initpulse: initpulse.f90
+	$(F90_gfortran) $(COPTS_gfortran) $< -o $(GFORTRAN_BIN_DIR)/initpulse.exe $(LIBS_gfortran)
 
+gfortran_testSuite:  $(GFORTRAN_BIN_FILES)
 
 $(GFORTRAN_BIN_DIR)/%.exe: %.f90 gfortran_helper.o gfortran_comparator.o
 	$(F90_gfortran) $(COPTS_gfortran) -o $@ $< gfortran_helper.o gfortran_comparator.o $(LIBS_gfortran)
@@ -129,8 +134,11 @@ ifort_helper.o: helper.f90
 ifort_comparator.o: comparator.f90
 	$(F90_ifort) $(COPTS_ifort) -c $< -o $@
 
+ifort_initpulse: initpulse.f90
+	$(F90_ifort) $(COPTS_ifort) $< -o $(IFORT_BIN_DIR)/initpulse.exe $(LIBS_ifort)
+
 ifort_testSuite: $(IFORT_BIN_FILES)
-	
+
 
 $(IFORT_BIN_DIR)/%.exe: %.f90 ifort_helper.o ifort_comparator.o
 	$(F90_ifort) $(COPTS_ifort) -o $@ $< ifort_helper.o ifort_comparator.o $(LIBS_ifort)
@@ -144,6 +152,15 @@ $(IFORT_BIN_DIR)/%.exe: %.f90 ifort_helper.o ifort_comparator.o
 	./test.sh -c $* | tee test_$*.results 
 
 test : $(TESTS)
+
+
+test_put: 
+	./test_put.sh -c gfortran | tee testput_gfortran.results 
+
+test_get:
+	./test_get.sh -c gfortran | tee testget_gfortran.results 
+
+
 
 
 

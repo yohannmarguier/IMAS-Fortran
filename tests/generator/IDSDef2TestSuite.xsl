@@ -156,13 +156,13 @@
         
         <xsl:text>&#10;</xsl:text>
 	
-        <xsl:text>&#9;call create(idx)&#10;</xsl:text>
+        <xsl:text>&#9;call open(idx)&#10;</xsl:text>
 	<xsl:text>&#10;</xsl:text>
 	<xsl:text>&#9;! --- IDS: </xsl:text><xsl:value-of select="@name"/><xsl:text> ---&#10;</xsl:text>
 	<xsl:text>&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_put()&#10;</xsl:text>
 
 	<xsl:if test=".//field[@type='dynamic']">
-          <xsl:text>&#9;call createslice(idxslice)&#10;</xsl:text>
+          <xsl:text>&#9;call openslice(idxslice)&#10;</xsl:text>
        	  <xsl:text>&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_putSlice()&#10;</xsl:text>
 	</xsl:if>
 
