@@ -2156,17 +2156,7 @@ end module
          if (homogeneous) then
             timepath="/time"
          else
-	    timepath=<xsl:if test="substring(@timebasepath,1,1)!='/'">path//</xsl:if>"<xsl:value-of select="@timebasepath"/>"
-	    <!--<xsl:choose>
-	    <xsl:when test="@coordinate7_AosParent_relative">timepath="<xsl:value-of select="@coordinate7_AosParent_relative"/>"</xsl:when>
-	    <xsl:when test="@coordinate6_AosParent_relative">timepath="<xsl:value-of select="@coordinate6_AosParent_relative"/>"</xsl:when>
-	    <xsl:when test="@coordinate5_AosParent_relative">timepath="<xsl:value-of select="@coordinate5_AosParent_relative"/>"</xsl:when>
-	    <xsl:when test="@coordinate4_AosParent_relative">timepath="<xsl:value-of select="@coordinate4_AosParent_relative"/>"</xsl:when>
-	    <xsl:when test="@coordinate3_AosParent_relative">timepath="<xsl:value-of select="@coordinate3_AosParent_relative"/>"</xsl:when>
-	    <xsl:when test="@coordinate2_AosParent_relative">timepath="<xsl:value-of select="@coordinate2_AosParent_relative"/>"</xsl:when>
-	    <xsl:when test="@coordinate1_AosParent_relative">timepath="<xsl:value-of select="@coordinate1_AosParent_relative"/>"</xsl:when>
-	    <xsl:when test="@name='time'">timepath=<xsl:value-of select="$fieldpath"/></xsl:when>
-	    </xsl:choose>-->
+	    timepath=<xsl:if test="substring(@timebasepath,1,1)='\'">path//</xsl:if>"/<xsl:value-of select="translate(@timebasepath,'\','/')"/>"
          endif
       endif
     </xsl:when>
@@ -2192,17 +2182,7 @@ end module
          if (homogeneous) then
             timepath="/time"
          else
-	    timepath=<xsl:if test="substring(@timebasepath,1,1)!='/'">path//</xsl:if>"<xsl:value-of select="@timebasepath"/>"
-	    <!--<xsl:choose>
-	    <xsl:when test="@coordinate7_AosParent_relative">timepath="<xsl:value-of select="@coordinate7_AosParent_relative"/>"</xsl:when>
-	    <xsl:when test="@coordinate6_AosParent_relative">timepath="<xsl:value-of select="@coordinate6_AosParent_relative"/>"</xsl:when>
-	    <xsl:when test="@coordinate5_AosParent_relative">timepath="<xsl:value-of select="@coordinate5_AosParent_relative"/>"</xsl:when>
-	    <xsl:when test="@coordinate4_AosParent_relative">timepath="<xsl:value-of select="@coordinate4_AosParent_relative"/>"</xsl:when>
-	    <xsl:when test="@coordinate3_AosParent_relative">timepath="<xsl:value-of select="@coordinate3_AosParent_relative"/>"</xsl:when>
-	    <xsl:when test="@coordinate2_AosParent_relative">timepath="<xsl:value-of select="@coordinate2_AosParent_relative"/>"</xsl:when>
-	    <xsl:when test="@coordinate1_AosParent_relative">timepath="<xsl:value-of select="@coordinate1_AosParent_relative"/>"</xsl:when>
-	    <xsl:when test="@name='time'">timepath=<xsl:value-of select="$fieldpath"/></xsl:when>
-	    </xsl:choose>-->
+	    timepath=<xsl:if test="substring(@timebasepath,1,1)='\'">path//</xsl:if>"<xsl:value-of select="translate(@timebasepath,'\','/')"/>"
          endif
 	 <xsl:choose>
 	   <xsl:when test="$slice='yes'">
