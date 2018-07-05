@@ -290,7 +290,7 @@ end module
   <xsl:result-document href="utilities_copy_struct.f90">
 module utilities_copy_struct
 
-interface ids_copy_struct
+interface ids_copy
   <xsl:for-each select="/IDSs/utilities/field[@data_type='structure' or @data_type='struct_array']">
   <xsl:variable name="this-type">
     <xsl:choose>
@@ -357,9 +357,6 @@ use utilities_copy_struct
 
 interface ids_copy
   module procedure ids_copy_struct_<xsl:value-of select="local:unique_name(@name)"/>
-end interface 
-
-interface ids_copy_struct
   <xsl:for-each select=".//field[@data_type='structure' or @data_type='struct_array']">
     <xsl:variable name="this-name" select="@name"/>
     <xsl:variable name="this-type">
