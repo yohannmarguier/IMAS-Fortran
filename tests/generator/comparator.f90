@@ -798,6 +798,8 @@ FUNCTION assertField_STR(observed, expected, fieldName) RESULT (outValue)
 		if(debugMode) write(*,*) fieldName, " : OK "
 	else
 		write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
+                outValue = .FALSE.
+                return
 	end if
 
 END FUNCTION assertField_STR
