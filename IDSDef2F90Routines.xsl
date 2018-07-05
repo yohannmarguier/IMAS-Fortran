@@ -96,13 +96,13 @@ module <xsl:value-of select="@name"/>_delete
 
 ! Declaration of the generic IDS DELETE routine
 interface ids_delete
-  module procedure ids_delete_<xsl:value-of select="@name"/> <!-- subroutine for the whole IDS -->
+  module procedure ids_delete_<xsl:value-of select="local:unique_name(@name)"/> <!-- subroutine for the whole IDS -->
 end interface 
 
 contains
 
 !!!!!! Routine to DELETE the IDS
-subroutine ids_delete_<xsl:value-of select="@name"/>(pulsectx, IDSpath, IDS)  <!-- systematic calls to the low level delete_data routine. The IDS input argument is added just for the interface to identify the relevant IDS type -->
+subroutine ids_delete_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, IDSpath, IDS)  <!-- systematic calls to the low level delete_data routine. The IDS input argument is added just for the interface to identify the relevant IDS type -->
   use ids_schemas
   use ual_low_level_wrap
   implicit none
@@ -119,7 +119,7 @@ subroutine ids_delete_<xsl:value-of select="@name"/>(pulsectx, IDSpath, IDS)  <!
 
   call ual_end_action(opctx,status)
 
-end subroutine ids_delete_<xsl:value-of select="@name"/>
+end subroutine ids_delete_<xsl:value-of select="local:unique_name(@name)"/>
 
 end module <xsl:value-of select="@name"/>_delete
   </xsl:result-document>
@@ -201,7 +201,7 @@ module <xsl:value-of select="@name"/>_deallocate_struct
 use utilities_deallocate_struct
 
 interface ids_deallocate
-  module procedure ids_deallocate_struct_<xsl:value-of select="@name"/> <!-- subroutine for the whole IDS -->
+  module procedure ids_deallocate_struct_<xsl:value-of select="local:unique_name(@name)"/> <!-- subroutine for the whole IDS -->
 end interface 
 
 interface ids_deallocate_struct
@@ -227,7 +227,7 @@ end interface
  contains 
 
 <!-- subroutine for the whole IDS -->
-subroutine ids_deallocate_struct_<xsl:value-of select="@name"/>(struct_in)
+subroutine ids_deallocate_struct_<xsl:value-of select="local:unique_name(@name)"/>(struct_in)
   use ual_low_level_wrap
   use, intrinsic :: ISO_C_BINDING, only: C_LOC
   use ids_schemas
@@ -243,7 +243,7 @@ subroutine ids_deallocate_struct_<xsl:value-of select="@name"/>(struct_in)
     <xsl:with-param name="idxpath" select="''"/>
   </xsl:apply-templates>
   call set_c_data(struct_in, c_data)
-end subroutine ids_deallocate_struct_<xsl:value-of select="@name"/>
+end subroutine ids_deallocate_struct_<xsl:value-of select="local:unique_name(@name)"/>
 
 <xsl:for-each select=".//field[@data_type='structure' or @data_type='struct_array']">
   <xsl:variable name="this-name" select="@name"/>
@@ -356,7 +356,7 @@ module <xsl:value-of select="@name"/>_copy_struct
 use utilities_copy_struct
 
 interface ids_copy
-  module procedure ids_copy_struct_<xsl:value-of select="@name"/>
+  module procedure ids_copy_struct_<xsl:value-of select="local:unique_name(@name)"/>
 end interface 
 
 interface ids_copy_struct
@@ -383,7 +383,7 @@ end interface
  contains
 
 <!-- subroutine for the whole IDS -->
-subroutine ids_copy_struct_<xsl:value-of select="@name"/>(struct_in, struct_out)
+subroutine ids_copy_struct_<xsl:value-of select="local:unique_name(@name)"/>(struct_in, struct_out)
   ! Copies all fields of struct_in to struct_out
   ! Assumes that struct_in is a single instance of a given structure
   use ids_schemas
@@ -397,7 +397,7 @@ subroutine ids_copy_struct_<xsl:value-of select="@name"/>(struct_in, struct_out)
     <xsl:with-param name="idxpath" select="''"/>
   </xsl:apply-templates>
   return
-end subroutine ids_copy_struct_<xsl:value-of select="@name"/>
+end subroutine ids_copy_struct_<xsl:value-of select="local:unique_name(@name)"/>
 
 <xsl:for-each select=".//field[@data_type='structure' or @data_type='struct_array']">
   <xsl:variable name="this-name" select="@name"/>
@@ -520,7 +520,7 @@ module <xsl:value-of select="@name"/>_put_struct
 use utilities_put_struct
 
 interface ids_put
-  module procedure put_struct_ids_<xsl:value-of select="@name"/> <!-- subroutine for the whole IDS -->
+  module procedure put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/> <!-- subroutine for the whole IDS -->
 end interface
 
 interface ids_put_struct
@@ -548,7 +548,7 @@ end interface
 
 <!-- subroutine for the whole IDS -->
 !!! Routines to PUT the full IDS !!!
-subroutine put_struct_ids_<xsl:value-of select="@name"/>(pulsectx, name, IDS)
+subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS)
   use ids_schemas
   use ual_low_level_wrap
   use <xsl:value-of select="@name"/>_delete  
@@ -589,7 +589,7 @@ subroutine put_struct_ids_<xsl:value-of select="@name"/>(pulsectx, name, IDS)
     <xsl:with-param name="contextvar" select="'opctx'"/>
     <xsl:with-param name="timedparentexpr" select="''"/>
   </xsl:apply-templates>
-end subroutine put_struct_ids_<xsl:value-of select="@name"/>
+end subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
 
 <xsl:for-each select=".//field[@data_type='structure' or @data_type='struct_array']">
   <xsl:variable name="this-type">
@@ -720,7 +720,7 @@ module <xsl:value-of select="@name"/>_put_slice_struct
 use utilities_put_slice_struct
 
 interface ids_put_slice
-  module procedure put_slice_struct_ids_<xsl:value-of select="@name"/> <!-- subroutine for the whole IDS -->
+  module procedure put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/> <!-- subroutine for the whole IDS -->
 end interface 
 
 interface ids_put_slice_struct
@@ -746,7 +746,7 @@ end interface
 
 <!-- subroutine for the whole IDS -->
 !!! Routines to PUT_SLICE one time slice of an IDS !!!
-subroutine put_slice_struct_ids_<xsl:value-of select="@name"/>(pulsectx, name, IDS)
+subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS)
   use ids_schemas
   use ual_low_level_wrap
   implicit none
@@ -786,7 +786,7 @@ subroutine put_slice_struct_ids_<xsl:value-of select="@name"/>(pulsectx, name, I
     <xsl:with-param name="timedparentexpr" select="''"/>
     <xsl:with-param name="slice" select="'yes'"/>
   </xsl:apply-templates>
-end subroutine put_slice_struct_ids_<xsl:value-of select="@name"/>
+end subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
 
 <xsl:for-each select=".//field[@data_type='structure' or @data_type='struct_array']">
   <xsl:variable name="this-type">
@@ -919,7 +919,7 @@ module <xsl:value-of select="@name"/>_get_struct
 use utilities_get_struct
 
 interface ids_get
-  module procedure get_struct_ids_<xsl:value-of select="@name"/> <!-- subroutine for the whole IDS -->
+  module procedure get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/> <!-- subroutine for the whole IDS -->
 end interface 
 
 interface ids_get_struct
@@ -947,7 +947,7 @@ end interface
 
 <!-- subroutine for the whole IDS -->
 !!! Routines to GET the full IDS !!!
-subroutine get_struct_ids_<xsl:value-of select="@name"/>(pulsectx, name, IDS)
+subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS)
   use ids_schemas
   use ual_low_level_wrap
   implicit none
@@ -983,7 +983,7 @@ subroutine get_struct_ids_<xsl:value-of select="@name"/>(pulsectx, name, IDS)
   call set_c_data(IDS,.true.)
 
   return
-end subroutine get_struct_ids_<xsl:value-of select="@name"/>
+end subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
 
 
 <xsl:for-each select=".//field[@data_type='structure' or @data_type='struct_array']">
@@ -1043,32 +1043,14 @@ use utilities_get_struct
 use <xsl:value-of select="@name"/>_get_struct
 
 interface ids_get_slice
-  module procedure get_slice_struct_ids_<xsl:value-of select="@name"/> <!-- subroutine for the whole IDS -->
-<!--
-  <xsl:for-each select=".//field[@data_type='structure' or @data_type='struct_array']">
-    <xsl:variable name="this-type">
-      <xsl:choose>
-	<xsl:when test="@structure_reference='self'">
-	  <xsl:value-of select="@name"/>
-	</xsl:when>
-	<xsl:otherwise>
-	  <xsl:value-of select="@structure_reference"/>
-	</xsl:otherwise>
-      </xsl:choose>
-    </xsl:variable>
-    <xsl:variable name="this-ids" select="ancestor::IDS/@name"/>
-    <xsl:if test="not (preceding::field[@structure_reference=$this-type and ancestor::IDS/@name=$this-ids] or /IDSs/utilities/field/@name=$this-type)">
-  module procedure get_slice_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>
-    </xsl:if>
-  </xsl:for-each>
--->
+  module procedure get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/> <!-- subroutine for the whole IDS -->
 end interface
 
  contains 
 
 <!-- subroutine for the whole IDS -->
 !!! Routines to GET one time slice of an IDS, with time interpolation !!!
-subroutine get_slice_struct_ids_<xsl:value-of select="@name"/>(pulsectx, name, IDS, twant, interpol)
+subroutine get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS, twant, interpol)
   use ids_schemas
   use ual_low_level_wrap
   implicit none
@@ -1106,49 +1088,7 @@ subroutine get_slice_struct_ids_<xsl:value-of select="@name"/>(pulsectx, name, I
   call set_c_data(IDS,.true.)
 
   return
-end subroutine get_slice_struct_ids_<xsl:value-of select="@name"/>
-
-<!--
-<xsl:for-each select=".//field[@data_type='structure' or @data_type='struct_array']">
-  <xsl:variable name="this-type">
-    <xsl:choose>
-      <xsl:when test="@structure_reference='self'">
-	<xsl:value-of select="@name"/>
-      </xsl:when>
-      <xsl:otherwise>
-	<xsl:value-of select="@structure_reference"/>
-      </xsl:otherwise>
-    </xsl:choose>
-  </xsl:variable>
-  <xsl:variable name="this-ids" select="ancestor::IDS/@name"/>
-  <xsl:if test="not (preceding::field[@structure_reference=$this-type and ancestor::IDS/@name=$this-ids] or /IDSs/utilities/field/@name=$this-type)">
-subroutine get_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>(ctx, path, struct, homogeneous, timedparent, retstatus)
-  use ids_schemas
-  use ual_low_level_wrap
-  implicit none
-
-  integer(ids_int), intent(in) :: ctx
-  character*(*), intent(in) :: path
-  type(ids_<xsl:value-of select="$this-type"/>), intent(inout) :: struct      
-  logical, intent(in) :: homogeneous, timedparent
-  integer(ids_int), intent(out) :: retstatus
-  integer(ids_int) :: i, aoslen, lenstring, aosctx
-  integer(ids_int) :: size1, size2, size3, size4, size5, size6, size7
-  integer :: status
-  character(len=100000) :: longstring
-  character(len=300) :: timepath
-
-  <xsl:apply-templates select="./field" mode="GET_FIELD">
-    <xsl:with-param name="structvar" select="'struct'"/>
-    <xsl:with-param name="contextvar" select="'ctx'"/>
-    <xsl:with-param name="timedparentexpr" select="'timedparent.or.'"/>
-  </xsl:apply-templates>      
-   retstatus = 0
-end subroutine get_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>
-
-  </xsl:if>
-</xsl:for-each>
--->
+end subroutine get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
 
 end module    
   </xsl:result-document>
