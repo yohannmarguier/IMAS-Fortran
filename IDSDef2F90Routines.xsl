@@ -3046,11 +3046,13 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
        <xsl:choose>
        <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data']) or @name='data_error_upper' or @name='data_error_lower'">
        timepath=<xsl:value-of select="$mds_path"/>//&quot;/time&quot;
-       call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%time')"/>),IDS%<xsl:value-of select="concat($variable_path,'%time')"/>)
+       call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%time')"/>),&amp;
+       IDS%<xsl:value-of select="concat($variable_path,'%time')"/>)
        </xsl:when>
        <xsl:otherwise>
        timepath=&quot;<xsl:call-template name="printtimepath"/>&quot;
-       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
+       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>), &amp;
+       <xsl:call-template name="printtimevariable"/>)
        </xsl:otherwise>
        </xsl:choose>
    else
@@ -3088,7 +3090,8 @@ if (associated(IDS%<xsl:value-of select="@name"/>)) then
    <xsl:when test="@type='dynamic'">
    if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
        timepath="<xsl:call-template name="printtimepath"/>"
-       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
+       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),&amp;
+       <xsl:call-template name="printtimevariable"/>)
    else
        timepath="time"
        call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
@@ -3194,11 +3197,13 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
        <xsl:choose>
        <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data']) or @name='data_error_upper' or @name='data_error_lower'">
        timepath=<xsl:value-of select="$mds_path"/>//&quot;/time&quot;
-       call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%time')"/>),IDS%<xsl:value-of select="concat($variable_path,'%time')"/>)
+       call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%time')"/>),&amp;
+       IDS%<xsl:value-of select="concat($variable_path,'%time')"/>)
        </xsl:when>
        <xsl:otherwise>
        timepath=&quot;<xsl:call-template name="printtimepath"/>&quot;
-       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
+       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),&amp;
+       <xsl:call-template name="printtimevariable"/>)
        </xsl:otherwise>
        </xsl:choose>
    else
@@ -3231,7 +3236,8 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    <xsl:when test="@type='dynamic'">
    if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
        timepath="<xsl:call-template name="printtimepath"/>"
-       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
+       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),&amp;
+       <xsl:call-template name="printtimevariable"/>)
    else
        timepath="time"
        call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
@@ -3272,11 +3278,13 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
        <xsl:choose>
        <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data']) or @name='data_error_upper' or @name='data_error_lower'">
        timepath=<xsl:value-of select="$mds_path"/>//&quot;/time&quot;
-       call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%time')"/>),IDS%<xsl:value-of select="concat($variable_path,'%time')"/>)
+       call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%time')"/>),&amp;
+       IDS%<xsl:value-of select="concat($variable_path,'%time')"/>)
        </xsl:when>
        <xsl:otherwise>
        timepath=&quot;<xsl:call-template name="printtimepath"/>&quot;
-       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
+       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),&amp;
+       <xsl:call-template name="printtimevariable"/>)
        </xsl:otherwise>
        </xsl:choose>
    else
@@ -3310,7 +3318,8 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    <xsl:when test="@type='dynamic'">
    if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
        timepath="<xsl:call-template name="printtimepath"/>"
-       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
+       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),&amp;
+       <xsl:call-template name="printtimevariable"/>)
    else
        timepath="time"
        call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
@@ -3352,11 +3361,13 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
        <xsl:choose>
        <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data']) or @name='data_error_upper' or @name='data_error_lower'">
        timepath=<xsl:value-of select="$mds_path"/>//&quot;/time&quot;
-       call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%time')"/>),IDS%<xsl:value-of select="concat($variable_path,'%time')"/>)
+       call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%time')"/>),&amp;
+       IDS%<xsl:value-of select="concat($variable_path,'%time')"/>)
        </xsl:when>
        <xsl:otherwise>
        timepath=&quot;<xsl:call-template name="printtimepath"/>&quot;
-       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
+       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),&amp;
+       <xsl:call-template name="printtimevariable"/>)
        </xsl:otherwise>
        </xsl:choose>
    else
@@ -3390,7 +3401,8 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    <xsl:when test="@type='dynamic'">
    if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
        timepath="<xsl:call-template name="printtimepath"/>"
-       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
+       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),&amp;
+       <xsl:call-template name="printtimevariable"/>)
    else
        timepath="time"
        call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
@@ -3432,11 +3444,13 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
        <xsl:choose>
        <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data']) or @name='data_error_upper' or @name='data_error_lower'">
        timepath=<xsl:value-of select="$mds_path"/>//&quot;/time&quot;
-       call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%time')"/>),IDS%<xsl:value-of select="concat($variable_path,'%time')"/>)
+       call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%time')"/>),&amp;
+       IDS%<xsl:value-of select="concat($variable_path,'%time')"/>)
        </xsl:when>
        <xsl:otherwise>
        timepath=&quot;<xsl:call-template name="printtimepath"/>&quot;
-       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
+       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),&amp;
+       <xsl:call-template name="printtimevariable"/>)
        </xsl:otherwise>
        </xsl:choose>
    else
@@ -3470,7 +3484,8 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    <xsl:when test="@type='dynamic'">
    if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
        timepath="<xsl:call-template name="printtimepath"/>"
-       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
+       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),&amp;
+       <xsl:call-template name="printtimevariable"/>)
    else
        timepath="time"
        call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
@@ -3512,11 +3527,13 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
        <xsl:choose>
        <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data']) or @name='data_error_upper' or @name='data_error_lower'">
        timepath=<xsl:value-of select="$mds_path"/>//&quot;/time&quot;
-       call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%time')"/>),IDS%<xsl:value-of select="concat($variable_path,'%time')"/>)
+       call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%time')"/>),&amp;
+       IDS%<xsl:value-of select="concat($variable_path,'%time')"/>)
        </xsl:when>
        <xsl:otherwise>
        timepath=&quot;<xsl:call-template name="printtimepath"/>&quot;
-       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
+       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),&amp;
+       <xsl:call-template name="printtimevariable"/>)
        </xsl:otherwise>
        </xsl:choose>
    else
@@ -3552,7 +3569,8 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    <xsl:when test="@type='dynamic'">
    if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
        timepath="<xsl:call-template name="printtimepath"/>"
-       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
+       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),&amp;
+       <xsl:call-template name="printtimevariable"/>)
    else
        timepath="time"
        call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
@@ -3595,11 +3613,13 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
        <xsl:choose>
        <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data']) or @name='data_error_upper' or @name='data_error_lower'">
        timepath=<xsl:value-of select="$mds_path"/>//&quot;/time&quot;
-       call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%time')"/>),IDS%<xsl:value-of select="concat($variable_path,'%time')"/>)
+       call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%time')"/>),&amp;
+       IDS%<xsl:value-of select="concat($variable_path,'%time')"/>)
        </xsl:when>
        <xsl:otherwise>
        timepath=&quot;<xsl:call-template name="printtimepath"/>&quot;
-       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
+       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),&amp;
+       <xsl:call-template name="printtimevariable"/>)
        </xsl:otherwise>
        </xsl:choose>
    else
@@ -3636,7 +3656,8 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    <xsl:when test="@type='dynamic'">
    if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
        timepath="<xsl:call-template name="printtimepath"/>"
-       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
+       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),&amp;
+       <xsl:call-template name="printtimevariable"/>)
    else
        timepath="time"
        call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
@@ -3677,11 +3698,13 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
        <xsl:choose>
        <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data']) or @name='data_error_upper' or @name='data_error_lower'">
        timepath=<xsl:value-of select="$mds_path"/>//&quot;/time&quot;
-       call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%time')"/>),IDS%<xsl:value-of select="concat($variable_path,'%time')"/>)
+       call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%time')"/>),&amp;
+       IDS%<xsl:value-of select="concat($variable_path,'%time')"/>)
        </xsl:when>
        <xsl:otherwise>
        timepath=&quot;<xsl:call-template name="printtimepath"/>&quot;
-       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
+       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),&amp;
+       <xsl:call-template name="printtimevariable"/>)
        </xsl:otherwise>
        </xsl:choose>
    else
@@ -3718,7 +3741,8 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    <xsl:when test="@type='dynamic'">
    if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
        timepath="<xsl:call-template name="printtimepath"/>"
-       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
+       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),&amp;
+       <xsl:call-template name="printtimevariable"/>)
    else
        timepath="time"
        call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
@@ -3764,11 +3788,13 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
        <xsl:choose>
        <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data']) or @name='data_error_upper' or @name='data_error_lower'">
        timepath=<xsl:value-of select="$mds_path"/>//&quot;/time&quot;
-       call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%time')"/>),IDS%<xsl:value-of select="concat($variable_path,'%time')"/>)
+       call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%time')"/>),&amp;
+       IDS%<xsl:value-of select="concat($variable_path,'%time')"/>)
        </xsl:when>
        <xsl:otherwise>
        timepath=&quot;<xsl:call-template name="printtimepath"/>&quot;
-       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
+       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),&amp;
+       <xsl:call-template name="printtimevariable"/>)
        </xsl:otherwise>
        </xsl:choose>
    else
@@ -3806,7 +3832,8 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    <xsl:when test="@type='dynamic'">
    if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
        timepath="<xsl:call-template name="printtimepath"/>"
-       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
+       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),&amp;
+       <xsl:call-template name="printtimevariable"/>)
    else
        timepath="time"
        call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
@@ -3851,16 +3878,19 @@ if (associated(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>)) t
        <xsl:choose>
        <xsl:when test="(@name='data' and ../field[@name='time']) or (@name='time' and ../field[@name='data']) or @name='data_error_upper' or @name='data_error_lower'">
        timepath=<xsl:value-of select="$mds_path"/>//&quot;/time&quot;
-       call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%time')"/>),IDS%<xsl:value-of select="concat($variable_path,'%time')"/>)
+       call begin_IDS_put_timed(idx, path,size(IDS%<xsl:value-of select="concat($variable_path,'%time')"/>),&amp;
+       IDS%<xsl:value-of select="concat($variable_path,'%time')"/>)
        </xsl:when>
        <xsl:otherwise>
        timepath=&quot;<xsl:call-template name="printtimepath"/>&quot;
-       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
+       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),&amp;
+       <xsl:call-template name="printtimevariable"/>)
        </xsl:otherwise>
        </xsl:choose>
    else
        timepath="time"
-       call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
+       call begin_IDS_put_timed(idx, path,size(IDS%time),&amp;
+       IDS%time)
    endif
    </xsl:when>
    <xsl:otherwise>
@@ -3894,10 +3924,12 @@ if (associated(IDS%<xsl:value-of select="translate(@path,'/','%')"/>)) then
    <xsl:when test="@type='dynamic'">
    if (IDS%IDS_Properties%Homogeneous_time.EQ.0) then
        timepath="<xsl:call-template name="printtimepath"/>"
-       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),<xsl:call-template name="printtimevariable"/>)
+       call begin_IDS_put_timed(idx, path,size(<xsl:call-template name="printtimevariable"/>),&amp;
+       <xsl:call-template name="printtimevariable"/>)
    else
        timepath="time"
-       call begin_IDS_put_timed(idx, path,size(IDS%time),IDS%time)
+       call begin_IDS_put_timed(idx, path,size(IDS%time) &amp;
+       IDS%time)
    endif
    </xsl:when>
    <xsl:otherwise>
