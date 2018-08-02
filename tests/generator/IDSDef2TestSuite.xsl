@@ -82,12 +82,11 @@
         <xsl:text>PROGRAM </xsl:text><xsl:value-of select="@name"/><xsl:text>_test&#10;</xsl:text>
 	<xsl:text>&#9;use comparator &#10;</xsl:text>
 	<xsl:text>&#9;use ids_schemas &#10;</xsl:text>
-
 	<xsl:text>&#9;use helper&#10;</xsl:text>
         <xsl:text>&#9;implicit none&#10;   </xsl:text>
 
-	<xsl:text>&#9;INTEGER :: idx;&#10;</xsl:text>
-	<xsl:text>&#9;INTEGER, PARAMETER :: IDS_PATH_LEN = 30;&#10;</xsl:text>
+	<xsl:text>&#9;INTEGER :: idx,idxslice&#10;</xsl:text>
+	<xsl:text>&#9;INTEGER, PARAMETER :: IDS_PATH_LEN = 30&#10;</xsl:text>
 	<xsl:text>&#9;INTEGER :: N_SEED&#10;</xsl:text>
 	<xsl:text>&#9;call random_seed(SIZE=N_SEED)&#10;</xsl:text>
 	<xsl:text>&#9;ALLOCATE(SEED(N_SEED))&#10;</xsl:text>
@@ -102,7 +101,7 @@
 	<xsl:text>&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_put()&#10;</xsl:text>
 	<xsl:text>&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_get()&#10;</xsl:text>
         <!-- Procedure put_slice should exist only for time-dependent IDSs -->
-        <xsl:text>&#9;call createslice(idx);&#10;</xsl:text>
+        <xsl:text>&#9;call createslice(idxslice);&#10;</xsl:text>
 	<xsl:if test=".//field[@type='dynamic']">
        	  <xsl:text>&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_putSlice()&#10;</xsl:text>
 	</xsl:if>
