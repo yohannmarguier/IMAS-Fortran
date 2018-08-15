@@ -46,27 +46,33 @@ IDSNAMES_FUNC+=$(addsuffix _deallocate_struct,$(IDSNAMES))
 # IDS routines
 IDSROUTINES=$(addsuffix .f90,$(IDSNAMES_FUNC))
 SOURCES=ids_routines.f90 utilities_copy_struct.f90 utilities_deallocate_struct.f90 $(IDSROUTINES)
+# pkg-config files
+PC_FILES=
 
 ifneq ("no","$(strip $(IMAS_G95))")
 TARGETS += libimas-g95.so libimas-g95.a
+PC_FILES += imas-g95.pc
 INSTALL_TARGETS += g95
 IDSOBJECTS_g95=$(addsuffix _g95.o,$(IDSNAMES_FUNC))
 endif
 
 ifneq ("no","$(strip $(IMAS_GFORTRAN))")
 TARGETS += libimas-gfortran.so libimas-gfortran.a
+PC_FILES += imas-gfortran.pc
 INSTALL_TARGETS += gfortran
 IDSOBJECTS_gfortran=$(addsuffix _gfortran.o,$(IDSNAMES_FUNC))
 endif
 
 ifneq ("no","$(strip $(IMAS_PGI))")
 TARGETS += libimas-pgi.so libimas-pgi.a
+PC_FILES += imas-pgi.pc
 INSTALL_TARGETS += pgi
 IDSOBJECTS_pgi=$(addsuffix _pgi.o,$(IDSNAMES_FUNC))
 endif
 
 ifneq ("no","$(strip $(IMAS_IFORT))")
 TARGETS += libimas-ifort.so libimas-ifort.a
+PC_FILES += imas-ifort.pc
 INSTALL_TARGETS += ifort
 IDSOBJECTS_ifort=$(addsuffix _ifort.o,$(IDSNAMES_FUNC))
 endif
@@ -246,7 +252,5 @@ ids_schemas.f90: xsd2F90TypeDef.xsl
 	mv ../xml/ids_schemas.f90 .
 
 #----------------------- pkgconfig ---------------------
-PC_FILES = imas-ifort.pc imas-gfortran.pc imas-pgi.pc imas-g95.pc
-
 include ../Makefile.pkgconfig
 endif # IMAS_FORTRAN=no?
