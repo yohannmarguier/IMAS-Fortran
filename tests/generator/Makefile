@@ -9,6 +9,11 @@ ifeq (,$(UAL_BUILD))
 $(error UAL_BUILD variable unset, are you running make ual_test from the Installer? use Makefile-local to test a previously installed IMAS.)
 endif
 
+ifeq ("no","$(strip $(IMAS_FORTRAN))")
+all sources sources_install install clean clean-src:
+	$(warning "Ignoring fortraninterface (IMAS_FORTRAN=no).")
+else
+
 # Check that "saxon9he.jar" utility is set in CLASSPATH
 SAXONICAJAR=$(wildcard $(filter %saxon9he.jar,$(subst :, ,$(CLASSPATH))))
 
@@ -28,3 +33,4 @@ ids_path = $(UAL_BUILD)/models/mdsplus
 
 
 include Makefile.tests
+endif # IMAS_FORTRAN

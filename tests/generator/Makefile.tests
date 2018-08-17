@@ -6,12 +6,12 @@ help:
 	$(error Do not run make on this file directly, use Makefile or Makefile-local.)
 
 
-ifeq "$(strip $(GFORTRAN))" "yes"
+ifneq ("no","$(strip $(IMAS_GFORTRAN))")
     TARGETS += gfortran_testSuite
     TESTS += gfortran_test
 endif
 
-ifeq "$(strip $(IFORT))" "yes"
+ifneq ("no","$(strip $(IMAS_IFORT))")
     TARGETS += ifort_testSuite
     TESTS += ifort_test
 endif
