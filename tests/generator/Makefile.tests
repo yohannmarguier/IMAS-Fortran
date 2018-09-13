@@ -8,7 +8,11 @@ endif
 help:
 	$(error Specify a target to run, e.g. make test)
 
-
+ifneq ("no","$(strip $(SYS_WIN))")
+	JAVA = $(JAVA_HOME)/bin/java
+else
+	JAVA = java
+endif
 	
 # Make NEW_LOW_LEVEL=yes default
 NEW_LOW_LEVEL?=yes
@@ -74,7 +78,7 @@ clean-src: clean
 
 
 #################################################
-#                 INIT: SOURCE GENERATION
+#				 INIT: SOURCE GENERATION
 #################################################
 # Test if all generated sources are found to exist as files and
 # gracefully skip generation if not needed.
@@ -87,10 +91,10 @@ endif
 # Target sources is reserved (used by user to build sources only)
 # Need a single target to prevent parallel building:
 sources_: IDSDef2TestSuite.xsl $(IDSDEF) | saxonicajar $(TEST_SRC_DIR)
-	java net.sf.saxon.Transform newLowLevel=$(NEW_LOW_LEVEL) -t -s:$(IDSDEF) -xsl:IDSDef2TestSuite.xsl
+	$(JAVA) net.sf.saxon.Transform newLowLevel=$(NEW_LOW_LEVEL) -t -s:$(IDSDEF) -xsl:IDSDef2TestSuite.xsl
 
 #################################################
-#              BUILD
+#			  BUILD
 #################################################
 
 #------------------------- gfortran ----------------------------
@@ -197,7 +201,7 @@ ifort_initpulse: initpulse.f90
 
 
 #################################################
-#              TEST
+#			  TEST
 #################################################
 .PHONY: test ifort_test gfortran_test
 
