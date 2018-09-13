@@ -6,6 +6,25 @@ all sources sources_install install clean clean-src:
 	$(warning "Ignoring fortraninterface (IMAS_FORTRAN=no).")
 else
 
+ifneq ("no","$(strip $(SYS_WIN))")
+ifneq ("no","$(strip $(IMAS_G95))")
+	$(error "Ignoring fortraninterface for Windows (IMAS_G95=yes).")
+endif
+ifneq ("no","$(strip $(IMAS_PGI))")
+	$(error "Ignoring fortraninterface for Windows (IMAS_PGI=yes).")
+endif
+ifneq ("no","$(strip $(IMAS_IFORT))")
+	$(error "Ignoring fortraninterface for Windows (IMAS_IFORT=yes).")
+endif
+endif
+
+export IMAS_PREFIX=$(UAL)
+
+ifeq (,$(wildcard $(IMAS_PREFIX)))
+$(error $$IMAS_PREFIX is unset)
+endif
+
+
 FC_g95         = g95
 MODDIR_g95      = g95
 COPTS_g95       = -D__USE_XOPEN2K8 -r8 -ftrace=full -fPIC -fno-second-underscore -ffree-line-length-huge -g -fmod=$(MODDIR_g95)
@@ -27,9 +46,25 @@ COPTS_ifort     = -r8 -O0 -assume no2underscore -fPIC -module $(MODDIR_ifort) -g
 INCDIR_ifort    = -I$(MODDIR_ifort)
 
 IDSDEF          = ../xml/IDSDef.xml
-IDSDEFXSD       = ../xml/dd_physics_data_dictionary.xsd
 
-LIBS            =  -L../lowlevel -limas -lm
+# Windows
+ifneq ("no","$(strip $(SYS_WIN))")
+    LIBS        = $(IMAS_PREFIX)/lib/libimas.lib
+    LIBS        += $(MDSPLUS_HOME)/devtools/lib64/mingw/TreeShr.lib
+    LIBS        += $(MDSPLUS_HOME)/devtools/lib64/mingw/TdiShr.lib
+    LIBS        += $(MDSPLUS_HOME)/devtools/lib64/mingw/MdsShr.lib
+    LIBS        += $(MDSPLUS_HOME)/devtools/lib64/mingw/XTreeShr.lib
+    LIBS        += $(MDSPLUS_HOME)/devtools/lib64/mingw/MdsIpShr.lib
+    LIBS        += $(MDSPLUS_HOME)/devtools/lib64/mingw/MdsObjectsCppShr.lib
+	LIBS        += -lm -lstdc++
+    JAVA        = $(JAVA_HOME)/bin/java
+    IDSDEFXSD   = dd_data_dictionary.xml.xsd
+else
+    LIBS        = -L../lowlevel -limas -lm
+    JAVA        = java
+    IDSDEFXSD   = dd_physics_data_dictionary.xsd
+endif
+
 
 # Get a list of IDS from IDSDEF file
 IDSNAMES := $(shell sed '/<IDS name=/!d;s/.*name="\([^"]*\)".*/\1/' $(IDSDEF))
@@ -62,8 +97,11 @@ IDSOBJECTS_g95=$(addsuffix _g95.o,$(IDSNAMES_FUNC))
 endif
 
 ifneq ("no","$(strip $(IMAS_GFORTRAN))")
-TARGETS += libimas-gfortran.so libimas-gfortran.a
-PC_FILES += imas-gfortran.pc
+ifneq ("no","$(strip $(SYS_WIN))")
+    TARGETS += libimas-gfortran.dll libimas-gfortran.lib
+else
+    TARGETS += libimas-gfortran.so libimas-gfortran.a
+endif
 INSTALL_TARGETS += gfortran
 IDSOBJECTS_gfortran=$(addsuffix _gfortran.o,$(IDSNAMES_FUNC))
 endif
@@ -128,7 +166,7 @@ install_gfortran: $(IDSOBJECTS_gfortran) libimas-gfortran.a libimas-gfortran.so
 	ln -svfT libimas-gfortran$(SOEXT3) $(libdir)/libimas-gfortran.so
 
 clean:
-	$(RM) -r *.o *.mod *.so* *~ g95/ gfortran/ pgi/ ifort/ *.a
+	$(RM) -r *.o *.mod *.so *~ g95/ gfortran/ pgi/ ifort/ *.a *.lib *.dll
 
 clean-src: clean
 	$(RM) $(SOURCES)
@@ -197,6 +235,13 @@ libimas-gfortran$(SOEXT3): %$(SOEXT3): ids_schemas_gfortran.o ual_defs_gfortran.
 
 libimas-gfortran.a: ids_schemas_gfortran.o ual_defs_gfortran.o ual_low_level_wrap_gfortran.o utilities_copy_struct_gfortran.o utilities_deallocate_struct_gfortran.o utilities_put_struct_gfortran.o utilities_put_slice_struct_gfortran.o utilities_get_struct_gfortran.o $(IDSOBJECTS_gfortran) ids_routines_gfortran.o $(DEP_gfortran)
 	$(AR) rvs $@ $^
+
+libimas-gfortran.dll: ids_schemas_gfortran.o ual_defs_gfortran.o ual_low_level_wrap_gfortran.o utilities_copy_struct_gfortran.o utilities_deallocate_struct_gfortran.o utilities_put_struct_gfortran.o utilities_put_slice_struct_gfortran.o utilities_get_struct_gfortran.o $(IDSOBJECTS_gfortran) ids_routines_gfortran.o $(DEP_gfortran)
+	$(FC_gfortran) $(COPTS_gfortran) -o $@ -shared -Wl,-soname,$@.$(IMAS_MAJOR).$(IMAS_MINOR) $^ $(LIBS)
+
+libimas-gfortran.lib: ids_schemas_gfortran.o ual_defs_gfortran.o ual_low_level_wrap_gfortran.o utilities_copy_struct_gfortran.o utilities_deallocate_struct_gfortran.o utilities_put_struct_gfortran.o utilities_put_slice_struct_gfortran.o utilities_get_struct_gfortran.o $(IDSOBJECTS_gfortran) ids_routines_gfortran.o $(DEP_gfortran)
+	$(AR) rcvsu $@ $^
+	ranlib $@
 
 ids_routines_gfortran.o: ids_routines.f90 ual_defs_gfortran.o ual_low_level_wrap_gfortran.o utilities_copy_struct_gfortran.o utilities_deallocate_struct_gfortran.o utilities_put_struct_gfortran.o utilities_put_slice_struct_gfortran.o utilities_get_struct_gfortran.o $(IDSOBJECTS_gfortran)
 	$(FC_gfortran) -c $(COPTS_gfortran) $(INCDIR_gfortran) ids_routines.f90 -o $@
@@ -325,19 +370,19 @@ $(filter %_deallocate_struct_ifort.o,$(IDSOBJECTS)): %_ifort.o:%.f90 ids_schemas
 #----------------------- xslt ---------------------
 # Test if all idsroutines are found to exist as files.
 ifeq ($(words $(IDSROUTINES)), $(words $(wildcard $(IDSROUTINES))))
-$(SOURCES): IDSDef2F90Routines.xsl xsd2copy_structures.xsl | saxonicajar
-	java net.sf.saxon.Transform -t -s:$(IDSDEF) -xsl:IDSDef2F90Routines.xsl
+$(SOURCES): IDSDef2F90Routines.xsl xsd2copy_structures.xsl
+	$(JAVA) net.sf.saxon.Transform -t -s:$(IDSDEF) -xsl:IDSDef2F90Routines.xsl
 idsroutines:
 else
 # Need to generate, use an intermediate target idsroutines to force non-parallel execution.
 $(SOURCES): idsroutines
-idsroutines: IDSDef2F90Routines.xsl xsd2copy_structures.xsl | saxonicajar
-	java net.sf.saxon.Transform -t -s:$(IDSDEF) -xsl:IDSDef2F90Routines.xsl
+idsroutines: IDSDef2F90Routines.xsl xsd2copy_structures.xsl
+	$(JAVA) net.sf.saxon.Transform -t -s:$(IDSDEF) -xsl:IDSDef2F90Routines.xsl
 endif
 
 ids_schemas.f90: xsd2F90TypeDef.xsl
 	(cp xsd2F90TypeDef.xsl ../xml/ ; cd ../xml/ ; \
-	xsltproc xsd2F90TypeDef.xsl dd_physics_data_dictionary.xsd > ids_schemas.f90 ) ; \
+	xsltproc xsd2F90TypeDef.xsl $(IDSDEFXSD) > ids_schemas.f90 ) ; \
 	$(RM) ../xml/xsd2F90TypeDef.xsl ; \
 	mv ../xml/ids_schemas.f90 .
 
