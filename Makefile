@@ -50,12 +50,13 @@ IDSDEF          = ../xml/IDSDef.xml
 # Windows
 ifneq ("no","$(strip $(SYS_WIN))")
     LIBS        = $(IMAS_PREFIX)/lib/libimas.lib
-    LIBS        += $(MDSPLUS_HOME)/devtools/lib64/mingw/TreeShr.lib
-    LIBS        += $(MDSPLUS_HOME)/devtools/lib64/mingw/TdiShr.lib
-    LIBS        += $(MDSPLUS_HOME)/devtools/lib64/mingw/MdsShr.lib
-    LIBS        += $(MDSPLUS_HOME)/devtools/lib64/mingw/XTreeShr.lib
-    LIBS        += $(MDSPLUS_HOME)/devtools/lib64/mingw/MdsIpShr.lib
-    LIBS        += $(MDSPLUS_HOME)/devtools/lib64/mingw/MdsObjectsCppShr.lib
+    #LIBS        += $(MDSPLUS_HOME)/lib/TreeShr.a
+    #LIBS        += $(MDSPLUS_HOME)/lib/TdiShr.a
+    #LIBS        += $(MDSPLUS_HOME)/lib/MdsShr.a
+    #LIBS        += $(MDSPLUS_HOME)/lib/XTreeShr.a
+    #LIBS        += $(MDSPLUS_HOME)/lib/MdsIpShr.a
+    #LIBS        += $(MDSPLUS_HOME)/lib/MdsObjectsCppShr.a
+    LIBS        += -lTreeShr -lTdiShr -lMdsShr -lXTreeShr -lMdsIpShr -lMdsObjectsCppShr
 	LIBS        += -lm -lstdc++
     JAVA        = $(JAVA_HOME)/bin/java
     IDSDEFXSD   = dd_data_dictionary.xml.xsd
