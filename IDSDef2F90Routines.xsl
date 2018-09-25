@@ -954,7 +954,7 @@ subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   integer(ids_int) :: pulsectx, opctx, aosctx
   type(ids_<xsl:value-of select="@name"/>) :: IDS
   ! internal variables declaration
-  logical :: homogeneous, timedparent
+  logical :: timedparent
   integer(ids_int) :: aoslen, i, lenstring
   integer(ids_int) :: size1, size2, size3, size4, size5, size6, size7
   character(len=100000) :: longstring
@@ -1059,7 +1059,7 @@ subroutine get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   integer(ids_int) :: pulsectx, opctx, aosctx
   type(ids_<xsl:value-of select="@name"/>) :: IDS
   ! internal variables declaration
-  logical :: homogeneous, timedparent
+  logical :: timedparent
   integer(ids_int) :: aoslen, i, lenstring
   integer(ids_int) :: size1, size2, size3, size4, size5, size6, size7
   character(len=100000) :: longstring
@@ -1769,7 +1769,7 @@ end module
     ! Get <xsl:value-of select="@name"/>
     <xsl:choose>
       <xsl:when test="@type='dynamic'">
-       if (homogeneous) then
+       if (<xsl:choose><xsl:when test="$root='yes'">IDS%ids_properties%homogeneous_time.eq.1</xsl:when><xsl:otherwise>homogeneous</xsl:otherwise></xsl:choose>) then
           timepath = "/time"
        else
           timepath = <xsl:value-of select="$fieldpath"/>//"/time"
@@ -1855,6 +1855,7 @@ end module
     <xsl:call-template name="set_timepath">
       <xsl:with-param name="fieldpath" select="$fieldpath"/>
       <xsl:with-param name="fieldvar" select="$fieldvar"/>
+      <xsl:with-param name="root" select="$root"/>
     </xsl:call-template>
     call get_vect1d_string(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
        trim(timepath), <xsl:value-of select="$fieldvar"/>, size1, status)
@@ -1895,6 +1896,7 @@ end module
     <xsl:call-template name="set_timepath">
       <xsl:with-param name="fieldpath" select="$fieldpath"/>
       <xsl:with-param name="fieldvar" select="$fieldvar"/>
+      <xsl:with-param name="root" select="$root"/>
     </xsl:call-template>
     call get_vect1d_double(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
           trim(timepath), <xsl:value-of select="$fieldvar"/>, size1, status)
@@ -1911,6 +1913,7 @@ end module
     <xsl:call-template name="set_timepath">
       <xsl:with-param name="fieldpath" select="$fieldpath"/>
       <xsl:with-param name="fieldvar" select="$fieldvar"/>
+      <xsl:with-param name="root" select="$root"/>
     </xsl:call-template>
     call get_vect1d_int(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
           trim(timepath), <xsl:value-of select="$fieldvar"/>, size1, status)
@@ -1927,6 +1930,7 @@ end module
     <xsl:call-template name="set_timepath">
       <xsl:with-param name="fieldpath" select="$fieldpath"/>
       <xsl:with-param name="fieldvar" select="$fieldvar"/>
+      <xsl:with-param name="root" select="$root"/>
     </xsl:call-template>
     call get_vect2d_double(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
           trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
@@ -1944,6 +1948,7 @@ end module
     <xsl:call-template name="set_timepath">
       <xsl:with-param name="fieldpath" select="$fieldpath"/>
       <xsl:with-param name="fieldvar" select="$fieldvar"/>
+      <xsl:with-param name="root" select="$root"/>
     </xsl:call-template>
     call get_vect2d_int(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
           trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
@@ -1961,6 +1966,7 @@ end module
     <xsl:call-template name="set_timepath">
       <xsl:with-param name="fieldpath" select="$fieldpath"/>
       <xsl:with-param name="fieldvar" select="$fieldvar"/>
+      <xsl:with-param name="root" select="$root"/>
     </xsl:call-template>
     call get_vect3d_double(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
           trim(timepath), <xsl:value-of select="$fieldvar"/>, &amp;
@@ -1978,6 +1984,7 @@ end module
     <xsl:call-template name="set_timepath">
       <xsl:with-param name="fieldpath" select="$fieldpath"/>
       <xsl:with-param name="fieldvar" select="$fieldvar"/>
+      <xsl:with-param name="root" select="$root"/>
     </xsl:call-template>
     call get_vect3d_int(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
           trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
@@ -1995,6 +2002,7 @@ end module
     <xsl:call-template name="set_timepath">
       <xsl:with-param name="fieldpath" select="$fieldpath"/>
       <xsl:with-param name="fieldvar" select="$fieldvar"/>
+      <xsl:with-param name="root" select="$root"/>
     </xsl:call-template>
     call get_vect4d_double(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
           trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
@@ -2012,6 +2020,7 @@ end module
     <xsl:call-template name="set_timepath">
       <xsl:with-param name="fieldpath" select="$fieldpath"/>
       <xsl:with-param name="fieldvar" select="$fieldvar"/>
+      <xsl:with-param name="root" select="$root"/>
     </xsl:call-template>
     call get_vect5d_double(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
           trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
@@ -2029,6 +2038,7 @@ end module
     <xsl:call-template name="set_timepath">
       <xsl:with-param name="fieldpath" select="$fieldpath"/>
       <xsl:with-param name="fieldvar" select="$fieldvar"/>
+      <xsl:with-param name="root" select="$root"/>
     </xsl:call-template>
     call get_vect6d_double(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
           trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
@@ -2085,12 +2095,13 @@ end module
 <xsl:template name="set_timepath">
   <xsl:param name="fieldpath"/>
   <xsl:param name="fieldvar"/>
+  <xsl:param name="root"/>
   <xsl:choose>
     <xsl:when test="@type='dynamic'">
       if (timedparent) then
          timepath=""
       else
-         if (homogeneous) then
+         if (<xsl:choose><xsl:when test="$root='yes'">IDS%ids_properties%homogeneous_time.eq.1</xsl:when><xsl:otherwise>homogeneous</xsl:otherwise></xsl:choose>) then
             timepath="/time"
          else
 	    timepath=<xsl:if test="substring(@timebasepath,1,1)='\'">path//</xsl:if>"/<xsl:value-of select="translate(@timebasepath,'\','/')"/>"
