@@ -50,12 +50,6 @@ IDSDEF          = ../xml/IDSDef.xml
 # Windows
 ifneq ("no","$(strip $(SYS_WIN))")
     LIBS        = $(IMAS_PREFIX)/lib/libimas.lib
-    #LIBS        += $(MDSPLUS_HOME)/lib/TreeShr.a
-    #LIBS        += $(MDSPLUS_HOME)/lib/TdiShr.a
-    #LIBS        += $(MDSPLUS_HOME)/lib/MdsShr.a
-    #LIBS        += $(MDSPLUS_HOME)/lib/XTreeShr.a
-    #LIBS        += $(MDSPLUS_HOME)/lib/MdsIpShr.a
-    #LIBS        += $(MDSPLUS_HOME)/lib/MdsObjectsCppShr.a
     LIBS        += -lTreeShr -lTdiShr -lMdsShr -lXTreeShr -lMdsIpShr -lMdsObjectsCppShr
 	LIBS        += -lm -lstdc++
     JAVA        = $(JAVA_HOME)/bin/java
@@ -238,7 +232,7 @@ libimas-gfortran.a: ids_schemas_gfortran.o ual_defs_gfortran.o ual_low_level_wra
 	$(AR) rvs $@ $^
 
 libimas-gfortran.dll: ids_schemas_gfortran.o ual_defs_gfortran.o ual_low_level_wrap_gfortran.o utilities_copy_struct_gfortran.o utilities_deallocate_struct_gfortran.o utilities_put_struct_gfortran.o utilities_put_slice_struct_gfortran.o utilities_get_struct_gfortran.o $(IDSOBJECTS_gfortran) ids_routines_gfortran.o $(DEP_gfortran)
-	$(FC_gfortran) $(COPTS_gfortran) -o $@ -shared -Wl,-soname,$@.$(IMAS_MAJOR).$(IMAS_MINOR) $^ $(LIBS)
+	$(FC_gfortran) $(COPTS_gfortran) -o $@ -shared -Wl,-soname,$@.$(IMAS_MAJOR).$(IMAS_MINOR) -Wl,--out-implib,$@.lib $^ $(LIBS)
 
 libimas-gfortran.lib: ids_schemas_gfortran.o ual_defs_gfortran.o ual_low_level_wrap_gfortran.o utilities_copy_struct_gfortran.o utilities_deallocate_struct_gfortran.o utilities_put_struct_gfortran.o utilities_put_slice_struct_gfortran.o utilities_get_struct_gfortran.o $(IDSOBJECTS_gfortran) ids_routines_gfortran.o $(DEP_gfortran)
 	$(AR) rcvsu $@ $^
