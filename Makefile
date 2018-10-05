@@ -25,39 +25,60 @@ $(error $$IMAS_PREFIX is unset)
 endif
 
 
-FC_g95         = g95
-MODDIR_g95      = g95
-COPTS_g95       = -D__USE_XOPEN2K8 -r8 -ftrace=full -fPIC -fno-second-underscore -ffree-line-length-huge -g -fmod=$(MODDIR_g95)
-INCDIR_g95      = -I$(MODDIR_g95)
+FC_g95			= g95
+MODDIR_g95		= g95
+COPTS_g95		= -D__USE_XOPEN2K8 -r8 -ftrace=full -fPIC -fno-second-underscore -ffree-line-length-huge -g -fmod=$(MODDIR_g95)
+INCDIR_g95		= -I$(MODDIR_g95)
 
-FC_gfortran    = gfortran
+FC_gfortran		= gfortran
 MODDIR_gfortran = gfortran
-COPTS_gfortran  = -O0 -D__USE_XOPEN2K8 -fdefault-real-8 -fdefault-double-8 -fPIC -fno-second-underscore -ffree-line-length-none -g -J$(MODDIR_gfortran)
-INCDIR_gfortran = -I$(MODDIR_gfortran)
+COPTS_gfortran	= -O0 -D__USE_XOPEN2K8 -fdefault-real-8 -fdefault-double-8 -fPIC -fno-second-underscore -ffree-line-length-none -g -J$(MODDIR_gfortran)
+INCDIR_gfortran	= -I$(MODDIR_gfortran)
 
-FC_pgi         = pgf90
-MODDIR_pgi      = pgi
-COPTS_pgi       = -D__USE_XOPEN2K8 -r8 -Mnosecond_underscore -fPIC -module=./$(MODDIR_pgi) -g
-INCDIR_pgi      = -I$(MODDIR_pgi)
+FC_pgi			= pgf90
+MODDIR_pgi		= pgi
+COPTS_pgi		= -D__USE_XOPEN2K8 -r8 -Mnosecond_underscore -fPIC -module=./$(MODDIR_pgi) -g
+INCDIR_pgi		= -I$(MODDIR_pgi)
 
-FC_ifort       = ifort
-MODDIR_ifort    = ifort
-COPTS_ifort     = -r8 -O0 -assume no2underscore -fPIC -module $(MODDIR_ifort) -g -shared-intel
-INCDIR_ifort    = -I$(MODDIR_ifort)
+FC_ifort		= ifort
+MODDIR_ifort	= ifort
+COPTS_ifort		= -r8 -O0 -assume no2underscore -fPIC -module $(MODDIR_ifort) -g -shared-intel
+INCDIR_ifort	= -I$(MODDIR_ifort)
 
-IDSDEF          = ../xml/IDSDef.xml
+IDSDEF		  = ../xml/IDSDef.xml
 
 # Windows
 ifneq ("no","$(strip $(SYS_WIN))")
-    LIBS        = $(IMAS_PREFIX)/lib/libimas.lib
-    LIBS        += -lTreeShr -lTdiShr -lMdsShr -lXTreeShr -lMdsIpShr -lMdsObjectsCppShr
-	LIBS        += -lm -lstdc++
-    JAVA        = $(JAVA_HOME)/bin/java
-    IDSDEFXSD   = dd_data_dictionary.xml.xsd
+	LIBS		= $(IMAS_PREFIX)/lib/libimas.lib
+	ifneq ("no","$(strip $(IMAS_MDSPLUS))")
+		LIBS	+= -L$(MDSPLUS_DIR)/lib
+		#LIBS	+= -lTreeShr -lTdiShr -lMdsShr -lXTreeShr -lMdsIpShr -lMdsObjectsCppShr
+		LIBS	+= $(MDSPLUS_DIR)/lib/XTreeShr.a
+		LIBS	+= $(MDSPLUS_DIR)/lib/MdsObjectsCppShr.a
+		LIBS	+= $(MDSPLUS_DIR)/lib/MdsIpShr.a
+		LIBS	+= $(MDSPLUS_DIR)/lib/MdsLib.a
+		LIBS	+= $(MDSPLUS_DIR)/lib/TdiShr.a
+		LIBS	+= $(MDSPLUS_DIR)/lib/TreeShr.a
+		LIBS	+= $(MDSPLUS_DIR)/lib/MdsShr.a
+		LIBS	+= -lxml2 -lws2_32 -ldl -liphlpapi
+	endif
+	ifneq ("no","$(strip $(IMAS_UDA))")
+		LIBS	+= -L$(UDA_HOME)/lib
+		LIBS	+= $(UDA_HOME)/lib/libuda_cpp.a
+		LIBS	+= $(UDA_HOME)/lib/libportablexdr.a
+		LIBS	+= -lws2_32 -lssl -lcrypto
+	endif
+	ifneq ("no","$(strip $(IMAS_HDF5))")
+		LIBS	+= -L$(HDF5_HOME)/lib
+		LIBS	+= $(HDF5_HOME)/lib/libhdf5.a -ldl -lz
+	endif
+	LIBS		+= -lm -lstdc++
+	JAVA		= $(JAVA_HOME)/bin/java
+	IDSDEFXSD   = dd_data_dictionary.xml.xsd
 else
-    LIBS        = -L../lowlevel -limas -lm
-    JAVA        = java
-    IDSDEFXSD   = dd_physics_data_dictionary.xsd
+	LIBS		= -L../lowlevel -limas -lm
+	JAVA		= java
+	IDSDEFXSD   = dd_physics_data_dictionary.xsd
 endif
 
 
@@ -93,9 +114,9 @@ endif
 
 ifneq ("no","$(strip $(IMAS_GFORTRAN))")
 ifneq ("no","$(strip $(SYS_WIN))")
-    TARGETS += libimas-gfortran.dll libimas-gfortran.lib
+	TARGETS += libimas-gfortran.dll libimas-gfortran.lib
 else
-    TARGETS += libimas-gfortran.so libimas-gfortran.a
+	TARGETS += libimas-gfortran.so libimas-gfortran.a
 endif
 INSTALL_TARGETS += gfortran
 IDSOBJECTS_gfortran=$(addsuffix _gfortran.o,$(IDSNAMES_FUNC))
