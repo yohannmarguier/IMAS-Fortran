@@ -1190,7 +1190,8 @@ endif
 							<xsl:when test="@data_type='flt_1d_type' or @data_type='FLT_1D'">
 ! Get <xsl:value-of select="@path"/>
 								<!-- for comment only -->
-call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension(idx,path, "<xsl:value-of select="@path"/>", &amp;
+   ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1))
    call get_vect1d_double_Slice(idx,path, "<xsl:value-of select="@path"/>", &amp;
@@ -1204,7 +1205,8 @@ endif
 							<xsl:when test=" @data_type='FLT_2D'">
 ! Get <xsl:value-of select="@path"/>
 								<!-- for comment only -->
-call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension(idx,path, "<xsl:value-of select="@path"/>",&amp;
+   ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2))
    call get_vect2d_double_Slice(idx,path, "<xsl:value-of select="@path"/>", &amp;
@@ -1218,7 +1220,8 @@ endif
 							<xsl:when test=" @data_type='INT_2D'">
 ! Get <xsl:value-of select="@path"/>
 								<!-- for comment only -->
-call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension(idx,path, "<xsl:value-of select="@path"/>",&amp;
+   ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2))
    call get_vect2d_int_Slice(idx,path, "<xsl:value-of select="@path"/>", &amp;
@@ -1232,7 +1235,8 @@ endif
 							<xsl:when test="@data_type='FLT_3D'">
 ! Get <xsl:value-of select="@path"/>
 								<!-- for comment only -->
-call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension(idx,path, "<xsl:value-of select="@path"/>",&amp;
+   ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3))
    call get_vect3d_double_Slice(idx,path, "<xsl:value-of select="@path"/>", &amp;
@@ -1246,7 +1250,8 @@ endif
 							<xsl:when test="@data_type='INT_3D'">
 ! Get <xsl:value-of select="@path"/>
 								<!-- for comment only -->
-call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension(idx,path, "<xsl:value-of select="@path"/>",&amp;
+   ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3))
    call get_vect3d_int_Slice(idx,path, "<xsl:value-of select="@path"/>", &amp;
@@ -1261,7 +1266,8 @@ endif
 							<xsl:when test="@data_type='FLT_4D'">
 ! Get <xsl:value-of select="@path"/>
 								<!-- for comment only -->
-call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension(idx,path, "<xsl:value-of select="@path"/>",&amp;
+   ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3,dim4))
    call get_vect4d_double_Slice(idx,path, "<xsl:value-of select="@path"/>", &amp;
@@ -1276,7 +1282,8 @@ endif
 							<xsl:when test="@data_type='FLT_5D'">
 ! Get <xsl:value-of select="@path"/>
 								<!-- for comment only -->
-call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension(idx,path, "<xsl:value-of select="@path"/>",&amp;
+   ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3,dim4,dim5))
    call get_vect5d_double_Slice(idx,path, "<xsl:value-of select="@path"/>", &amp;
@@ -1290,7 +1297,8 @@ endif
 							<xsl:when test="@data_type='FLT_6D'">
 ! Get <xsl:value-of select="@path"/>
 								<!-- for comment only -->
-call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension(idx,path, "<xsl:value-of select="@path"/>",&amp;
+   ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3,dim4,dim5,dim6))
    call get_vect6d_double_Slice(idx,path, "<xsl:value-of select="@path"/>", &amp;
@@ -1360,7 +1368,8 @@ enddo -->
 					<xsl:when test="@data_type='flt_1d_type' or @data_type='FLT_1D'">
 ! Get <xsl:value-of select="@path"/>
 						<!-- for comment only -->
-call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension(idx,path, "<xsl:value-of select="@path"/>",&amp;
+   ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(vect2Ddouble(dim1,dim2)) <!-- dim2 contains lentime-->
    call get_vect2d_double(idx,path,"<xsl:value-of select="@path"/>",vect2Ddouble,dim1,dim2,dum1,dum2,status)
@@ -1377,7 +1386,8 @@ endif
 					<xsl:when test="@data_type='int_1d_type' or @data_type='INT_1D'">
 ! Get <xsl:value-of select="@path"/>
 						<!-- for comment only -->
-call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension(idx,path, "<xsl:value-of select="@path"/>",&amp;
+   ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(vect2Dint(dim1,dim2)) <!-- dim2 contains lentime-->
    call get_vect2d_int(idx,path,"<xsl:value-of select="@path"/>", &amp;
@@ -1395,7 +1405,8 @@ endif
 					<xsl:when test=" @data_type='FLT_2D'">
 ! Get <xsl:value-of select="@path"/>
 						<!-- for comment only -->
-call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension(idx,path, "<xsl:value-of select="@path"/>",&amp;
+   ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(vect3Ddouble(dim1,dim2,dim3)) <!-- dim3 contains lentime-->
    call get_vect3D_double(idx,path,"<xsl:value-of select="@path"/>",vect3Ddouble,  &amp;
@@ -1413,7 +1424,8 @@ endif
 					<xsl:when test=" @data_type='INT_2D'">
 ! Get <xsl:value-of select="@path"/>
 						<!-- for comment only -->
-call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension(idx,path, "<xsl:value-of select="@path"/>",&amp;
+   ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(vect3DInt(dim1,dim2,dim3)) <!-- dim3 contains lentime-->
    call get_vect3D_Int(idx,path,"<xsl:value-of select="@path"/>",vect3DInt,dim1,dim2,dim3, &amp;
@@ -1431,7 +1443,8 @@ endif
 					<xsl:when test="@data_type='FLT_3D'">
 ! Get <xsl:value-of select="@path"/>
 						<!-- for comment only -->
-call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension(idx,path, "<xsl:value-of select="@path"/>",&amp;
+   ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(vect4Ddouble(dim1,dim2,dim3,dim4)) <!-- dim4 contains lentime-->
    call get_vect4D_double(idx,path,"<xsl:value-of select="@path"/>", &amp;
@@ -1449,7 +1462,8 @@ endif
 										<xsl:when test="@data_type='FLT_4D'">
 ! Get <xsl:value-of select="@path"/>
 						<!-- for comment only -->
-call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension(idx,path, "<xsl:value-of select="@path"/>",&amp;
+   ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(vect5Ddouble(dim1,dim2,dim3,dim4,dim5)) <!-- dim5 contains lentime-->
    call get_vect5D_double(idx,path,"<xsl:value-of select="@path"/>", &amp;
@@ -1467,7 +1481,8 @@ endif
 										<xsl:when test="@data_type='FLT_5D'">
 ! Get <xsl:value-of select="@path"/>
 						<!-- for comment only -->
-call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension(idx,path, "<xsl:value-of select="@path"/>",&amp;
+   ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(vect6Ddouble(dim1,dim2,dim3,dim4,dim5,dim6)) <!-- dim6 contains lentime-->
    call get_vect6D_double(idx,path,"<xsl:value-of select="@path"/>", &amp;
@@ -1592,7 +1607,8 @@ endif
 					<xsl:when test="@data_type='str_1d_type' or @data_type='STR_1D'">
 ! Get <xsl:value-of select="@path"/>
 						<!-- for comment only -->
-call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension(idx,path, "<xsl:value-of select="@path"/>",&amp;
+   ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    do itime=1,lentime
       allocate(IDSs(itime)%<xsl:value-of select="translate(@path,'/','%')"/>(dim1))  <!-- Do all allocate first together, otherwise problems if Get between two allocations of IDS(i)-->
@@ -1634,7 +1650,8 @@ endif
 					<xsl:when test="@data_type='flt_1d_type' or @data_type='FLT_1D'">
 ! Get <xsl:value-of select="@path"/>
 						<!-- for comment only -->
-call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension(idx,path, "<xsl:value-of select="@path"/>",&amp;
+   ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(vect1DDouble(dim1))
    call get_vect1D_Double(idx,path, "<xsl:value-of select="@path"/>", &amp;
@@ -1652,7 +1669,8 @@ endif
 					<xsl:when test="@data_type='int_1d_type' or @data_type='INT_1D'">
 ! Get <xsl:value-of select="@path"/>
 						<!-- for comment only -->
-call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension(idx,path, "<xsl:value-of select="@path"/>",&amp;
+   ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(vect1Dint(dim1))
    call get_vect1D_int(idx,path, "<xsl:value-of select="@path"/>", &amp;
@@ -1670,7 +1688,8 @@ endif
 					<xsl:when test=" @data_type='FLT_2D'">
 ! Get <xsl:value-of select="@path"/>
 						<!-- for comment only -->
-call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension(idx,path, "<xsl:value-of select="@path"/>",&amp;
+   ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(vect2DDouble(dim1,dim2))
    call get_vect2D_Double(idx,path, "<xsl:value-of select="@path"/>", &amp;
@@ -1688,7 +1707,8 @@ endif
 					<xsl:when test=" @data_type='INT_2D'">
 ! Get <xsl:value-of select="@path"/>
 						<!-- for comment only -->
-call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension(idx,path, "<xsl:value-of select="@path"/>",&amp;
+   ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(vect2DInt(dim1,dim2))
    call get_vect2D_Int(idx,path, "<xsl:value-of select="@path"/>", &amp;
@@ -1706,7 +1726,8 @@ endif
 					<xsl:when test="@data_type='FLT_3D'">
 ! Get <xsl:value-of select="@path"/>
 						<!-- for comment only -->
-call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension(idx,path, "<xsl:value-of select="@path"/>",&amp;
+   ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(vect3DDouble(dim1,dim2,dim3))
    call get_vect3D_Double(idx,path, "<xsl:value-of select="@path"/>",vect3DDouble, &amp;
@@ -1724,7 +1745,8 @@ endif
 					<xsl:when test="@data_type='INT_3D'">
 ! Get <xsl:value-of select="@path"/>
 						<!-- for comment only -->
-call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension(idx,path, "<xsl:value-of select="@path"/>",&amp;
+   ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(vect3DInt(dim1,dim2,dim3))
    call get_vect3D_Int(idx,path, "<xsl:value-of select="@path"/>",vect3DInt, &amp;
@@ -1742,7 +1764,8 @@ endif
 					<xsl:when test="@data_type='FLT_4D'">
 ! Get <xsl:value-of select="@path"/>
 						<!-- for comment only -->
-call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension(idx,path, "<xsl:value-of select="@path"/>",&amp;
+   ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(vect4dDouble(dim1,dim2,dim3,dim4))
    call get_vect4d_Double(idx,path, "<xsl:value-of select="@path"/>", &amp;
@@ -1760,7 +1783,8 @@ endif
 										<xsl:when test="@data_type='FLT_5D'">
 ! Get <xsl:value-of select="@path"/>
 						<!-- for comment only -->
-call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension(idx,path, "<xsl:value-of select="@path"/>",&amp;
+   ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(vect5dDouble(dim1,dim2,dim3,dim4,dim5))
    call get_vect5d_Double(idx,path, "<xsl:value-of select="@path"/>", &amp;
@@ -1778,7 +1802,8 @@ endif
 										<xsl:when test="@data_type='FLT_6D'">
 ! Get <xsl:value-of select="@path"/>
 						<!-- for comment only -->
-call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension(idx,path, "<xsl:value-of select="@path"/>",&amp;
+   ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(vect6dDouble(dim1,dim2,dim3,dim4,dim5,dim6))
    call get_vect6d_Double(idx,path, "<xsl:value-of select="@path"/>", &amp;
@@ -1859,7 +1884,8 @@ endif
 			<xsl:when test="@data_type='str_1d_type' or @data_type='STR_1D'">
 ! Get <xsl:value-of select="@path"/>
 				<!-- for comment only -->
-call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension(idx,path, "<xsl:value-of select="@path"/>",&amp;
+   ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1))
    call get_Vect1d_string(idx,path, "<xsl:value-of select="@path"/>", &amp;
@@ -1894,7 +1920,8 @@ endif
 			<xsl:when test="@data_type='flt_1d_type' or @data_type='FLT_1D'">
 ! Get <xsl:value-of select="@path"/>
 				<!-- for comment only -->
-call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension(idx,path, "<xsl:value-of select="@path"/>",&amp;
+   ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1))
    call get_vect1d_double(idx,path,"<xsl:value-of select="@path"/>", &amp;
@@ -1907,7 +1934,8 @@ endif
 			<xsl:when test="@data_type='int_1d_type' or @data_type='INT_1D'">
 ! Get <xsl:value-of select="@path"/>
 				<!-- for comment only -->
-call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension(idx,path, "<xsl:value-of select="@path"/>",&amp;
+   ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1))
    call get_vect1d_int(idx,path,"<xsl:value-of select="@path"/>", &amp;
@@ -1920,7 +1948,8 @@ endif
 			<xsl:when test=" @data_type='FLT_2D'">
 ! Get <xsl:value-of select="@path"/>
 				<!-- for comment only -->
-call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension(idx,path, "<xsl:value-of select="@path"/>",&amp;
+   ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2))
    call get_vect2d_double(idx,path,"<xsl:value-of select="@path"/>", &amp;
@@ -1934,7 +1963,8 @@ endif
 			<xsl:when test=" @data_type='INT_2D'">
 ! Get <xsl:value-of select="@path"/>
 				<!-- for comment only -->
-call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension(idx,path, "<xsl:value-of select="@path"/>",&amp;
+   ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2))
    call get_vect2d_int(idx,path,"<xsl:value-of select="@path"/>", &amp;
@@ -1948,7 +1978,8 @@ endif
 			<xsl:when test="@data_type='FLT_3D'">
 ! Get <xsl:value-of select="@path"/>
 				<!-- for comment only -->
-call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension(idx,path, "<xsl:value-of select="@path"/>",&amp;
+   ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3))
    call get_vect3d_double(idx,path,"<xsl:value-of select="@path"/>",&amp;
@@ -1962,7 +1993,8 @@ endif
 			<xsl:when test="@data_type='INT_3D'">
 ! Get <xsl:value-of select="@path"/>
 				<!-- for comment only -->
-call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension(idx,path, "<xsl:value-of select="@path"/>",&amp;
+   ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3))
    call get_vect3d_int(idx,path,"<xsl:value-of select="@path"/>",&amp;
@@ -1976,7 +2008,8 @@ endif
 			<xsl:when test="@data_type='FLT_4D'">
 ! Get <xsl:value-of select="@path"/>
 				<!-- for comment only -->
-call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension(idx,path, "<xsl:value-of select="@path"/>",&amp;
+   ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3,dim4))
    call get_vect4d_double(idx,path,"<xsl:value-of select="@path"/>", &amp;
@@ -1991,7 +2024,8 @@ endif
 			<xsl:when test="@data_type='FLT_5D'">
 ! Get <xsl:value-of select="@path"/>
 				<!-- for comment only -->
-call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension(idx,path, "<xsl:value-of select="@path"/>",&amp;
+   ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3,dim4,dim5))
    call get_vect5d_double(idx,path,"<xsl:value-of select="@path"/>", &amp;
@@ -2005,7 +2039,8 @@ endif
 						<xsl:when test="@data_type='FLT_6D'">
 ! Get <xsl:value-of select="@path"/>
 				<!-- for comment only -->
-call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+call get_dimension(idx,path, "<xsl:value-of select="@path"/>",&amp;
+   ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
 if (dim1.GT.0) then
    allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3,dim4,dim5,dim6))
    call get_vect6d_double(idx,path,"<xsl:value-of select="@path"/>", &amp;
@@ -4710,7 +4745,8 @@ endif
 ! Get <xsl:value-of select="@path"/>
 <xsl:choose>
 <xsl:when test="$variable_path">
-   call get_dimension(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+   call get_dimension(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
+      ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
    if (dim1.GT.0) then
       allocate(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(dim1))
       call get_Vect1d_string(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;, &amp;
@@ -4721,7 +4757,8 @@ endif
 <!-- -->
 </xsl:when>
 <xsl:otherwise>
-   call get_dimension(idx,path, "<xsl:value-of select="@name"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+   call get_dimension(idx,path, "<xsl:value-of select="@name"/>",&amp;
+      ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
    if (dim1.GT.0) then
       allocate(IDS%<xsl:value-of select="@name"/>(dim1))
       call get_Vect1d_string(idx,path, "<xsl:value-of select="@name"/>", &amp;
@@ -4784,7 +4821,8 @@ endif
 ! Get <xsl:value-of select="@path"/>
 <xsl:choose>
 <xsl:when test="$variable_path">
-   call get_dimension(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+   call get_dimension(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
+      ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
    if (dim1.GT.0) then
       allocate(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(dim1))
       call get_vect1d_double(idx,path,<xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;, &amp;
@@ -4795,7 +4833,8 @@ endif
    endif
 </xsl:when>
 <xsl:otherwise>
-   call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+   call get_dimension(idx,path, "<xsl:value-of select="@path"/>",&amp;
+      ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
    if (dim1.GT.0) then
       allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1))
       call get_vect1d_double(idx,path,"<xsl:value-of select="@path"/>", &amp;
@@ -4812,7 +4851,8 @@ endif
 ! Get <xsl:value-of select="@path"/>
 <xsl:choose>
 <xsl:when test="$variable_path">
-   call get_dimension(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+   call get_dimension(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
+      ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
    if (dim1.GT.0) then
       allocate(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(dim1))
       call get_vect1d_int(idx,path,<xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;, &amp;
@@ -4823,7 +4863,8 @@ endif
    endif
 </xsl:when>
 <xsl:otherwise>
-   call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+   call get_dimension(idx,path, "<xsl:value-of select="@path"/>",&amp;
+      ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
    if (dim1.GT.0) then
       allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1))
       call get_vect1d_int(idx,path,"<xsl:value-of select="@path"/>", &amp;
@@ -4841,7 +4882,8 @@ endif
 ! Get <xsl:value-of select="@path"/>
 <xsl:choose>
 <xsl:when test="$variable_path">
-   call get_dimension(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+   call get_dimension(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
+      ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
    if (dim1.GT.0) then
       allocate(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(dim1,dim2))
       call get_vect2d_double(idx,path,<xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;, &amp;
@@ -4852,7 +4894,8 @@ endif
    endif
 </xsl:when>
 <xsl:otherwise>
-   call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+   call get_dimension(idx,path, "<xsl:value-of select="@path"/>",&amp;
+      ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
    if (dim1.GT.0) then
       allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2))
       call get_vect2d_double(idx,path,"<xsl:value-of select="@path"/>", &amp;
@@ -4869,7 +4912,8 @@ endif
 ! Get <xsl:value-of select="@path"/>
 <xsl:choose>
 <xsl:when test="$variable_path">
-   call get_dimension(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+   call get_dimension(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
+      ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
    if (dim1.GT.0) then
       allocate(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(dim1,dim2))
       call get_vect2d_int(idx,path,<xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;, &amp;
@@ -4880,7 +4924,8 @@ endif
    endif
 </xsl:when>
 <xsl:otherwise>
-   call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+   call get_dimension(idx,path, "<xsl:value-of select="@path"/>",&amp;
+      ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
    if (dim1.GT.0) then
       allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2))
       call get_vect2d_int(idx,path,"<xsl:value-of select="@path"/>", &amp;
@@ -4897,7 +4942,8 @@ endif
 ! Get <xsl:value-of select="@path"/>
 <xsl:choose>
 <xsl:when test="$variable_path">
-   call get_dimension(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+   call get_dimension(idx,path, <xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;,&amp;
+      ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
    if (dim1.GT.0) then
       allocate(IDS%<xsl:value-of select="concat($variable_path,'%',@name)"/>(dim1,dim2,dim3))
       call get_vect3d_double(idx,path,<xsl:value-of select="$mds_path"/>//&quot;/<xsl:value-of select="@name"/>&quot;, &amp;
@@ -4908,7 +4954,8 @@ endif
    endif
 </xsl:when>
 <xsl:otherwise>
-   call get_dimension(idx,path, "<xsl:value-of select="@path"/>",ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
+   call get_dimension(idx,path, "<xsl:value-of select="@path"/>",&amp;
+      ndims,dim1,dim2,dim3,dim4,dim5,dim6,dim7)
    if (dim1.GT.0) then
       allocate(IDS%<xsl:value-of select="translate(@path,'/','%')"/>(dim1,dim2,dim3))
       call get_vect3d_double(idx,path,"<xsl:value-of select="@path"/>", &amp;
