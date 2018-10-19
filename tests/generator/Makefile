@@ -1,166 +1,34 @@
-# !/bin/bash
-# "make install" should have been run at the installer level before running "make test"
+# This Makefile expects you've got UAL already built (using the installer), but not yet installed, so we're testing the current build.
 # Until the testSuite is made modular (one test program per IDS), it is recommended to avoid running the IFORT case (huge source file, takes ages to compile)
 # To detect if an error has been reported, search for "ERROR:" strings in the result file (fortraninterface/tests/generator/gfortran_testSuite.results)
 
 include ../../../Makefile.common
 
-ifeq (,$(IMAS_INSTALL_DIR))
-$(error Please supply a variable IMAS_INSTALL_DIR that is the prefix of your IMAS installation.)
+ifeq (,$(UAL_BUILD))
+$(error UAL_BUILD variable unset, are you sure you are running 'make ual_test' from the Installer? use Makefile-local to test a previously installed IMAS.)
 endif
 
+ifeq ("no","$(strip $(IMAS_FORTRAN))")
+all sources sources_install install clean clean-src:
+	$(warning "Ignoring fortraninterface (IMAS_FORTRAN=no).")
+else
 # Check that "saxon9he.jar" utility is set in CLASSPATH
 SAXONICAJAR=$(wildcard $(filter %saxon9he.jar,$(subst :, ,$(CLASSPATH))))
 
 #------------------------- gfortran ----------------------------
-F90_gfortran = gfortran
-COPTS_gfortran = -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none -I$(IMAS_INSTALL_DIR)/include/gfortran
-LIBS_gfortran = -L$(IMAS_INSTALL_DIR)/lib -limas-gfortran -limas -lm
+FC_gfortran = gfortran
+COPTS_gfortran = -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none -I$(UAL_BUILD)/fortraninterface/gfortran
+LIBS_gfortran = -L$(UAL_BUILD)/fortraninterface -limas-gfortran -L$(UAL_BUILD)/lowlevel -limas -lm
 
 #------------------------- ifort ----------------------------
-F90_ifort = ifort
-COPTS_ifort = -g -r8 -assume no2underscore  -fPIC -module $(IMAS_INSTALL_DIR)/include/ifort -shared-intel
-LIBS_ifort = -L$(IMAS_INSTALL_DIR)/lib -limas-ifort -limas -lm
+FC_ifort = ifort
+COPTS_ifort = -g -r8 -assume no2underscore  -fPIC -module $(UAL_BUILD)/fortraninterface/ifort -shared-intel
+LIBS_ifort = -L$(UAL_BUILD)/fortraninterface -limas-ifort -L$(UAL_BUILD)/lowlevel -limas -lm
 
 
-IDSDEF = $(UAL)/xml/IDSDef.xml
-ids_path = $(UAL)/models/mdsplus
+IDSDEF = $(UAL_BUILD)/xml/IDSDef.xml
+ids_path = $(UAL_BUILD)/models/mdsplus
 
 
-ifeq "$(strip $(IMAS_GFORTRAN))" "yes"
-    TARGETS += gfortran_testSuite gfortran_initpulse
-    TESTS += gfortran_test
-    TESTS2 += gfortran_test2
-endif
-
-ifeq "$(strip $(IMAS_IFORT))" "yes"
-    TARGETS += ifort_testSuite ifort_initpulse
-    TESTS += ifort_test
-    TESTS2 += ifort_test2
-endif
-
-
-IFORT_BIN_DIR:=./bin/ifort
-GFORTRAN_BIN_DIR:=./bin/gfortran
-TEST_SRC_DIR=./src
-
-
-TEST_IDS_FILES=$(wildcard $(TEST_SRC_DIR)/*.f90)
-
-TEST_FILES= initpulse.f90 helper.f90 comparator.f90 $(TEST_IDS_FILES)
-
-IFORT_BIN_FILES=$(patsubst %.f90,$(IFORT_BIN_DIR)/%.exe,$(notdir $(TEST_IDS_FILES)))
-GFORTRAN_BIN_FILES=$(patsubst %.f90,$(GFORTRAN_BIN_DIR)/%.exe,$(notdir $(TEST_IDS_FILES)))
-
-
-# Sets a path where make will search for files
-VPATH = ./src $(TEST_SRC_DIR) 
-
-
-
-
-ifeq ($(strip $(TEST_IDS_FILES)),)
-all:  
-	@echo "Error: Source files have been not created. Please run 'make sources' first"
-	@exit 1	
-else
-all :   $(TARGETS) 
-endif
-
-
-.PHONY: clean clean-src
-clean: ifort_clean gfortran_clean
-	rm -rf build *~ *.o *.mod
-	rm -rf idspath-*
-	rm -rf *.results
-
-clean-src: clean
-	rm -rf $(TEST_IDS_FILES) 
-
-
-#################################################
-#                 INIT: SOURCE GENERATION
-#################################################
-sources: IDSDef2TestSuite.xsl $(IDSDEF)
-	mkdir -p $(IFORT_BIN_DIR)
-	mkdir -p $(GFORTRAN_BIN_DIR)
-ifeq (,$(SAXONICAJAR))
-	$(error Invalid /path/to/saxon9he.jar in CLASSPATH. Forgot to load module?)
-endif
-	java net.sf.saxon.Transform newLowLevel=$(NEW_LOW_LEVEL) -t -s:$(IDSDEF) -xsl:IDSDef2TestSuite.xsl   
-
-sources2: IDSDef2TestSuite.xsl $(IDSDEF)
-	mkdir -p $(IFORT_BIN_DIR)
-	mkdir -p $(GFORTRAN_BIN_DIR)
-ifeq (,$(SAXONICAJAR))
-	$(error Invalid /path/to/saxon9he.jar in CLASSPATH. Forgot to load module?)
-endif
-	java net.sf.saxon.Transform newLowLevel=$(NEW_LOW_LEVEL) sources2="yes" -t -s:$(IDSDEF) -xsl:IDSDef2TestSuite.xsl   
-
-
-
-#################################################
-#              BUILD
-#################################################
-
-#------------------------- gfortran ----------------------------
-.PHONY: gfortran_clean
-gfortran_clean:
-	rm -rf ${GFORTRAN_BIN_DIR}
-
-gfortran_helper.o: helper.f90
-	$(F90_gfortran) $(COPTS_gfortran) -c $< -o $@
-
-gfortran_comparator.o: comparator.f90
-	$(F90_gfortran) $(COPTS_gfortran) -c $< -o $@
-
-gfortran_initpulse: initpulse.f90
-	$(F90_gfortran) $(COPTS_gfortran) $< -o $(GFORTRAN_BIN_DIR)/initpulse.exe $(LIBS_gfortran)
-
-gfortran_testSuite:  $(GFORTRAN_BIN_FILES)
-
-$(GFORTRAN_BIN_DIR)/%.exe: %.f90 gfortran_helper.o gfortran_comparator.o
-	$(F90_gfortran) $(COPTS_gfortran) -o $@ $< gfortran_helper.o gfortran_comparator.o $(LIBS_gfortran)
-
-
-#------------------------- ifort ----------------------------
-.PHONY: ifort_clean
-ifort_clean:
-	rm -rf ${IFORT_BIN_DIR}
-
-ifort_helper.o: helper.f90
-	$(F90_ifort) $(COPTS_ifort) -c $< -o $@
-
-ifort_comparator.o: comparator.f90
-	$(F90_ifort) $(COPTS_ifort) -c $< -o $@
-
-ifort_initpulse: initpulse.f90
-	$(F90_ifort) $(COPTS_ifort) $< -o $(IFORT_BIN_DIR)/initpulse.exe $(LIBS_ifort)
-
-ifort_testSuite: $(IFORT_BIN_FILES)
-
-
-$(IFORT_BIN_DIR)/%.exe: %.f90 ifort_helper.o ifort_comparator.o
-	$(F90_ifort) $(COPTS_ifort) -o $@ $< ifort_helper.o ifort_comparator.o $(LIBS_ifort)
-
-#################################################
-#              TEST
-#################################################
-:.PHONY: test ifort_test gfortran_test
-
-%_test: %_testSuite
-	./test.sh -c $* | tee test_$*.results 
-
-test : $(TESTS)
-
-
-test_put: 
-	./test_put.sh -c gfortran | tee testput_gfortran.results 
-
-test_get:
-	./test_get.sh -c gfortran | tee testget_gfortran.results 
-
-
-
-
-
+include Makefile.tests
+endif # IMAS_FORTRAN

@@ -1,0 +1,137 @@
+#
+# Please run this from Makefile or Makefile-local.
+#
+# Do not run make on this file directly.
+help:
+	$(error Do not run make on this file directly, use Makefile or Makefile-local and specify a target, e.g. make test.)
+
+ifneq ("no","$(strip $(IMAS_GFORTRAN))")
+    TARGETS += gfortran_testSuite gfortran_initpulse
+    TESTS += gfortran_test
+    TESTS2 += gfortran_test2
+endif
+
+ifneq ("no","$(strip $(IMAS_IFORT))")
+    TARGETS += ifort_testSuite ifort_initpulse
+    TESTS += ifort_test
+    TESTS2 += ifort_test2
+endif
+
+
+IFORT_BIN_DIR:=./bin/ifort
+GFORTRAN_BIN_DIR:=./bin/gfortran
+TEST_SRC_DIR=./src
+
+TEST_IDS_FILES=$(wildcard $(TEST_SRC_DIR)/*.f90)
+# Get a list of IDS from IDSDEF file
+IDSNAMES := $(shell sed '/<IDS name=/!d;s/.*name="\([^"]*\)".*/\1/' $(IDSDEF))
+TEST_IDS_FILES = $(patsubst %,$(TEST_SRC_DIR)/%_test.f90,$(IDSNAMES))
+
+TEST_FILES= initpulse.f90 helper.f90 comparator.f90 $(TEST_IDS_FILES)
+
+IFORT_BIN_FILES=$(patsubst %.f90,$(IFORT_BIN_DIR)/%.exe,$(notdir $(TEST_IDS_FILES)))
+GFORTRAN_BIN_FILES=$(patsubst %.f90,$(GFORTRAN_BIN_DIR)/%.exe,$(notdir $(TEST_IDS_FILES)))
+
+# Sets a path where make will search for files
+VPATH = ./src $(TEST_SRC_DIR) 
+
+all :   $(TARGETS)
+
+# Test if all generated sources are found to exist as files to
+# gracefully skip generation if not needed.
+ifeq ($(words $(TEST_IDS_FILES)), $(words $(wildcard $(TEST_IDS_FILES))))
+$(TEST_IDS_FILES):
+else
+$(TEST_IDS_FILES): sources
+endif
+
+
+.PHONY: clean clean-src
+clean: ifort_clean gfortran_clean
+	$(RM) -r build *~ *.o *.mod
+	$(RM) -r idspath-*
+	$(RM) -r *.results
+
+clean-src: clean
+	$(RM) -r $(TEST_IDS_FILES)
+
+
+#################################################
+#                 INIT: SOURCE GENERATION
+#################################################
+sources: IDSDef2TestSuite.xsl $(IDSDEF)
+	$(mkdir_p) $(IFORT_BIN_DIR)
+	$(mkdir_p) $(GFORTRAN_BIN_DIR)
+ifeq (,$(SAXONICAJAR))
+	$(error Invalid /path/to/saxon9he.jar in CLASSPATH. Forgot to load module?)
+endif
+	java net.sf.saxon.Transform newLowLevel=$(NEW_LOW_LEVEL) -t -s:$(IDSDEF) -xsl:IDSDef2TestSuite.xsl   
+
+sources2: IDSDef2TestSuite.xsl $(IDSDEF)
+	$(mkdir_p) $(IFORT_BIN_DIR)
+	$(mkdir_p) $(GFORTRAN_BIN_DIR)
+ifeq (,$(SAXONICAJAR))
+	$(error Invalid /path/to/saxon9he.jar in CLASSPATH. Forgot to load module?)
+endif
+	java net.sf.saxon.Transform newLowLevel=$(NEW_LOW_LEVEL) sources2="yes" -t -s:$(IDSDEF) -xsl:IDSDef2TestSuite.xsl   
+
+
+#################################################
+#              BUILD
+#################################################
+
+#------------------------- gfortran ----------------------------
+.PHONY: gfortran_clean
+gfortran_clean:
+	$(RM) -r ${GFORTRAN_BIN_DIR}
+
+gfortran_helper.o: helper.f90
+	$(FC_gfortran) $(COPTS_gfortran) -c $< -o $@
+
+gfortran_comparator.o: comparator.f90
+	$(FC_gfortran) $(COPTS_gfortran) -c $< -o $@
+
+gfortran_initpulse: initpulse.f90
+	$(FC_gfortran) $(COPTS_gfortran) -c $< -o $@
+
+gfortran_testSuite:  $(GFORTRAN_BIN_FILES)
+
+$(GFORTRAN_BIN_FILES): $(GFORTRAN_BIN_DIR)/%.exe : $(TEST_SRC_DIR)/%.f90 gfortran_helper.o gfortran_comparator.o
+	$(FC_gfortran) $(COPTS_gfortran) -o $@ $< gfortran_helper.o gfortran_comparator.o $(LIBS_gfortran)
+
+#------------------------- ifort ----------------------------
+.PHONY: ifort_clean
+ifort_clean:
+	$(RM) -r ${IFORT_BIN_DIR}
+
+ifort_helper.o: helper.f90
+	$(FC_ifort) $(COPTS_ifort) -c $< -o $@
+
+ifort_comparator.o: comparator.f90
+	$(FC_ifort) $(COPTS_ifort) -c $< -o $@
+
+ifort_initpulse: initpulse.f90
+	$(FC_ifort) $(COPTS_ifort) -c $< -o $@
+
+ifort_testSuite: $(IFORT_BIN_FILES)
+
+
+$(IFORT_BIN_FILES): $(IFORT_BIN_DIR)/%.exe: $(TEST_SRC_DIR)/%.f90 ifort_helper.o ifort_comparator.o
+	$(FC_ifort) $(COPTS_ifort) -o $@ $< ifort_helper.o ifort_comparator.o $(LIBS_ifort)
+
+#################################################
+#              TEST
+#################################################
+.PHONY: test ifort_test gfortran_test
+
+%_test: %_testSuite
+	./test.sh -c $* | tee test_$*.results 
+
+test : $(TESTS)
+
+
+test_put: 
+	./test_put.sh -c gfortran | tee testput_gfortran.results 
+
+test_get:
+	./test_get.sh -c gfortran | tee testget_gfortran.results 

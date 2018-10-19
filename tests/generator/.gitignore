@@ -2,3 +2,5 @@ gfortran_test*
 ifort_test*
 imasdb-gfortran_test/
 imasdb-ifort_test/
+testput_gfortran.results
+testget_gfortran.results
