@@ -50,28 +50,6 @@ IDSDEF		  = ../xml/IDSDef.xml
 # Windows
 ifneq ("no","$(strip $(SYS_WIN))")
 	LIBS		= $(IMAS_PREFIX)/lib/libimas.lib
-	ifneq ("no","$(strip $(IMAS_MDSPLUS))")
-		LIBS	+= -L$(MDSPLUS_DIR)/lib
-		#LIBS	+= -lTreeShr -lTdiShr -lMdsShr -lXTreeShr -lMdsIpShr -lMdsObjectsCppShr
-		LIBS	+= $(MDSPLUS_DIR)/lib/XTreeShr.a
-		LIBS	+= $(MDSPLUS_DIR)/lib/MdsObjectsCppShr.a
-		LIBS	+= $(MDSPLUS_DIR)/lib/MdsIpShr.a
-		LIBS	+= $(MDSPLUS_DIR)/lib/MdsLib.a
-		LIBS	+= $(MDSPLUS_DIR)/lib/TdiShr.a
-		LIBS	+= $(MDSPLUS_DIR)/lib/TreeShr.a
-		LIBS	+= $(MDSPLUS_DIR)/lib/MdsShr.a
-		LIBS	+= -lxml2 -lws2_32 -ldl -liphlpapi
-	endif
-	ifneq ("no","$(strip $(IMAS_UDA))")
-		LIBS	+= -L$(UDA_HOME)/lib
-		LIBS	+= $(UDA_HOME)/lib/libuda_cpp.a
-		LIBS	+= $(UDA_HOME)/lib/libportablexdr.a
-		LIBS	+= -lws2_32 -lssl -lcrypto
-	endif
-	ifneq ("no","$(strip $(IMAS_HDF5))")
-		LIBS	+= -L$(HDF5_HOME)/lib
-		LIBS	+= $(HDF5_HOME)/lib/libhdf5.a -ldl -lz
-	endif
 	LIBS		+= -lm -lstdc++
 	JAVA		= $(JAVA_HOME)/bin/java
 	IDSDEFXSD   = dd_data_dictionary.xml.xsd
@@ -79,6 +57,44 @@ else
 	LIBS		= -L../lowlevel -limas -lm
 	JAVA		= java
 	IDSDEFXSD   = dd_physics_data_dictionary.xsd
+endif
+
+ifneq ("no","$(strip $(IMAS_MDSPLUS))")
+	ifneq ("no","$(strip $(SYS_WIN))")
+		LIBS	+= -L$(MDSPLUS_DIR)/lib
+		LIBS	+= $(MDSPLUS_DIR)/lib/XTreeShr.a
+		LIBS	+= $(MDSPLUS_DIR)/lib/MdsObjectsCppShr.a
+		LIBS	+= $(MDSPLUS_DIR)/lib/MdsIpShr.a
+		LIBS	+= $(MDSPLUS_DIR)/lib/MdsLib.a
+		LIBS	+= $(MDSPLUS_DIR)/lib/TdiShr.a
+		LIBS	+= $(MDSPLUS_DIR)/lib/TreeShr.a
+		LIBS	+= $(MDSPLUS_DIR)/lib/MdsShr.a
+		LIBS	+= -lxml2 -lws2_32 -ldl -liphlpapi -lstdc++
+	else
+		LIBS	+= -L$(MDSPLUS_DIR)/lib64 -L$(MDSPLUS_DIR)/lib
+		LIBS	+= -lMdsShr -lTreeShr -lTdiShr -lMdsLib -lMdsIpShr -lMdsObjectsCppShr -lXTreeShr
+	endif
+endif
+
+ifneq ("no","$(strip $(IMAS_UDA))")
+	ifneq ("no","$(strip $(SYS_WIN))")
+		LIBS	+= -L$(UDA_HOME)/lib
+		LIBS	+= $(UDA_HOME)/lib/libuda_cpp.a
+		LIBS	+= $(UDA_HOME)/lib/libportablexdr.a
+		LIBS	+= -lws2_32 -lssl -lcrypto -lstdc++
+	else
+		LIBS	+= `pkg-config --libs uda-cpp`
+	endif
+endif
+
+ifneq ("no","$(strip $(IMAS_HDF5))")
+	ifneq ("no","$(strip $(SYS_WIN))")
+		LIBS	+= -L$(HDF5_HOME)/lib
+		LIBS	+= $(HDF5_HOME)/lib/libhdf5.a -ldl -lz -lstdc++
+	else
+		LIBS	+= -L$(HDF5_HOME)/lib
+		LIBS	+= -hdf5 -ldl -lz
+	endif
 endif
 
 
@@ -145,8 +161,10 @@ install: all $(addprefix install_,$(INSTALL_TARGETS)) pkgconfig_install
 
 sources: $(SOURCES) ids_schemas.f90
 sources_install: $(SOURCES) ids_schemas.f90
+ifeq ("no","$(strip $(SYS_WIN))")
 	$(mkdir_p) $(datadir)/src/fortraninterface
 	$(INSTALL_DATA) $^ $(datadir)/src/fortraninterface
+endif
 
 install_pgi: $(IDSOBJECTS_pgi) libimas-pgi.a libimas-pgi.so
 	$(mkdir_p) $(includedir)/pgi
@@ -173,6 +191,7 @@ install_ifort: $(IDSOBJECTS_ifort) libimas-ifort.a libimas-ifort.so
 	ln -svfT libimas-ifort$(SOEXT3) $(libdir)/libimas-ifort$(SOEXT1)
 	ln -svfT libimas-ifort$(SOEXT3) $(libdir)/libimas-ifort.so
 install_gfortran: $(IDSOBJECTS_gfortran) libimas-gfortran.a libimas-gfortran.so
+ifeq ("no","$(strip $(SYS_WIN))")
 	$(mkdir_p) $(includedir)/gfortran
 	$(INSTALL_DATA) gfortran/*.mod $(includedir)/gfortran
 	$(mkdir_p) $(libdir)
@@ -180,6 +199,15 @@ install_gfortran: $(IDSOBJECTS_gfortran) libimas-gfortran.a libimas-gfortran.so
 	ln -svfT libimas-gfortran$(SOEXT3) $(libdir)/libimas-gfortran$(SOEXT2)
 	ln -svfT libimas-gfortran$(SOEXT3) $(libdir)/libimas-gfortran$(SOEXT1)
 	ln -svfT libimas-gfortran$(SOEXT3) $(libdir)/libimas-gfortran.so
+else
+	$(mkdir_p) $(packagedir)/fortraninterface/include
+	cp gfortran/*.mod $(packagedir)/fortraninterface/include
+	$(mkdir_p) $(packagedir)/fortraninterface/lib
+	for OBJECT in `find . -type f \( -name "*.lib" -or -name "*.dll" \)`; do \
+		cp $$OBJECT $(packagedir)/fortraninterface/lib; \
+	done
+endif
+
 
 clean:
 	$(RM) -r *.o *.mod *.so *~ g95/ gfortran/ pgi/ ifort/ *.a *.lib *.dll
