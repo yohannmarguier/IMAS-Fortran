@@ -17,6 +17,8 @@ ifneq ("no","$(strip $(IMAS_IFORT))")
     TESTS2 += ifort_test2
 endif
 
+# Make NEW_LOW_LEVEL=yes default
+NEW_LOW_LEVEL?=yes
 
 IFORT_BIN_DIR:=./bin/ifort
 GFORTRAN_BIN_DIR:=./bin/gfortran
