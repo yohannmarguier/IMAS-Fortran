@@ -170,7 +170,8 @@ end interface
 subroutine ids_deallocate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(struct_in,  c_data)
   use ual_low_level_wrap
   use, intrinsic :: ISO_C_BINDING, only: C_LOC
-  use ids_schemas
+  use ids_types
+  use ids_utilities, only: ids_<xsl:value-of select="$this-type"/>
   implicit none
 
   integer(ids_int) :: i
@@ -325,7 +326,8 @@ end interface
 subroutine ids_copy_struct_<xsl:value-of select="local:unique_name($this-type)"/>(struct_in,  struct_out)
   ! Copies all fields of struct_in to struct_out
   ! Assumes that struct_in is a single instance of a given structure
-  use ids_schemas
+  use ids_types
+  use ids_utilities, only: ids_<xsl:value-of select="$this-type"/>
   implicit none
 
   integer(ids_int) :: i
@@ -477,7 +479,8 @@ end interface
   <xsl:if test="not (preceding::field[@structure_reference=$this-type or @name=$this-type])">
 
 subroutine put_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>(ctx, path, struct, homogeneous, timedparent, retstatus)
-  use ids_schemas
+  use ids_types
+  use ids_utilities, only: ids_<xsl:value-of select="$this-type"/>
   use ual_low_level_wrap
   implicit none
 
@@ -676,7 +679,8 @@ end interface
   <xsl:if test="not (preceding::field[@structure_reference=$this-type or @name=$this-type])">
 
 subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>(ctx, path, struct, homogeneous, timedparent, retstatus)
-  use ids_schemas
+  use ids_types
+  use ids_utilities, only: ids_<xsl:value-of select="$this-type"/>
   use ual_low_level_wrap
   implicit none
 
@@ -875,7 +879,8 @@ end interface
   <xsl:if test="not (preceding::field[@structure_reference=$this-type or @name=$this-type])">
 
 subroutine get_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>(ctx, path, struct, homogeneous, timedparent, retstatus)
-  use ids_schemas
+  use ids_types
+  use ids_utilities, only: ids_<xsl:value-of select="$this-type"/>
   use ual_low_level_wrap
   implicit none
 
