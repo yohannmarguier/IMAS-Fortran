@@ -1,6 +1,9 @@
-!*.f90
-gfortran_test*
-ifort_test*
+src/
+tmp/
+build/
+*.log
+gfortran_*
+ifort_*
 imasdb-gfortran_test/
 imasdb-ifort_test/
 testput_gfortran.results

@@ -5,7 +5,8 @@
 include ../../../Makefile.common
 
 ifeq (,$(UAL_BUILD))
-$(error UAL_BUILD variable unset, are you sure you are running 'make ual_test' from the Installer? use Makefile-local to test a previously installed IMAS.)
+UAL_BUILD=../../..
+$(warning UAL_BUILD variable unset, probably not running 'make ual_test' from the Installer. Assuming UAL_BUILD=$(UAL_BUILD).)
 endif
 
 ifeq ("no","$(strip $(IMAS_FORTRAN))")
@@ -15,18 +16,20 @@ else
 
 #------------------------- gfortran ----------------------------
 FC_gfortran = gfortran
-COPTS_gfortran = -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none -I$(UAL_BUILD)/include/gfortran
-LIBS_gfortran = -L$(UAL_BUILD)/lib -limas-gfortran -limas -lm
+COPTS_gfortran = -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none -I$(UAL_BUILD)/fortraninterface/gfortran
+LIBS_gfortran = -L$(UAL_BUILD)/lowlevel -L$(UAL_BUILD)/fortraninterface -limas-gfortran -limas -lm
 
 #------------------------- ifort ----------------------------
 FC_ifort = ifort
-COPTS_ifort = -g -r8 -assume no2underscore  -fPIC -module $(UAL_BUILD)/include/ifort -shared-intel
-LIBS_ifort = -L$(UAL_BUILD)/lib -limas-ifort -limas -lm
+COPTS_ifort = -g -r8 -assume no2underscore  -fPIC -I$(UAL_BUILD)/fortraninterface/ifort -shared-intel
+LIBS_ifort = -L$(UAL_BUILD)/lowlevel -L$(UAL_BUILD)/fortraninterface -limas-ifort -limas -lm
 
 
 IDSDEF = $(UAL_BUILD)/xml/IDSDef.xml
-ids_path = $(UAL_BUILD)/models/mdsplus
+ids_path = $(realpath $(UAL_BUILD)/models/mdsplus)
 
+# Test environment (mimics loaded imas environment), write ids to tmp dir
+test_ENV = LD_LIBRARY_PATH=$(UAL_BUILD)/fortraninterface:$(UAL_BUILD)/lowlevel:$$LD_LIBRARY_PATH ids_path="$$PWD/tmp;$(ids_path)"
 
 include Makefile.tests
 endif # IMAS_FORTRAN

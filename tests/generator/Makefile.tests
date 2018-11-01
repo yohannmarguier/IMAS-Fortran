@@ -10,7 +10,7 @@ help:
 
 
 	
-	# Make NEW_LOW_LEVEL=yes default
+# Make NEW_LOW_LEVEL=yes default
 NEW_LOW_LEVEL?=yes
 
 IFORT_BIN_DIR:=./bin/ifort
@@ -18,27 +18,22 @@ IFORT_BUILD_DIR:=./build/ifort
 GFORTRAN_BIN_DIR:=./bin/gfortran
 GFORTRAN_BUILD_DIR:=./build/gfortran
 TEST_SRC_DIR=./src
-
-
+TMP_DIR=./tmp
 
 ifneq ("no","$(strip $(IMAS_GFORTRAN))")
-    TARGETS += gfortran_testSuite gfortran_initpulse
-    TESTS += gfortran_test
-    TESTS2 += gfortran_test2
-    COPTS_gfortran+=-J$(GFORTRAN_BUILD_DIR)
+  TARGETS += $(GFORTRAN_BIN_FILES)
+  TESTS += $(GFORTRAN_TESTS)
+  TESTS2 += gfortran_test2
+  COPTS_gfortran+=-J$(GFORTRAN_BUILD_DIR)
 endif
 
 ifneq ("no","$(strip $(IMAS_IFORT))")
-    TARGETS += ifort_testSuite ifort_initpulse
-    TESTS += ifort_test
-    TESTS2 += ifort_test2
-    COPTS_ifort+=-module $(IFORT_BUILD_DIR)
+  TARGETS += $(IFORT_BIN_FILES)
+  TESTS += $(IFORT_TESTS)
+  TESTS2 += ifort_test2
+  COPTS_ifort+=-module $(IFORT_BUILD_DIR)
 endif
 
-
-
-
-TEST_IDS_FILES=$(wildcard $(TEST_SRC_DIR)/*.f90)
 # Get a list of IDS from IDSDEF file
 IDSNAMES := $(shell sed '/<IDS name=/!d;s/.*name="\([^"]*\)".*/\1/' $(IDSDEF))
 TEST_IDS_FILES = $(patsubst %,$(TEST_SRC_DIR)/%_test.f90,$(IDSNAMES))
@@ -47,37 +42,25 @@ IDS_SOURCES += $(patsubst %,$(TEST_SRC_DIR)/%_test_dynamic.f90,$(IDSNAMES))
 IDS_SOURCES += $(patsubst %,$(TEST_SRC_DIR)/%_test_static.f90,$(IDSNAMES))
 IDS_SOURCES += $(patsubst %,$(TEST_SRC_DIR)/%_init_dynamic.f90,$(IDSNAMES))
 IDS_SOURCES += $(patsubst %,$(TEST_SRC_DIR)/%_init_static.f90,$(IDSNAMES))
-HARD_SOURCES = comparator.f90 generator.f90 helper.f90 initpulse.f90 setter.f90
-ALL_SOURCES = $(HARD_SOURCES) $(IDS_SOURCES)
-
-GFORTRAN_HARD_OBJECTS = $(patsubst %.f90,$(GFORTRAN_BUILD_DIR)/%.o,$(notdir $(HARD_SOURCES)))
-IFORT_HARD_OBJECTS = $(patsubst %.f90,$(IFORT_BUILD_DIR)/%.o,$(notdir $(HARD_SOURCES)))
-GFORTRAN_IDS_OBJECTS = $(patsubst %.f90,$(GFORTRAN_BUILD_DIR)/%.o,$(notdir $(IDS_SOURCES)))
-IFORT_IDS_OBJECTS = $(patsubst %.f90,$(IFORT_BUILD_DIR)/%.o,$(notdir $(IDS_SOURCES)))
-
-TEST_FILES= initpulse.f90 helper.f90 comparator.f90 $(TEST_IDS_FILES)
 
 IFORT_BIN_FILES=$(patsubst %.f90,$(IFORT_BIN_DIR)/%.exe,$(notdir $(TEST_IDS_FILES)))
 GFORTRAN_BIN_FILES=$(patsubst %.f90,$(GFORTRAN_BIN_DIR)/%.exe,$(notdir $(TEST_IDS_FILES)))
 
-all: $(TARGETS)
+GFORTRAN_TESTS = gfortran_initpulse_test gfortran_test
+IFORT_TESTS = ifort_initpulse_test ifort_test
 
-# Test if all generated sources are found to exist as files and
-# gracefully skip generation if not needed.
-ifeq ($(words $(IDS_SOURCES)), $(words $(wildcard $(IDS_SOURCES))))
-$(IDS_SOURCES):
-else
-$(IDS_SOURCES): sources
-endif
+all: $(TARGETS)
+check test: $(TESTS)
+sources: $(IDS_SOURCES)
 
 # Create src and bin dirs as needed
-$(TEST_SRC_DIR) $(IFORT_BIN_DIR) $(GFORTRAN_BIN_DIR) $(IFORT_BUILD_DIR) $(GFORTRAN_BUILD_DIR):
+$(TEST_SRC_DIR) $(IFORT_BIN_DIR) $(GFORTRAN_BIN_DIR) $(IFORT_BUILD_DIR) $(GFORTRAN_BUILD_DIR) $(TMP_DIR):
 	$(mkdir_p) $@
 
 .PHONY: clean clean-src
 clean: ifort_clean gfortran_clean
 	$(RM) -r idspath-*
-	$(RM) -r *.results
+	$(RM) -r *.log
 
 clean-src: clean
 	$(RM) -r $(TEST_SRC_DIR)
@@ -86,11 +69,21 @@ clean-src: clean
 #################################################
 #                 INIT: SOURCE GENERATION
 #################################################
-sources: IDSDef2TestSuite.xsl $(IDSDEF) | saxonicajar $(TEST_SRC_DIR)
-	java net.sf.saxon.Transform newLowLevel=$(NEW_LOW_LEVEL) -t -s:$(IDSDEF) -xsl:IDSDef2TestSuite.xsl   
+# Test if all generated sources are found to exist as files and
+# gracefully skip generation if not needed.
+ifeq ($(words $(IDS_SOURCES)), $(words $(wildcard $(IDS_SOURCES))))
+$(IDS_SOURCES):
+else
+$(IDS_SOURCES): sources_
+endif
+
+# Target sources is reserved (used by user to build sources only)
+# Need a single target to prevent parallel building:
+sources_: IDSDef2TestSuite.xsl $(IDSDEF) | saxonicajar $(TEST_SRC_DIR)
+	java net.sf.saxon.Transform newLowLevel=$(NEW_LOW_LEVEL) -t -s:$(IDSDEF) -xsl:IDSDef2TestSuite.xsl
 
 sources2: IDSDef2TestSuite.xsl $(IDSDEF) | saxonicajar $(TEST_SRC_DIR)
-	java net.sf.saxon.Transform newLowLevel=$(NEW_LOW_LEVEL) sources2="yes" -t -s:$(IDSDEF) -xsl:IDSDef2TestSuite.xsl   
+	java net.sf.saxon.Transform newLowLevel=$(NEW_LOW_LEVEL) sources2="yes" -t -s:$(IDSDEF) -xsl:IDSDef2TestSuite.xsl
 
 #################################################
 #              BUILD
@@ -101,6 +94,7 @@ sources2: IDSDef2TestSuite.xsl $(IDSDEF) | saxonicajar $(TEST_SRC_DIR)
 gfortran_clean:
 	$(RM) -r $(GFORTRAN_BIN_DIR)
 	$(RM) -r $(GFORTRAN_BUILD_DIR)
+	$(RM) gfortran_initpulse
 	
 $(GFORTRAN_BUILD_DIR)/generator.o: $(GFORTRAN_BUILD_DIR)/%.o: %.f90 | $(GFORTRAN_BUILD_DIR)
 	$(FC_gfortran) $(COPTS_gfortran) -c $< -o $@
@@ -130,18 +124,15 @@ $(GFORTRAN_BIN_FILES): $(GFORTRAN_BIN_DIR)/%_test.exe: $(GFORTRAN_BUILD_DIR)/set
 	
 	
 gfortran_initpulse: initpulse.f90
-	$(FC_gfortran) $(COPTS_gfortran) -c $< -o $@
+	$(FC_gfortran) $(COPTS_gfortran) -o $@ $^ $(LIBS_gfortran)
 
-gfortran_testSuite: $(GFORTRAN_BIN_FILES)
-
-gfortran_test: gfortran_testSuite
-	./test.sh -c gfortran | tee test_gfortran.results 
 
 #------------------------- ifort ----------------------------
 .PHONY: ifort_clean
 ifort_clean:
 	$(RM) -r $(IFORT_BIN_DIR)
 	$(RM) -r $(IFORT_BUILD_DIR)
+	$(RM) ifort_initpulse
 	
 $(IFORT_BUILD_DIR)/generator.o: $(IFORT_BUILD_DIR)/%.o: %.f90 | $(IFORT_BUILD_DIR)
 	$(FC_ifort) $(COPTS_ifort) -c $< -o $@
@@ -169,27 +160,34 @@ $(IFORT_BUILD_DIR)/%_test.o: $(TEST_SRC_DIR)/%_test.f90 $(IFORT_BUILD_DIR)/helpe
 $(IFORT_BIN_FILES): $(IFORT_BIN_DIR)/%_test.exe: $(IFORT_BUILD_DIR)/setter.o $(IFORT_BUILD_DIR)/comparator.o $(IFORT_BUILD_DIR)/generator.o $(IFORT_BUILD_DIR)/helper.o $(IFORT_BUILD_DIR)/%_test.o $(IFORT_BUILD_DIR)/%_init_static.o $(IFORT_BUILD_DIR)/%_init_dynamic.o $(IFORT_BUILD_DIR)/%_test_static.o $(IFORT_BUILD_DIR)/%_test_dynamic.o | $(IFORT_BIN_DIR)
 	$(FC_ifort) $(COPTS_ifort) -o $@ $^ $(LIBS_ifort)
 	
-	
 ifort_initpulse: initpulse.f90
-	$(FC_ifort) $(COPTS_ifort) -c $< -o $@
+	$(FC_ifort) $(COPTS_ifort) -o $@ $^ $(LIBS_ifort)
 
-ifort_testSuite: $(IFORT_BIN_FILES)
-
-ifort_test: ifort_testSuite
-	./test.sh -c ifort | tee test_ifort.results 
 
 #################################################
 #              TEST
 #################################################
 .PHONY: test ifort_test gfortran_test
 
-test: $(IDS_SOURCES) $(TESTS)
+# Canned recipe that runs prerequisites as tests and produces TAP-like output
+define run-tests
+	@echo 1..$(words $^) # number of tests to be executed
+	@N=1;for prog in $^ ;do \
+	( $(test_ENV) ./$$prog 2>&1 | tee ./$$prog.log ) && \
+	test 0 -eq $$(grep -c -i error ./$$prog.log ) && \
+	echo ok $$N - $$prog passed. || echo not ok $$N - $$prog failed.\
+	;done | tee $@.log
+	@test 0 -eq $$(grep -c -i error $@.log) || exit 1
+endef
 
-test_put: 
-	./test_put.sh -c gfortran | tee testput_gfortran.results 
-
-test_get:
-	./test_get.sh -c gfortran | tee testget_gfortran.results 
+gfortran_initpulse_test: gfortran_initpulse | $(TMP_DIR)
+	$(run-tests)
+gfortran_test: $(GFORTRAN_BIN_FILES) | gfortran_initpulse_test
+	$(run-tests)
+ifort_initpulse_test: ifort_initpulse | $(TMP_DIR)
+	$(run-tests)
+ifort_test: $(IFORT_BIN_FILES) | ifort_initpulse_test
+	$(run-tests)
 
 #----------------------- classpath deps ---------------------
 include ../../../Makefile.classpath
