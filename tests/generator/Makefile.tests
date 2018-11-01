@@ -42,6 +42,9 @@ IDS_SOURCES += $(patsubst %,$(TEST_SRC_DIR)/%_test_dynamic.f90,$(IDSNAMES))
 IDS_SOURCES += $(patsubst %,$(TEST_SRC_DIR)/%_test_static.f90,$(IDSNAMES))
 IDS_SOURCES += $(patsubst %,$(TEST_SRC_DIR)/%_init_dynamic.f90,$(IDSNAMES))
 IDS_SOURCES += $(patsubst %,$(TEST_SRC_DIR)/%_init_static.f90,$(IDSNAMES))
+TEST_IDS_FILES_PUT = $(patsubst %,$(TEST_SRC_DIR)/%_put_test.f90,$(IDSNAMES))
+TEST_IDS_FILES_GET = $(patsubst %,$(TEST_SRC_DIR)/%_get_test.f90,$(IDSNAMES))
+IDS_SOURCES2 = $(TEST_IDS_FILES_PUT) $(TEST_IDS_FILES_GET)
 
 IFORT_BIN_FILES=$(patsubst %.f90,$(IFORT_BIN_DIR)/%.exe,$(notdir $(TEST_IDS_FILES)))
 GFORTRAN_BIN_FILES=$(patsubst %.f90,$(GFORTRAN_BIN_DIR)/%.exe,$(notdir $(TEST_IDS_FILES)))
@@ -52,6 +55,7 @@ IFORT_TESTS = ifort_initpulse_test ifort_test
 all: $(TARGETS)
 check test: $(TESTS)
 sources: $(IDS_SOURCES)
+sources2: $(IDS_SOURCES2)
 
 # Create src and bin dirs as needed
 $(TEST_SRC_DIR) $(IFORT_BIN_DIR) $(GFORTRAN_BIN_DIR) $(IFORT_BUILD_DIR) $(GFORTRAN_BUILD_DIR) $(TMP_DIR):
@@ -76,13 +80,18 @@ $(IDS_SOURCES):
 else
 $(IDS_SOURCES): sources_
 endif
+ifeq ($(words $(IDS_SOURCES2)), $(words $(wildcard $(IDS_SOURCES2))))
+$(IDS_SOURCES2):
+else
+$(IDS_SOURCES2): sources2_
+endif
 
 # Target sources is reserved (used by user to build sources only)
 # Need a single target to prevent parallel building:
 sources_: IDSDef2TestSuite.xsl $(IDSDEF) | saxonicajar $(TEST_SRC_DIR)
 	java net.sf.saxon.Transform newLowLevel=$(NEW_LOW_LEVEL) -t -s:$(IDSDEF) -xsl:IDSDef2TestSuite.xsl
 
-sources2: IDSDef2TestSuite.xsl $(IDSDEF) | saxonicajar $(TEST_SRC_DIR)
+sources2_: IDSDef2TestSuite.xsl $(IDSDEF) | saxonicajar $(TEST_SRC_DIR)
 	java net.sf.saxon.Transform newLowLevel=$(NEW_LOW_LEVEL) sources2="yes" -t -s:$(IDSDEF) -xsl:IDSDef2TestSuite.xsl
 
 #################################################
