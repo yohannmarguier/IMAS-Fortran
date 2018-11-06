@@ -19,6 +19,10 @@
 	  <xsl:apply-templates select="child::IDS" mode="get_test"/>
 	</xsl:when>
 	<xsl:otherwise>
+	  <xsl:apply-templates select="child::IDS" mode="init_static"/>
+	  <xsl:apply-templates select="child::IDS" mode="init_dynamic"/>
+	  <xsl:apply-templates select="child::IDS" mode="test_static"/>
+          <xsl:apply-templates select="child::IDS" mode="test_dynamic"/>
 	  <xsl:apply-templates select="child::IDS" mode="test"/>
 	</xsl:otherwise>
       </xsl:choose>
@@ -26,6 +30,148 @@
 
  <!-- ============================= END OF GENRATED FILE ============================== -->
 
+ 
+ 
+ 
+ <!--+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
+<!-- IDS INIT STATIC                                             -->
+<!--+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
+<xsl:template match="IDS" mode="init_static">
+  <xsl:result-document href="src/{@name}_init_static.f90">
+        <xsl:text>module </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_static_mod&#10;</xsl:text>
+        <xsl:text>&#xA;</xsl:text>
+        <xsl:text>&#9;use ids_schemas, only: ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>&#10;</xsl:text>
+        <xsl:text>&#9;use helper&#10;</xsl:text>
+        <xsl:text>&#xA;</xsl:text> 
+        <xsl:text>&#9;implicit none&#10;</xsl:text>
+        <xsl:text>&#xA;</xsl:text> 
+        <xsl:text>contains</xsl:text>
+        <xsl:text>&#xA;</xsl:text>
+
+        <xsl:text>!==================================================================&#10;</xsl:text>
+        <xsl:text>!&#9;&#9; INIT STATIC DATA: </xsl:text><xsl:value-of select="@name"/> <xsl:text> &#10;</xsl:text>
+        <xsl:text>!==================================================================&#10;</xsl:text>
+        <xsl:text>SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_static( ids )&#10;</xsl:text>
+        <xsl:text>&#9;TYPE (ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>), INTENT(INOUT) :: ids &#10;</xsl:text>
+        <xsl:text>&#10;</xsl:text>
+
+        <xsl:apply-templates select="field" mode="putStatic"/> 
+
+        <xsl:text>&#10;</xsl:text>
+        <xsl:text>END SUBROUTINE </xsl:text> <xsl:value-of select="@name"/><xsl:text>_init_static&#10;</xsl:text>
+        <xsl:text>&#10;</xsl:text>
+        <xsl:text>END MODULE </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_static_mod&#10;</xsl:text>
+        <xsl:text>&#10;</xsl:text>
+  </xsl:result-document>
+</xsl:template>
+
+
+ <!--+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
+<!-- IDS INIT DYNAMIC                                             -->
+<!--+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
+<xsl:template match="IDS" mode="init_dynamic">
+  <xsl:result-document href="src/{@name}_init_dynamic.f90">
+        <xsl:text>module </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_dynamic_mod&#10;</xsl:text>
+        <xsl:text>&#xA;</xsl:text>
+        <xsl:text>&#9;use ids_schemas, only: ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>&#10;</xsl:text>
+        <xsl:text>&#9;use helper&#10;</xsl:text>
+        <xsl:text>&#xA;</xsl:text> 
+        <xsl:text>&#9;implicit none&#10;</xsl:text>
+        <xsl:text>&#xA;</xsl:text> 
+        <xsl:text>contains</xsl:text>
+        <xsl:text>&#xA;</xsl:text>
+
+        <xsl:text>!==================================================================&#10;</xsl:text>
+        <xsl:text>!&#9;&#9; INIT DYNAMIC DATA: </xsl:text><xsl:value-of select="@name"/> <xsl:text> &#10;</xsl:text>
+        <xsl:text>!==================================================================&#10;</xsl:text>
+        <xsl:text>SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_dynamic( ids, timedArraySize, j )&#10;</xsl:text>
+        <xsl:text>&#9;TYPE (ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>), INTENT(INOUT) :: ids &#10;</xsl:text>
+        <xsl:text>&#9;INTEGER, INTENT(IN) :: timedArraySize &#10;</xsl:text>
+        <xsl:text>&#9;INTEGER, INTENT(IN) :: j &#10;</xsl:text>
+        <xsl:text>&#10;</xsl:text>
+
+        <xsl:apply-templates select="field" mode="putDynamic"/> 
+
+        <xsl:text>&#10;</xsl:text>
+        <xsl:text>END SUBROUTINE </xsl:text> <xsl:value-of select="@name"/><xsl:text>_init_dynamic&#10;</xsl:text>
+        <xsl:text>&#10;</xsl:text>
+        <xsl:text>END MODULE </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_dynamic_mod&#10;</xsl:text>
+        <xsl:text>&#10;</xsl:text>
+  </xsl:result-document>
+</xsl:template>
+
+ <!--+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
+<!-- IDS TEST STATIC                                             -->
+<!--+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
+<xsl:template match="IDS" mode="test_static">
+  <xsl:result-document href="src/{@name}_test_static.f90">
+        <xsl:text>module </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_static_mod&#10;</xsl:text>
+        <xsl:text>&#xA;</xsl:text>
+         <xsl:text>&#9;use helper&#10;</xsl:text>
+        <xsl:text>&#9;use comparator &#10;</xsl:text>
+        <xsl:text>&#9;use ids_schemas, only: ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>&#10;</xsl:text>
+        <xsl:text>&#9;implicit none&#10;</xsl:text>
+        <xsl:text>&#xA;</xsl:text> 
+        <xsl:text>&#xA;</xsl:text> 
+        <xsl:text>contains</xsl:text>
+        <xsl:text>&#xA;</xsl:text>
+
+        <xsl:text>!==================================================================&#10;</xsl:text>
+        <xsl:text>!&#9;&#9; TEST STATIC DATA: </xsl:text><xsl:value-of select="@name"/> <xsl:text> &#10;</xsl:text>
+        <xsl:text>!==================================================================&#10;</xsl:text>
+        <xsl:text>SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_static( ids )&#10;</xsl:text>
+        <xsl:text>&#9;TYPE (ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>), INTENT(INOUT) :: ids &#10;</xsl:text>
+        <xsl:text>&#9;LOGICAL :: isEqual &#10;</xsl:text>
+        
+        <xsl:text>&#10;</xsl:text>
+
+        <xsl:apply-templates select="field" mode="getStatic"/> 
+
+        <xsl:text>&#10;</xsl:text>
+        <xsl:text>END SUBROUTINE </xsl:text> <xsl:value-of select="@name"/><xsl:text>_test_static&#10;</xsl:text>
+        <xsl:text>&#10;</xsl:text>
+        <xsl:text>END MODULE </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_static_mod&#10;</xsl:text>
+        <xsl:text>&#10;</xsl:text>
+  </xsl:result-document>
+</xsl:template>
+
+
+ <!--+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
+<!-- IDS TEST DYNAMIC                                             -->
+<!--+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
+<xsl:template match="IDS" mode="test_dynamic">
+  <xsl:result-document href="src/{@name}_test_dynamic.f90">
+        <xsl:text>module </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_dynamic_mod&#10;</xsl:text>
+        <xsl:text>&#xA;</xsl:text>
+        <xsl:text>&#9;use helper&#10;</xsl:text>
+        <xsl:text>&#9;use comparator &#10;</xsl:text>
+        <xsl:text>&#9;use ids_schemas, only: ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>&#10;</xsl:text>
+        <xsl:text>&#xA;</xsl:text> 
+        <xsl:text>&#9;implicit none&#10;</xsl:text>
+        <xsl:text>&#xA;</xsl:text> 
+        <xsl:text>contains</xsl:text>
+        <xsl:text>&#xA;</xsl:text>
+
+        <xsl:text>!==================================================================&#10;</xsl:text>
+        <xsl:text>!&#9;&#9; TEST DYNAMIC DATA: </xsl:text><xsl:value-of select="@name"/> <xsl:text> &#10;</xsl:text>
+        <xsl:text>!==================================================================&#10;</xsl:text>
+        <xsl:text>SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_dynamic( ids, timedArraySize, j )&#10;</xsl:text>
+        <xsl:text>&#9;TYPE (ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>), INTENT(INOUT) :: ids &#10;</xsl:text>
+        <xsl:text>&#9;INTEGER, INTENT(IN) :: timedArraySize &#10;</xsl:text>
+        <xsl:text>&#9;INTEGER, INTENT(IN) :: j &#10;</xsl:text>
+        <xsl:text>&#9;LOGICAL :: isEqual &#10;</xsl:text>
+        <xsl:text>&#10;</xsl:text>
+
+        <xsl:apply-templates select="field" mode="getDynamic"/> 
+
+        <xsl:text>&#10;</xsl:text>
+        <xsl:text>END SUBROUTINE </xsl:text> <xsl:value-of select="@name"/><xsl:text>_test_dynamic&#10;</xsl:text>
+        <xsl:text>&#10;</xsl:text>
+        <xsl:text>END MODULE </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_dynamic_mod&#10;</xsl:text>
+        <xsl:text>&#10;</xsl:text>
+  </xsl:result-document>
+</xsl:template>
+ 
  <!-- ============================= TEMPLATES ============================== -->
 
         <!--Documentation for a single field-->
@@ -142,11 +288,11 @@
             <xsl:apply-templates select="child::IDS[.//field[@type='dynamic'] and @name='temporary']" mode="putSlice"/>
             <xsl:apply-templates select="child::IDS[@name='temporary']" mode="getSlice"/>
 	-->
-	<xsl:apply-templates select="." mode="assign_non_timed"/>
+<!--	<xsl:apply-templates select="." mode="assign_non_timed"/>
 	<xsl:apply-templates select="." mode="assign_timed"/>
 	<xsl:apply-templates select="." mode="get_non_timed"/>
 	<xsl:apply-templates select="." mode="get_timed"/>
-	<xsl:apply-templates select=".[.//field[@type='dynamic']]" mode="putSlice"/>
+-->	<xsl:apply-templates select=".[.//field[@type='dynamic']]" mode="putSlice"/>
         <xsl:apply-templates select="." mode="getSlice"/>
         <xsl:text>END PROGRAM </xsl:text><xsl:value-of select="@name"/><xsl:text>_test&#10;</xsl:text>
         <xsl:text>&#10;</xsl:text>
@@ -287,6 +433,8 @@
        <xsl:text>!&#9;&#9; PUT </xsl:text><xsl:value-of select="@name"/> <xsl:text> &#10;</xsl:text>
        <xsl:text>!==================================================================&#10;</xsl:text>
 	<xsl:text>SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_put&#10;</xsl:text>
+	<xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_static_mod&#10;</xsl:text> 
+	<xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_dynamic_mod&#10;</xsl:text> 
 	<xsl:text>&#9;CHARACTER (LEN = *), parameter :: idsName = "</xsl:text><xsl:value-of select="@name"/><xsl:text>"&#10;</xsl:text>
 	<xsl:text>&#9;TYPE (ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>) :: ids &#10;</xsl:text>
 	<xsl:text>&#9;CHARACTER (LEN=IDS_PATH_LEN) :: idspath &#10;</xsl:text>
@@ -297,8 +445,8 @@
 	<xsl:text>&#9;CALL random_seed(PUT = seed)&#10;</xsl:text>
         <xsl:text>&#9;do i = 0, </xsl:text><xsl:value-of select="@maxoccur"/><xsl:text> - 1 &#10;</xsl:text>
     	<xsl:text>&#9;WRITE(*,*) "--- occurence: ", i&#10;</xsl:text>
-	<xsl:text>&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_assign_non_timed(ids);&#10;</xsl:text> 
-       	<xsl:text>&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_assign_timed(ids, DIM_SIZE, -1);&#10;</xsl:text> 
+	<xsl:text>&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_static(ids);&#10;</xsl:text> 
+       	<xsl:text>&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_dynamic(ids, DIM_SIZE, -1);&#10;</xsl:text> 
 	<xsl:text>&#9;&#9;!------------&#10;</xsl:text>
 	<xsl:text>&#9;&#9;if (i == 0) then &#10;</xsl:text>
 	<xsl:text>&#9;&#9;&#9;idspath = idsName  &#10;</xsl:text>
@@ -324,6 +472,8 @@
        <xsl:text>!&#9;&#9; PUT SLICE </xsl:text><xsl:value-of select="@name"/> <xsl:text> &#10;</xsl:text>
        <xsl:text>!==================================================================&#10;</xsl:text>
 	<xsl:text>SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_putSlice&#10;</xsl:text>
+	<xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_static_mod&#10;</xsl:text> 
+        <xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_dynamic_mod&#10;</xsl:text> 
 	<xsl:text>&#9;CHARACTER (LEN = *), parameter :: idsName = "</xsl:text><xsl:value-of select="@name"/><xsl:text>"&#10;</xsl:text>
 	<xsl:text>&#9;TYPE (ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>) :: ids &#10;</xsl:text>
 	<xsl:text>&#9;CHARACTER (LEN=IDS_PATH_LEN) :: idspath &#10;</xsl:text>
@@ -332,10 +482,10 @@
         <xsl:text>&#9;WRITE(*,*) "Testing putSlice() on </xsl:text><xsl:value-of select="@name"/><xsl:text>"&#10;</xsl:text>
         <xsl:text>&#9;CALL random_seed(PUT = seed)&#10;</xsl:text>
         <xsl:text>&#9;do i = 0, </xsl:text><xsl:value-of select="@maxoccur"/><xsl:text> - 1 &#10;</xsl:text>
-	 <xsl:text>&#9;WRITE(*,*) "--- occurence: ", i&#10;</xsl:text>
+	<xsl:text>&#9;WRITE(*,*) "--- occurence: ", i&#10;</xsl:text>
  	<xsl:text>&#9;&#9;do j = 1, noOfSlices &#10;</xsl:text>
- 	<xsl:text>&#9;WRITE(*,*) "--- --- slice : ", j&#10;</xsl:text>
-<xsl:text>&#9;&#9;&#9;!------------&#10;</xsl:text>
+ 	<xsl:text>&#9;&#9;WRITE(*,*) "--- --- slice : ", j&#10;</xsl:text>
+        <xsl:text>&#9;&#9;&#9;!------------&#10;</xsl:text>
 	<xsl:text>&#9;&#9;&#9;if (i == 0) then &#10;</xsl:text>
 	<xsl:text>&#9;&#9;&#9;&#9;idspath = idsName  &#10;</xsl:text>
 	<xsl:text>&#9;&#9;&#9;else&#10;</xsl:text>
@@ -346,24 +496,24 @@
 
 	<xsl:choose>
             <xsl:when test="$newLowLevel!='yes'">
-	<xsl:text>&#9;&#9;&#9;if (j == 1) then &#10;</xsl:text>
+            <xsl:text>&#9;&#9;&#9;if (j == 1) then &#10;</xsl:text>
 		<xsl:text>&#9;&#9;&#9;! ------ PUT STATIC DATA (ONCE)   &#10;</xsl:text>
-		<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_assign_non_timed(ids);&#10;</xsl:text> 
+		<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_static(ids);&#10;</xsl:text> 
          <xsl:text>&#9;&#9;&#9;&#9;call ids_put_non_timed(idxslice, idspath, ids);&#10;</xsl:text> 
 	<xsl:text>&#9;&#9;&#9;end if &#10;</xsl:text>
 
 		<xsl:text>&#9;&#9;&#9;! ------ PUT DYNAMIC DATA (LOOP) &#10;</xsl:text>
-       		<xsl:text>&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_assign_timed(ids, j);&#10;</xsl:text> 
+       		<xsl:text>&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_dynamic(ids, j);&#10;</xsl:text> 
 
 	<xsl:text>&#9;&#9;&#9;call ids_put_slice(idxslice, idspath, ids);&#10;</xsl:text>
             </xsl:when>
 	    <xsl:otherwise>
 		<xsl:text>&#9;&#9;&#9;if (j == 1) then &#10;</xsl:text>
-		<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_assign_non_timed(ids);&#10;</xsl:text> 
-       		<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_assign_timed(ids, 1, j);&#10;</xsl:text> 
+		<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_static(ids);&#10;</xsl:text> 
+       		<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_dynamic(ids, 1, j);&#10;</xsl:text> 
         	<xsl:text>&#9;&#9;&#9;&#9;call ids_put(idxslice ,idspath, ids);&#10;</xsl:text> 
-		<xsl:text>&#9;&#9;else&#10;</xsl:text>
-       		<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_assign_timed(ids, 1, j);&#10;</xsl:text> 
+		<xsl:text>&#9;&#9;&#9;else&#10;</xsl:text>
+       		<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_dynamic(ids, 1, j);&#10;</xsl:text> 
 		<xsl:text>&#9;&#9;&#9;&#9;call ids_put_slice(idxslice ,idspath, ids);&#10;</xsl:text>
 		<xsl:text>&#9;&#9;&#9;end if &#10;</xsl:text>
 	   </xsl:otherwise>
@@ -386,6 +536,8 @@
        <xsl:text>!&#9;&#9; GET </xsl:text><xsl:value-of select="@name"/> <xsl:text> &#10;</xsl:text>
        <xsl:text>!==================================================================&#10;</xsl:text>
 	<xsl:text>SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_get&#10;</xsl:text>
+	<xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_static_mod&#10;</xsl:text> 
+        <xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_dynamic_mod&#10;</xsl:text> 
 	<xsl:text>&#9;CHARACTER (LEN = *), parameter :: idsName = "</xsl:text><xsl:value-of select="@name"/><xsl:text>"&#10;</xsl:text>
 	<xsl:text>&#9;TYPE (ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>) :: ids &#10;</xsl:text>
 	<xsl:text>&#9;CHARACTER (LEN=IDS_PATH_LEN) :: idspath &#10;</xsl:text>
@@ -405,8 +557,8 @@
 	<xsl:text>  &#10;</xsl:text>
 
 	<xsl:text>&#9;&#9;call ids_get(idx, idspath, ids);&#10;</xsl:text>
-	<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_get_non_timed(ids)&#10;</xsl:text> 
-       	<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_get_timed(ids, DIM_SIZE, -1)&#10;</xsl:text> 
+	<xsl:text>&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_static(ids)&#10;</xsl:text> 
+       	<xsl:text>&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_dynamic(ids, DIM_SIZE, -1)&#10;</xsl:text> 
 		
 		
 		 <!-- <xsl:text>&#9;call ids_deallocate(ids)&#10;</xsl:text> -->
@@ -426,6 +578,8 @@
        <xsl:text>!&#9;&#9; GET </xsl:text><xsl:value-of select="@name"/> <xsl:text> &#10;</xsl:text>
        <xsl:text>!==================================================================&#10;</xsl:text>
 	<xsl:text>SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_getSlice&#10;</xsl:text>
+	<xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_static_mod&#10;</xsl:text> 
+        <xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_dynamic_mod&#10;</xsl:text> 
 	<xsl:text>&#9;LOGICAL :: isEqual &#10;</xsl:text>
 	<xsl:text>&#9;CHARACTER (LEN = *), parameter :: idsName = "</xsl:text><xsl:value-of select="@name"/><xsl:text>"&#10;</xsl:text>
 	<xsl:text>&#9;TYPE (ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>) :: ids &#10;</xsl:text>
@@ -435,7 +589,7 @@
         <xsl:text>&#9;WRITE(*,*) "Testing getSlice() on </xsl:text><xsl:value-of select="@name"/><xsl:text>"&#10;</xsl:text>
 	<xsl:text>&#9;CALL random_seed(PUT = seed)&#10;</xsl:text>
         <xsl:text>&#9;do i = 0, </xsl:text><xsl:value-of select="@maxoccur"/><xsl:text> - 1  &#10;</xsl:text>
-	<xsl:text>&#9;WRITE(*,*) "---  occurence: ", i&#10;</xsl:text>
+	<xsl:text>&#9;&#9;WRITE(*,*) "---  occurence: ", i&#10;</xsl:text>
 	<xsl:text>&#9;&#9;if (i == 0) then &#10;</xsl:text>
 	<xsl:text>&#9;&#9;&#9;idspath = idsName  &#10;</xsl:text>
 	<xsl:text>&#9;&#9;else&#10;</xsl:text>
@@ -450,9 +604,9 @@
 
 	<xsl:text>&#9;&#9;&#9;if (j == 1) then &#10;</xsl:text>
 	<xsl:text>  &#10;</xsl:text>
-	<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_get_non_timed(ids);&#10;</xsl:text> 
+	<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_static(ids);&#10;</xsl:text> 
 	<xsl:text>&#9;&#9;&#9;end if &#10;</xsl:text>
-       	<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_get_timed(ids, DIM_SIZE, j);&#10;</xsl:text> 
+       	<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_dynamic(ids, DIM_SIZE, j);&#10;</xsl:text> 
   	<xsl:text>&#9;&#9;end do &#10;</xsl:text>
         <xsl:text>&#9;end do &#10;</xsl:text>
         <xsl:text>&#9;&#10;</xsl:text>
