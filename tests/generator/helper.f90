@@ -1,5 +1,4 @@
 MODULE helper
-  use ids_schemas
   use ids_routines
   use ual_low_level_wrap
   implicit none
@@ -60,18 +59,25 @@ CONTAINS
 
     FUNCTION getTimeScalar(idxTime) RESULT (outValue)
         REAL(ids_real):: outValue
-	INTEGER :: idxTime
+       INTEGER :: idxTime
 	
         outValue = timeVector(idxTime)
         RETURN
     END FUNCTION getTimeScalar
+  
 
-
-    FUNCTION getTimeVector() RESULT (outArray)
+    FUNCTION getTimeVector(size, index) RESULT (outArray)
+        INTEGER, INTENT(in)::size
+	INTEGER, INTENT(in)::index 
    	REAL(ids_real), DIMENSION(:), POINTER      :: outArray
 
-	allocate(outArray(DIM_SIZE))
-	outArray = timeVector
+	allocate(outArray(size))
+	
+	if(index > 0) then
+		outArray = timeVector(index:index)
+	else
+		outArray = timeVector(1:size)
+	end if
 
         RETURN
     END FUNCTION getTimeVector
