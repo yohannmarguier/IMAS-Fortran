@@ -41,7 +41,8 @@
         <xsl:text>module </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_static_mod&#10;</xsl:text>
         <xsl:text>&#xA;</xsl:text>
         <xsl:text>&#9;use ids_schemas, only: ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>&#10;</xsl:text>
-        <xsl:text>&#9;use helper&#10;</xsl:text>
+        <xsl:text>&#9;use generator&#10;</xsl:text>
+         <xsl:text>&#9;use setter&#10;</xsl:text>
         <xsl:text>&#xA;</xsl:text> 
         <xsl:text>&#9;implicit none&#10;</xsl:text>
         <xsl:text>&#xA;</xsl:text> 
@@ -74,7 +75,8 @@
         <xsl:text>module </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_dynamic_mod&#10;</xsl:text>
         <xsl:text>&#xA;</xsl:text>
         <xsl:text>&#9;use ids_schemas, only: ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>&#10;</xsl:text>
-        <xsl:text>&#9;use helper&#10;</xsl:text>
+        <xsl:text>&#9;use generator&#10;</xsl:text>
+            <xsl:text>&#9;use setter&#10;</xsl:text>
         <xsl:text>&#xA;</xsl:text> 
         <xsl:text>&#9;implicit none&#10;</xsl:text>
         <xsl:text>&#xA;</xsl:text> 
@@ -84,9 +86,9 @@
         <xsl:text>!==================================================================&#10;</xsl:text>
         <xsl:text>!&#9;&#9; INIT DYNAMIC DATA: </xsl:text><xsl:value-of select="@name"/> <xsl:text> &#10;</xsl:text>
         <xsl:text>!==================================================================&#10;</xsl:text>
-        <xsl:text>SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_dynamic( ids, timedArraySize, j )&#10;</xsl:text>
+        <xsl:text>SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_dynamic( ids, isSliceMode, j )&#10;</xsl:text>
         <xsl:text>&#9;TYPE (ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>), INTENT(INOUT) :: ids &#10;</xsl:text>
-        <xsl:text>&#9;INTEGER, INTENT(IN) :: timedArraySize &#10;</xsl:text>
+        <xsl:text>&#9;LOGICAL, INTENT(IN) :: isSliceMode &#10;</xsl:text>
         <xsl:text>&#9;INTEGER, INTENT(IN) :: j &#10;</xsl:text>
         <xsl:text>&#10;</xsl:text>
 
@@ -107,7 +109,7 @@
   <xsl:result-document href="src/{@name}_test_static.f90">
         <xsl:text>module </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_static_mod&#10;</xsl:text>
         <xsl:text>&#xA;</xsl:text>
-         <xsl:text>&#9;use helper&#10;</xsl:text>
+         <xsl:text>&#9;use generator&#10;</xsl:text>
         <xsl:text>&#9;use comparator &#10;</xsl:text>
         <xsl:text>&#9;use ids_schemas, only: ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>&#10;</xsl:text>
         <xsl:text>&#9;implicit none&#10;</xsl:text>
@@ -143,7 +145,7 @@
   <xsl:result-document href="src/{@name}_test_dynamic.f90">
         <xsl:text>module </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_dynamic_mod&#10;</xsl:text>
         <xsl:text>&#xA;</xsl:text>
-        <xsl:text>&#9;use helper&#10;</xsl:text>
+        <xsl:text>&#9;use generator&#10;</xsl:text>
         <xsl:text>&#9;use comparator &#10;</xsl:text>
         <xsl:text>&#9;use ids_schemas, only: ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>&#10;</xsl:text>
         <xsl:text>&#xA;</xsl:text> 
@@ -155,9 +157,9 @@
         <xsl:text>!==================================================================&#10;</xsl:text>
         <xsl:text>!&#9;&#9; TEST DYNAMIC DATA: </xsl:text><xsl:value-of select="@name"/> <xsl:text> &#10;</xsl:text>
         <xsl:text>!==================================================================&#10;</xsl:text>
-        <xsl:text>SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_dynamic( ids, timedArraySize, j )&#10;</xsl:text>
+        <xsl:text>SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_dynamic( ids, isSliceMode, j )&#10;</xsl:text>
         <xsl:text>&#9;TYPE (ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>), INTENT(INOUT) :: ids &#10;</xsl:text>
-        <xsl:text>&#9;INTEGER, INTENT(IN) :: timedArraySize &#10;</xsl:text>
+        <xsl:text>&#9;LOGICAL, INTENT(IN) :: isSliceMode &#10;</xsl:text>
         <xsl:text>&#9;INTEGER, INTENT(IN) :: j &#10;</xsl:text>
         <xsl:text>&#9;LOGICAL :: isEqual &#10;</xsl:text>
         <xsl:text>&#10;</xsl:text>
@@ -245,9 +247,11 @@
 	
 	<!-- ================================ MAIN PROGRAM ================================= -->
         <xsl:text>PROGRAM </xsl:text><xsl:value-of select="@name"/><xsl:text>_test&#10;</xsl:text>
-	<xsl:text>&#9;use comparator &#10;</xsl:text>
-	<xsl:text>&#9;use ids_schemas &#10;</xsl:text>
+	<xsl:text>&#9;!use comparator &#10;</xsl:text>
+	<xsl:text>&#9;!use ids_schemas &#10;</xsl:text>
 	<xsl:text>&#9;use helper&#10;</xsl:text>
+	<xsl:text>&#9;use generator&#10;</xsl:text>
+        
         <xsl:text>&#9;implicit none&#10;   </xsl:text>
 
 	<xsl:text>&#9;INTEGER :: idx,idxslice&#10;</xsl:text>
@@ -446,7 +450,7 @@
         <xsl:text>&#9;do i = 0, </xsl:text><xsl:value-of select="@maxoccur"/><xsl:text> - 1 &#10;</xsl:text>
     	<xsl:text>&#9;WRITE(*,*) "--- occurence: ", i&#10;</xsl:text>
 	<xsl:text>&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_static(ids);&#10;</xsl:text> 
-       	<xsl:text>&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_dynamic(ids, DIM_SIZE, -1);&#10;</xsl:text> 
+       	<xsl:text>&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_dynamic(ids, .FALSE., -1);&#10;</xsl:text> 
 	<xsl:text>&#9;&#9;!------------&#10;</xsl:text>
 	<xsl:text>&#9;&#9;if (i == 0) then &#10;</xsl:text>
 	<xsl:text>&#9;&#9;&#9;idspath = idsName  &#10;</xsl:text>
@@ -510,10 +514,10 @@
 	    <xsl:otherwise>
 		<xsl:text>&#9;&#9;&#9;if (j == 1) then &#10;</xsl:text>
 		<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_static(ids);&#10;</xsl:text> 
-       		<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_dynamic(ids, 1, j);&#10;</xsl:text> 
+       		<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_dynamic(ids, .TRUE., j);&#10;</xsl:text> 
         	<xsl:text>&#9;&#9;&#9;&#9;call ids_put(idxslice ,idspath, ids);&#10;</xsl:text> 
 		<xsl:text>&#9;&#9;&#9;else&#10;</xsl:text>
-       		<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_dynamic(ids, 1, j);&#10;</xsl:text> 
+       		<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_dynamic(ids, .TRUE., j);&#10;</xsl:text> 
 		<xsl:text>&#9;&#9;&#9;&#9;call ids_put_slice(idxslice ,idspath, ids);&#10;</xsl:text>
 		<xsl:text>&#9;&#9;&#9;end if &#10;</xsl:text>
 	   </xsl:otherwise>
@@ -558,7 +562,7 @@
 
 	<xsl:text>&#9;&#9;call ids_get(idx, idspath, ids);&#10;</xsl:text>
 	<xsl:text>&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_static(ids)&#10;</xsl:text> 
-       	<xsl:text>&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_dynamic(ids, DIM_SIZE, -1)&#10;</xsl:text> 
+       	<xsl:text>&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_dynamic(ids, .FALSE., -1)&#10;</xsl:text> 
 		
 		
 		 <!-- <xsl:text>&#9;call ids_deallocate(ids)&#10;</xsl:text> -->
@@ -606,7 +610,7 @@
 	<xsl:text>  &#10;</xsl:text>
 	<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_static(ids);&#10;</xsl:text> 
 	<xsl:text>&#9;&#9;&#9;end if &#10;</xsl:text>
-       	<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_dynamic(ids, DIM_SIZE, j);&#10;</xsl:text> 
+       	<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_dynamic(ids, .TRUE., j);&#10;</xsl:text> 
   	<xsl:text>&#9;&#9;end do &#10;</xsl:text>
         <xsl:text>&#9;end do &#10;</xsl:text>
         <xsl:text>&#9;&#10;</xsl:text>
@@ -635,9 +639,9 @@
         <xsl:text>!==================================================================&#10;</xsl:text>
        <xsl:text>!&#9;&#9; ASSIGN TIMED </xsl:text><xsl:value-of select="@name"/> <xsl:text> &#10;</xsl:text>
        <xsl:text>!==================================================================&#10;</xsl:text>
-	<xsl:text>SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_assign_timed( ids, timedArraySize, j )&#10;</xsl:text>
+	<xsl:text>SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_assign_timed( ids, isSliceMode, j )&#10;</xsl:text>
 	<xsl:text>&#9;TYPE (ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>), INTENT(INOUT) :: ids &#10;</xsl:text>
-	<xsl:text>&#9;INTEGER, INTENT(IN) :: timedArraySize &#10;</xsl:text>
+	<xsl:text>&#9;LOGICAL, INTENT(IN) :: isSliceMode &#10;</xsl:text>
 	<xsl:text>&#9;INTEGER, INTENT(IN) :: j &#10;</xsl:text>
 	<xsl:text>&#9;&#10;</xsl:text>
 
@@ -668,9 +672,9 @@
         <xsl:text>!==================================================================&#10;</xsl:text>
        <xsl:text>!&#9;&#9; GET TIMED </xsl:text><xsl:value-of select="@name"/> <xsl:text> &#10;</xsl:text>
        <xsl:text>!==================================================================&#10;</xsl:text>
-	<xsl:text>SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_get_timed( ids, timedArraySize, j )&#10;</xsl:text>
+	<xsl:text>SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_get_timed( ids, isSliceMode, j )&#10;</xsl:text>
 	<xsl:text>&#9;TYPE (ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>), INTENT(INOUT) :: ids &#10;</xsl:text>
-	<xsl:text>&#9;INTEGER, INTENT(IN) :: timedArraySize&#10;</xsl:text>
+	<xsl:text>&#9;LOGICAL, INTENT(IN) :: isSliceMode&#10;</xsl:text>
 	<xsl:text>&#9;INTEGER, INTENT(IN) :: j &#10;</xsl:text>
 	<xsl:text>&#9;LOGICAL :: isEqual &#10;</xsl:text>
 	<xsl:text>&#9;&#10;</xsl:text>
@@ -840,11 +844,18 @@ or
 
 
     <xsl:template match="field[not(@data_type='structure' or @data_type='struct_array') ]" mode="get">
-      <xsl:call-template name="COMMENT_FIELD"/>
+ <!--     <xsl:call-template name="COMMENT_FIELD"/>
       <xsl:text>&#9;&#9;&#9; isEqual = assertField(ids%</xsl:text><xsl:value-of select="translate(@path, '/', '%')"/><xsl:text>, </xsl:text>
       <xsl:call-template name="type2value"/>
       <xsl:text>, "</xsl:text><xsl:value-of select="ancestor::IDS/@name"/><xsl:text>/</xsl:text><xsl:value-of select="@path"/><xsl:text>");&#10;</xsl:text>
       <xsl:text>&#9;&#9;&#9; if (.not.isEqual) STOP &#10;</xsl:text>
+     --> 
+                 <xsl:call-template name="COMMENT_FIELD"/>
+            <xsl:call-template name="getValue">
+                <xsl:with-param name="fieldPath" select="concat('ids%', translate(@path, '/', '%'))"/>
+
+            </xsl:call-template>
+
     </xsl:template>
 
 
@@ -920,7 +931,7 @@ or
 			or
 			(not($staticOnly) and (@type ='dynamic' or @data_type='structure' or @data_type='struct_array'))"> 
 	    <xsl:call-template name="COMMENT_FIELD"/>
-		
+		<!--
 		<xsl:text>&#9;&#9;&#9;  isEqual =  assertField(ids%</xsl:text><xsl:value-of select="concat($path, '%', @name)"/><xsl:text>, </xsl:text>
 	    	<xsl:call-template name="type2value"/>
 		<xsl:text>, "</xsl:text><xsl:value-of select="ancestor::IDS/@name"/><xsl:text>/</xsl:text><xsl:value-of select="@path"/><xsl:text>");&#10;</xsl:text>
@@ -928,6 +939,16 @@ or
 		
 
  		<xsl:text>&#9;&#9;&#9; if (.not.isEqual) STOP &#10;</xsl:text>
+ 		
+ 		-->
+ 		
+
+              <xsl:call-template name="COMMENT_FIELD"/>
+            <xsl:call-template name="getValue">
+                <xsl:with-param name="fieldPath" select="concat('ids%', $path, '%', @name)"/>
+                <xsl:with-param name="slice" select="$dynamicOnly or $staticOnly"/>
+            </xsl:call-template>
+
 	  </xsl:if>
 	 
         </xsl:for-each>
@@ -961,114 +982,103 @@ or
     </xsl:template>
 
 
-    <xsl:template name="setValue">
-            <xsl:param name="fieldPath"/>
-	          <xsl:param name="slice"/>
 
+      <xsl:template name="setValue">
+        <xsl:param name="fieldPath"/>
 
-	<xsl:variable name="lastDimSize">
-	        <xsl:choose>
-		        <xsl:when test="@type ='dynamic' and not(ancestor::field[@data_type='struct_array' and @maxoccur='unbounded'])" >
-	                	<xsl:value-of select="'timedArraySize'" />
-			</xsl:when>
-			<xsl:otherwise>
-				<xsl:value-of select="'DIM_SIZE'" />
-	                </xsl:otherwise>
-	        </xsl:choose>
-	</xsl:variable>
+        <xsl:variable name="sliceMode">
+                <xsl:choose>
+                        <xsl:when test="@type ='dynamic' and not(ancestor::field[@data_type='struct_array' and @maxoccur='unbounded'])" >
+                                <xsl:value-of select="'isSliceMode'" />
+                        </xsl:when>
+                        <xsl:otherwise>
+                                <xsl:value-of select="'.FALSE.'" />
+                        </xsl:otherwise>
+                </xsl:choose>
+        </xsl:variable>
 
         <xsl:choose>
+            <xsl:when test="@name='homogeneous_time'">
+                        <xsl:text>&#9;&#9;&#9;call initHomogeneousTime( </xsl:text><xsl:value-of select="$fieldPath"/><xsl:text> )</xsl:text>
+            </xsl:when>
 
-	      <xsl:when test="@name='homogeneous_time'">
-	    		<xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/> <xsl:text>= </xsl:text>
-	    </xsl:when>
+            <xsl:when test="@name='time' and (@data_type='flt_1d_type' or @data_type='FLT_1D')">
+                          <xsl:text>&#9;&#9;&#9;call initTimeField( </xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>, isSliceMode, j)</xsl:text>
+            </xsl:when>
 
-<!--          <xsl:when test="@name='time' and $slice and (@data_type='flt_1d_type' or @data_type='FLT_1D')">
-	    		
+            <xsl:when test="@data_type='str_type' or @data_type='STR_0D' or
+                            @data_type='str_1d_type' or @data_type='STR_1D' or
+                            @data_type='flt_type' or @data_type='FLT_0D' or
+                            @data_type='flt_1d_type' or @data_type='FLT_1D'or
+                            @data_type='flt_2d_type' or @data_type='FLT_2D' or
+                            @data_type='FLT_3D'or  @data_type='FLT_4D'or  @data_type='FLT_5D' or @data_type='FLT_6D' or
+                            @data_type='int_type' or @data_type='INT_0D' or 
+                            @data_type='int_1d_type' or @data_type='INT_1D' or 
+                            @data_type='INT_2D' or @data_type='INT_3D' or @data_type='INT_4D'">
+                      <xsl:text>&#9;&#9;&#9;call initField(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>, </xsl:text><xsl:value-of select="$sliceMode"/><xsl:text> ) &#10;</xsl:text>
 
-    			<xsl:text>&#9;&#9;&#9;allocate(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>(1)) &#10;</xsl:text>
-	             	<xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text> = </xsl:text>
-	    </xsl:when>
-    -->	<xsl:when test="@name='time' and (@data_type='flt_1d_type' or @data_type='FLT_1D')">
-	    		
-
-    			<xsl:text>&#9;&#9;&#9;allocate(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>(</xsl:text><xsl:value-of select="$lastDimSize"/><xsl:text>)) &#10;</xsl:text>
-	             	<xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text> = </xsl:text>
-	    </xsl:when>
-
-            <xsl:when test="@data_type='str_type' or @data_type='STR_0D'">
-	        	     <xsl:text>&#9;&#9;&#9;allocate(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>(1)) &#10;</xsl:text>
-	    		 <xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/> <xsl:text> = </xsl:text>
-	    		<!-- <xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/> <xsl:text>(1) = 'abc123' &#10;</xsl:text> -->
-	    </xsl:when>
-            <xsl:when test="@data_type='str_1d_type' or @data_type='STR_1D'">
-    	<xsl:text>&#9;&#9;&#9;allocate(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>(1)) &#10;</xsl:text>
-	    <xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/>     <xsl:text> = </xsl:text>
-	   </xsl:when>
-
-            <xsl:when test="@data_type='flt_type' or @data_type='FLT_0D'">
-	   	<xsl:text>&#9;&#9;&#9;</xsl:text>  <xsl:value-of select="$fieldPath"/> <xsl:text> = </xsl:text>
-	    </xsl:when>
-
-
-          <xsl:when test="@data_type='flt_1d_type' or @data_type='FLT_1D'">
-	    	     	<xsl:text>&#9;&#9;&#9;allocate(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>(</xsl:text><xsl:value-of select="$lastDimSize"/><xsl:text>)) &#10;</xsl:text>
-	             	<xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text> = </xsl:text>
-	    </xsl:when>
-             <xsl:when test="@data_type='flt_2d_type' or @data_type='FLT_2D'">
-	    	<xsl:text>&#9;&#9;&#9;allocate(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>(DIM_SIZE, </xsl:text><xsl:value-of select="$lastDimSize"/><xsl:text>)) &#10;</xsl:text>
-	       		<xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text> = </xsl:text>
-	</xsl:when>
-
-	   <xsl:when test="@data_type='FLT_3D'">
-	    	    	<xsl:text>&#9;&#9;&#9;allocate(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>(DIM_SIZE, DIM_SIZE, </xsl:text><xsl:value-of select="$lastDimSize"/><xsl:text>)) &#10;</xsl:text>
-	    		<xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text> = </xsl:text>
-		</xsl:when>
-            <xsl:when test="@data_type='FLT_4D'">
-	    	    	    	<xsl:text>&#9;&#9;&#9;allocate(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>(DIM_SIZE, DIM_SIZE, DIM_SIZE, </xsl:text><xsl:value-of select="$lastDimSize"/><xsl:text>)) &#10;</xsl:text>
-	    	<xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text> = </xsl:text>
-	    </xsl:when>
-            <xsl:when test="@data_type='FLT_5D'">
-	    	   	 <xsl:text>&#9;&#9;&#9;allocate(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>(DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE, </xsl:text><xsl:value-of select="$lastDimSize"/><xsl:text>)) &#10;</xsl:text>
-	    		<xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/> <xsl:text> = </xsl:text>
-	    </xsl:when>
-            <xsl:when test="@data_type='FLT_6D'">
-	    	    	    	    	    	<xsl:text>&#9;&#9;&#9;allocate(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>(DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE, </xsl:text><xsl:value-of select="$lastDimSize"/><xsl:text>)) &#10;</xsl:text>
-	    		<xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text> = </xsl:text>
-	    </xsl:when>
-
-             <xsl:when test="@data_type='int_type' or @data_type='INT_0D'">
-			 <xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text> = </xsl:text>
-	    </xsl:when>
-
-             <xsl:when test="@data_type='int_1d_type' or @data_type='INT_1D'">
-	        	     	<xsl:text>&#9;&#9;&#9;allocate(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>(</xsl:text><xsl:value-of select="$lastDimSize"/><xsl:text>)) &#10;</xsl:text>
-	      		<xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text> = </xsl:text>
-	    </xsl:when>
-
-	    <xsl:when test="@data_type='INT_2D'">
-	    <xsl:text>&#9;&#9;&#9;allocate(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>(DIM_SIZE, </xsl:text><xsl:value-of select="$lastDimSize"/><xsl:text>)) &#10;</xsl:text>
-	    		<xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text> = </xsl:text>
-	    </xsl:when>
-             <xsl:when test="@data_type='INT_3D'">
-	    	    	    	<xsl:text>&#9;&#9;&#9;allocate(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>(DIM_SIZE, DIM_SIZE, </xsl:text><xsl:value-of select="$lastDimSize"/><xsl:text>)) &#10;</xsl:text>
-	    		<xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text> = </xsl:text>
-	    </xsl:when>
-            <xsl:when test="@data_type='INT_4D'">
-	    	    	    	    	<xsl:text>&#9;&#9;&#9;allocate(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>(DIM_SIZE, DIM_SIZE, DIM_SIZE, </xsl:text><xsl:value-of select="$lastDimSize"/><xsl:text>)) &#10;</xsl:text>
-	    		<xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text> = </xsl:text>
-	    </xsl:when>
+            </xsl:when>
 
             <xsl:otherwise>
-
-	    <xsl:message terminate='no'> ERROR! Unknown type: <xsl:value-of select="@data_type"/>  (<xsl:value-of select="ancestor::IDS/@name"/>:  <xsl:value-of select="@path" />)</xsl:message>
-	    </xsl:otherwise>
+                <xsl:message terminate='no'> ERROR! Unknown type: <xsl:value-of select="@data_type"/>  (<xsl:value-of select="ancestor::IDS/@name"/>:  <xsl:value-of select="@path" />)</xsl:message>
+            </xsl:otherwise>
         </xsl:choose>
-	     <xsl:call-template name="type2value"/>
+
 <xsl:text>&#9;&#10;</xsl:text>
 
     </xsl:template>
+    
+    
+    
+          <xsl:template name="getValue">
+        <xsl:param name="fieldPath"/>
 
+        <xsl:variable name="sliceMode">
+                <xsl:choose>
+                        <xsl:when test="@type ='dynamic' and not(ancestor::field[@data_type='struct_array' and @maxoccur='unbounded'])" >
+                                <xsl:value-of select="'isSliceMode'" />
+                        </xsl:when>
+                        <xsl:otherwise>
+                                <xsl:value-of select="'.FALSE.'" />
+                        </xsl:otherwise>
+                </xsl:choose>
+        </xsl:variable>
+
+        <xsl:choose>
+            <xsl:when test="@name='homogeneous_time'">
+                                           <xsl:text>&#9;&#9;&#9;isEqual = assertHomogeneousTimeField(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>, </xsl:text><xsl:value-of select="$sliceMode"/><xsl:text>, "</xsl:text><xsl:value-of select="ancestor::IDS/@name"/><xsl:text>:</xsl:text><xsl:value-of select="@path"/><xsl:text>")&#10;</xsl:text>
+            </xsl:when>
+
+            <xsl:when test="@name='time' and (@data_type='flt_1d_type' or @data_type='FLT_1D')">
+                              <xsl:text>&#9;&#9;&#9;isEqual = assertTimeField(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>, </xsl:text><xsl:value-of select="$sliceMode"/><xsl:text>, j, "</xsl:text><xsl:value-of select="ancestor::IDS/@name"/><xsl:text>:</xsl:text><xsl:value-of select="@path"/><xsl:text>")&#10;</xsl:text>
+            </xsl:when>
+
+            <xsl:when test="@data_type='str_type' or @data_type='STR_0D' or
+                            @data_type='str_1d_type' or @data_type='STR_1D' or
+                            @data_type='flt_type' or @data_type='FLT_0D' or
+                            @data_type='flt_1d_type' or @data_type='FLT_1D'or
+                            @data_type='flt_2d_type' or @data_type='FLT_2D' or
+                            @data_type='FLT_3D'or  @data_type='FLT_4D'or  @data_type='FLT_5D' or @data_type='FLT_6D' or
+                            @data_type='int_type' or @data_type='INT_0D' or 
+                            @data_type='int_1d_type' or @data_type='INT_1D' or 
+                            @data_type='INT_2D' or @data_type='INT_3D' or @data_type='INT_4D'">
+                      <xsl:text>&#9;&#9;&#9;isEqual = assertField(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>, </xsl:text><xsl:value-of select="$sliceMode"/><xsl:text>, "</xsl:text><xsl:value-of select="ancestor::IDS/@name"/><xsl:text>:</xsl:text><xsl:value-of select="@path"/><xsl:text>")&#10;</xsl:text>
+
+
+                <xsl:text>&#9;&#9;&#9; if (.not.isEqual) STOP &#10;</xsl:text>
+            </xsl:when>
+
+            <xsl:otherwise>
+                <xsl:message terminate='no'> ERROR! Unknown type: <xsl:value-of select="@data_type"/>  (<xsl:value-of select="ancestor::IDS/@name"/>:  <xsl:value-of select="@path" />)</xsl:message>
+            </xsl:otherwise>
+        </xsl:choose>
+
+<xsl:text>&#9;&#10;</xsl:text>
+
+    </xsl:template>
+    
+    
+    
     <xsl:template name="type2value">
 
 	<xsl:variable name="lastDimSize">
