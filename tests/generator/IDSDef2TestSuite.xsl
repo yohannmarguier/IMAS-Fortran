@@ -1076,44 +1076,5 @@ or
 <xsl:text>&#9;&#10;</xsl:text>
 
     </xsl:template>
-    
-    
-    
-    <xsl:template name="type2value">
-
-	<xsl:variable name="lastDimSize">
-	        <xsl:choose>
-		        <xsl:when test="@type ='dynamic' and not(ancestor::field[@data_type='struct_array' and @maxoccur='unbounded'])" >
-	                	<xsl:value-of select="'timedArraySize'" />
-			</xsl:when>
-			<xsl:otherwise>
-				<xsl:value-of select="'DIM_SIZE'" />
-	                </xsl:otherwise>
-	        </xsl:choose>
-	</xsl:variable>
-
-        <xsl:choose>
-	    <xsl:when test="@name='time' and (@data_type='flt_1d_type' or @data_type='FLT_1D')"><xsl:text>getTimeVector(timedArraySize, j)</xsl:text></xsl:when>
-	    <xsl:when test="@name='homogeneous_time'"><xsl:text>getHomogeneousTime()</xsl:text></xsl:when>
-            <xsl:when test="@data_type='str_type' or @data_type='STR_0D'">         <xsl:text>getString()</xsl:text></xsl:when>
-            <xsl:when test="@data_type='str_1d_type' or @data_type='STR_1D'">   <xsl:text> getString()</xsl:text></xsl:when>
-
-            <xsl:when test="@data_type='flt_type' or @data_type='FLT_0D'">           	<xsl:text>getDouble()</xsl:text></xsl:when>
-            <xsl:when test="@data_type='flt_1d_type' or @data_type='FLT_1D'">       	<xsl:text>getDouble1DArray(</xsl:text><xsl:value-of select="$lastDimSize"/><xsl:text>)</xsl:text></xsl:when>
-            <xsl:when test="@data_type='FLT_2D'">        				<xsl:text>getDouble2DArray(DIM_SIZE, </xsl:text><xsl:value-of select="$lastDimSize"/><xsl:text>)</xsl:text></xsl:when>
-            <xsl:when test="@data_type='FLT_3D'">  					<xsl:text>getDouble3DArray(DIM_SIZE, DIM_SIZE, </xsl:text><xsl:value-of select="$lastDimSize"/><xsl:text>)</xsl:text></xsl:when>
-            <xsl:when test="@data_type='FLT_4D'">  					<xsl:text>getDouble4DArray(DIM_SIZE, DIM_SIZE, DIM_SIZE, </xsl:text><xsl:value-of select="$lastDimSize"/><xsl:text>)</xsl:text></xsl:when>
-            <xsl:when test="@data_type='FLT_5D'">   					<xsl:text>getDouble5DArray(DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE, </xsl:text><xsl:value-of select="$lastDimSize"/><xsl:text>)</xsl:text></xsl:when>
-            <xsl:when test="@data_type='FLT_6D'">   					<xsl:text>getDouble6DArray(DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE, DIM_SIZE, </xsl:text><xsl:value-of select="$lastDimSize"/><xsl:text>)</xsl:text></xsl:when>
-
-            <xsl:when test="@data_type='int_type' or @data_type='INT_0D'">          	<xsl:text>getInteger()</xsl:text></xsl:when>
-            <xsl:when test="@data_type='int_1d_type' or @data_type='INT_1D'">       	<xsl:text>getInteger1DArray(</xsl:text><xsl:value-of select="$lastDimSize"/><xsl:text>)</xsl:text></xsl:when>
-            <xsl:when test="@data_type='INT_2D'">   					<xsl:text>getInteger2DArray(DIM_SIZE, </xsl:text><xsl:value-of select="$lastDimSize"/><xsl:text>)</xsl:text></xsl:when>
-            <xsl:when test="@data_type='INT_3D'">   					<xsl:text>getInteger3DArray(DIM_SIZE, DIM_SIZE, </xsl:text><xsl:value-of select="$lastDimSize"/><xsl:text>)</xsl:text></xsl:when>
-            <xsl:when test="@data_type='INT_4D'">   					<xsl:text>getInteger4DArray(DIM_SIZE, DIM_SIZE, DIM_SIZE, </xsl:text><xsl:value-of select="$lastDimSize"/><xsl:text>)</xsl:text></xsl:when>
-    <xsl:otherwise>
-	    <xsl:message terminate='no'> ERROR! Unknown type: <xsl:value-of select="@data_type"/>  (<xsl:value-of select="ancestor::IDS/@name"/>:  <xsl:value-of select="@path" />)</xsl:message>
-         </xsl:otherwise>
-        </xsl:choose>
-    </xsl:template>
+ 
 </xsl:stylesheet>
