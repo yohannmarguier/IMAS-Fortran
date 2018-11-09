@@ -1,6 +1,6 @@
 MODULE setter
 
-use ids_schemas, only: ids_real
+use ids_types, only: ids_real
 use generator
 
 implicit none
