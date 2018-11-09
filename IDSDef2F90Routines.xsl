@@ -2109,7 +2109,7 @@ end module
          if (<xsl:choose><xsl:when test="$root='yes'">IDS%ids_properties%homogeneous_time.eq.1</xsl:when><xsl:otherwise>homogeneous</xsl:otherwise></xsl:choose>) then
             timepath="/time"
          else
-	    timepath=<xsl:if test="substring(@timebasepath,1,1)='\'">path//</xsl:if>"/<xsl:value-of select="translate(@timebasepath,'\','/')"/>"
+	    timepath=<xsl:if test="substring(@timebasepath,1,1)='\'">path//</xsl:if>"<xsl:value-of select="translate(@timebasepath,'\','/')"/>"
          endif
       endif
     </xsl:when>
