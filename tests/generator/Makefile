@@ -17,13 +17,13 @@ SAXONICAJAR=$(wildcard $(filter %saxon9he.jar,$(subst :, ,$(CLASSPATH))))
 
 #------------------------- gfortran ----------------------------
 FC_gfortran = gfortran
-COPTS_gfortran = -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none -I$(UAL_BUILD)/fortraninterface/gfortran
-LIBS_gfortran = -L$(UAL_BUILD)/fortraninterface -limas-gfortran -L$(UAL_BUILD)/lowlevel -limas -lm
+COPTS_gfortran = -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none -I$(UAL_BUILD)/include/gfortran
+LIBS_gfortran = -L$(UAL_BUILD)/lib -limas-gfortran -limas -lm
 
 #------------------------- ifort ----------------------------
 FC_ifort = ifort
-COPTS_ifort = -g -r8 -assume no2underscore  -fPIC -module $(UAL_BUILD)/fortraninterface/ifort -shared-intel
-LIBS_ifort = -L$(UAL_BUILD)/fortraninterface -limas-ifort -L$(UAL_BUILD)/lowlevel -limas -lm
+COPTS_ifort = -g -r8 -assume no2underscore  -fPIC -module $(UAL_BUILD)/include/ifort -shared-intel
+LIBS_ifort = -L$(UAL_BUILD)/lib -limas-ifort -limas -lm
 
 
 IDSDEF = $(UAL_BUILD)/xml/IDSDef.xml
