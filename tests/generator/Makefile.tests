@@ -139,6 +139,9 @@ gfortran_initpulse: initpulse.f90
 
 gfortran_testSuite:  $(GFORTRAN_BIN_FILES)
 
+gfortran_test: gfortran_testSuite
+	./test.sh -c gfortran | tee test_gfortran.results 
+
 #------------------------- ifort ----------------------------
 .PHONY: ifort_clean
 ifort_clean:
@@ -182,16 +185,15 @@ ifort_initpulse: initpulse.f90
 
 ifort_testSuite: $(IFORT_BIN_FILES)
 
+ifort_test: ifort_testSuite
+	./test.sh -c ifort | tee test_ifort.results 
+
 #################################################
 #              TEST
 #################################################
 .PHONY: test ifort_test gfortran_test
 
-%_test: %_testSuite
-	./test.sh -c $* | tee test_$*.results 
-
-test : $(TESTS)
-
+test: sources $(TESTS)
 
 test_put: 
 	./test_put.sh -c gfortran | tee testput_gfortran.results 
