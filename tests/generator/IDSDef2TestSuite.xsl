@@ -292,11 +292,7 @@
             <xsl:apply-templates select="child::IDS[.//field[@type='dynamic'] and @name='temporary']" mode="putSlice"/>
             <xsl:apply-templates select="child::IDS[@name='temporary']" mode="getSlice"/>
 	-->
-<!--	<xsl:apply-templates select="." mode="assign_non_timed"/>
-	<xsl:apply-templates select="." mode="assign_timed"/>
-	<xsl:apply-templates select="." mode="get_non_timed"/>
-	<xsl:apply-templates select="." mode="get_timed"/>
--->	<xsl:apply-templates select=".[.//field[@type='dynamic']]" mode="putSlice"/>
+	<xsl:apply-templates select=".[.//field[@type='dynamic']]" mode="putSlice"/>
         <xsl:apply-templates select="." mode="getSlice"/>
         <xsl:text>END PROGRAM </xsl:text><xsl:value-of select="@name"/><xsl:text>_test&#10;</xsl:text>
         <xsl:text>&#10;</xsl:text>
@@ -355,11 +351,7 @@
             <xsl:apply-templates select="child::IDS[.//field[@type='dynamic'] and @name='temporary']" mode="putSlice"/>
             <xsl:apply-templates select="child::IDS[@name='temporary']" mode="getSlice"/>
 	-->
-	
-	<xsl:apply-templates select="." mode="assign_non_timed"/>
-	<xsl:apply-templates select="." mode="assign_timed"/>
-	<xsl:apply-templates select="." mode="get_non_timed"/>
-	<xsl:apply-templates select="." mode="get_timed"/>
+
 	<xsl:apply-templates select=".[.//field[@type='dynamic']]" mode="putSlice"/>
         <!--<xsl:apply-templates select="." mode="getSlice"/>-->
         <xsl:text>END PROGRAM </xsl:text><xsl:value-of select="@name"/><xsl:text>_put_test&#10;</xsl:text>
@@ -416,12 +408,7 @@
             <xsl:apply-templates select="child::IDS[.//field[@type='dynamic'] and @name='temporary']" mode="putSlice"/>
             <xsl:apply-templates select="child::IDS[@name='temporary']" mode="getSlice"/>
 	-->
-	
-	<!--
-	<xsl:apply-templates select=".[.//field[@type='dynamic']]" mode="assign_non_timed"/>
-	<xsl:apply-templates select=".[.//field[@type='dynamic']]" mode="assign_timed"/>
-	<xsl:apply-templates select=".[.//field[@type='dynamic']]" mode="putSlice"/>
-	-->
+
         <xsl:apply-templates select="." mode="getSlice"/>
         <xsl:text>END PROGRAM </xsl:text><xsl:value-of select="@name"/><xsl:text>_get_test&#10;</xsl:text>
         <xsl:text>&#10;</xsl:text>
