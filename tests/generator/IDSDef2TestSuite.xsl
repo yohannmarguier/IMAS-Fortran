@@ -831,17 +831,26 @@ or
 
 
     <xsl:template match="field[not(@data_type='structure' or @data_type='struct_array') ]" mode="get">
+    <xsl:param name="dynamicOnly"/>
+    <xsl:param name="staticOnly"/>
  <!--     <xsl:call-template name="COMMENT_FIELD"/>
       <xsl:text>&#9;&#9;&#9; isEqual = assertField(ids%</xsl:text><xsl:value-of select="translate(@path, '/', '%')"/><xsl:text>, </xsl:text>
       <xsl:call-template name="type2value"/>
       <xsl:text>, "</xsl:text><xsl:value-of select="ancestor::IDS/@name"/><xsl:text>/</xsl:text><xsl:value-of select="@path"/><xsl:text>");&#10;</xsl:text>
       <xsl:text>&#9;&#9;&#9; if (.not.isEqual) STOP &#10;</xsl:text>
      --> 
+
+   
+        <xsl:if test="(not($dynamicOnly) and (@type !='dynamic' or not(@type) or @data_type='structure' or (@data_type='struct_array' and @type !='dynamic')))
+            or
+             (not($staticOnly) and (@type ='dynamic' or (@data_type='structure' and .//field[@type='dynamic'])  or  (@data_type='struct_array' and .//field[@type='dynamic'])))"> 
+
                  <xsl:call-template name="COMMENT_FIELD"/>
             <xsl:call-template name="getValue">
                 <xsl:with-param name="fieldPath" select="concat('ids%', translate(@path, '/', '%'))"/>
 
             </xsl:call-template>
+           </xsl:if>
 
     </xsl:template>
 
@@ -879,7 +888,7 @@ or
            </xsl:if>
     </xsl:template>
     
-    
+   <!--
     
        <xsl:template match="field[@data_type='structure']" mode="get">
       <xsl:param name="dynamicOnly"/>
@@ -891,7 +900,7 @@ or
 		    (not($staticOnly) and (@type ='dynamic' or @data_type='structure' or @data_type='struct_array'))"> 
 		    
 		    
-    <!-- <xsl:call-template name="COMMENT_FIELD"/> -->
+
       
         <xsl:call-template name="getStructArray">
         <xsl:with-param name="path" select="translate(@path, '/', '%')"/>
@@ -901,7 +910,7 @@ or
 
            </xsl:if>
  </xsl:template>
-
+-->
     <xsl:template name="getStructArray">
       <xsl:param name="path"/>
       <xsl:param name="dynamicOnly"/>
@@ -1019,7 +1028,6 @@ or
     
           <xsl:template name="getValue">
         <xsl:param name="fieldPath"/>
-
         <xsl:variable name="sliceMode">
                 <xsl:choose>
                         <xsl:when test="@type ='dynamic' and not(ancestor::field[@data_type='struct_array' and @maxoccur='unbounded'])" >
