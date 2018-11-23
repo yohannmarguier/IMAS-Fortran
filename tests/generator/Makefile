@@ -12,8 +12,6 @@ ifeq ("no","$(strip $(IMAS_FORTRAN))")
 all sources sources_install install clean clean-src:
 	$(warning "Ignoring fortraninterface (IMAS_FORTRAN=no).")
 else
-# Check that "saxon9he.jar" utility is set in CLASSPATH
-SAXONICAJAR=$(wildcard $(filter %saxon9he.jar,$(subst :, ,$(CLASSPATH))))
 
 #------------------------- gfortran ----------------------------
 FC_gfortran = gfortran

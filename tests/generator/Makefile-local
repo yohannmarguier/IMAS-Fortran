@@ -8,9 +8,6 @@ ifeq (,$(ids_path))
 $(error Please first install imas and then module load imas/... to populate environment)
 endif
 
-# Check that "saxon9he.jar" utility is set in CLASSPATH
-SAXONICAJAR=$(wildcard $(filter %saxon9he.jar,$(subst :, ,$(CLASSPATH))))
-
 #------------------------------- gfortran ----------------------------------
 FC_gfortran=gfortran
 COPTS_gfortran = -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none `pkg-config imas-gfortran --cflags`

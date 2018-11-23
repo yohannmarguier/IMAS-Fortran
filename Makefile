@@ -293,13 +293,13 @@ $(filter %_deallocate_struct_ifort.o,$(IDSOBJECTS)): %_ifort.o:%.f90 ids_schemas
 #----------------------- xslt ---------------------
 # Test if all idsroutines are found to exist as files.
 ifeq ($(words $(IDSROUTINES)), $(words $(wildcard $(IDSROUTINES))))
-$(SOURCES): IDSDef2F90Routines.xsl xsd2copy_structures.xsl
+$(SOURCES): IDSDef2F90Routines.xsl xsd2copy_structures.xsl | saxonicajar
 	java net.sf.saxon.Transform -t -s:$(IDSDEF) -xsl:IDSDef2F90Routines.xsl
 idsroutines:
 else
 # Need to generate, use an intermediate target idsroutines to force non-parallel execution.
 $(SOURCES): idsroutines
-idsroutines: IDSDef2F90Routines.xsl xsd2copy_structures.xsl
+idsroutines: IDSDef2F90Routines.xsl xsd2copy_structures.xsl | saxonicajar
 	java net.sf.saxon.Transform -t -s:$(IDSDEF) -xsl:IDSDef2F90Routines.xsl
 endif
 
@@ -313,4 +313,7 @@ ids_schemas.f90: xsd2F90TypeDef.xsl
 PC_FILES = imas-ifort.pc imas-gfortran.pc imas-pgi.pc imas-g95.pc
 
 include ../Makefile.pkgconfig
+
+#----------------------- classpath deps ---------------------
+include ../Makefile.classpath
 endif # IMAS_FORTRAN=no?

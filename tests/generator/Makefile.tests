@@ -71,24 +71,18 @@ clean-src: clean
 #################################################
 #                 INIT: SOURCE GENERATION
 #################################################
-sources: IDSDef2TestSuite.xsl $(IDSDEF)
+sources: IDSDef2TestSuite.xsl $(IDSDEF) | saxonicajar
 	$(mkdir_p) $(IFORT_BIN_DIR)
 	$(mkdir_p) $(GFORTRAN_BIN_DIR)
 	$(mkdir_p) $(IFORT_BUILD_DIR)
 	$(mkdir_p) $(GFORTRAN_BUILD_DIR)
-ifeq (,$(SAXONICAJAR))
-	$(error Invalid /path/to/saxon9he.jar in CLASSPATH. Forgot to load module?)
-endif
 	java net.sf.saxon.Transform newLowLevel=$(NEW_LOW_LEVEL) -t -s:$(IDSDEF) -xsl:IDSDef2TestSuite.xsl   
 
-sources2: IDSDef2TestSuite.xsl $(IDSDEF)
+sources2: IDSDef2TestSuite.xsl $(IDSDEF) | saxonicajar
 	$(mkdir_p) $(IFORT_BIN_DIR)
 	$(mkdir_p) $(GFORTRAN_BIN_DIR)
 	$(mkdir_p) $(IFORT_BUILD_DIR)
 	$(mkdir_p) $(GFORTRAN_BUILD_DIR)
-ifeq (,$(SAXONICAJAR))
-	$(error Invalid /path/to/saxon9he.jar in CLASSPATH. Forgot to load module?)
-endif
 	java net.sf.saxon.Transform newLowLevel=$(NEW_LOW_LEVEL) sources2="yes" -t -s:$(IDSDEF) -xsl:IDSDef2TestSuite.xsl   
 
 
@@ -200,3 +194,7 @@ test_put:
 
 test_get:
 	./test_get.sh -c gfortran | tee testget_gfortran.results 
+
+#----------------------- classpath deps ---------------------
+include ../../../Makefile.classpath
+
