@@ -22,7 +22,7 @@ LIBS_gfortran = -L$(UAL_BUILD)/lib -limas-gfortran -limas -lm
 
 #------------------------- ifort ----------------------------
 FC_ifort = ifort
-COPTS_ifort = -g -r8 -assume no2underscore  -fPIC -module $(UAL_BUILD)/include/ifort -shared-intel
+COPTS_ifort = -g -r8 -assume no2underscore  -fPIC -I$(UAL_BUILD)/include/ifort -shared-intel
 LIBS_ifort = -L$(UAL_BUILD)/lib -limas-ifort -limas -lm
 
 
