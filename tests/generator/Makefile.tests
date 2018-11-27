@@ -1,9 +1,13 @@
-#
-# Please run this from Makefile or Makefile-local.
-#
-# Do not run make on this file directly.
+
+# Please do not run make on this file directly.
+ifeq (1,$(words $(MAKEFILE_LIST)))
+  $(error Do not run make on this file directly, use Makefile or Makefile-local)
+endif
+
+# Require explicit target, do not assume make all
 help:
-	$(error Do not run make on this file directly, use Makefile or Makefile-local and specify a target, e.g. make test.)
+	$(error Specify a target to run, e.g. make test.)
+
 
 	
 	# Make NEW_LOW_LEVEL=yes default
@@ -38,37 +42,45 @@ TEST_IDS_FILES=$(wildcard $(TEST_SRC_DIR)/*.f90)
 # Get a list of IDS from IDSDEF file
 IDSNAMES := $(shell sed '/<IDS name=/!d;s/.*name="\([^"]*\)".*/\1/' $(IDSDEF))
 TEST_IDS_FILES = $(patsubst %,$(TEST_SRC_DIR)/%_test.f90,$(IDSNAMES))
+IDS_SOURCES = $(patsubst %,$(TEST_SRC_DIR)/%_test.f90,$(IDSNAMES))
+IDS_SOURCES += $(patsubst %,$(TEST_SRC_DIR)/%_test_dynamic.f90,$(IDSNAMES))
+IDS_SOURCES += $(patsubst %,$(TEST_SRC_DIR)/%_test_static.f90,$(IDSNAMES))
+IDS_SOURCES += $(patsubst %,$(TEST_SRC_DIR)/%_init_dynamic.f90,$(IDSNAMES))
+IDS_SOURCES += $(patsubst %,$(TEST_SRC_DIR)/%_init_static.f90,$(IDSNAMES))
+HARD_SOURCES = comparator.f90 generator.f90 helper.f90 initpulse.f90 setter.f90
+ALL_SOURCES = $(HARD_SOURCES) $(IDS_SOURCES)
+
+GFORTRAN_HARD_OBJECTS = $(patsubst %.f90,$(GFORTRAN_BUILD_DIR)/%.o,$(notdir $(HARD_SOURCES)))
+IFORT_HARD_OBJECTS = $(patsubst %.f90,$(IFORT_BUILD_DIR)/%.o,$(notdir $(HARD_SOURCES)))
+GFORTRAN_IDS_OBJECTS = $(patsubst %.f90,$(GFORTRAN_BUILD_DIR)/%.o,$(notdir $(IDS_SOURCES)))
+IFORT_IDS_OBJECTS = $(patsubst %.f90,$(IFORT_BUILD_DIR)/%.o,$(notdir $(IDS_SOURCES)))
 
 TEST_FILES= initpulse.f90 helper.f90 comparator.f90 $(TEST_IDS_FILES)
 
 IFORT_BIN_FILES=$(patsubst %.f90,$(IFORT_BIN_DIR)/%.exe,$(notdir $(TEST_IDS_FILES)))
 GFORTRAN_BIN_FILES=$(patsubst %.f90,$(GFORTRAN_BIN_DIR)/%.exe,$(notdir $(TEST_IDS_FILES)))
 
-# Sets a path where make will search for files
-VPATH = ./src $(TEST_SRC_DIR) 
-
-all :   $(TARGETS)
+all: $(TARGETS)
 
 # Test if all generated sources are found to exist as files and
 # gracefully skip generation if not needed.
-ifeq ($(words $(TEST_IDS_FILES)), $(words $(wildcard $(TEST_IDS_FILES))))
-$(TEST_IDS_FILES):
+ifeq ($(words $(IDS_SOURCES)), $(words $(wildcard $(IDS_SOURCES))))
+$(IDS_SOURCES):
 else
-$(TEST_IDS_FILES): sources
+$(IDS_SOURCES): sources
 endif
 
 # Create src and bin dirs as needed
-$(TEST_SRC_DIR) $(IFORT_BIN_DIR) $(GFORTRAN_BIN_DIR):
+$(TEST_SRC_DIR) $(IFORT_BIN_DIR) $(GFORTRAN_BIN_DIR) $(IFORT_BUILD_DIR) $(GFORTRAN_BUILD_DIR):
 	$(mkdir_p) $@
 
 .PHONY: clean clean-src
 clean: ifort_clean gfortran_clean
-	$(RM) -r build *~ *.o *.mod
 	$(RM) -r idspath-*
 	$(RM) -r *.results
 
 clean-src: clean
-	$(RM) -r $(TEST_IDS_FILES)
+	$(RM) -r $(TEST_SRC_DIR)
 
 
 #################################################
@@ -87,45 +99,40 @@ sources2: IDSDef2TestSuite.xsl $(IDSDEF) | saxonicajar $(TEST_SRC_DIR)
 #------------------------- gfortran ----------------------------
 .PHONY: gfortran_clean
 gfortran_clean:
-	$(RM) -r ${GFORTRAN_BIN_DIR}
-
-$(GFORTRAN_BUILD_DIR)/helper.o: helper.f90 $(GFORTRAN_BUILD_DIR)/generator.o
-	$(FC_gfortran) $(COPTS_gfortran) -c $< -o $@
+	$(RM) -r $(GFORTRAN_BIN_DIR)
+	$(RM) -r $(GFORTRAN_BUILD_DIR)
 	
-$(GFORTRAN_BUILD_DIR)/generator.o: generator.f90
+$(GFORTRAN_BUILD_DIR)/generator.o: $(GFORTRAN_BUILD_DIR)/%.o: %.f90 | $(GFORTRAN_BUILD_DIR)
 	$(FC_gfortran) $(COPTS_gfortran) -c $< -o $@
 
-$(GFORTRAN_BUILD_DIR)/setter.o: setter.f90 $(GFORTRAN_BUILD_DIR)/generator.o
+$(GFORTRAN_BUILD_DIR)/helper.o \
+$(GFORTRAN_BUILD_DIR)/setter.o \
+$(GFORTRAN_BUILD_DIR)/comparator.o: $(GFORTRAN_BUILD_DIR)/%.o: %.f90 $(GFORTRAN_BUILD_DIR)/generator.o
 	$(FC_gfortran) $(COPTS_gfortran) -c $< -o $@
 	
-$(GFORTRAN_BUILD_DIR)/comparator.o: comparator.f90 $(GFORTRAN_BUILD_DIR)/generator.o
-	$(FC_gfortran) $(COPTS_gfortran) -c $< -o $@
-	
-$(GFORTRAN_BUILD_DIR)/%_init_static.o:  $(TEST_SRC_DIR)/%_init_static.f90 $(GFORTRAN_BUILD_DIR)/setter.o
+$(GFORTRAN_BUILD_DIR)/%_init_static.o: $(TEST_SRC_DIR)/%_init_static.f90 $(GFORTRAN_BUILD_DIR)/setter.o
 	$(FC_gfortran) $(COPTS_gfortran) -c $< -o $@
 	
 $(GFORTRAN_BUILD_DIR)/%_init_dynamic.o: $(TEST_SRC_DIR)/%_init_dynamic.f90 $(GFORTRAN_BUILD_DIR)/setter.o
 	$(FC_gfortran) $(COPTS_gfortran) -c $< -o $@
 	
-$(GFORTRAN_BUILD_DIR)/%_test_static.o:  $(TEST_SRC_DIR)/%_test_static.f90 $(GFORTRAN_BUILD_DIR)/comparator.o 
+$(GFORTRAN_BUILD_DIR)/%_test_static.o: $(TEST_SRC_DIR)/%_test_static.f90 $(GFORTRAN_BUILD_DIR)/comparator.o
 	$(FC_gfortran) $(COPTS_gfortran) -c $< -o $@
 
 $(GFORTRAN_BUILD_DIR)/%_test_dynamic.o: $(TEST_SRC_DIR)/%_test_dynamic.f90 $(GFORTRAN_BUILD_DIR)/comparator.o  
 	$(FC_gfortran) $(COPTS_gfortran) -c $< -o $@
 
-	
-$(GFORTRAN_BUILD_DIR)/%_test.o: $(TEST_SRC_DIR)/%_test.f90 $(GFORTRAN_BUILD_DIR)/helper.o $(GFORTRAN_BUILD_DIR)/%_init_static.o $(GFORTRAN_BUILD_DIR)/%_init_dynamic.o  $(GFORTRAN_BUILD_DIR)/%_test_static.o $(GFORTRAN_BUILD_DIR)/%_test_dynamic.o 
+$(GFORTRAN_BUILD_DIR)/%_test.o: $(TEST_SRC_DIR)/%_test.f90 $(GFORTRAN_BUILD_DIR)/helper.o $(GFORTRAN_BUILD_DIR)/%_init_static.o $(GFORTRAN_BUILD_DIR)/%_init_dynamic.o $(GFORTRAN_BUILD_DIR)/%_test_static.o $(GFORTRAN_BUILD_DIR)/%_test_dynamic.o
 	$(FC_gfortran) $(COPTS_gfortran) -c $< -o $@
 	
-
-$(GFORTRAN_BIN_FILES): $(GFORTRAN_BIN_DIR)/%_test.exe:  $(GFORTRAN_BUILD_DIR)/setter.o $(GFORTRAN_BUILD_DIR)/comparator.o $(GFORTRAN_BUILD_DIR)/generator.o $(GFORTRAN_BUILD_DIR)/helper.o $(GFORTRAN_BUILD_DIR)/%_test.o $(GFORTRAN_BUILD_DIR)/%_init_static.o $(GFORTRAN_BUILD_DIR)/%_init_dynamic.o  $(GFORTRAN_BUILD_DIR)/%_test_static.o $(GFORTRAN_BUILD_DIR)/%_test_dynamic.o 
-	$(FC_gfortran) $(COPTS_gfortran) -o $@ $^  $(LIBS_gfortran)
+$(GFORTRAN_BIN_FILES): $(GFORTRAN_BIN_DIR)/%_test.exe: $(GFORTRAN_BUILD_DIR)/setter.o $(GFORTRAN_BUILD_DIR)/comparator.o $(GFORTRAN_BUILD_DIR)/generator.o $(GFORTRAN_BUILD_DIR)/helper.o $(GFORTRAN_BUILD_DIR)/%_test.o $(GFORTRAN_BUILD_DIR)/%_init_static.o $(GFORTRAN_BUILD_DIR)/%_init_dynamic.o $(GFORTRAN_BUILD_DIR)/%_test_static.o $(GFORTRAN_BUILD_DIR)/%_test_dynamic.o | $(GFORTRAN_BIN_DIR)
+	$(FC_gfortran) $(COPTS_gfortran) -o $@ $^ $(LIBS_gfortran)
 	
 	
 gfortran_initpulse: initpulse.f90
 	$(FC_gfortran) $(COPTS_gfortran) -c $< -o $@
 
-gfortran_testSuite:  $(GFORTRAN_BIN_FILES)
+gfortran_testSuite: $(GFORTRAN_BIN_FILES)
 
 gfortran_test: gfortran_testSuite
 	./test.sh -c gfortran | tee test_gfortran.results 
@@ -133,41 +140,36 @@ gfortran_test: gfortran_testSuite
 #------------------------- ifort ----------------------------
 .PHONY: ifort_clean
 ifort_clean:
-	$(RM) -r ${IFORT_BIN_DIR}
-
-$(IFORT_BUILD_DIR)/helper.o: helper.f90 $(IFORT_BUILD_DIR)/generator.o
-	$(FC_ifort) $(COPTS_ifort) -c $< -o $@
+	$(RM) -r $(IFORT_BIN_DIR)
+	$(RM) -r $(IFORT_BUILD_DIR)
 	
-$(IFORT_BUILD_DIR)/generator.o: generator.f90
-	$(FC_ifort) $(COPTS_ifort) -c $< -o $@
-	
-$(IFORT_BUILD_DIR)/setter.o: setter.f90 $(IFORT_BUILD_DIR)/generator.o
+$(IFORT_BUILD_DIR)/generator.o: $(IFORT_BUILD_DIR)/%.o: %.f90 | $(IFORT_BUILD_DIR)
 	$(FC_ifort) $(COPTS_ifort) -c $< -o $@
 
-$(IFORT_BUILD_DIR)/comparator.o: comparator.f90  $(IFORT_BUILD_DIR)/generator.o
+$(IFORT_BUILD_DIR)/helper.o \
+$(IFORT_BUILD_DIR)/setter.o \
+$(IFORT_BUILD_DIR)/comparator.o: $(IFORT_BUILD_DIR)/%.o: %.f90 $(IFORT_BUILD_DIR)/generator.o
 	$(FC_ifort) $(COPTS_ifort) -c $< -o $@
 	
-$(IFORT_BUILD_DIR)/%_init_static.o:  $(TEST_SRC_DIR)/%_init_static.f90 $(IFORT_BUILD_DIR)/setter.o
+$(IFORT_BUILD_DIR)/%_init_static.o: $(TEST_SRC_DIR)/%_init_static.f90 $(IFORT_BUILD_DIR)/setter.o
 	$(FC_ifort) $(COPTS_ifort) -c $< -o $@
 	
-$(IFORT_BUILD_DIR)/%_init_dynamic.o:  $(TEST_SRC_DIR)/%_init_dynamic.f90 $(IFORT_BUILD_DIR)/setter.o
+$(IFORT_BUILD_DIR)/%_init_dynamic.o: $(TEST_SRC_DIR)/%_init_dynamic.f90 $(IFORT_BUILD_DIR)/setter.o
 	$(FC_ifort) $(COPTS_ifort) -c $< -o $@
 	
-$(IFORT_BUILD_DIR)/%_test_static.o:  $(TEST_SRC_DIR)/%_test_static.f90 $(IFORT_BUILD_DIR)/comparator.o 
+$(IFORT_BUILD_DIR)/%_test_static.o: $(TEST_SRC_DIR)/%_test_static.f90 $(IFORT_BUILD_DIR)/comparator.o
 	$(FC_ifort) $(COPTS_ifort) -c $< -o $@
 
-$(IFORT_BUILD_DIR)/%_test_dynamic.o: $(TEST_SRC_DIR)/%_test_dynamic.f90 $(IFORT_BUILD_DIR)/comparator.o 
+$(IFORT_BUILD_DIR)/%_test_dynamic.o: $(TEST_SRC_DIR)/%_test_dynamic.f90 $(IFORT_BUILD_DIR)/comparator.o  
 	$(FC_ifort) $(COPTS_ifort) -c $< -o $@
 
-	
-$(IFORT_BUILD_DIR)/%_test.o: $(TEST_SRC_DIR)/%_test.f90 $(IFORT_BUILD_DIR)/helper.o $(IFORT_BUILD_DIR)/%_init_static.o $(IFORT_BUILD_DIR)/%_init_dynamic.o  $(IFORT_BUILD_DIR)/%_test_static.o $(IFORT_BUILD_DIR)/%_test_dynamic.o 
+$(IFORT_BUILD_DIR)/%_test.o: $(TEST_SRC_DIR)/%_test.f90 $(IFORT_BUILD_DIR)/helper.o $(IFORT_BUILD_DIR)/%_init_static.o $(IFORT_BUILD_DIR)/%_init_dynamic.o $(IFORT_BUILD_DIR)/%_test_static.o $(IFORT_BUILD_DIR)/%_test_dynamic.o
 	$(FC_ifort) $(COPTS_ifort) -c $< -o $@
 	
-
-$(IFORT_BIN_FILES): $(IFORT_BIN_DIR)/%_test.exe:  $(IFORT_BUILD_DIR)/setter.o $(IFORT_BUILD_DIR)/comparator.o  $(IFORT_BUILD_DIR)/generator.o $(IFORT_BUILD_DIR)/helper.o $(IFORT_BUILD_DIR)/%_test.o $(IFORT_BUILD_DIR)/%_init_static.o $(IFORT_BUILD_DIR)/%_init_dynamic.o  $(IFORT_BUILD_DIR)/%_test_static.o $(IFORT_BUILD_DIR)/%_test_dynamic.o 
-	$(FC_ifort) $(COPTS_ifort) -o $@ $^  $(LIBS_ifort)
+$(IFORT_BIN_FILES): $(IFORT_BIN_DIR)/%_test.exe: $(IFORT_BUILD_DIR)/setter.o $(IFORT_BUILD_DIR)/comparator.o $(IFORT_BUILD_DIR)/generator.o $(IFORT_BUILD_DIR)/helper.o $(IFORT_BUILD_DIR)/%_test.o $(IFORT_BUILD_DIR)/%_init_static.o $(IFORT_BUILD_DIR)/%_init_dynamic.o $(IFORT_BUILD_DIR)/%_test_static.o $(IFORT_BUILD_DIR)/%_test_dynamic.o | $(IFORT_BIN_DIR)
+	$(FC_ifort) $(COPTS_ifort) -o $@ $^ $(LIBS_ifort)
 	
-
+	
 ifort_initpulse: initpulse.f90
 	$(FC_ifort) $(COPTS_ifort) -c $< -o $@
 
@@ -181,7 +183,7 @@ ifort_test: ifort_testSuite
 #################################################
 .PHONY: test ifort_test gfortran_test
 
-test: sources $(TESTS)
+test: $(IDS_SOURCES) $(TESTS)
 
 test_put: 
 	./test_put.sh -c gfortran | tee testput_gfortran.results 
