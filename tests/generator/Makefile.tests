@@ -21,16 +21,14 @@ TEST_SRC_DIR=./src
 TMP_DIR=./tmp
 
 ifneq ("no","$(strip $(IMAS_GFORTRAN))")
-  TARGETS += $(GFORTRAN_BIN_FILES)
+  TARGETS += $(GFORTRAN_BIN_FILES) $(GFORTRAN_BIN_FILES_PUT) $(GFORTRAN_BIN_FILES_GET)
   TESTS += $(GFORTRAN_TESTS)
-  TESTS2 += gfortran_test2
   COPTS_gfortran+=-J$(GFORTRAN_BUILD_DIR)
 endif
 
 ifneq ("no","$(strip $(IMAS_IFORT))")
-  TARGETS += $(IFORT_BIN_FILES)
+  TARGETS += $(IFORT_BIN_FILES) $(IFORT_BIN_FILES_PUT) $(IFORT_BIN_FILES_GET)
   TESTS += $(IFORT_TESTS)
-  TESTS2 += ifort_test2
   COPTS_ifort+=-module $(IFORT_BUILD_DIR)
 endif
 
@@ -44,10 +42,16 @@ IDS_SOURCES += $(patsubst %,$(TEST_SRC_DIR)/%_init_dynamic.f90,$(IDSNAMES))
 IDS_SOURCES += $(patsubst %,$(TEST_SRC_DIR)/%_init_static.f90,$(IDSNAMES))
 TEST_IDS_FILES_PUT = $(patsubst %,$(TEST_SRC_DIR)/%_put_test.f90,$(IDSNAMES))
 TEST_IDS_FILES_GET = $(patsubst %,$(TEST_SRC_DIR)/%_get_test.f90,$(IDSNAMES))
-IDS_SOURCES2 = $(TEST_IDS_FILES_PUT) $(TEST_IDS_FILES_GET)
+IDS_SOURCES += $(TEST_IDS_FILES_PUT) $(TEST_IDS_FILES_GET)
 
 IFORT_BIN_FILES=$(patsubst %.f90,$(IFORT_BIN_DIR)/%.exe,$(notdir $(TEST_IDS_FILES)))
+IFORT_BIN_FILES_PUT=$(patsubst %.f90,$(IFORT_BIN_DIR)/%.exe,$(notdir $(TEST_IDS_FILES_PUT)))
+IFORT_BIN_FILES_GET=$(patsubst %.f90,$(IFORT_BIN_DIR)/%.exe,$(notdir $(TEST_IDS_FILES_GET)))
+
 GFORTRAN_BIN_FILES=$(patsubst %.f90,$(GFORTRAN_BIN_DIR)/%.exe,$(notdir $(TEST_IDS_FILES)))
+GFORTRAN_BIN_FILES_PUT=$(patsubst %.f90,$(GFORTRAN_BIN_DIR)/%.exe,$(notdir $(TEST_IDS_FILES_PUT)))
+GFORTRAN_BIN_FILES_GET=$(patsubst %.f90,$(GFORTRAN_BIN_DIR)/%.exe,$(notdir $(TEST_IDS_FILES_GET)))
+
 
 GFORTRAN_TESTS = gfortran_initpulse_test gfortran_test
 IFORT_TESTS = ifort_initpulse_test ifort_test
@@ -55,7 +59,7 @@ IFORT_TESTS = ifort_initpulse_test ifort_test
 all: $(TARGETS)
 check test: $(TESTS)
 sources: $(IDS_SOURCES)
-sources2: $(IDS_SOURCES2)
+#sources2: $(IDS_SOURCES) $(IDS_SOURCES2)
 
 # Create src and bin dirs as needed
 $(TEST_SRC_DIR) $(IFORT_BIN_DIR) $(GFORTRAN_BIN_DIR) $(IFORT_BUILD_DIR) $(GFORTRAN_BUILD_DIR) $(TMP_DIR):
@@ -131,7 +135,21 @@ $(GFORTRAN_BUILD_DIR)/%_test.o: $(TEST_SRC_DIR)/%_test.f90 $(GFORTRAN_BUILD_DIR)
 $(GFORTRAN_BIN_FILES): $(GFORTRAN_BIN_DIR)/%_test.exe: $(GFORTRAN_BUILD_DIR)/setter.o $(GFORTRAN_BUILD_DIR)/comparator.o $(GFORTRAN_BUILD_DIR)/generator.o $(GFORTRAN_BUILD_DIR)/helper.o $(GFORTRAN_BUILD_DIR)/%_test.o $(GFORTRAN_BUILD_DIR)/%_init_static.o $(GFORTRAN_BUILD_DIR)/%_init_dynamic.o $(GFORTRAN_BUILD_DIR)/%_test_static.o $(GFORTRAN_BUILD_DIR)/%_test_dynamic.o | $(GFORTRAN_BIN_DIR)
 	$(FC_gfortran) $(COPTS_gfortran) -o $@ $^ $(LIBS_gfortran)
 	
-	
+#-------------
+
+$(GFORTRAN_BUILD_DIR)/%_put_test.o: $(TEST_SRC_DIR)/%_put_test.f90 $(GFORTRAN_BUILD_DIR)/helper.o $(GFORTRAN_BUILD_DIR)/%_init_static.o $(GFORTRAN_BUILD_DIR)/%_init_dynamic.o $(GFORTRAN_BUILD_DIR)/%_test_static.o $(GFORTRAN_BUILD_DIR)/%_test_dynamic.o
+	$(FC_gfortran) $(COPTS_gfortran) -c $< -o $@
+
+$(GFORTRAN_BUILD_DIR)/%_get_test.o: $(TEST_SRC_DIR)/%_put_test.f90 $(GFORTRAN_BUILD_DIR)/helper.o $(GFORTRAN_BUILD_DIR)/%_init_static.o $(GFORTRAN_BUILD_DIR)/%_init_dynamic.o $(GFORTRAN_BUILD_DIR)/%_test_static.o $(GFORTRAN_BUILD_DIR)/%_test_dynamic.o
+	$(FC_gfortran) $(COPTS_gfortran) -c $< -o $@
+
+$(GFORTRAN_BIN_FILES_PUT): $(GFORTRAN_BIN_DIR)/%_put_test.exe: $(GFORTRAN_BUILD_DIR)/setter.o $(GFORTRAN_BUILD_DIR)/comparator.o $(GFORTRAN_BUILD_DIR)/generator.o $(GFORTRAN_BUILD_DIR)/helper.o $(GFORTRAN_BUILD_DIR)/%_put_test.o $(GFORTRAN_BUILD_DIR)/%_init_static.o $(GFORTRAN_BUILD_DIR)/%_init_dynamic.o $(GFORTRAN_BUILD_DIR)/%_test_static.o $(GFORTRAN_BUILD_DIR)/%_test_dynamic.o | $(GFORTRAN_BIN_DIR)
+	$(FC_gfortran) $(COPTS_gfortran) -o $@ $^ $(LIBS_gfortran)	
+
+$(GFORTRAN_BIN_FILES_GET): $(GFORTRAN_BIN_DIR)/%_get_test.exe: $(GFORTRAN_BUILD_DIR)/setter.o $(GFORTRAN_BUILD_DIR)/comparator.o $(GFORTRAN_BUILD_DIR)/generator.o $(GFORTRAN_BUILD_DIR)/helper.o $(GFORTRAN_BUILD_DIR)/%_get_test.o $(GFORTRAN_BUILD_DIR)/%_init_static.o $(GFORTRAN_BUILD_DIR)/%_init_dynamic.o $(GFORTRAN_BUILD_DIR)/%_test_static.o $(GFORTRAN_BUILD_DIR)/%_test_dynamic.o | $(GFORTRAN_BIN_DIR)
+	$(FC_gfortran) $(COPTS_gfortran) -o $@ $^ $(LIBS_gfortran)
+
+#-------------
 gfortran_initpulse: initpulse.f90
 	$(FC_gfortran) $(COPTS_gfortran) -o $@ $^ $(LIBS_gfortran)
 
@@ -168,7 +186,21 @@ $(IFORT_BUILD_DIR)/%_test.o: $(TEST_SRC_DIR)/%_test.f90 $(IFORT_BUILD_DIR)/helpe
 	
 $(IFORT_BIN_FILES): $(IFORT_BIN_DIR)/%_test.exe: $(IFORT_BUILD_DIR)/setter.o $(IFORT_BUILD_DIR)/comparator.o $(IFORT_BUILD_DIR)/generator.o $(IFORT_BUILD_DIR)/helper.o $(IFORT_BUILD_DIR)/%_test.o $(IFORT_BUILD_DIR)/%_init_static.o $(IFORT_BUILD_DIR)/%_init_dynamic.o $(IFORT_BUILD_DIR)/%_test_static.o $(IFORT_BUILD_DIR)/%_test_dynamic.o | $(IFORT_BIN_DIR)
 	$(FC_ifort) $(COPTS_ifort) -o $@ $^ $(LIBS_ifort)
-	
+
+#-------------
+$(IFORT_BUILD_DIR)/%_put_test.o: $(TEST_SRC_DIR)/%_put_test.f90 $(IFORT_BUILD_DIR)/helper.o $(IFORT_BUILD_DIR)/%_init_static.o $(IFORT_BUILD_DIR)/%_init_dynamic.o $(IFORT_BUILD_DIR)/%_test_static.o $(IFORT_BUILD_DIR)/%_test_dynamic.o
+	$(FC_ifort) $(COPTS_ifort) -c $< -o $@
+
+$(IFORT_BUILD_DIR)/%_get_test.o: $(TEST_SRC_DIR)/%_get_test.f90 $(IFORT_BUILD_DIR)/helper.o $(IFORT_BUILD_DIR)/%_init_static.o $(IFORT_BUILD_DIR)/%_init_dynamic.o $(IFORT_BUILD_DIR)/%_test_static.o $(IFORT_BUILD_DIR)/%_test_dynamic.o
+	$(FC_ifort) $(COPTS_ifort) -c $< -o $@
+
+$(IFORT_BIN_FILES_PUT): $(IFORT_BIN_DIR)/%_test.exe: $(IFORT_BUILD_DIR)/setter.o $(IFORT_BUILD_DIR)/comparator.o $(IFORT_BUILD_DIR)/generator.o $(IFORT_BUILD_DIR)/helper.o $(IFORT_BUILD_DIR)/%_put_test.o $(IFORT_BUILD_DIR)/%_init_static.o $(IFORT_BUILD_DIR)/%_init_dynamic.o $(IFORT_BUILD_DIR)/%_test_static.o $(IFORT_BUILD_DIR)/%_test_dynamic.o | $(IFORT_BIN_DIR)
+	$(FC_ifort) $(COPTS_ifort) -o $@ $^ $(LIBS_ifort)
+
+$(IFORT_BIN_FILES_GET): $(IFORT_BIN_DIR)/%_test.exe: $(IFORT_BUILD_DIR)/setter.o $(IFORT_BUILD_DIR)/comparator.o $(IFORT_BUILD_DIR)/generator.o $(IFORT_BUILD_DIR)/helper.o $(IFORT_BUILD_DIR)/%_get_test.o $(IFORT_BUILD_DIR)/%_init_static.o $(IFORT_BUILD_DIR)/%_init_dynamic.o $(IFORT_BUILD_DIR)/%_test_static.o $(IFORT_BUILD_DIR)/%_test_dynamic.o | $(IFORT_BIN_DIR)
+	$(FC_ifort) $(COPTS_ifort) -o $@ $^ $(LIBS_ifort)
+#-------------
+
 ifort_initpulse: initpulse.f90
 	$(FC_ifort) $(COPTS_ifort) -o $@ $^ $(LIBS_ifort)
 
@@ -191,11 +223,11 @@ endef
 
 gfortran_initpulse_test: gfortran_initpulse | $(TMP_DIR)
 	$(run-tests)
-gfortran_test: $(GFORTRAN_BIN_FILES) | gfortran_initpulse_test
+gfortran_test: $(GFORTRAN_BIN_FILES) $(GFORTRAN_BIN_FILES_PUT) $(GFORTRAN_BIN_FILES_GET)| gfortran_initpulse_test
 	$(run-tests)
 ifort_initpulse_test: ifort_initpulse | $(TMP_DIR)
 	$(run-tests)
-ifort_test: $(IFORT_BIN_FILES) | ifort_initpulse_test
+ifort_test: $(IFORT_BIN_FILES) $(IFORT_BIN_FILES_PUT) $(IFORT_BIN_FILES_GET) | ifort_initpulse_test
 	$(run-tests)
 
 #----------------------- classpath deps ---------------------

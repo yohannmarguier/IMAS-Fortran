@@ -13,19 +13,13 @@
 	######### GENERATION FOR NEW LOW LEVEL #####
       </xsl:if>
 
-      <xsl:choose>
-	<xsl:when test="$sources2 = 'yes'">
-	  <xsl:apply-templates select="child::IDS" mode="put_test"/>
-	  <xsl:apply-templates select="child::IDS" mode="get_test"/>
-	</xsl:when>
-	<xsl:otherwise>
 	  <xsl:apply-templates select="child::IDS" mode="init_static"/>
 	  <xsl:apply-templates select="child::IDS" mode="init_dynamic"/>
 	  <xsl:apply-templates select="child::IDS" mode="test_static"/>
           <xsl:apply-templates select="child::IDS" mode="test_dynamic"/>
 	  <xsl:apply-templates select="child::IDS" mode="test"/>
-	</xsl:otherwise>
-      </xsl:choose>
+	  <xsl:apply-templates select="child::IDS" mode="put_test"/>
+	  <xsl:apply-templates select="child::IDS" mode="get_test"/>
     </xsl:template>
 
  <!-- ============================= END OF GENRATED FILE ============================== -->
