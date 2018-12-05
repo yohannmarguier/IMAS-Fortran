@@ -140,7 +140,7 @@ $(GFORTRAN_BIN_FILES): $(GFORTRAN_BIN_DIR)/%_all_test.exe: $(GFORTRAN_BUILD_DIR)
 $(GFORTRAN_BUILD_DIR)/%_put_test.o: $(TEST_SRC_DIR)/%_put_test.f90 $(GFORTRAN_BUILD_DIR)/helper.o $(GFORTRAN_BUILD_DIR)/%_init_static.o $(GFORTRAN_BUILD_DIR)/%_init_dynamic.o $(GFORTRAN_BUILD_DIR)/%_test_static.o $(GFORTRAN_BUILD_DIR)/%_test_dynamic.o
 	$(FC_gfortran) $(COPTS_gfortran) -c $< -o $@
 
-$(GFORTRAN_BUILD_DIR)/%_get_test.o: $(TEST_SRC_DIR)/%_put_test.f90 $(GFORTRAN_BUILD_DIR)/helper.o $(GFORTRAN_BUILD_DIR)/%_init_static.o $(GFORTRAN_BUILD_DIR)/%_init_dynamic.o $(GFORTRAN_BUILD_DIR)/%_test_static.o $(GFORTRAN_BUILD_DIR)/%_test_dynamic.o
+$(GFORTRAN_BUILD_DIR)/%_get_test.o: $(TEST_SRC_DIR)/%_get_test.f90 $(GFORTRAN_BUILD_DIR)/helper.o $(GFORTRAN_BUILD_DIR)/%_init_static.o $(GFORTRAN_BUILD_DIR)/%_init_dynamic.o $(GFORTRAN_BUILD_DIR)/%_test_static.o $(GFORTRAN_BUILD_DIR)/%_test_dynamic.o
 	$(FC_gfortran) $(COPTS_gfortran) -c $< -o $@
 
 $(GFORTRAN_BIN_FILES_PUT): $(GFORTRAN_BIN_DIR)/%_put_test.exe: $(GFORTRAN_BUILD_DIR)/setter.o $(GFORTRAN_BUILD_DIR)/comparator.o $(GFORTRAN_BUILD_DIR)/generator.o $(GFORTRAN_BUILD_DIR)/helper.o $(GFORTRAN_BUILD_DIR)/%_put_test.o $(GFORTRAN_BUILD_DIR)/%_init_static.o $(GFORTRAN_BUILD_DIR)/%_init_dynamic.o $(GFORTRAN_BUILD_DIR)/%_test_static.o $(GFORTRAN_BUILD_DIR)/%_test_dynamic.o | $(GFORTRAN_BIN_DIR)
