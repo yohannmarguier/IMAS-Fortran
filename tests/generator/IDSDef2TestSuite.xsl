@@ -237,7 +237,7 @@
 
     <!-- IDS perform the tests -->
     <xsl:template match="IDS" mode="test">
-      <xsl:result-document href="src/{@name}_test.f90" standalone="yes" method="text">
+      <xsl:result-document href="src/{@name}_all_test.f90" standalone="yes" method="text">
 	
 	<!-- ================================ MAIN PROGRAM ================================= -->
         <xsl:text>PROGRAM </xsl:text><xsl:value-of select="@name"/><xsl:text>_test&#10;</xsl:text>
