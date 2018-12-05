@@ -34,7 +34,7 @@ endif
 
 # Get a list of IDS from IDSDEF file
 IDSNAMES := $(shell sed '/<IDS name=/!d;s/.*name="\([^"]*\)".*/\1/' $(IDSDEF))
-TEST_IDS_FILES = $(patsubst %,$(TEST_SRC_DIR)/%_test.f90,$(IDSNAMES))
+TEST_IDS_FILES = $(patsubst %,$(TEST_SRC_DIR)/%_all_test.f90,$(IDSNAMES))
 IDS_SOURCES = $(patsubst %,$(TEST_SRC_DIR)/%_test.f90,$(IDSNAMES))
 IDS_SOURCES += $(patsubst %,$(TEST_SRC_DIR)/%_test_dynamic.f90,$(IDSNAMES))
 IDS_SOURCES += $(patsubst %,$(TEST_SRC_DIR)/%_test_static.f90,$(IDSNAMES))
@@ -129,10 +129,10 @@ $(GFORTRAN_BUILD_DIR)/%_test_static.o: $(TEST_SRC_DIR)/%_test_static.f90 $(GFORT
 $(GFORTRAN_BUILD_DIR)/%_test_dynamic.o: $(TEST_SRC_DIR)/%_test_dynamic.f90 $(GFORTRAN_BUILD_DIR)/comparator.o  
 	$(FC_gfortran) $(COPTS_gfortran) -c $< -o $@
 
-$(GFORTRAN_BUILD_DIR)/%_test.o: $(TEST_SRC_DIR)/%_test.f90 $(GFORTRAN_BUILD_DIR)/helper.o $(GFORTRAN_BUILD_DIR)/%_init_static.o $(GFORTRAN_BUILD_DIR)/%_init_dynamic.o $(GFORTRAN_BUILD_DIR)/%_test_static.o $(GFORTRAN_BUILD_DIR)/%_test_dynamic.o
+$(GFORTRAN_BUILD_DIR)/%_test.o: $(TEST_SRC_DIR)/%_all_test.f90 $(GFORTRAN_BUILD_DIR)/helper.o $(GFORTRAN_BUILD_DIR)/%_init_static.o $(GFORTRAN_BUILD_DIR)/%_init_dynamic.o $(GFORTRAN_BUILD_DIR)/%_test_static.o $(GFORTRAN_BUILD_DIR)/%_test_dynamic.o
 	$(FC_gfortran) $(COPTS_gfortran) -c $< -o $@
 	
-$(GFORTRAN_BIN_FILES): $(GFORTRAN_BIN_DIR)/%_test.exe: $(GFORTRAN_BUILD_DIR)/setter.o $(GFORTRAN_BUILD_DIR)/comparator.o $(GFORTRAN_BUILD_DIR)/generator.o $(GFORTRAN_BUILD_DIR)/helper.o $(GFORTRAN_BUILD_DIR)/%_test.o $(GFORTRAN_BUILD_DIR)/%_init_static.o $(GFORTRAN_BUILD_DIR)/%_init_dynamic.o $(GFORTRAN_BUILD_DIR)/%_test_static.o $(GFORTRAN_BUILD_DIR)/%_test_dynamic.o | $(GFORTRAN_BIN_DIR)
+$(GFORTRAN_BIN_FILES): $(GFORTRAN_BIN_DIR)/%_all_test.exe: $(GFORTRAN_BUILD_DIR)/setter.o $(GFORTRAN_BUILD_DIR)/comparator.o $(GFORTRAN_BUILD_DIR)/generator.o $(GFORTRAN_BUILD_DIR)/helper.o $(GFORTRAN_BUILD_DIR)/%_test.o $(GFORTRAN_BUILD_DIR)/%_init_static.o $(GFORTRAN_BUILD_DIR)/%_init_dynamic.o $(GFORTRAN_BUILD_DIR)/%_test_static.o $(GFORTRAN_BUILD_DIR)/%_test_dynamic.o | $(GFORTRAN_BIN_DIR)
 	$(FC_gfortran) $(COPTS_gfortran) -o $@ $^ $(LIBS_gfortran)
 	
 #-------------
@@ -181,10 +181,10 @@ $(IFORT_BUILD_DIR)/%_test_static.o: $(TEST_SRC_DIR)/%_test_static.f90 $(IFORT_BU
 $(IFORT_BUILD_DIR)/%_test_dynamic.o: $(TEST_SRC_DIR)/%_test_dynamic.f90 $(IFORT_BUILD_DIR)/comparator.o  
 	$(FC_ifort) $(COPTS_ifort) -c $< -o $@
 
-$(IFORT_BUILD_DIR)/%_test.o: $(TEST_SRC_DIR)/%_test.f90 $(IFORT_BUILD_DIR)/helper.o $(IFORT_BUILD_DIR)/%_init_static.o $(IFORT_BUILD_DIR)/%_init_dynamic.o $(IFORT_BUILD_DIR)/%_test_static.o $(IFORT_BUILD_DIR)/%_test_dynamic.o
+$(IFORT_BUILD_DIR)/%_test.o: $(TEST_SRC_DIR)/%_all_test.f90 $(IFORT_BUILD_DIR)/helper.o $(IFORT_BUILD_DIR)/%_init_static.o $(IFORT_BUILD_DIR)/%_init_dynamic.o $(IFORT_BUILD_DIR)/%_test_static.o $(IFORT_BUILD_DIR)/%_test_dynamic.o
 	$(FC_ifort) $(COPTS_ifort) -c $< -o $@
 	
-$(IFORT_BIN_FILES): $(IFORT_BIN_DIR)/%_test.exe: $(IFORT_BUILD_DIR)/setter.o $(IFORT_BUILD_DIR)/comparator.o $(IFORT_BUILD_DIR)/generator.o $(IFORT_BUILD_DIR)/helper.o $(IFORT_BUILD_DIR)/%_test.o $(IFORT_BUILD_DIR)/%_init_static.o $(IFORT_BUILD_DIR)/%_init_dynamic.o $(IFORT_BUILD_DIR)/%_test_static.o $(IFORT_BUILD_DIR)/%_test_dynamic.o | $(IFORT_BIN_DIR)
+$(IFORT_BIN_FILES): $(IFORT_BIN_DIR)/%_all_test.exe: $(IFORT_BUILD_DIR)/setter.o $(IFORT_BUILD_DIR)/comparator.o $(IFORT_BUILD_DIR)/generator.o $(IFORT_BUILD_DIR)/helper.o $(IFORT_BUILD_DIR)/%_test.o $(IFORT_BUILD_DIR)/%_init_static.o $(IFORT_BUILD_DIR)/%_init_dynamic.o $(IFORT_BUILD_DIR)/%_test_static.o $(IFORT_BUILD_DIR)/%_test_dynamic.o | $(IFORT_BIN_DIR)
 	$(FC_ifort) $(COPTS_ifort) -o $@ $^ $(LIBS_ifort)
 
 #-------------
