@@ -194,10 +194,10 @@ $(IFORT_BUILD_DIR)/%_put_test.o: $(TEST_SRC_DIR)/%_put_test.f90 $(IFORT_BUILD_DI
 $(IFORT_BUILD_DIR)/%_get_test.o: $(TEST_SRC_DIR)/%_get_test.f90 $(IFORT_BUILD_DIR)/helper.o $(IFORT_BUILD_DIR)/%_init_static.o $(IFORT_BUILD_DIR)/%_init_dynamic.o $(IFORT_BUILD_DIR)/%_test_static.o $(IFORT_BUILD_DIR)/%_test_dynamic.o
 	$(FC_ifort) $(COPTS_ifort) -c $< -o $@
 
-$(IFORT_BIN_FILES_PUT): $(IFORT_BIN_DIR)/%_test.exe: $(IFORT_BUILD_DIR)/setter.o $(IFORT_BUILD_DIR)/comparator.o $(IFORT_BUILD_DIR)/generator.o $(IFORT_BUILD_DIR)/helper.o $(IFORT_BUILD_DIR)/%_put_test.o $(IFORT_BUILD_DIR)/%_init_static.o $(IFORT_BUILD_DIR)/%_init_dynamic.o $(IFORT_BUILD_DIR)/%_test_static.o $(IFORT_BUILD_DIR)/%_test_dynamic.o | $(IFORT_BIN_DIR)
+$(IFORT_BIN_FILES_PUT): $(IFORT_BIN_DIR)/%_put_test.exe: $(IFORT_BUILD_DIR)/setter.o $(IFORT_BUILD_DIR)/comparator.o $(IFORT_BUILD_DIR)/generator.o $(IFORT_BUILD_DIR)/helper.o $(IFORT_BUILD_DIR)/%_put_test.o $(IFORT_BUILD_DIR)/%_init_static.o $(IFORT_BUILD_DIR)/%_init_dynamic.o $(IFORT_BUILD_DIR)/%_test_static.o $(IFORT_BUILD_DIR)/%_test_dynamic.o | $(IFORT_BIN_DIR)
 	$(FC_ifort) $(COPTS_ifort) -o $@ $^ $(LIBS_ifort)
 
-$(IFORT_BIN_FILES_GET): $(IFORT_BIN_DIR)/%_test.exe: $(IFORT_BUILD_DIR)/setter.o $(IFORT_BUILD_DIR)/comparator.o $(IFORT_BUILD_DIR)/generator.o $(IFORT_BUILD_DIR)/helper.o $(IFORT_BUILD_DIR)/%_get_test.o $(IFORT_BUILD_DIR)/%_init_static.o $(IFORT_BUILD_DIR)/%_init_dynamic.o $(IFORT_BUILD_DIR)/%_test_static.o $(IFORT_BUILD_DIR)/%_test_dynamic.o | $(IFORT_BIN_DIR)
+$(IFORT_BIN_FILES_GET): $(IFORT_BIN_DIR)/%_get_test.exe: $(IFORT_BUILD_DIR)/setter.o $(IFORT_BUILD_DIR)/comparator.o $(IFORT_BUILD_DIR)/generator.o $(IFORT_BUILD_DIR)/helper.o $(IFORT_BUILD_DIR)/%_get_test.o $(IFORT_BUILD_DIR)/%_init_static.o $(IFORT_BUILD_DIR)/%_init_dynamic.o $(IFORT_BUILD_DIR)/%_test_static.o $(IFORT_BUILD_DIR)/%_test_dynamic.o | $(IFORT_BIN_DIR)
 	$(FC_ifort) $(COPTS_ifort) -o $@ $^ $(LIBS_ifort)
 #-------------
 
