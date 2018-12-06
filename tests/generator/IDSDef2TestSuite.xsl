@@ -4,7 +4,6 @@
     <xsl:strip-space elements="*"/>
 
     <xsl:param name="newLowLevel" select="'no'" />
-    <xsl:param name="sources2" select="'no'" />
 
     <!-- Initial c ode -->
     <xsl:template match="IDSs">
@@ -17,7 +16,7 @@
 	  <xsl:apply-templates select="child::IDS" mode="init_dynamic"/>
 	  <xsl:apply-templates select="child::IDS" mode="test_static"/>
           <xsl:apply-templates select="child::IDS" mode="test_dynamic"/>
-	  <xsl:apply-templates select="child::IDS" mode="test"/>
+	  <xsl:apply-templates select="child::IDS" mode="all_test"/>
 	  <xsl:apply-templates select="child::IDS" mode="put_test"/>
 	  <xsl:apply-templates select="child::IDS" mode="get_test"/>
     </xsl:template>
@@ -236,7 +235,7 @@
 
 
     <!-- IDS perform the tests -->
-    <xsl:template match="IDS" mode="test">
+    <xsl:template match="IDS" mode="all_test">
       <xsl:result-document href="src/{@name}_all_test.f90" standalone="yes" method="text">
 	
 	<!-- ================================ MAIN PROGRAM ================================= -->
@@ -257,7 +256,7 @@
         <xsl:text>&#10;</xsl:text>
 	
         <xsl:text>&#9;call create(idx);&#10;</xsl:text>
-	<!-- <xsl:apply-templates select="child::IDS[@name='temporary']" mode="test"/>   -->
+	<!-- <xsl:apply-templates select="child::IDS[@name='temporary']" mode="all_test"/>   -->
 	<!--<xsl:apply-templates select="." mode="testCalls"/>-->
 	<xsl:text>&#10;</xsl:text>
 	<xsl:text>&#9;! --- IDS: </xsl:text><xsl:value-of select="@name"/><xsl:text> ---&#10;</xsl:text>
@@ -329,7 +328,7 @@
         <xsl:text>&#9;call close(idx);&#10;</xsl:text>
         <xsl:text>&#9;call close(idxslice);&#10;</xsl:text>
       
-	<!-- <xsl:apply-templates select="child::IDS[@name='temporary']" mode="test"/>   -->
+	<!-- <xsl:apply-templates select="child::IDS[@name='temporary']" mode="all_test"/>   -->
 	<!--<xsl:apply-templates select="." mode="testPutCalls"/>-->
 	
 	<xsl:text>CONTAINS&#10;</xsl:text>
@@ -386,7 +385,7 @@
         <xsl:text>&#9;call close(idx);&#10;</xsl:text>
         <xsl:text>&#9;call close(idxslice);&#10;</xsl:text>
 
-	<!-- <xsl:apply-templates select="child::IDS[@name='temporary']" mode="test"/>   -->
+	<!-- <xsl:apply-templates select="child::IDS[@name='temporary']" mode="all_test"/>   -->
 	<!-- <xsl:apply-templates select="." mode="testGetCalls"/> -->
 
 	<xsl:text>CONTAINS&#10;</xsl:text>
