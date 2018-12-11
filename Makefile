@@ -64,10 +64,9 @@ ifneq ("no","$(strip $(IMAS_MDSPLUS))")
 		LIBS	+= -L$(MDSPLUS_DIR)/lib
 		LIBS	+= $(MDSPLUS_DIR)/lib/XTreeShr.a
 		LIBS	+= $(MDSPLUS_DIR)/lib/MdsObjectsCppShr.a
-		LIBS	+= $(MDSPLUS_DIR)/lib/MdsIpShr.a
-		LIBS	+= $(MDSPLUS_DIR)/lib/MdsLib.a
 		LIBS	+= $(MDSPLUS_DIR)/lib/TdiShr.a
 		LIBS	+= $(MDSPLUS_DIR)/lib/TreeShr.a
+		LIBS	+= $(MDSPLUS_DIR)/lib/MdsIpShr.a
 		LIBS	+= $(MDSPLUS_DIR)/lib/MdsShr.a
 		LIBS	+= -lxml2 -lws2_32 -ldl -liphlpapi -lstdc++
 	else
@@ -172,34 +171,34 @@ install_pgi: $(IDSOBJECTS_pgi) libimas-pgi.a libimas-pgi.so
 	$(INSTALL_DATA) pgi/*.mod $(includedir)/pgi
 	$(mkdir_p) $(libdir)
 	$(INSTALL_DATA) $(addprefix libimas-pgi,.a $(SOEXT3)) $(libdir)
-	ln -svfT libimas-pgi$(SOEXT3) $(libdir)/libimas-pgi$(SOEXT2)
-	ln -svfT libimas-pgi$(SOEXT3) $(libdir)/libimas-pgi$(SOEXT1)
-	ln -svfT libimas-pgi$(SOEXT3) $(libdir)/libimas-pgi.so
+	$(ln_s) libimas-pgi$(SOEXT3) $(libdir)/libimas-pgi$(SOEXT2)
+	$(ln_s) libimas-pgi$(SOEXT3) $(libdir)/libimas-pgi$(SOEXT1)
+	$(ln_s) libimas-pgi$(SOEXT3) $(libdir)/libimas-pgi.so
 install_g95: $(IDSOBJECTS_g95) libimas-g95.a libimas-g95.so
 	$(mkdir_p) $(includedir)/g95
 	$(INSTALL_DATA) g95/*.mod $(includedir)/g95
 	$(mkdir_p) $(libdir)
 	$(INSTALL_DATA) $(addprefix libimas-g95,.a $(SOEXT3)) $(libdir)
-	ln -svfT libimas-g95$(SOEXT3) $(libdir)/libimas-g95$(SOEXT2)
-	ln -svfT libimas-g95$(SOEXT3) $(libdir)/libimas-g95$(SOEXT1)
-	ln -svfT libimas-g95$(SOEXT3) $(libdir)/libimas-g95.so
+	$(ln_s) libimas-g95$(SOEXT3) $(libdir)/libimas-g95$(SOEXT2)
+	$(ln_s) libimas-g95$(SOEXT3) $(libdir)/libimas-g95$(SOEXT1)
+	$(ln_s) libimas-g95$(SOEXT3) $(libdir)/libimas-g95.so
 install_ifort: $(IDSOBJECTS_ifort) libimas-ifort.a libimas-ifort.so
 	$(mkdir_p) $(includedir)/ifort
 	$(INSTALL_DATA) ifort/*.mod $(includedir)/ifort
 	$(mkdir_p) $(libdir)
 	$(INSTALL_DATA) $(addprefix libimas-ifort,.a $(SOEXT3)) $(libdir)
-	ln -svfT libimas-ifort$(SOEXT3) $(libdir)/libimas-ifort$(SOEXT2)
-	ln -svfT libimas-ifort$(SOEXT3) $(libdir)/libimas-ifort$(SOEXT1)
-	ln -svfT libimas-ifort$(SOEXT3) $(libdir)/libimas-ifort.so
+	$(ln_s) libimas-ifort$(SOEXT3) $(libdir)/libimas-ifort$(SOEXT2)
+	$(ln_s) libimas-ifort$(SOEXT3) $(libdir)/libimas-ifort$(SOEXT1)
+	$(ln_s) libimas-ifort$(SOEXT3) $(libdir)/libimas-ifort.so
 install_gfortran: $(IDSOBJECTS_gfortran) libimas-gfortran.a libimas-gfortran.so
 ifeq ("no","$(strip $(SYS_WIN))")
 	$(mkdir_p) $(includedir)/gfortran
 	$(INSTALL_DATA) gfortran/*.mod $(includedir)/gfortran
 	$(mkdir_p) $(libdir)
 	$(INSTALL_DATA) $(addprefix libimas-gfortran,.a $(SOEXT3)) $(libdir)
-	ln -svfT libimas-gfortran$(SOEXT3) $(libdir)/libimas-gfortran$(SOEXT2)
-	ln -svfT libimas-gfortran$(SOEXT3) $(libdir)/libimas-gfortran$(SOEXT1)
-	ln -svfT libimas-gfortran$(SOEXT3) $(libdir)/libimas-gfortran.so
+	$(ln_s) libimas-gfortran$(SOEXT3) $(libdir)/libimas-gfortran$(SOEXT2)
+	$(ln_s) libimas-gfortran$(SOEXT3) $(libdir)/libimas-gfortran$(SOEXT1)
+	$(ln_s) libimas-gfortran$(SOEXT3) $(libdir)/libimas-gfortran.so
 else
 	$(mkdir_p) $(packagedir)/fortraninterface/include
 	cp gfortran/*.mod $(packagedir)/fortraninterface/include
@@ -227,12 +226,12 @@ test-clean-src:
 	$(MAKE) -C tests/generator clean-src
 
 libimas-g95.so libimas-gfortran.so libimas-pgi.so libimas-ifort.so: %.so:%$(SOEXT3)
-	ln -svfT $*$(SOEXT3) $@
+	$(ln_s) $*$(SOEXT3) $@
 
 #--------------------- g95 --------------
 libimas-g95$(SOEXT3): %$(SOEXT3): ids_schemas_g95.o ual_defs_g95.o ual_low_level_wrap_g95.o utilities_copy_struct_g95.o utilities_deallocate_struct_g95.o utilities_put_struct_g95.o utilities_put_slice_struct_g95.o utilities_get_struct_g95.o $(IDSOBJECTS_g95) ids_routines_g95.o $(DEP_g95)
 	$(FC_g95) $(COPTS_g95) -o $@ -shared -Wl,-soname,$*$(SOEXT2) $^ $(LIBS)
-	ln -svfT $@ $*$(SOEXT2)
+	$(ln_s) $@ $*$(SOEXT2)
 
 libimas-g95.a: ids_schemas_g95.o ual_defs_g95.o ual_low_level_wrap_g95.o utilities_copy_struct_g95.o utilities_deallocate_struct_g95.o utilities_put_struct_g95.o utilities_put_slice_struct_g95.o utilities_get_struct_g95.o $(IDSOBJECTS_g95) ids_routines_g95.o $(DEP_g95)
 	$(AR) rvs $@ $^
@@ -276,7 +275,7 @@ $(filter %_deallocate_struct_g95.o,$(IDSOBJECTS)): %_g95.o:%.f90 ids_schemas_g95
 #--------------------- gfortran --------------
 libimas-gfortran$(SOEXT3): %$(SOEXT3): ids_schemas_gfortran.o ual_defs_gfortran.o ual_low_level_wrap_gfortran.o utilities_copy_struct_gfortran.o utilities_deallocate_struct_gfortran.o utilities_put_struct_gfortran.o utilities_put_slice_struct_gfortran.o utilities_get_struct_gfortran.o $(IDSOBJECTS_gfortran) ids_routines_gfortran.o $(DEP_gfortran)
 	$(FC_gfortran) $(COPTS_gfortran) -o $@ -shared -Wl,-soname,$*$(SOEXT2) $^ $(LIBS)
-	ln -svfT $@ $*$(SOEXT2)
+	$(ln_s) $@ $*$(SOEXT2)
 
 libimas-gfortran.a: ids_schemas_gfortran.o ual_defs_gfortran.o ual_low_level_wrap_gfortran.o utilities_copy_struct_gfortran.o utilities_deallocate_struct_gfortran.o utilities_put_struct_gfortran.o utilities_put_slice_struct_gfortran.o utilities_get_struct_gfortran.o $(IDSOBJECTS_gfortran) ids_routines_gfortran.o $(DEP_gfortran)
 	$(AR) rvs $@ $^
@@ -327,7 +326,7 @@ $(filter %_deallocate_struct_gfortran.o,$(IDSOBJECTS)): %_gfortran.o:%.f90 ids_s
 #--------------------- pgi --------------
 libimas-pgi$(SOEXT3): %$(SOEXT3): ids_schemas_pgi.o ual_defs_pgi.o ual_low_level_wrap_pgi.o utilities_copy_struct_pgi.o utilities_deallocate_struct_pgi.o utilities_put_struct_pgi.o utilities_put_slice_struct_pgi.o utilities_get_struct_pgi.o $(IDSOBJECTS_pgi) ids_routines_pgi.o $(DEP_pgi)
 	$(FC_pgi) $(COPTS_pgi) -o $@ -shared -Wl,-soname,$*$(SOEXT2) $^ $(LIBS)
-	ln -svfT $@ $*$(SOEXT2)
+	$(ln_s) $@ $*$(SOEXT2)
 
 libimas-pgi.a: ids_schemas_pgi.o ual_defs_pgi.o ual_low_level_wrap_pgi.o utilities_copy_struct_pgi.o utilities_deallocate_struct_pgi.o utilities_put_struct_pgi.o utilities_put_slice_struct_pgi.o utilities_get_struct_pgi.o $(IDSOBJECTS_pgi) ids_routines_pgi.o $(DEP_pgi)
 	$(AR) rvs $@ $^
@@ -371,7 +370,7 @@ $(filter %_deallocate_struct_pgi.o,$(IDSOBJECTS)): %_pgi.o:%.f90 ids_schemas_pgi
 #--------------------- ifort --------------
 libimas-ifort$(SOEXT3): %$(SOEXT3): ids_schemas_ifort.o ual_defs_ifort.o ual_low_level_wrap_ifort.o utilities_copy_struct_ifort.o utilities_deallocate_struct_ifort.o utilities_put_struct_ifort.o utilities_put_slice_struct_ifort.o utilities_get_struct_ifort.o $(IDSOBJECTS_ifort) ids_routines_ifort.o $(DEP_ifort)
 	$(FC_ifort) $(COPTS_ifort) -o $@ -shared -Wl,-soname,$*$(SOEXT2) $^ $(LIBS)
-	ln -svfT $@ $*$(SOEXT2)
+	$(ln_s) $@ $*$(SOEXT2)
 
 libimas-ifort.a: ids_schemas_ifort.o ual_defs_ifort.o ual_low_level_wrap_ifort.o utilities_copy_struct_ifort.o utilities_deallocate_struct_ifort.o utilities_put_struct_ifort.o utilities_put_slice_struct_ifort.o utilities_get_struct_ifort.o $(IDSOBJECTS_ifort) ids_routines_ifort.o $(DEP_ifort)
 	$(AR) rvs $@ $^
