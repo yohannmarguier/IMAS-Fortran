@@ -1,0 +1,12 @@
+prefix=__PREFIX__
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: imas-pgi-__DD_GIT_DESCRIBE__
+Version: __UAL_GIT_DESCRIBE__
+Description: IMAS Fortran Libraries (pgi)
+URL: https://imas.iter.org
+Requires: imas-lowlevel = __UAL_GIT_DESCRIBE__
+Cflags: -I${includedir}/pgi
+Libs: -L${libdir} -limas-pgi-__DD_GIT_DESCRIBE__
