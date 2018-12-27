@@ -60,34 +60,34 @@ PC_FILES=
 PC_FILES_VAR=
 
 ifneq ("no","$(strip $(IMAS_G95))")
-TARGETS += libimas-g95.so libimas-g95.a
+TARGETS += libimas-g95.so libimas-g95.a id_g95_all
 PC_FILES += imas-g95.pc
 PC_FILES_VAR += imas-g95-$(DD_GIT_DESCRIBE).pc
-INSTALL_TARGETS += g95
+INSTALL_TARGETS += g95_install id_g95_install
 IDSOBJECTS_g95=$(addsuffix _g95.o,$(IDSNAMES_FUNC))
 endif
 
 ifneq ("no","$(strip $(IMAS_GFORTRAN))")
-TARGETS += libimas-gfortran.so libimas-gfortran.a
+TARGETS += libimas-gfortran.so libimas-gfortran.a id_gfortran_all
 PC_FILES += imas-gfortran.pc
 PC_FILES_VAR += imas-gfortran-$(DD_GIT_DESCRIBE).pc
-INSTALL_TARGETS += gfortran
+INSTALL_TARGETS += gfortran_install id_gfortran_install
 IDSOBJECTS_gfortran=$(addsuffix _gfortran.o,$(IDSNAMES_FUNC))
 endif
 
 ifneq ("no","$(strip $(IMAS_PGI))")
-TARGETS += libimas-pgi.so libimas-pgi.a
+TARGETS += libimas-pgi.so libimas-pgi.a id_pgi_all
 PC_FILES += imas-pgi.pc
 PC_FILES_VAR += imas-pgi-$(DD_GIT_DESCRIBE).pc
-INSTALL_TARGETS += pgi
+INSTALL_TARGETS += pgi_install id_pgi_install
 IDSOBJECTS_pgi=$(addsuffix _pgi.o,$(IDSNAMES_FUNC))
 endif
 
 ifneq ("no","$(strip $(IMAS_IFORT))")
-TARGETS += libimas-ifort.so libimas-ifort.a
+TARGETS += libimas-ifort.so libimas-ifort.a id_ifort_all
 PC_FILES += imas-ifort.pc
 PC_FILES_VAR += imas-ifort-$(DD_GIT_DESCRIBE).pc
-INSTALL_TARGETS += ifort
+INSTALL_TARGETS += ifort_install id_ifort_install
 IDSOBJECTS_ifort=$(addsuffix _ifort.o,$(IDSNAMES_FUNC))
 endif
 
@@ -96,29 +96,29 @@ IDSOBJECTS=$(IDSOBJECTS_g95) $(IDSOBJECTS_gfortran) $(IDSOBJECTS_pgi) $(IDSOBJEC
 
 all: $(SOURCES) $(TARGETS) pkgconfig
 
-install: all $(addprefix install_,$(INSTALL_TARGETS)) pkgconfig_install
+install: all $(INSTALL_TARGETS) pkgconfig_install
 
 $(libdir) $(addprefix $(includedir)/,pgi g95 gfortran ifort) $(datadir)/src/fortraninterface \
 $(MODDIR_pgi) $(MODDIR_g95) $(MODDIR_gfortran) $(MODDIR_ifort):
 	$(mkdir_p) $@
 
-sources: $(SOURCES) ids_schemas.f90
-sources_install: $(SOURCES) ids_schemas.f90
-	$(INSTALL_DATA) $^ $(datadir)/src/fortraninterface
+sources: $(SOURCES) ids_schemas.f90 id_f90_sources
+sources_install: $(SOURCES) ids_schemas.f90 id_f90_sources_install
+	$(INSTALL_DATA) $(SOURCES) ids_schemas.f90 $(datadir)/src/fortraninterface
 
-install_pgi: $(IDSOBJECTS_pgi) libimas-pgi.a_install libimas-pgi.so_install | $(includedir)/pgi
-	$(INSTALL_DATA) pgi/*.mod $(includedir)/pgi
-install_g95: $(IDSOBJECTS_g95) libimas-g95.a_install libimas-g95.so_install | $(includedir)/g95
-	$(INSTALL_DATA) g95/*.mod $(includedir)/g95
-install_ifort: $(IDSOBJECTS_ifort) libimas-ifort.a_install libimas-ifort.so_install | $(includedir)/ifort
-	$(INSTALL_DATA) ifort/*.mod $(includedir)/ifort
-install_gfortran: $(IDSOBJECTS_gfortran) libimas-gfortran.a_install libimas-gfortran.so_install | $(includedir)/gfortran
-	$(INSTALL_DATA) gfortran/*.mod $(includedir)/gfortran
+pgi_install: $(IDSOBJECTS_pgi) libimas-pgi.a_install libimas-pgi.so_install | $(includedir)/pgi
+	$(INSTALL_DATA) $(MODDIR_pgi)/*.mod $(includedir)/pgi
+g95_install: $(IDSOBJECTS_g95) libimas-g95.a_install libimas-g95.so_install | $(includedir)/g95
+	$(INSTALL_DATA) $(MODDIR_g95)/*.mod $(includedir)/g95
+ifort_install: $(IDSOBJECTS_ifort) libimas-ifort.a_install libimas-ifort.so_install | $(includedir)/ifort
+	$(INSTALL_DATA) $(MODDIR_ifort)/*.mod $(includedir)/ifort
+gfortran_install: $(IDSOBJECTS_gfortran) libimas-gfortran.a_install libimas-gfortran.so_install | $(includedir)/gfortran
+	$(INSTALL_DATA) $(MODDIR_gfortran)/*.mod $(includedir)/gfortran
 
-clean:
+clean: pkgconfig_clean id_g95_clean id_gfortran_clean id_ifort_clean id_pgi_clean
 	$(RM) -r *.o *.mod *.so* *~ g95/ gfortran/ pgi/ ifort/ *.a
 
-clean-src: clean
+clean-src: clean id_f90_clean-src
 	$(RM) $(SOURCES)
 	$(RM) ids_schemas.f90  
 
@@ -366,22 +366,18 @@ $(filter %_deallocate_struct_ifort.o,$(IDSOBJECTS)): %_ifort.o:%.f90 ids_schemas
 
 #----------------------- xslt ---------------------
 # Test if all idsroutines are found to exist as files.
-ifeq ($(words $(IDSROUTINES)), $(words $(wildcard $(IDSROUTINES))))
-$(SOURCES): IDSDef2F90Routines.xsl xsd2copy_structures.xsl | saxonicajar
-	java net.sf.saxon.Transform -t -s:$(IDSDEF) -xsl:IDSDef2F90Routines.xsl
-idsroutines:
-else
-# Need to generate, use an intermediate target idsroutines to force non-parallel execution.
 $(SOURCES): idsroutines
 idsroutines: IDSDef2F90Routines.xsl xsd2copy_structures.xsl | saxonicajar
-	java net.sf.saxon.Transform -t -s:$(IDSDEF) -xsl:IDSDef2F90Routines.xsl
-endif
+	$(if $(call gotallfiles,$(IDSROUTINES)),,java net.sf.saxon.Transform -t -s:$(IDSDEF) -xsl:IDSDef2F90Routines.xsl)
 
 ids_schemas.f90: xsd2F90TypeDef.xsl
 	(cp xsd2F90TypeDef.xsl ../xml/ ; cd ../xml/ ; \
 	xsltproc xsd2F90TypeDef.xsl dd_physics_data_dictionary.xsd > ids_schemas.f90 ) ; \
 	$(RM) ../xml/xsd2F90TypeDef.xsl ; \
 	mv ../xml/ids_schemas.f90 .
+
+#----------------------- identifiers ---------------------
+include ../Makefile.identifiers
 
 #----------------------- pkgconfig ---------------------
 include ../Makefile.pkgconfig
