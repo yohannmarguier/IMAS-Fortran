@@ -69,7 +69,15 @@ $(TEST_SRC_DIR) $(IFORT_BIN_DIR) $(GFORTRAN_BIN_DIR) $(IFORT_BUILD_DIR) $(GFORTR
 	$(mkdir_p) $@
 
 .PHONY: clean clean-src
-clean: ifort_clean gfortran_clean
+
+
+ifneq ("no","$(strip $(IMAS_GFORTRAN))")
+clean: gfortran_clean
+endif
+ifneq ("no","$(strip $(IMAS_IFORT))")
+clean: ifort_clean
+endif
+clean:
 	$(RM) -r idspath-*
 	$(RM) -r *.log
 
@@ -98,7 +106,10 @@ sources_: IDSDef2TestSuite.xsl $(IDSDEF) | saxonicajar $(TEST_SRC_DIR)
 #################################################
 
 #------------------------- gfortran ----------------------------
+ifneq ("no","$(strip $(IMAS_GFORTRAN))")
 .PHONY: gfortran_clean
+endif
+
 gfortran_clean:
 	$(RM) -r $(GFORTRAN_BIN_DIR)
 	$(RM) -r $(GFORTRAN_BUILD_DIR)
@@ -150,7 +161,10 @@ gfortran_initpulse: initpulse.f90
 
 
 #------------------------- ifort ----------------------------
+ifneq ("no","$(strip $(IMAS_IFORT))")
 .PHONY: ifort_clean
+endif
+
 ifort_clean:
 	$(RM) -r $(IFORT_BIN_DIR)
 	$(RM) -r $(IFORT_BUILD_DIR)
@@ -203,7 +217,13 @@ ifort_initpulse: initpulse.f90
 #################################################
 #			  TEST
 #################################################
-.PHONY: test ifort_test gfortran_test
+.PHONY: test
+ifneq ("no","$(strip $(IMAS_GFORTRAN))")
+.PHONY: gfortran_test
+endif
+ifneq ("no","$(strip $(IMAS_IFORT))")
+.PHONY: ifort_test
+endif
 
 # Canned recipe that runs prerequisites as tests and produces TAP-like output
 define run-tests
