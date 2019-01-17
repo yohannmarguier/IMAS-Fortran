@@ -58,11 +58,13 @@ SOURCES=ids_routines.f90 utilities_copy_struct.f90 utilities_deallocate_struct.f
 # pkg-config files
 PC_FILES=
 PC_FILES_VAR=
+PC_FILES_ALT=
 
 ifneq ("no","$(strip $(IMAS_G95))")
 TARGETS += libimas-g95.so libimas-g95.a id_g95_all
 PC_FILES += imas-g95.pc
 PC_FILES_VAR += imas-g95-$(DD_GIT_DESCRIBE).pc
+PC_FILES_ALT += $(ID_g95_PC_FILES_2)
 INSTALL_TARGETS += g95_install id_g95_install
 IDSOBJECTS_g95=$(addsuffix _g95.o,$(IDSNAMES_FUNC))
 endif
@@ -71,6 +73,7 @@ ifneq ("no","$(strip $(IMAS_GFORTRAN))")
 TARGETS += libimas-gfortran.so libimas-gfortran.a id_gfortran_all
 PC_FILES += imas-gfortran.pc
 PC_FILES_VAR += imas-gfortran-$(DD_GIT_DESCRIBE).pc
+PC_FILES_ALT += $(ID_gfortran_PC_FILES_2)
 INSTALL_TARGETS += gfortran_install id_gfortran_install
 IDSOBJECTS_gfortran=$(addsuffix _gfortran.o,$(IDSNAMES_FUNC))
 endif
@@ -79,6 +82,7 @@ ifneq ("no","$(strip $(IMAS_PGI))")
 TARGETS += libimas-pgi.so libimas-pgi.a id_pgi_all
 PC_FILES += imas-pgi.pc
 PC_FILES_VAR += imas-pgi-$(DD_GIT_DESCRIBE).pc
+PC_FILES_ALT += $(ID_pgi_PC_FILES_2)
 INSTALL_TARGETS += pgi_install id_pgi_install
 IDSOBJECTS_pgi=$(addsuffix _pgi.o,$(IDSNAMES_FUNC))
 endif
@@ -87,6 +91,7 @@ ifneq ("no","$(strip $(IMAS_IFORT))")
 TARGETS += libimas-ifort.so libimas-ifort.a id_ifort_all
 PC_FILES += imas-ifort.pc
 PC_FILES_VAR += imas-ifort-$(DD_GIT_DESCRIBE).pc
+PC_FILES_ALT += $(ID_ifort_PC_FILES_2)
 INSTALL_TARGETS += ifort_install id_ifort_install
 IDSOBJECTS_ifort=$(addsuffix _ifort.o,$(IDSNAMES_FUNC))
 endif
