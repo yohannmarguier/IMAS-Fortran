@@ -143,22 +143,22 @@ LIBFILES_g95 = ids_schemas_g95.o ual_defs_g95.o ual_low_level_wrap_g95.o utiliti
 libimas-g95-$(DD_GIT_DESCRIBE).so.$(SO_NUM): $(LIBFILES_g95)
 	$(FC_g95) $(FCFLAGS_g95) -o $@ -shared -Wl,-soname,$@ $^ $(LIBS)
 libimas-g95-$(DD_GIT_DESCRIBE).so: %:%.$(SO_NUM)
-	ln -svfT $< $@
+	$(LN_S) $< $@
 libimas-g95.so:libimas-g95-$(DD_GIT_DESCRIBE).so
-	ln -svfT $< $@
+	$(LN_S) $< $@
 libimas-g95.so_install: %.so_install:%-$(DD_GIT_DESCRIBE).so.$(SO_NUM) | $(libdir)
 	$(INSTALL_DATA) $< $(libdir)
-	ln -svfT $< $(libdir)/$*-$(DD_GIT_DESCRIBE).so
-	ln -svfT $< $(libdir)/$*.so
+	$(LN_S) $< $(libdir)/$*-$(DD_GIT_DESCRIBE).so
+	$(LN_S) $< $(libdir)/$*.so
 
 # Static library
 libimas-g95-$(DD_GIT_DESCRIBE).a: $(LIBFILES_g95)
 	$(AR) rvs $@ $^
 libimas-g95.a:libimas-g95-$(DD_GIT_DESCRIBE).a
-	ln -svfT $< $@
+	$(LN_S) $< $@
 libimas-g95.a_install: %.a_install:%-$(DD_GIT_DESCRIBE).a | $(libdir)
 	$(INSTALL_DATA) $< $(libdir)
-	ln -svfT $< $(libdir)/$*.a
+	$(LN_S) $< $(libdir)/$*.a
 
 ids_routines_g95.o: ids_routines.f90 ual_defs_g95.o ual_low_level_wrap_g95.o utilities_copy_struct_g95.o utilities_deallocate_struct_g95.o utilities_put_struct_g95.o utilities_put_slice_struct_g95.o utilities_get_struct_g95.o $(IDSOBJECTS_g95)
 	$(FC_g95) -c $(FCFLAGS_g95) $(INCDIR_g95) ids_routines.f90 -o $@
@@ -201,22 +201,22 @@ LIBFILES_gfortran = ids_schemas_gfortran.o ual_defs_gfortran.o ual_low_level_wra
 libimas-gfortran-$(DD_GIT_DESCRIBE).so.$(SO_NUM): $(LIBFILES_gfortran)
 	$(FC_gfortran) $(FCFLAGS_gfortran) -o $@ -shared -Wl,-soname,$@ $^ $(LIBS)
 libimas-gfortran-$(DD_GIT_DESCRIBE).so: %:%.$(SO_NUM)
-	ln -svfT $< $@
+	$(LN_S) $< $@
 libimas-gfortran.so:libimas-gfortran-$(DD_GIT_DESCRIBE).so
-	ln -svfT $< $@
+	$(LN_S) $< $@
 libimas-gfortran.so_install: %.so_install:%-$(DD_GIT_DESCRIBE).so.$(SO_NUM) | $(libdir)
 	$(INSTALL_DATA) $< $(libdir)
-	ln -svfT $< $(libdir)/$*-$(DD_GIT_DESCRIBE).so
-	ln -svfT $< $(libdir)/$*.so
+	$(LN_S) $< $(libdir)/$*-$(DD_GIT_DESCRIBE).so
+	$(LN_S) $< $(libdir)/$*.so
 
 # Static library
 libimas-gfortran-$(DD_GIT_DESCRIBE).a: $(LIBFILES_gfortran)
 	$(AR) rvs $@ $^
 libimas-gfortran.a:libimas-gfortran-$(DD_GIT_DESCRIBE).a
-	ln -svfT $< $@
+	$(LN_S) $< $@
 libimas-gfortran.a_install: %.a_install:%-$(DD_GIT_DESCRIBE).a | $(libdir)
 	$(INSTALL_DATA) $< $(libdir)
-	ln -svfT $< $(libdir)/$*.a
+	$(LN_S) $< $(libdir)/$*.a
 
 ids_routines_gfortran.o: ids_routines.f90 ual_defs_gfortran.o ual_low_level_wrap_gfortran.o utilities_copy_struct_gfortran.o utilities_deallocate_struct_gfortran.o utilities_put_struct_gfortran.o utilities_put_slice_struct_gfortran.o utilities_get_struct_gfortran.o $(IDSOBJECTS_gfortran)
 	$(FC_gfortran) -c $(FCFLAGS_gfortran) $(INCDIR_gfortran) ids_routines.f90 -o $@
@@ -259,22 +259,22 @@ LIBFILES_pgi = ids_schemas_pgi.o ual_defs_pgi.o ual_low_level_wrap_pgi.o utiliti
 libimas-pgi-$(DD_GIT_DESCRIBE).so.$(SO_NUM): $(LIBFILES_pgi)
 	$(FC_pgi) $(FCFLAGS_pgi) -o $@ -shared -Wl,-soname,$@ $^ $(LIBS)
 libimas-pgi-$(DD_GIT_DESCRIBE).so: %:%.$(SO_NUM)
-	ln -svfT $< $@
+	$(LN_S) $< $@
 libimas-pgi.so:libimas-pgi-$(DD_GIT_DESCRIBE).so
-	ln -svfT $< $@
+	$(LN_S) $< $@
 libimas-pgi.so_install: %.so_install:%-$(DD_GIT_DESCRIBE).so.$(SO_NUM) | $(libdir)
 	$(INSTALL_DATA) $< $(libdir)
-	ln -svfT $< $(libdir)/$*-$(DD_GIT_DESCRIBE).so
-	ln -svfT $< $(libdir)/$*.so
+	$(LN_S) $< $(libdir)/$*-$(DD_GIT_DESCRIBE).so
+	$(LN_S) $< $(libdir)/$*.so
 
 # Static library
 libimas-pgi-$(DD_GIT_DESCRIBE).a: $(LIBFILES_pgi)
 	$(AR) rvs $@ $^
 libimas-pgi.a:libimas-pgi-$(DD_GIT_DESCRIBE).a
-	ln -svfT $< $@
+	$(LN_S) $< $@
 libimas-pgi.a_install: %.a_install:%-$(DD_GIT_DESCRIBE).a | $(libdir)
 	$(INSTALL_DATA) $< $(libdir)
-	ln -svfT $< $(libdir)/$*.a
+	$(LN_S) $< $(libdir)/$*.a
 
 ids_routines_pgi.o: ids_routines.f90 ual_defs_pgi.o ual_low_level_wrap_pgi.o utilities_copy_struct_pgi.o utilities_deallocate_struct_pgi.o utilities_put_struct_pgi.o utilities_put_slice_struct_pgi.o utilities_get_struct_pgi.o $(IDSOBJECTS_pgi)
 	$(FC_pgi) -c $(FCFLAGS_pgi) $(INCDIR_pgi) ids_routines.f90 -o $@
@@ -317,22 +317,22 @@ LIBFILES_ifort = ids_schemas_ifort.o ual_defs_ifort.o ual_low_level_wrap_ifort.o
 libimas-ifort-$(DD_GIT_DESCRIBE).so.$(SO_NUM): $(LIBFILES_ifort)
 	$(FC_ifort) $(FCFLAGS_ifort) -o $@ -shared -Wl,-soname,$@ $^ $(LIBS)
 libimas-ifort-$(DD_GIT_DESCRIBE).so: %:%.$(SO_NUM)
-	ln -svfT $< $@
+	$(LN_S) $< $@
 libimas-ifort.so:libimas-ifort-$(DD_GIT_DESCRIBE).so
-	ln -svfT $< $@
+	$(LN_S) $< $@
 libimas-ifort.so_install: %.so_install:%-$(DD_GIT_DESCRIBE).so.$(SO_NUM) | $(libdir)
 	$(INSTALL_DATA) $< $(libdir)
-	ln -svfT $< $(libdir)/$*-$(DD_GIT_DESCRIBE).so
-	ln -svfT $< $(libdir)/$*.so
+	$(LN_S) $< $(libdir)/$*-$(DD_GIT_DESCRIBE).so
+	$(LN_S) $< $(libdir)/$*.so
 
 # Static library
 libimas-ifort-$(DD_GIT_DESCRIBE).a: $(LIBFILES_ifort)
 	$(AR) rvs $@ $^
 libimas-ifort.a:libimas-ifort-$(DD_GIT_DESCRIBE).a
-	ln -svfT $< $@
+	$(LN_S) $< $@
 libimas-ifort.a_install: %.a_install:%-$(DD_GIT_DESCRIBE).a | $(libdir)
 	$(INSTALL_DATA) $< $(libdir)
-	ln -svfT $< $(libdir)/$*.a
+	$(LN_S) $< $(libdir)/$*.a
 
 ids_routines_ifort.o: ids_routines.f90 ual_defs_ifort.o ual_low_level_wrap_ifort.o utilities_copy_struct_ifort.o utilities_deallocate_struct_ifort.o utilities_put_struct_ifort.o utilities_put_slice_struct_ifort.o utilities_get_struct_ifort.o $(IDSOBJECTS_ifort)
 	$(FC_ifort) -c $(FCFLAGS_ifort) $(INCDIR_ifort) ids_routines.f90 -o $@
