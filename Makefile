@@ -459,7 +459,7 @@ $(filter %_deallocate_struct_ifort.o,$(IDSOBJECTS)): %_ifort.o:%.f90 ids_schemas
 # Test if all idsroutines are found to exist as files.
 $(SOURCES): idsroutines
 idsroutines: IDSDef2F90Routines.xsl xsd2copy_structures.xsl | saxonicajar
-	$(if $(call gotallfiles,$(IDSROUTINES)),,$(JAVA) net.sf.saxon.Transform -t -s:$(IDSDEF) -xsl:IDSDef2F90Routines.xsl)
+	$(if $(call allnewerthan,$(IDSROUTINES),$^),, $(JAVA) net.sf.saxon.Transform -t -s:$(IDSDEF) -xsl:IDSDef2F90Routines.xsl )
 
 ids_schemas.f90: xsd2F90TypeDef.xsl
 	(cp xsd2F90TypeDef.xsl ../xml/ ; cd ../xml/ ; \
