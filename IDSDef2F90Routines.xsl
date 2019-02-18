@@ -1422,6 +1422,11 @@ end module
              call ual_iterate_over_arraystruct(aosctx, 1, status)
           enddo
           call ual_end_action(aosctx, status)
+       else
+          write(*,*) "ERROR! with field "//<xsl:value-of select="$fieldpath"/>//" from context:"
+	  call ual_print_context(<xsl:value-of select="$contextvar"/>)
+          call ual_end_action(<xsl:value-of select="$contextvar"/>, status)
+	  return
        endif
     endif
   </xsl:when>
@@ -1797,6 +1802,11 @@ end module
           call ual_iterate_over_arraystruct(aosctx, 1, status)
        enddo
        call ual_end_action(aosctx, status)
+    else
+       write(*,*) "ERROR! with field "//<xsl:value-of select="$fieldpath"/>//" from context:"
+       call ual_print_context(<xsl:value-of select="$contextvar"/>)
+       call ual_end_action(<xsl:value-of select="$contextvar"/>, status)
+       return
     endif
   </xsl:when>
 
