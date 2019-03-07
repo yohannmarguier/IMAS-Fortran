@@ -1,4 +1,4 @@
-# You should have already installed imas and loaded it (IMAS_PREFIX variable) before running "make -f Makefile-local check".
+# You should have already installed imas and loaded it (IMAS_PREFIX variable) before running "make -f Makefile-ext check".
 # Until the testSuite is made modular (one test program per IDS), it is recommended to avoid running the IFORT case (huge source file, takes ages to compile)
 # To detect if an error has been reported, search for "ERROR:" strings in the result file (fortraninterface/tests/generator/gfortran_testSuite.results)
 

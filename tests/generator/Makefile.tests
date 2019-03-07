@@ -1,7 +1,7 @@
 
 # Please do not run make on this file directly.
 ifeq (1,$(words $(MAKEFILE_LIST)))
-  $(error Do not run make on this file directly, use Makefile or Makefile-local)
+  $(error Do not run make on this file directly, use Makefile or Makefile-ext)
 endif
 
 # Require explicit target, do not assume make all
