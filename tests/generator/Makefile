@@ -10,7 +10,7 @@ $(warning UAL_BUILD variable unset, probably not running 'make ual_test' from th
 endif
 
 ifeq ("no","$(strip $(IMAS_FORTRAN))")
-all sources sources_install install clean clean-src:
+all sources sources_install install clean clean-src check test:
 	$(warning "Ignoring fortraninterface (IMAS_FORTRAN=no).")
 else
 

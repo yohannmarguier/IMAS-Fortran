@@ -11,7 +11,7 @@ SO_NUM=4
 
 
 ifeq ("no","$(strip $(IMAS_FORTRAN))")
-all sources sources_install install clean clean-src:
+all sources sources_install install clean clean-src check test:
 	$(warning "Ignoring fortraninterface (IMAS_FORTRAN=no).")
 else
 
@@ -198,20 +198,20 @@ gfortran_install: $(IDSOBJECTS_gfortran) libimas-gfortran.dll libimas-gfortran.l
 	done
 endif
 
-clean: pkgconfig_clean id_g95_clean id_gfortran_clean id_ifort_clean id_pgi_clean
+clean: pkgconfig_clean id_g95_clean id_gfortran_clean id_ifort_clean id_pgi_clean check-clean
 	$(RM) -r *.o *.mod *.so* *~ g95/ gfortran/ pgi/ ifort/ *.a *.lib *.dll
 
-clean-src: clean id_f90_clean-src
+clean-src: clean id_f90_clean-src check-clean-src
 	$(RM) $(SOURCES)
 	$(RM) ids_schemas.f90  
 
-test:
+check test:
 	$(MAKE) -C tests/generator test
 
-test-clean:
+check-clean test-clean:
 	$(MAKE) -C tests/generator clean
 
-test-clean-src:
+check-clean-src test-clean-src:
 	$(MAKE) -C tests/generator clean-src
 
 

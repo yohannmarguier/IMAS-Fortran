@@ -6,7 +6,7 @@ endif
 
 # Require explicit target, do not assume make all
 help:
-	$(error Specify a target to run, e.g. make test)
+	$(error Specify a target to run, e.g. make check)
 
 ifneq ("no","$(strip $(SYS_WIN))")
 	JAVA = $(JAVA_HOME)/bin/java
