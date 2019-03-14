@@ -46,7 +46,7 @@ INCDIR_gfortran = -I$(MODDIR_gfortran)
 
 FC_nagfor      = nagfor
 MODDIR_nagfor   = nagfor
-FCFLAGS_nagfor    = -O0 -D__USE_XOPEN2K8 -double -kind=byte -PIC -mdir ./$(MODDIR_nagfor) -g
+FCFLAGS_nagfor    = -O0 -D__USE_XOPEN2K8 -free -w=unused -kind=byte -r8 -PIC -mdir ./$(MODDIR_nagfor) -g 
 INCDIR_nagfor   = -I$(MODDIR_nagfor)
 
 FC_pgi         = pgf90
@@ -362,7 +362,7 @@ $(filter %_deallocate_struct_gfortran.o,$(IDSOBJECTS)): %_gfortran.o:%.f90 ids_s
 LIBFILES_nagfor = ids_schemas_nagfor.o ual_defs_nagfor.o ual_low_level_wrap_nagfor.o utilities_copy_struct_nagfor.o utilities_deallocate_struct_nagfor.o utilities_put_struct_nagfor.o utilities_put_slice_struct_nagfor.o utilities_get_struct_nagfor.o $(IDSOBJECTS_nagfor) ids_routines_nagfor.o $(DEP_nagfor)
 
 libimas-nagfor-$(DD_GIT_DESCRIBE).so.$(SO_NUM): $(LIBFILES_nagfor)
-	$(FC_nagfor) $(FCFLAGS_nagfor) -o $@ -shared -Wl,-soname,$@ $^ $(LIBS)
+	$(FC_nagfor) $(FCFLAGS_nagfor) -o $@ -Wl,-Wl,,-shared -Wl,-Wl,,-soname,,$@ $^ $(LIBS)
 libimas-nagfor-$(DD_GIT_DESCRIBE).so: %:%.$(SO_NUM)
 	$(LN_S) $< $@
 libimas-nagfor.so:libimas-nagfor-$(DD_GIT_DESCRIBE).so
