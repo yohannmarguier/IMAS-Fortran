@@ -18,6 +18,6 @@ FC_ifort=ifort
 COPTS_ifort = -g -r8 -assume no2underscore  -fPIC `pkg-config imas-ifort --cflags` -shared-intel
 LIBS_ifort= `pkg-config imas-ifort imas-lowlevel --libs` -lm
 
-IDSDEF = $(IMAS_PREFIX)/include/IDSDef.xml
+IDSDEF = $(IMAS_PREFIX)/lowlevel/IDSDef.xml
 
 include Makefile.tests
