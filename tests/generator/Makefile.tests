@@ -1,14 +1,18 @@
 
 # Please do not run make on this file directly.
 ifeq (1,$(words $(MAKEFILE_LIST)))
-  $(error Do not run make on this file directly, use Makefile or Makefile-local)
+  $(error Do not run make on this file directly, use Makefile or Makefile-ext)
 endif
 
 # Require explicit target, do not assume make all
 help:
-	$(error Specify a target to run, e.g. make test)
+	$(error Specify a target to run, e.g. make check)
 
-
+ifneq ("no","$(strip $(SYS_WIN))")
+	JAVA = $(JAVA_HOME)/bin/java
+else
+	JAVA = java
+endif
 	
 # Make NEW_LOW_LEVEL=yes default
 NEW_LOW_LEVEL?=yes
@@ -65,7 +69,15 @@ $(TEST_SRC_DIR) $(IFORT_BIN_DIR) $(GFORTRAN_BIN_DIR) $(IFORT_BUILD_DIR) $(GFORTR
 	$(mkdir_p) $@
 
 .PHONY: clean clean-src
-clean: ifort_clean gfortran_clean
+
+
+ifneq ("no","$(strip $(IMAS_GFORTRAN))")
+clean: gfortran_clean
+endif
+ifneq ("no","$(strip $(IMAS_IFORT))")
+clean: ifort_clean
+endif
+clean:
 	$(RM) -r idspath-*
 	$(RM) -r *.log
 
@@ -74,7 +86,7 @@ clean-src: clean
 
 
 #################################################
-#                 INIT: SOURCE GENERATION
+#				 INIT: SOURCE GENERATION
 #################################################
 # Test if all generated sources are found to exist as files and
 # gracefully skip generation if not needed.
@@ -87,14 +99,17 @@ endif
 # Target sources is reserved (used by user to build sources only)
 # Need a single target to prevent parallel building:
 sources_: IDSDef2TestSuite.xsl $(IDSDEF) | saxonicajar $(TEST_SRC_DIR)
-	java net.sf.saxon.Transform newLowLevel=$(NEW_LOW_LEVEL) -t -s:$(IDSDEF) -xsl:IDSDef2TestSuite.xsl
+	$(JAVA) net.sf.saxon.Transform newLowLevel=$(NEW_LOW_LEVEL) -t -s:$(IDSDEF) -xsl:IDSDef2TestSuite.xsl
 
 #################################################
-#              BUILD
+#			  BUILD
 #################################################
 
 #------------------------- gfortran ----------------------------
+ifneq ("no","$(strip $(IMAS_GFORTRAN))")
 .PHONY: gfortran_clean
+endif
+
 gfortran_clean:
 	$(RM) -r $(GFORTRAN_BIN_DIR)
 	$(RM) -r $(GFORTRAN_BUILD_DIR)
@@ -146,7 +161,10 @@ gfortran_initpulse: initpulse.f90
 
 
 #------------------------- ifort ----------------------------
+ifneq ("no","$(strip $(IMAS_IFORT))")
 .PHONY: ifort_clean
+endif
+
 ifort_clean:
 	$(RM) -r $(IFORT_BIN_DIR)
 	$(RM) -r $(IFORT_BUILD_DIR)
@@ -197,9 +215,15 @@ ifort_initpulse: initpulse.f90
 
 
 #################################################
-#              TEST
+#			  TEST
 #################################################
-.PHONY: test ifort_test gfortran_test
+.PHONY: test
+ifneq ("no","$(strip $(IMAS_GFORTRAN))")
+.PHONY: gfortran_test
+endif
+ifneq ("no","$(strip $(IMAS_IFORT))")
+.PHONY: ifort_test
+endif
 
 # Canned recipe that runs prerequisites as tests and produces TAP-like output
 define run-tests
