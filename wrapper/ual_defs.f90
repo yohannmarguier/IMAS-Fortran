@@ -50,7 +50,6 @@ module ual_defs
   integer, parameter :: CONTEXT_ERR        = ERR_0-1
   integer, parameter :: BACKEND_ERR        = ERR_0-2
   integer, parameter :: LOWLEVEL_ERR       = ERR_0-3
-  integer, parameter :: NODATA_ERR         = ERR_0-4
 
 end module ual_defs
 
