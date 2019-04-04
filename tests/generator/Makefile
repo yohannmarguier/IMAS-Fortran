@@ -18,7 +18,7 @@ else
 FC_gfortran = gfortran
 COPTS_gfortran = -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none -I$(UAL_BUILD)/fortraninterface/gfortran
 ifneq ("no","$(strip $(SYS_WIN))")
-	LIBS_gfortran = -L$(UAL_BUILD)/lowlevel -L$(UAL_BUILD)/fortraninterface $(UAL_BUILD)/fortraninterface/libimas-gfortran.lib $(UAL_BUILD)/lib/libimas.lib -lm -lstdc++
+	LIBS_gfortran = -L$(UAL_BUILD)/lowlevel -L$(UAL_BUILD)/fortraninterface $(UAL_BUILD)/fortraninterface/libimas-gfortran.lib $(UAL_BUILD)/lowlevel/libimas.lib -lm -lstdc++
 else
 	LIBS_gfortran = -L$(UAL_BUILD)/lowlevel -L$(UAL_BUILD)/fortraninterface -limas-gfortran -limas -lm
 endif
