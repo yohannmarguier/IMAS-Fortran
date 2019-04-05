@@ -53,7 +53,7 @@ INCDIR_ifort    = -I$(MODDIR_ifort)
 
 # Windows
 ifneq ("no","$(strip $(SYS_WIN))")
-LIBS		= $(IMAS_PREFIX)/lib/libimas.lib
+LIBS		= $(IMAS_PREFIX)/lowlevel/libimas.lib
 LIBS		+= -lm -lstdc++
 JAVA		= $(JAVA_HOME)/bin/java
 else
