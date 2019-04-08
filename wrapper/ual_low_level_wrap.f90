@@ -1436,10 +1436,10 @@ contains
        do i=1,size
           data(i:i) = tmpdata(i)
        end do
-       !if (size.gt.0) then
-       call c_free(C_LOC(tmpdata))
-       nullify(tmpdata)
-       !endif
+       if (size.gt.0) then
+          call c_free(C_LOC(tmpdata))
+          nullify(tmpdata)
+       endif
        dim1 = size
     end if
   end subroutine get_string
@@ -1537,8 +1537,10 @@ contains
           data(i) = trim(tmpstr)
        end do
        dim1 = size1
-       call c_free(C_LOC(tmpdata))
-       nullify(tmpdata)
+       if (size1.gt.0) then
+          call c_free(C_LOC(tmpdata))
+          nullify(tmpdata)
+       end if
     end if
   end subroutine get_vect1D_string
 

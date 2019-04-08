@@ -26,7 +26,7 @@ CONTAINS
     character(len=255) :: buffer
     integer :: bufferSize, stat
     
-    call getenv("TESTHOMOGENEOUS", buffer)
+    call get_environment_variable("TESTHOMOGENEOUS", buffer)
     bufferSize = LEN_TRIM(buffer)
     if(bufferSize < 1) then
        homogeneousTime = 1
