@@ -1,0 +1,19 @@
+
+#------------------------- gfortran ----------------------------
+FC_gfortran = gfortran
+COPTS_gfortran = -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none -I$(UAL_BUILD)/fortraninterface/gfortran
+LIBS_gfortran = -L$(UAL_BUILD)/lowlevel -L$(UAL_BUILD)/fortraninterface -limas-gfortran -limas -lm
+
+#------------------------- ifort ----------------------------
+FC_ifort = ifort
+COPTS_ifort = -g -r8 -assume no2underscore  -fPIC -I$(UAL_BUILD)/fortraninterface/ifort -shared-intel
+LIBS_ifort = -L$(UAL_BUILD)/lowlevel -L$(UAL_BUILD)/fortraninterface -limas-ifort -limas -lm
+
+IFORT_BIN_FILES=$(patsubst %.f90,$(IFORT_BIN_DIR)/%.exe,$(notdir $(TEST_IDS_FILES)))
+IFORT_BIN_FILES_PUT=$(patsubst %.f90,$(IFORT_BIN_DIR)/%.exe,$(notdir $(TEST_IDS_FILES_PUT)))
+IFORT_BIN_FILES_GET=$(patsubst %.f90,$(IFORT_BIN_DIR)/%.exe,$(notdir $(TEST_IDS_FILES_GET)))
+
+GFORTRAN_BIN_FILES=$(patsubst %.f90,$(GFORTRAN_BIN_DIR)/%.exe,$(notdir $(TEST_IDS_FILES)))
+GFORTRAN_BIN_FILES_PUT=$(patsubst %.f90,$(GFORTRAN_BIN_DIR)/%.exe,$(notdir $(TEST_IDS_FILES_PUT)))
+GFORTRAN_BIN_FILES_GET=$(patsubst %.f90,$(GFORTRAN_BIN_DIR)/%.exe,$(notdir $(TEST_IDS_FILES_GET)))
+

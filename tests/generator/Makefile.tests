@@ -8,12 +8,6 @@ endif
 help:
 	$(error Specify a target to run, e.g. make check)
 
-ifneq ("no","$(strip $(SYS_WIN))")
-	JAVA = $(JAVA_HOME)/bin/java
-else
-	JAVA = java
-endif
-	
 # Make NEW_LOW_LEVEL=yes default
 NEW_LOW_LEVEL?=yes
 
@@ -47,14 +41,6 @@ IDS_SOURCES += $(patsubst %,$(TEST_SRC_DIR)/%_init_static.f90,$(IDSNAMES))
 TEST_IDS_FILES_PUT = $(patsubst %,$(TEST_SRC_DIR)/%_put_test.f90,$(IDSNAMES))
 TEST_IDS_FILES_GET = $(patsubst %,$(TEST_SRC_DIR)/%_get_test.f90,$(IDSNAMES))
 IDS_SOURCES += $(TEST_IDS_FILES_PUT) $(TEST_IDS_FILES_GET)
-
-IFORT_BIN_FILES=$(patsubst %.f90,$(IFORT_BIN_DIR)/%.exe,$(notdir $(TEST_IDS_FILES)))
-IFORT_BIN_FILES_PUT=$(patsubst %.f90,$(IFORT_BIN_DIR)/%.exe,$(notdir $(TEST_IDS_FILES_PUT)))
-IFORT_BIN_FILES_GET=$(patsubst %.f90,$(IFORT_BIN_DIR)/%.exe,$(notdir $(TEST_IDS_FILES_GET)))
-
-GFORTRAN_BIN_FILES=$(patsubst %.f90,$(GFORTRAN_BIN_DIR)/%.exe,$(notdir $(TEST_IDS_FILES)))
-GFORTRAN_BIN_FILES_PUT=$(patsubst %.f90,$(GFORTRAN_BIN_DIR)/%.exe,$(notdir $(TEST_IDS_FILES_PUT)))
-GFORTRAN_BIN_FILES_GET=$(patsubst %.f90,$(GFORTRAN_BIN_DIR)/%.exe,$(notdir $(TEST_IDS_FILES_GET)))
 
 
 GFORTRAN_TESTS = gfortran_initpulse_test gfortran_test

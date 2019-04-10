@@ -1,0 +1,118 @@
+sources_install: $(SOURCES) ids_schemas.f90 id_f90_sources_install
+	$(INSTALL_DATA) $(SOURCES) ids_schemas.f90 $(datadir)/src/fortraninterface
+
+pgi_install: $(IDSOBJECTS_pgi) libimas-pgi.a_install libimas-pgi.so_install | $(includedir)/pgi
+	$(INSTALL_DATA) $(MODDIR_pgi)/*.mod $(includedir)/pgi
+g95_install: $(IDSOBJECTS_g95) libimas-g95.a_install libimas-g95.so_install | $(includedir)/g95
+	$(INSTALL_DATA) $(MODDIR_g95)/*.mod $(includedir)/g95
+ifort_install: $(IDSOBJECTS_ifort) libimas-ifort.a_install libimas-ifort.so_install | $(includedir)/ifort
+	$(INSTALL_DATA) $(MODDIR_ifort)/*.mod $(includedir)/ifort
+nagfor_install: $(IDSOBJECTS_nagfor) libimas-nagfor.a_install libimas-nagfor.so_install | $(includedir)/nagfor
+	$(INSTALL_DATA) $(MODDIR_nagfor)/*.mod $(includedir)/nagfor
+gfortran_install: $(IDSOBJECTS_gfortran) libimas-gfortran.a_install libimas-gfortran.so_install | $(includedir)/gfortran
+	$(INSTALL_DATA) $(MODDIR_gfortran)/*.mod $(includedir)/gfortran
+
+#--------------------- g95 --------------
+libimas-g95-$(DD_GIT_DESCRIBE).so.$(SO_NUM): $(LIBFILES_g95)
+	$(FC_g95) $(FCFLAGS_g95) -o $@ -shared -Wl,-soname,$@ $^ $(LIBS)
+libimas-g95-$(DD_GIT_DESCRIBE).so: %:%.$(SO_NUM)
+	$(LN_S) $< $@
+libimas-g95.so:libimas-g95-$(DD_GIT_DESCRIBE).so
+	$(LN_S) $< $@
+libimas-g95.so_install: %.so_install:%-$(DD_GIT_DESCRIBE).so.$(SO_NUM) | $(libdir)
+	$(INSTALL_DATA) $< $(libdir)
+	$(LN_S) $< $(libdir)/$*-$(DD_GIT_DESCRIBE).so
+	$(LN_S) $< $(libdir)/$*.so
+
+# Static library
+libimas-g95-$(DD_GIT_DESCRIBE).a: $(LIBFILES_g95)
+	$(AR) rvs $@ $^
+libimas-g95.a:libimas-g95-$(DD_GIT_DESCRIBE).a
+	$(LN_S) $< $@
+libimas-g95.a_install: %.a_install:%-$(DD_GIT_DESCRIBE).a | $(libdir)
+	$(INSTALL_DATA) $< $(libdir)
+	$(LN_S) $< $(libdir)/$*.a
+
+#--------------------- gfortran --------------
+libimas-gfortran-$(DD_GIT_DESCRIBE).so.$(SO_NUM): $(LIBFILES_gfortran)
+	$(FC_gfortran) $(FCFLAGS_gfortran) -o $@ -shared -Wl,-soname,$@ $^ $(LIBS)
+libimas-gfortran-$(DD_GIT_DESCRIBE).so: %:%.$(SO_NUM)
+	$(LN_S) $< $@
+libimas-gfortran.so:libimas-gfortran-$(DD_GIT_DESCRIBE).so
+	$(LN_S) $< $@
+libimas-gfortran.so_install: %.so_install:%-$(DD_GIT_DESCRIBE).so.$(SO_NUM) | $(libdir)
+	$(INSTALL_DATA) $< $(libdir)
+	$(LN_S) $< $(libdir)/$*-$(DD_GIT_DESCRIBE).so
+	$(LN_S) $< $(libdir)/$*.so
+
+# Static library
+libimas-gfortran-$(DD_GIT_DESCRIBE).a: $(LIBFILES_gfortran)
+	$(AR) rvs $@ $^
+libimas-gfortran.a:libimas-gfortran-$(DD_GIT_DESCRIBE).a
+	$(LN_S) $< $@
+libimas-gfortran.a_install: %.a_install:%-$(DD_GIT_DESCRIBE).a | $(libdir)
+	$(INSTALL_DATA) $< $(libdir)
+	$(LN_S) $< $(libdir)/$*.a
+
+#--------------------- nagfor --------------
+libimas-nagfor-$(DD_GIT_DESCRIBE).so.$(SO_NUM): $(LIBFILES_nagfor)
+	$(FC_nagfor) $(FCFLAGS_nagfor) -o $@ -Wl,-shared -Wl,-Wl,,-soname,,$@ $^ $(LIBS)
+libimas-nagfor-$(DD_GIT_DESCRIBE).so: %:%.$(SO_NUM)
+	$(LN_S) $< $@
+libimas-nagfor.so:libimas-nagfor-$(DD_GIT_DESCRIBE).so
+	$(LN_S) $< $@
+libimas-nagfor.so_install: %.so_install:%-$(DD_GIT_DESCRIBE).so.$(SO_NUM) | $(libdir)
+	$(INSTALL_DATA) $< $(libdir)
+	$(LN_S) $< $(libdir)/$*-$(DD_GIT_DESCRIBE).so
+	$(LN_S) $< $(libdir)/$*.so
+
+# Static library
+libimas-nagfor-$(DD_GIT_DESCRIBE).a: $(LIBFILES_nagfor)
+	$(AR) rvs $@ $^
+libimas-nagfor.a:libimas-nagfor-$(DD_GIT_DESCRIBE).a
+	$(LN_S) $< $@
+libimas-nagfor.a_install: %.a_install:%-$(DD_GIT_DESCRIBE).a | $(libdir)
+	$(INSTALL_DATA) $< $(libdir)
+	$(LN_S) $< $(libdir)/$*.a
+
+#--------------------- pgi --------------
+libimas-pgi-$(DD_GIT_DESCRIBE).so.$(SO_NUM): $(LIBFILES_pgi)
+	$(FC_pgi) $(FCFLAGS_pgi) -o $@ -shared -Wl,-soname,$@ $^ $(LIBS)
+libimas-pgi-$(DD_GIT_DESCRIBE).so: %:%.$(SO_NUM)
+	$(LN_S) $< $@
+libimas-pgi.so:libimas-pgi-$(DD_GIT_DESCRIBE).so
+	$(LN_S) $< $@
+libimas-pgi.so_install: %.so_install:%-$(DD_GIT_DESCRIBE).so.$(SO_NUM) | $(libdir)
+	$(INSTALL_DATA) $< $(libdir)
+	$(LN_S) $< $(libdir)/$*-$(DD_GIT_DESCRIBE).so
+	$(LN_S) $< $(libdir)/$*.so
+
+# Static library
+libimas-pgi-$(DD_GIT_DESCRIBE).a: $(LIBFILES_pgi)
+	$(AR) rvs $@ $^
+libimas-pgi.a:libimas-pgi-$(DD_GIT_DESCRIBE).a
+	$(LN_S) $< $@
+libimas-pgi.a_install: %.a_install:%-$(DD_GIT_DESCRIBE).a | $(libdir)
+	$(INSTALL_DATA) $< $(libdir)
+	$(LN_S) $< $(libdir)/$*.a
+
+#--------------------- ifort --------------
+libimas-ifort-$(DD_GIT_DESCRIBE).so.$(SO_NUM): $(LIBFILES_ifort)
+	$(FC_ifort) $(FCFLAGS_ifort) -o $@ -shared -Wl,-soname,$@ $^ $(LIBS)
+libimas-ifort-$(DD_GIT_DESCRIBE).so: %:%.$(SO_NUM)
+	$(LN_S) $< $@
+libimas-ifort.so:libimas-ifort-$(DD_GIT_DESCRIBE).so
+	$(LN_S) $< $@
+libimas-ifort.so_install: %.so_install:%-$(DD_GIT_DESCRIBE).so.$(SO_NUM) | $(libdir)
+	$(INSTALL_DATA) $< $(libdir)
+	$(LN_S) $< $(libdir)/$*-$(DD_GIT_DESCRIBE).so
+	$(LN_S) $< $(libdir)/$*.so
+
+# Static library
+libimas-ifort-$(DD_GIT_DESCRIBE).a: $(LIBFILES_ifort)
+	$(AR) rvs $@ $^
+libimas-ifort.a:libimas-ifort-$(DD_GIT_DESCRIBE).a
+	$(LN_S) $< $@
+libimas-ifort.a_install: %.a_install:%-$(DD_GIT_DESCRIBE).a | $(libdir)
+	$(INSTALL_DATA) $< $(libdir)
+	$(LN_S) $< $(libdir)/$*.a

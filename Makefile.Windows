@@ -1,0 +1,50 @@
+ifneq ("no","$(strip $(IMAS_G95))")
+$(error "Ignoring fortraninterface for Windows (IMAS_G95=yes).")
+endif
+ifneq ("no","$(strip $(IMAS_NAGFOR))")
+$(error "Ignoring fortraninterface for Windows (IMAS_NAGFOR=yes).")
+endif
+ifneq ("no","$(strip $(IMAS_PGI))")
+$(error "Ignoring fortraninterface for Windows (IMAS_PGI=yes).")
+endif
+ifneq ("no","$(strip $(IMAS_IFORT))")
+$(error "Ignoring fortraninterface for Windows (IMAS_IFORT=yes).")
+endif
+
+# Windows
+LIBS		= ../lowlevel/libimas.lib
+LIBS		+= -lm -lstdc++
+JAVA		= $(JAVA_HOME)/bin/java
+
+ifneq ("no","$(strip $(IMAS_MDSPLUS))")
+LIBS	+= -L$(MDSPLUS_DIR)/lib
+LIBS	+= $(MDSPLUS_DIR)/lib/XTreeShr.a
+LIBS	+= $(MDSPLUS_DIR)/lib/MdsObjectsCppShr.a
+LIBS	+= $(MDSPLUS_DIR)/lib/TdiShr.a
+LIBS	+= $(MDSPLUS_DIR)/lib/TreeShr.a
+LIBS	+= $(MDSPLUS_DIR)/lib/MdsIpShr.a
+LIBS	+= $(MDSPLUS_DIR)/lib/MdsShr.a
+LIBS	+= -lxml2 -lws2_32 -ldl -liphlpapi -lstdc++
+endif
+
+ifneq ("no","$(strip $(IMAS_UDA))")
+LIBS	+= -L$(UDA_HOME)/lib
+LIBS	+= $(UDA_HOME)/lib/libuda_cpp.a
+LIBS	+= $(UDA_HOME)/lib/libportablexdr.a
+LIBS	+= -lws2_32 -lssl -lcrypto -lstdc++
+endif
+ 
+ifneq ("no","$(strip $(IMAS_HDF5))")
+LIBS	+= -L$(HDF5_HOME)/lib
+LIBS	+= $(HDF5_HOME)/lib/libhdf5.a -ldl -lz -lstdc++
+endif
+
+ifneq ("no","$(strip $(IMAS_GFORTRAN))")
+TARGETS += libimas-gfortran.dll libimas-gfortran.lib
+TARGETS += id_gfortran_all
+PC_FILES += imas-gfortran.pc
+PC_FILES_VAR += imas-gfortran-$(DD_GIT_DESCRIBE).pc
+PC_FILES_ALT += $(ID_gfortran_PC_FILES_2)
+INSTALL_TARGETS += gfortran_install id_gfortran_install
+IDSOBJECTS_gfortran=$(addsuffix _gfortran.o,$(IDSNAMES_FUNC))
+endif
