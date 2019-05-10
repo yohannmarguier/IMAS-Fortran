@@ -763,13 +763,13 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   character(len=300) :: timepath
   character(*), parameter :: path = ''
 
+  if (IDS%ids_properties%homogeneous_time.EQ.ids_int_invalid) then
+     write(*,*) "ERROR : the IDS%ids_properties%homogeneous_time property of this IDS must be provided"
+     return
+  endif
   homogeneous = IDS%ids_properties%homogeneous_time.EQ.1
-  !if (.not.homogeneous) then
-  !   write(*,*) "ERROR : the PUT_SLICE routine works only for homogeneous time IDS: check ids_properties%homogeneous_time"
-  !   return
-  !endif
-  if (.NOT.(associated(IDS%time))) then
-     write(*,*) "ERROR : the ids%time vector of an homogeneous_time IDS must be associated"
+  if ((homogeneous).AND.(.NOT.(associated(IDS%time)))) then
+     write(*,*) "ERROR : the IDS%time vector of an homogeneous_time IDS must be associated"
      return
   endif
 
