@@ -30,6 +30,7 @@ use ids_schemas
 use ual_low_level_wrap
 use utilities_copy_struct
 use utilities_deallocate_struct
+use specific_validate_struct
 
 <xsl:for-each select="IDS">
 use <xsl:value-of select="@name"/>_put_struct
@@ -567,7 +568,11 @@ end interface
 subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS, retstatus)
   use ids_schemas
   use ual_low_level_wrap
-  use <xsl:value-of select="@name"/>_delete  
+  use <xsl:value-of select="@name"/>_delete
+  <xsl:if test="@specific_validation_rules='yes'">
+  use specific_validate_struct
+  </xsl:if>
+
   implicit none
 
   integer(ids_int), optional, intent(out) :: retstatus 
@@ -783,6 +788,10 @@ end interface
 subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS, retstatus)
   use ids_schemas
   use ual_low_level_wrap
+  <xsl:if test="@specific_validation_rules='yes'">
+  use specific_validate_struct
+  </xsl:if>
+
   implicit none
 
   integer(ids_int), intent(out), optional :: retstatus
@@ -825,6 +834,10 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
         STOP 
      end if
   end if
+
+  <xsl:if test="@specific_validation_rules='yes'">
+  call ids_validate(IDS)
+  </xsl:if>
 
   timedparent=.false.
   <xsl:apply-templates select="./field" mode="PUT_FIELD">
