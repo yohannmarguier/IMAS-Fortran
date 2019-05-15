@@ -598,6 +598,10 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
      return
   endif
 
+  <xsl:if test="@specific_validation_rules='yes'">
+  call ids_validate(IDS)
+  </xsl:if>
+  
   call ual_begin_global_action(pulsectx, name, WRITE_OP, opctx) 
   if (opctx.lt.0) then
      write(*,*) 'Error in ual_begin_global_action (from ids_put for IDS <xsl:value-of select="@name"/>)'
