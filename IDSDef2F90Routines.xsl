@@ -50,9 +50,9 @@ character*(*) :: path
 real(ids_real), pointer :: time(:)
 integer(ids_int) :: dim1
 
-call begin_IDS_get(pulsectx, path, opctx) 
+call ual_begin_global_action(pulsectx, path, READ_OP, opctx) 
 if (opctx.lt.0) then
-   STOP 'Error in begin_ids_get from ids_get_times'
+   STOP 'Error in ual_begin_global_action from ids_get_times'
 end if
 
 call get_vect1d_double(opctx, "time", "time", time, dim1, status)
@@ -578,9 +578,9 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
      return
   endif
 
-  call begin_ids_put_timed(pulsectx, name, opctx)
+  call ual_begin_global_action(pulsectx, name, WRITE_OP, opctx) 
   if (opctx.lt.0) then
-     STOP 'Error in begin_ids_put_timed (from ids_put for IDS <xsl:value-of select="@name"/>)'
+     STOP 'Error in ual_begin_global_action (from ids_put for IDS <xsl:value-of select="@name"/>)'
   end if
 
   timedparent=.false.
@@ -773,11 +773,10 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
      return
   endif
 
-  timepath = "time"
-  call begin_ids_put_slice(pulsectx, name, IDS%time(1), opctx)
+  call ual_begin_slice_action(pulsectx, name, WRITE_OP, UNDEFINED_TIME, UNDEFINED_INTERP, opctx)
   if (opctx.lt.0) then
      !! error when trying to get new ctx => stop!
-     STOP 'Error in begin_ids_put_slice (from ids_put_slice for IDS <xsl:value-of select="@name"/>)'
+     STOP 'Error in ual_begin_slice_action (from ids_put_slice for IDS <xsl:value-of select="@name"/>)'
   end if
 
   timedparent=.false.
@@ -966,10 +965,10 @@ subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   character(len=300) :: timepath
   character(*), parameter :: path = ''
 
-  call begin_IDS_get(pulsectx, name, opctx) 
+  call ual_begin_global_action(pulsectx, name, READ_OP, opctx) 
   if (opctx.lt.0) then
      !! error when trying to get new ctx => stop!
-     STOP 'Error in begin_ids_get (from ids_get for IDS <xsl:value-of select="@name"/>)'
+     STOP 'Error in ual_begin_global_action (from ids_get for IDS <xsl:value-of select="@name"/>)'
   end if
 
   timedparent=.false.
@@ -1071,10 +1070,10 @@ subroutine get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   character(len=300) :: timepath
   character(*), parameter :: path = ''
 
-  call begin_ids_get_slice(pulsectx, name, twant, interpol, opctx)
+  call ual_begin_slice_action(pulsectx, name, READ_OP, twant, interpol, opctx) 
   if (opctx.lt.0) then
      !! error when trying to get new ctx => stop!
-     STOP 'Error in begin_ids_get_slice (from ids_get_slice for IDS <xsl:value-of select="@name"/>)'
+     STOP 'Error in ual_begin_slice_action (from ids_get_slice for IDS <xsl:value-of select="@name"/>)'
   end if
 
   timedparent=.false.
@@ -1139,7 +1138,7 @@ end module
 	<xsl:with-param name ="field_path" select="$updated_field_path"/>
       </xsl:apply-templates>
     </xsl:when>
-    <xsl:otherwise>call delete_data(opctx, <xsl:value-of select="$updated_field_path"/>, status)
+    <xsl:otherwise>call ual_delete_data(opctx, <xsl:value-of select="$updated_field_path"/>, status)
     </xsl:otherwise>
   </xsl:choose>
 </xsl:template>
