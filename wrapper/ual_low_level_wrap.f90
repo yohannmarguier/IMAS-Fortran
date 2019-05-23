@@ -1193,10 +1193,13 @@ contains
     integer, intent(out) :: dim1, status
     type(C_PTR) :: cptr
     integer(C_INT) :: csize
+    cptr = C_NULL_PTR
     status = c_getVect1DChar(opCtx, trim(fieldPath)//C_NULL_CHAR, &
          trim(timebasePath)//C_NULL_CHAR, cptr, csize)
     if (status.eq.0) then
-       call C_F_POINTER(cptr, data, (/csize/))
+       if (C_ASSOCIATED(cptr)) then
+          call C_F_POINTER(cptr, data, (/csize/))
+       end if
        dim1 = csize
     end if
   end subroutine get_vect1D_char
@@ -1234,10 +1237,13 @@ contains
     integer, intent(out) :: dim1, status
     type(C_PTR) :: cptr
     integer(C_INT) :: csize1
+    cptr = C_NULL_PTR
     status = c_getVect1DInt(opCtx, trim(fieldPath)//C_NULL_CHAR, &
          trim(timebasePath)//C_NULL_CHAR, cptr, csize1)
     if (status.eq.0) then
-       call C_F_POINTER(cptr, data, (/csize1/))
+       if (C_ASSOCIATED(cptr)) then
+          call C_F_POINTER(cptr, data, (/csize1/))
+       end if
        dim1 = csize1
     end if
   end subroutine get_vect1d_int
@@ -1251,10 +1257,13 @@ contains
     integer, intent(out) :: dim1, status
     type(C_PTR) :: cptr
     integer(C_INT) :: csize1
+    cptr = C_NULL_PTR
     status = c_getVect1DDouble(opCtx, trim(fieldPath)//C_NULL_CHAR, &
          trim(timebasePath)//C_NULL_CHAR, cptr, csize1)
     if (status.eq.0) then
-       call C_F_POINTER(cptr, data, (/csize1/))
+       if (C_ASSOCIATED(cptr)) then
+          call C_F_POINTER(cptr, data, (/csize1/))
+       end if
        dim1 = csize1
     end if
   end subroutine get_vect1d_double
@@ -1268,10 +1277,13 @@ contains
     integer, intent(out) :: dim1, status
     type(C_PTR) :: cptr
     integer(C_INT) :: csize1
+    cptr = C_NULL_PTR
     status = c_getVect1DComplex(opCtx, trim(fieldPath)//C_NULL_CHAR, &
          trim(timebasePath)//C_NULL_CHAR, cptr, csize1)
     if (status.eq.0) then
-       call C_F_POINTER(cptr, data, (/csize1/))
+       if (C_ASSOCIATED(cptr)) then
+          call C_F_POINTER(cptr, data, (/csize1/))
+       end if
        dim1 = csize1
     end if
   end subroutine get_vect1d_complex
@@ -1286,11 +1298,14 @@ contains
     integer, intent(out) :: dim1, dim2, status
     type(C_PTR) :: cptr
     integer(C_INT) :: csize1, csize2
+    cptr = C_NULL_PTR
     status = c_getVect2DChar(opCtx, trim(fieldPath)//C_NULL_CHAR, &
          trim(timebasePath)//C_NULL_CHAR, cptr, &
          csize1, csize2)
     if (status.eq.0) then
-       call C_F_POINTER(cptr, data, (/csize1,csize2/))
+       if (C_ASSOCIATED(cptr)) then
+          call C_F_POINTER(cptr, data, (/csize1,csize2/))
+       end if
        dim1 = csize1
        dim2 = csize2
     end if
@@ -1309,16 +1324,16 @@ contains
     call get_vect2D_char(opCtx, fieldPath, timebasePath, &
          tmpdata, size1, size2, status)
     if (status.eq.0) then
-       allocate(data(size1))
-       do i=1,size1
-          tmpstr = ' '
-          do j=1,size2
-             tmpstr(j:j) = tmpdata(i,j)
-          end do
-          data(i) = trim(tmpstr)
-       end do
-       dim1 = size1
        if (size1.gt.0) then
+          allocate(data(size1))
+          do i=1,size1
+             tmpstr = ' '
+             do j=1,size2
+                tmpstr(j:j) = tmpdata(i,j)
+             end do
+             data(i) = trim(tmpstr)
+          end do
+          dim1 = size1
           call c_free(C_LOC(tmpdata))
           nullify(tmpdata)
        end if
@@ -1335,11 +1350,14 @@ contains
     integer, intent(out) :: dim1, dim2, status
     type(C_PTR) :: cptr
     integer(C_INT) :: csize1, csize2
+    cptr = C_NULL_PTR
     status = c_getVect2DInt(opCtx, trim(fieldPath)//C_NULL_CHAR, &
          trim(timebasePath)//C_NULL_CHAR, cptr, &
          csize1, csize2)
     if (status.eq.0) then
-       call C_F_POINTER(cptr, data, (/csize1,csize2/))
+       if (C_ASSOCIATED(cptr)) then
+          call C_F_POINTER(cptr, data, (/csize1,csize2/))
+       end if
        dim1 = csize1
        dim2 = csize2
     end if
@@ -1355,11 +1373,14 @@ contains
     integer, intent(out) :: dim1, dim2, status
     type(C_PTR) :: cptr
     integer(C_INT) :: csize1, csize2
+    cptr = C_NULL_PTR
     status = c_getVect2DDouble(opCtx, trim(fieldPath)//C_NULL_CHAR, &
          trim(timebasePath)//C_NULL_CHAR, cptr, &
          csize1, csize2)
     if (status.eq.0) then
-       call C_F_POINTER(cptr, data, (/csize1,csize2/))
+       if (C_ASSOCIATED(cptr)) then
+          call C_F_POINTER(cptr, data, (/csize1,csize2/))
+       end if
        dim1 = csize1
        dim2 = csize2
     end if
@@ -1375,11 +1396,14 @@ contains
     integer, intent(out) :: dim1, dim2, status
     type(C_PTR) :: cptr
     integer(C_INT) :: csize1, csize2
+    cptr = C_NULL_PTR
     status = c_getVect2DComplex(opCtx, trim(fieldPath)//C_NULL_CHAR, &
          trim(timebasePath)//C_NULL_CHAR, cptr, &
          csize1, csize2)
     if (status.eq.0) then
-       call C_F_POINTER(cptr, data, (/csize1,csize2/))
+       if (C_ASSOCIATED(cptr)) then
+          call C_F_POINTER(cptr, data, (/csize1,csize2/))
+       end if
        dim1 = csize1
        dim2 = csize2
     end if
@@ -1395,11 +1419,14 @@ contains
     integer, intent(out) :: dim1, dim2, dim3, status
     type(C_PTR) :: cptr
     integer(C_INT) :: csize1, csize2, csize3
+    cptr = C_NULL_PTR
     status = c_getVect3DInt(opCtx, trim(fieldPath)//C_NULL_CHAR, &
          trim(timebasePath)//C_NULL_CHAR, cptr, &
          csize1, csize2, csize3)
     if (status.eq.0) then
-       call C_F_POINTER(cptr, data, (/csize1,csize2,csize3/))
+       if (C_ASSOCIATED(cptr)) then
+          call C_F_POINTER(cptr, data, (/csize1,csize2,csize3/))
+       end if
        dim1 = csize1
        dim2 = csize2
        dim3 = csize3
@@ -1416,11 +1443,14 @@ contains
     integer, intent(out) :: dim1, dim2, dim3, status
     type(C_PTR) :: cptr
     integer(C_INT) :: csize1, csize2, csize3
+    cptr = C_NULL_PTR
     status = c_getVect3DDouble(opCtx, trim(fieldPath)//C_NULL_CHAR, &
          trim(timebasePath)//C_NULL_CHAR, cptr, &
          csize1, csize2, csize3)
     if (status.eq.0) then
-       call C_F_POINTER(cptr, data, (/csize1,csize2,csize3/))
+       if (C_ASSOCIATED(cptr)) then
+          call C_F_POINTER(cptr, data, (/csize1,csize2,csize3/))
+       end if
        dim1 = csize1
        dim2 = csize2
        dim3 = csize3
@@ -1437,11 +1467,14 @@ contains
     integer, intent(out) :: dim1, dim2, dim3, status
     type(C_PTR) :: cptr
     integer(C_INT) :: csize1, csize2, csize3
+    cptr = C_NULL_PTR
     status = c_getVect3DComplex(opCtx, trim(fieldPath)//C_NULL_CHAR, &
          trim(timebasePath)//C_NULL_CHAR, cptr, &
          csize1, csize2, csize3)
     if (status.eq.0) then
-       call C_F_POINTER(cptr, data, (/csize1,csize2,csize3/))
+       if (C_ASSOCIATED(cptr)) then
+          call C_F_POINTER(cptr, data, (/csize1,csize2,csize3/))
+       end if
        dim1 = csize1
        dim2 = csize2
        dim3 = csize3
@@ -1458,11 +1491,14 @@ contains
     integer, intent(out) :: dim1, dim2, dim3, dim4, status
     type(C_PTR) :: cptr
     integer(C_INT) :: csize1, csize2, csize3, csize4
+    cptr = C_NULL_PTR
     status = c_getVect4DInt(opCtx, trim(fieldPath)//C_NULL_CHAR, &
          trim(timebasePath)//C_NULL_CHAR, cptr, &
          csize1, csize2, csize3, csize4)
     if (status.eq.0) then
-       call C_F_POINTER(cptr, data, (/csize1,csize2,csize3,csize4/))
+       if (C_ASSOCIATED(cptr)) then
+          call C_F_POINTER(cptr, data, (/csize1,csize2,csize3,csize4/))
+       end if
        dim1 = csize1
        dim2 = csize2
        dim3 = csize3
@@ -1480,11 +1516,14 @@ contains
     integer, intent(out) :: dim1, dim2, dim3, dim4, status
     type(C_PTR) :: cptr
     integer(C_INT) :: csize1, csize2, csize3, csize4
+    cptr = C_NULL_PTR
     status = c_getVect4DDouble(opCtx, trim(fieldPath)//C_NULL_CHAR, &
          trim(timebasePath)//C_NULL_CHAR, cptr, &
          csize1, csize2, csize3, csize4)
     if (status.eq.0) then
-       call C_F_POINTER(cptr, data, (/csize1,csize2,csize3,csize4/))
+       if (C_ASSOCIATED(cptr)) then
+          call C_F_POINTER(cptr, data, (/csize1,csize2,csize3,csize4/))
+       end if
        dim1 = csize1
        dim2 = csize2
        dim3 = csize3
@@ -1502,11 +1541,14 @@ contains
     integer, intent(out) :: dim1, dim2, dim3, dim4, status
     type(C_PTR) :: cptr
     integer(C_INT) :: csize1, csize2, csize3, csize4
+    cptr = C_NULL_PTR
     status = c_getVect4DComplex(opCtx, trim(fieldPath)//C_NULL_CHAR, &
          trim(timebasePath)//C_NULL_CHAR, cptr, &
          csize1, csize2, csize3, csize4)
     if (status.eq.0) then
-       call C_F_POINTER(cptr, data, (/csize1,csize2,csize3,csize4/))
+       if (C_ASSOCIATED(cptr)) then
+          call C_F_POINTER(cptr, data, (/csize1,csize2,csize3,csize4/))
+       end if
        dim1 = csize1
        dim2 = csize2
        dim3 = csize3
@@ -1524,11 +1566,14 @@ contains
     integer, intent(out) :: dim1, dim2, dim3, dim4, dim5, status
     type(C_PTR) :: cptr
     integer(C_INT) :: csize1, csize2, csize3, csize4, csize5
+    cptr = C_NULL_PTR
     status = c_getVect5DInt(opCtx, trim(fieldPath)//C_NULL_CHAR, &
          trim(timebasePath)//C_NULL_CHAR, cptr, &
          csize1, csize2, csize3, csize4, csize5)
     if (status.eq.0) then
-       call C_F_POINTER(cptr, data, (/csize1,csize2,csize3,csize4,csize5/))
+       if (C_ASSOCIATED(cptr)) then
+          call C_F_POINTER(cptr, data, (/csize1,csize2,csize3,csize4,csize5/))
+       end if
        dim1 = csize1
        dim2 = csize2
        dim3 = csize3
@@ -1547,11 +1592,14 @@ contains
     integer, intent(out) :: dim1, dim2, dim3, dim4, dim5, status
     type(C_PTR) :: cptr
     integer(C_INT) :: csize1, csize2, csize3, csize4, csize5
+    cptr = C_NULL_PTR
     status = c_getVect5DDouble(opCtx, trim(fieldPath)//C_NULL_CHAR, &
          trim(timebasePath)//C_NULL_CHAR, cptr, &
          csize1, csize2, csize3, csize4, csize5)
     if (status.eq.0) then
-       call C_F_POINTER(cptr, data, (/csize1,csize2,csize3,csize4,csize5/))
+       if (C_ASSOCIATED(cptr)) then
+          call C_F_POINTER(cptr, data, (/csize1,csize2,csize3,csize4,csize5/))
+       end if
        dim1 = csize1
        dim2 = csize2
        dim3 = csize3
@@ -1570,11 +1618,14 @@ contains
     integer, intent(out) :: dim1, dim2, dim3, dim4, dim5, status
     type(C_PTR) :: cptr
     integer(C_INT) :: csize1, csize2, csize3, csize4, csize5
+    cptr = C_NULL_PTR
     status = c_getVect5DComplex(opCtx, trim(fieldPath)//C_NULL_CHAR, &
          trim(timebasePath)//C_NULL_CHAR, cptr, &
          csize1, csize2, csize3, csize4, csize5)
     if (status.eq.0) then
-       call C_F_POINTER(cptr, data, (/csize1,csize2,csize3,csize4,csize5/))
+       if (C_ASSOCIATED(cptr)) then
+          call C_F_POINTER(cptr, data, (/csize1,csize2,csize3,csize4,csize5/))
+       end if
        dim1 = csize1
        dim2 = csize2
        dim3 = csize3
@@ -1593,11 +1644,14 @@ contains
     integer, intent(out) :: dim1, dim2, dim3, dim4, dim5, dim6, status
     type(C_PTR) :: cptr
     integer(C_INT) :: csize1, csize2, csize3, csize4, csize5, csize6
+    cptr = C_NULL_PTR
     status = c_getVect6DInt(opCtx, trim(fieldPath)//C_NULL_CHAR, &
          trim(timebasePath)//C_NULL_CHAR, cptr, &
          csize1, csize2, csize3, csize4, csize5, csize6)
     if (status.eq.0) then
-       call C_F_POINTER(cptr, data, (/csize1,csize2,csize3,csize4,csize5,csize6/))
+       if (C_ASSOCIATED(cptr)) then
+          call C_F_POINTER(cptr, data, (/csize1,csize2,csize3,csize4,csize5,csize6/))
+       end if
        dim1 = csize1
        dim2 = csize2
        dim3 = csize3
@@ -1617,11 +1671,14 @@ contains
     integer, intent(out) :: dim1, dim2, dim3, dim4, dim5, dim6, status
     type(C_PTR) :: cptr
     integer(C_INT) :: csize1, csize2, csize3, csize4, csize5, csize6
+    cptr = C_NULL_PTR
     status = c_getVect6DDouble(opCtx, trim(fieldPath)//C_NULL_CHAR, &
          trim(timebasePath)//C_NULL_CHAR, cptr, &
          csize1, csize2, csize3, csize4, csize5, csize6)
     if (status.eq.0) then
-       call C_F_POINTER(cptr, data, (/csize1,csize2,csize3,csize4,csize5,csize6/))
+       if (C_ASSOCIATED(cptr)) then
+          call C_F_POINTER(cptr, data, (/csize1,csize2,csize3,csize4,csize5,csize6/))
+       end if
        dim1 = csize1
        dim2 = csize2
        dim3 = csize3
@@ -1641,11 +1698,14 @@ contains
     integer, intent(out) :: dim1, dim2, dim3, dim4, dim5, dim6, status
     type(C_PTR) :: cptr
     integer(C_INT) :: csize1, csize2, csize3, csize4, csize5, csize6
+    cptr = C_NULL_PTR
     status = c_getVect6DComplex(opCtx, trim(fieldPath)//C_NULL_CHAR, &
          trim(timebasePath)//C_NULL_CHAR, cptr, &
          csize1, csize2, csize3, csize4, csize5, csize6)
     if (status.eq.0) then
-       call C_F_POINTER(cptr, data, (/csize1,csize2,csize3,csize4,csize5,csize6/))
+       if (C_ASSOCIATED(cptr)) then
+          call C_F_POINTER(cptr, data, (/csize1,csize2,csize3,csize4,csize5,csize6/))
+       end if
        dim1 = csize1
        dim2 = csize2
        dim3 = csize3
@@ -1665,11 +1725,14 @@ contains
     integer, intent(out) :: dim1, dim2, dim3, dim4, dim5, dim6, dim7, status
     type(C_PTR) :: cptr
     integer(C_INT) :: csize1, csize2, csize3, csize4, csize5, csize6, csize7
+    cptr = C_NULL_PTR
     status = c_getVect7DInt(opCtx, trim(fieldPath)//C_NULL_CHAR, &
          trim(timebasePath)//C_NULL_CHAR, cptr, &
          csize1, csize2, csize3, csize4, csize5, csize6, csize7)
     if (status.eq.0) then
-       call C_F_POINTER(cptr, data, (/csize1,csize2,csize3,csize4,csize5,csize6,csize7/))
+       if (C_ASSOCIATED(cptr)) then
+          call C_F_POINTER(cptr, data, (/csize1,csize2,csize3,csize4,csize5,csize6,csize7/))
+       end if
        dim1 = csize1
        dim2 = csize2
        dim3 = csize3
@@ -1690,11 +1753,14 @@ contains
     integer, intent(out) :: dim1, dim2, dim3, dim4, dim5, dim6, dim7, status
     type(C_PTR) :: cptr
     integer(C_INT) :: csize1, csize2, csize3, csize4, csize5, csize6, csize7
+    cptr = C_NULL_PTR
     status = c_getVect7DDouble(opCtx, trim(fieldPath)//C_NULL_CHAR, &
          trim(timebasePath)//C_NULL_CHAR, cptr, &
          csize1, csize2, csize3, csize4, csize5, csize6, csize7)
     if (status.eq.0) then
-       call C_F_POINTER(cptr, data, (/csize1,csize2,csize3,csize4,csize5,csize6,csize7/))
+       if (C_ASSOCIATED(cptr)) then 
+          call C_F_POINTER(cptr, data, (/csize1,csize2,csize3,csize4,csize5,csize6,csize7/))
+       end if
        dim1 = csize1
        dim2 = csize2
        dim3 = csize3
@@ -1715,11 +1781,14 @@ contains
     integer, intent(out) :: dim1, dim2, dim3, dim4, dim5, dim6, dim7, status
     type(C_PTR) :: cptr
     integer(C_INT) :: csize1, csize2, csize3, csize4, csize5, csize6, csize7
+    cptr = C_NULL_PTR
     status = c_getVect7DComplex(opCtx, trim(fieldPath)//C_NULL_CHAR, &
          trim(timebasePath)//C_NULL_CHAR, cptr, &
          csize1, csize2, csize3, csize4, csize5, csize6, csize7)
     if (status.eq.0) then
-       call C_F_POINTER(cptr, data, (/csize1,csize2,csize3,csize4,csize5,csize6,csize7/))
+       if (C_ASSOCIATED(cptr)) then 
+          call C_F_POINTER(cptr, data, (/csize1,csize2,csize3,csize4,csize5,csize6,csize7/))
+       end if
        dim1 = csize1
        dim2 = csize2
        dim3 = csize3
