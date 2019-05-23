@@ -972,6 +972,8 @@ subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   end if
 
   timedparent=.false.
+  call set_c_data(IDS,.true.)
+
   <xsl:apply-templates select="./field" mode="GET_FIELD">
     <xsl:with-param name="structvar" select="'IDS'"/>
     <xsl:with-param name="contextvar" select="'opctx'"/>
@@ -980,8 +982,6 @@ subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   </xsl:apply-templates>
 
   call ual_end_action(opctx, status)
-
-  call set_c_data(IDS,.true.)
 
   return
 end subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
@@ -1077,6 +1077,8 @@ subroutine get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   end if
 
   timedparent=.false.
+  call set_c_data(IDS,.true.)
+
   <xsl:apply-templates select="./field" mode="GET_FIELD">
     <xsl:with-param name="structvar" select="'IDS'"/>
     <xsl:with-param name="contextvar" select="'opctx'"/>
@@ -1085,8 +1087,6 @@ subroutine get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   </xsl:apply-templates>
 
   call ual_end_action(opctx, status)
-
-  call set_c_data(IDS,.true.)
 
   return
 end subroutine get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
