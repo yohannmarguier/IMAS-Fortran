@@ -569,12 +569,12 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   call ids_delete(pulsectx, name, IDS)
 
   if (IDS%ids_properties%homogeneous_time.EQ.ids_int_invalid) then
-     write(*,*) "ERROR : the IDS%ids_properties%homogeneous_time property of this IDS must be provided"
+     write(*,*) "Warning : <xsl:value-of select="@name"/> is found to be EMPTY (homogeneous_time undefined). PUT returns with no action."
      return
   endif
   homogeneous = IDS%ids_properties%homogeneous_time.EQ.1
   if ((homogeneous).AND.(.NOT.(associated(IDS%time)))) then
-     write(*,*) "ERROR : the IDS%time vector of an homogeneous_time IDS must be associated"
+     write(*,*) "ERROR : time vector of homogeneous <xsl:value-of select="@name"/> must be associated."
      return
   endif
 
@@ -764,12 +764,12 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   character(*), parameter :: path = ''
 
   if (IDS%ids_properties%homogeneous_time.EQ.ids_int_invalid) then
-     write(*,*) "ERROR : the IDS%ids_properties%homogeneous_time property of this IDS must be provided"
+     write(*,*) "Warning : <xsl:value-of select="@name"/> is found to be EMPTY (homogeneous_time undefined). PUTSLICE returns with no action."
      return
   endif
   homogeneous = IDS%ids_properties%homogeneous_time.EQ.1
   if ((homogeneous).AND.(.NOT.(associated(IDS%time)))) then
-     write(*,*) "ERROR : the IDS%time vector of an homogeneous_time IDS must be associated"
+     write(*,*) "ERROR : time vector of homogeneous <xsl:value-of select="@name"/> must be associated."
      return
   endif
 
