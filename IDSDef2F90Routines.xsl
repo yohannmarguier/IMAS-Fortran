@@ -1182,14 +1182,14 @@ end module
     </xsl:when>
 
     <!-- Case of all other vector data -->
-    <xsl:when test="@data_type='flt_1d_type' or @data_type='int_1d_type' or
+    <xsl:when test="@data_type='flt_1d_type' or @data_type='int_1d_type' or 
 		    @data_type='flt_2d_type' or @data_type='int_2d_type' or 
-		    @data_type='FLT_1D' or @data_type='INT_1D' or 
-		    @data_type='FLT_2D' or @data_type='INT_2D' or 
-		    @data_type='FLT_3D' or @data_type='INT_3D' or 
-		    @data_type='FLT_4D' or @data_type='INT_4D' or 
-		    @data_type='FLT_5D' or @data_type='INT_5D' or 
-		    @data_type='FLT_6D' or @data_type='INT_6D'">
+		    @data_type='FLT_1D' or @data_type='INT_1D' or @data_type='CPX_1D' or 
+		    @data_type='FLT_2D' or @data_type='INT_2D' or @data_type='CPX_2D' or 
+		    @data_type='FLT_3D' or @data_type='INT_3D' or @data_type='CPX_3D' or 
+		    @data_type='FLT_4D' or @data_type='INT_4D' or @data_type='CPX_4D' or 
+		    @data_type='FLT_5D' or @data_type='INT_5D' or @data_type='CPX_5D' or 
+		    @data_type='FLT_6D' or @data_type='INT_6D' or @data_type='CPX_6D'">
   ! deallocate <xsl:value-of select="$currentidxpath"/>
   if (associated(struct_in<xsl:value-of select="$currentidxpath"/>)) then
     if (c_data) then
@@ -1202,7 +1202,8 @@ end module
 
     <!-- Case of scalar data (just to differenciate with errors "otherwise") -->
     <xsl:when test="@data_type='int_type' or @data_type='INT_0D' or 
-		    @data_type='flt_type' or @data_type='FLT_0D'">
+		    @data_type='flt_type' or @data_type='FLT_0D' or 
+		    @data_type='CPX_0D'">
     </xsl:when>
 
     <!-- Error case: could throw error or generate code that can't compile? -->
@@ -1260,11 +1261,20 @@ end module
   endif
     </xsl:when>
 
+    <!-- 0D scalar, complex data -->
+    <xsl:when test="@data_type='CPLX_0D'">
+  ! Copy <xsl:value-of select="$currentidxpath"/>
+  if (struct_in<xsl:value-of select="$currentidxpath"/>.NE.ids_complex_invalid) then
+    struct_out<xsl:value-of select="$currentidxpath"/> = &amp;
+    struct_in<xsl:value-of select="$currentidxpath"/>
+  endif
+    </xsl:when>
+
     <!-- 1D vector data -->
     <xsl:when test="@data_type='STR_0D' or @data_type='STR_1D' or 
 		    @data_type='str_type' or @data_type='str_1d_type' or 
-		    @data_type='FLT_1D' or @data_type='INT_1D' or 
-		    @data_type='flt_1d_type' or @data_type='int_1d_type'">
+		    @data_type='FLT_1D' or @data_type='INT_1D' or @data_type='CPX_1D' or 
+		    @data_type='flt_1d_type' or @data_type='int_1d_type' or @data_type='cpx_1d_type'">
   ! Copy <xsl:value-of select="$currentidxpath"/>
   if (associated(struct_in<xsl:value-of select="$currentidxpath"/>)) then
     allocate(struct_out<xsl:value-of select="$currentidxpath"/>&amp;
@@ -1276,7 +1286,8 @@ end module
 
     <!-- 2D vector data -->
     <xsl:when test="@data_type='int_2d_type' or @data_type='INT_2D' or 
-		    @data_type='flt_2d_type' or @data_type='FLT_2D'">
+		    @data_type='flt_2d_type' or @data_type='FLT_2D' or 
+		    @data_type='cpx_2d_type' or @data_type='CPX_2D'">
   ! Copy <xsl:value-of select="$currentidxpath"/>
   if (associated(struct_in<xsl:value-of select="$currentidxpath"/>)) then
     allocate(struct_out<xsl:value-of select="$currentidxpath"/>&amp;
@@ -1520,6 +1531,20 @@ end module
     endif
   </xsl:when>
 
+  <!-- complex scalar data -->
+  <xsl:when test="@data_type='cpx_type' or @data_type='CPX_0D'">
+    ! Put <xsl:value-of select="@name"/>
+    if (<xsl:value-of select="$fieldvar"/>.NE.ids_complex_invalid) then
+       call put_complex(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
+          '', <xsl:value-of select="$fieldvar"/>, status)
+	  <xsl:call-template name="checkErrorCtx">
+            <xsl:with-param name="method" select="'put'"/>
+	    <xsl:with-param name="ctx" select="$contextvar"/>
+	    <xsl:with-param name="path" select="$fieldpath"/>
+	  </xsl:call-template>
+    endif
+  </xsl:when>
+
   <!-- float 1D vector data -->
   <xsl:when test="@data_type='flt_1d_type' or @data_type='FLT_1D'">
     ! Put <xsl:value-of select="@name"/>
@@ -1531,6 +1556,26 @@ end module
       <xsl:with-param name="rank" select="1"/>
     </xsl:call-template>
        call put_vect1d_double(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
+          trim(timepath), <xsl:value-of select="$fieldvar"/>, lastdimsize, status)
+	  <xsl:call-template name="checkErrorCtx">
+            <xsl:with-param name="method" select="'put'"/>
+	    <xsl:with-param name="ctx" select="$contextvar"/>
+	    <xsl:with-param name="path" select="$fieldpath"/>
+	  </xsl:call-template>
+    endif
+  </xsl:when>
+
+  <!-- complex 1D vector data -->
+  <xsl:when test="@data_type='cpx_1d_type' or @data_type='CPX_1D'">
+    ! Put <xsl:value-of select="@name"/>
+    if (associated(<xsl:value-of select="$fieldvar"/>)) then
+    <xsl:call-template name="set_timepath_and_lastdimsize">
+      <xsl:with-param name="slice" select="$slice"/>
+      <xsl:with-param name="fieldpath" select="$fieldpath"/>
+      <xsl:with-param name="fieldvar" select="$fieldvar"/>
+      <xsl:with-param name="rank" select="1"/>
+    </xsl:call-template>
+       call put_vect1d_complex(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
           trim(timepath), <xsl:value-of select="$fieldvar"/>, lastdimsize, status)
 	  <xsl:call-template name="checkErrorCtx">
             <xsl:with-param name="method" select="'put'"/>
@@ -1571,6 +1616,28 @@ end module
       <xsl:with-param name="rank" select="2"/>
     </xsl:call-template>
        call put_vect2d_double(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
+          trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
+	  size(<xsl:value-of select="$fieldvar"/>,1),&amp;
+	  lastdimsize, status)
+	  <xsl:call-template name="checkErrorCtx">
+            <xsl:with-param name="method" select="'put'"/>
+	    <xsl:with-param name="ctx" select="$contextvar"/>
+	    <xsl:with-param name="path" select="$fieldpath"/>
+	  </xsl:call-template>
+    endif
+  </xsl:when>
+
+  <!-- complex 2D vector data -->
+  <xsl:when test="@data_type='cpx_2d_type' or @data_type='CPX_2D'">
+    ! Put <xsl:value-of select="@name"/>
+    if (associated(<xsl:value-of select="$fieldvar"/>)) then
+    <xsl:call-template name="set_timepath_and_lastdimsize">
+      <xsl:with-param name="slice" select="$slice"/>
+      <xsl:with-param name="fieldpath" select="$fieldpath"/>
+      <xsl:with-param name="fieldvar" select="$fieldvar"/>
+      <xsl:with-param name="rank" select="2"/>
+    </xsl:call-template>
+       call put_vect2d_complex(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
           trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
 	  size(<xsl:value-of select="$fieldvar"/>,1),&amp;
 	  lastdimsize, status)
@@ -1904,6 +1971,18 @@ end module
     </xsl:call-template>
   </xsl:when>
 
+  <!-- complex scalar data -->
+  <xsl:when test="@data_type='cpx_type' or @data_type='CPX_0D'">
+    ! Get <xsl:value-of select="@name"/>
+    call get_complex(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
+          '', <xsl:value-of select="$fieldvar"/>, status)
+    <xsl:call-template name="checkErrorCtx">
+      <xsl:with-param name="method" select="'get'"/>
+      <xsl:with-param name="ctx" select="$contextvar"/>
+      <xsl:with-param name="path" select="$fieldpath"/>
+    </xsl:call-template>
+  </xsl:when>
+
   <!-- float 1D vector data -->
   <xsl:when test="@data_type='flt_1d_type' or @data_type='FLT_1D'">
     ! Get <xsl:value-of select="@name"/>
@@ -1913,6 +1992,23 @@ end module
       <xsl:with-param name="root" select="$root"/>
     </xsl:call-template>
     call get_vect1d_double(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
+          trim(timepath), <xsl:value-of select="$fieldvar"/>, size1, status)
+    <xsl:call-template name="checkErrorCtx">
+      <xsl:with-param name="method" select="'get'"/>
+      <xsl:with-param name="ctx" select="$contextvar"/>
+      <xsl:with-param name="path" select="$fieldpath"/>
+    </xsl:call-template>
+  </xsl:when>
+
+  <!-- complex 1D vector data -->
+  <xsl:when test="@data_type='cpx_1d_type' or @data_type='CPX_1D'">
+    ! Get <xsl:value-of select="@name"/>
+    <xsl:call-template name="set_timepath">
+      <xsl:with-param name="fieldpath" select="$fieldpath"/>
+      <xsl:with-param name="fieldvar" select="$fieldvar"/>
+      <xsl:with-param name="root" select="$root"/>
+    </xsl:call-template>
+    call get_vect1d_complex(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
           trim(timepath), <xsl:value-of select="$fieldvar"/>, size1, status)
     <xsl:call-template name="checkErrorCtx">
       <xsl:with-param name="method" select="'get'"/>
@@ -1947,6 +2043,24 @@ end module
       <xsl:with-param name="root" select="$root"/>
     </xsl:call-template>
     call get_vect2d_double(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
+          trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
+	  size1, size2, status)
+    <xsl:call-template name="checkErrorCtx">
+      <xsl:with-param name="method" select="'get'"/>
+      <xsl:with-param name="ctx" select="$contextvar"/>
+      <xsl:with-param name="path" select="$fieldpath"/>
+    </xsl:call-template>
+  </xsl:when>
+
+  <!-- complex 2D vector data -->
+  <xsl:when test="@data_type='cpx_2d_type' or @data_type='CPX_2D'">
+    ! Get <xsl:value-of select="@name"/>
+    <xsl:call-template name="set_timepath">
+      <xsl:with-param name="fieldpath" select="$fieldpath"/>
+      <xsl:with-param name="fieldvar" select="$fieldvar"/>
+      <xsl:with-param name="root" select="$root"/>
+    </xsl:call-template>
+    call get_vect2d_complex(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
           trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
 	  size1, size2, status)
     <xsl:call-template name="checkErrorCtx">
