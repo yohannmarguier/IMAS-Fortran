@@ -998,9 +998,13 @@ or
             <xsl:when test="@data_type='str_type' or @data_type='STR_0D' or
                             @data_type='str_1d_type' or @data_type='STR_1D' or
                             @data_type='flt_type' or @data_type='FLT_0D' or
+			    @data_type='cpx_type' or @data_type='CPX_0D' or
                             @data_type='flt_1d_type' or @data_type='FLT_1D'or
+			    @data_type='cpx_1d_type' or @data_type='CPX_1D'or
                             @data_type='flt_2d_type' or @data_type='FLT_2D' or
-                            @data_type='FLT_3D'or  @data_type='FLT_4D'or  @data_type='FLT_5D' or @data_type='FLT_6D' or
+                            @data_type='cpx_2d_type' or @data_type='CPX_2D' or
+                            @data_type='FLT_3D' or  @data_type='FLT_4D'or  @data_type='FLT_5D' or @data_type='FLT_6D' or
+			    @data_type='CPX_3D' or
                             @data_type='int_type' or @data_type='INT_0D' or 
                             @data_type='int_1d_type' or @data_type='INT_1D' or 
                             @data_type='INT_2D' or @data_type='INT_3D' or @data_type='INT_4D'">
