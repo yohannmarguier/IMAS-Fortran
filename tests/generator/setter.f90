@@ -374,31 +374,79 @@ END SUBROUTINE initField_FLT6DArray
 
 SUBROUTINE initField_CPX(idsField, isSliceMode)
     IMPLICIT NONE
-    COMPLEX(ids_real), INTENT (IN)      :: idsField
+    COMPLEX(ids_real), INTENT (INOUT)      :: idsField
     LOGICAL, INTENT (IN)  :: isSliceMode
+
+    idsField = getComplex()
 
 END SUBROUTINE initField_CPX
 
 ! ===========================================================================
+
 SUBROUTINE initField_CPX1DArray(idsField, isSliceMode)
     IMPLICIT NONE
     COMPLEX(ids_real), DIMENSION(:), POINTER   :: idsField
     LOGICAL, INTENT (IN)  :: isSliceMode
 
+    INTEGER :: lastDim
+    
+    IF( isSliceMode ) then
+        lastDim = 1
+    ELSE
+        lastDim = dim1
+    END IF
+        
+    IF(.NOT. associated(idsField)) then
+        allocate(idsField(lastDim)) 
+    END IF
+    
+    idsField = getComplex1DArray(lastDim)
+
 END SUBROUTINE initField_CPX1DArray
+
 ! ===========================================================================
+
 SUBROUTINE initField_CPX2DArray(idsField, isSliceMode)
     IMPLICIT NONE
     COMPLEX(ids_real), DIMENSION(:,:), POINTER    :: idsField
     LOGICAL, INTENT (IN)  :: isSliceMode
 
+    INTEGER :: lastDim
+    
+    IF( isSliceMode ) then
+        lastDim = 1
+    ELSE
+        lastDim = dim2
+    END IF
+            
+    IF(.NOT. associated(idsField)) then
+        allocate(idsField(dim1, lastDim)) 
+    END IF
+    
+    idsField = getComplex2DArray(dim1, lastDim)
+
 END SUBROUTINE initField_CPX2DArray
+
 ! ===========================================================================
 
 SUBROUTINE initField_CPX3DArray(idsField, isSliceMode)
     IMPLICIT NONE
     COMPLEX(ids_real), DIMENSION(:,:,:), POINTER    :: idsField
     LOGICAL, INTENT (IN)  :: isSliceMode
+
+    INTEGER :: lastDim
+ 
+    IF( isSliceMode ) then
+        lastDim = 1
+    ELSE
+        lastDim = dim3
+    END IF
+                
+    IF(.NOT. associated(idsField)) then
+        allocate(idsField(dim1, dim2,  lastDim)) 
+    END IF
+    
+    idsField = getComplex3DArray(dim1, dim2,  lastDim)
 
 END SUBROUTINE initField_CPX3DArray
 
@@ -412,13 +460,16 @@ SUBROUTINE initField_CPX4DArray(idsField, isSliceMode)
 END SUBROUTINE initField_CPX4DArray
 
 ! ====================================================================================
+
 SUBROUTINE initField_CPX5DArray(idsField, isSliceMode)
     IMPLICIT NONE
     COMPLEX(ids_real), DIMENSION(:,:,:, :,:), POINTER    :: idsField
     LOGICAL, INTENT (IN)  :: isSliceMode
 
 END SUBROUTINE initField_CPX5DArray
+
  ! ===========================================================================
+
 SUBROUTINE initField_CPX6DArray(idsField, isSliceMode)
     IMPLICIT NONE
     COMPLEX(ids_real), DIMENSION(:,:,:, :,:,:), POINTER    :: idsField

@@ -9,7 +9,8 @@ implicit none
               MODULE PROCEDURE &
 	      		assertField_INT, assertField_INT1DArray, assertField_INT2DArray, assertField_INT3DArray, assertField_INT4DArray, assertField_INT5DArray, assertField_INT6DArray, &
 			assertField_FLT, assertField_FLT1DArray, assertField_FLT2DArray, assertField_FLT3DArray, assertField_FLT4DArray, assertField_FLT5DArray, assertField_FLT6DArray, &
-			assertField_STR
+                        assertField_CPX, assertField_CPX1DArray, assertField_CPX2DArray, assertField_CPX3DArray, &
+			assertField_STR 
        END INTERFACE
 
 
@@ -743,6 +744,176 @@ END FUNCTION assertField_FLT5DArray
 	end if
 
 END FUNCTION assertField_FLT6DArray
+
+
+! =================================================================
+! 		Complex
+! =================================================================
+FUNCTION assertField_CPX(observed, isSliceMode, fieldName) RESULT (outValue)
+  IMPLICIT NONE
+  
+  COMPLEX(ids_real), INTENT (IN)      :: observed
+  LOGICAL, INTENT (IN)    :: isSliceMode
+  CHARACTER*(*),INTENT(IN) :: fieldName
+  
+  COMPLEX(ids_real)      :: expected
+  LOGICAL    :: outValue
+  
+  INTEGER     :: lastDim
+  
+  outValue = .TRUE.
+  
+  expected = getComplex()
+  
+  if(observed == expected) then
+     if(debugMode) write(*,*) fieldName, " : OK "
+  else
+     write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
+     outValue = .FALSE.
+     return
+  end if
+END FUNCTION assertField_CPX
+
+
+! =================================================================
+FUNCTION assertField_CPX1DArray(observed, isSliceMode, fieldName) RESULT (outValue)
+  IMPLICIT NONE
+
+  COMPLEX(ids_real), DIMENSION(:), POINTER      :: observed, expected
+  LOGICAL, INTENT (IN)    :: isSliceMode
+  CHARACTER*(*),INTENT(IN) :: fieldName
+  LOGICAL    :: outValue
+       
+  INTEGER     :: lastDim
+
+  outValue = .TRUE.
+
+  IF(.NOT. associated(observed)) then
+     write(*,*) "ERROR: ", fieldName, " is not associated!"
+     outValue = .FALSE.
+     return
+  end if
+
+  IF( isSliceMode ) then
+     lastDim = 1
+  ELSE
+     lastDim = DIM1
+  END IF
+  expected => getComplex1DArray(lastDim)
+        
+  IF(.NOT. ALL(shape(observed).EQ.shape( expected))) then
+     write(*,*) fieldName, " : ERROR: Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
+     outValue = .FALSE.
+     return
+  end if
+
+  IF(size(observed) .NE. size(expected)) then
+     write(*,*) fieldName, " : ERROR: Array size differs!"
+     outValue = .FALSE.
+     return
+  end if
+
+  IF(ALL(observed.EQ.expected)) then
+     if(debugMode) write(*,*) fieldName, " : OK "
+  else
+     write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
+     outValue = .FALSE.
+     return
+  end if
+END FUNCTION assertField_CPX1DArray
+
+! =================================================================
+FUNCTION assertField_CPX2DArray(observed, isSliceMode, fieldName) RESULT (outValue)
+  IMPLICIT NONE
+  COMPLEX(ids_real), DIMENSION(:,:), POINTER      :: observed, expected
+  LOGICAL, INTENT (IN)    :: isSliceMode
+  CHARACTER*(*),INTENT(IN) :: fieldName
+  LOGICAL    :: outValue
+       
+  INTEGER     :: lastDim
+  
+  outValue = .TRUE.
+
+  IF(.not. associated(observed)) then
+     write(*,*) fieldName, " : ERROR: field is not associated!!!"
+     outValue = .FALSE.
+     return
+  END IF
+  
+  IF( isSliceMode ) then
+     lastDim = 1
+  ELSE
+     lastDim = DIM2
+  END IF
+  expected => getComplex2DArray(DIM1, lastDim)
+  
+  IF(.NOT. ALL(shape(observed).EQ.shape( expected))) then
+     write(*,*) fieldName, " : ERROR: Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
+     outValue = .FALSE.
+     return
+  end if
+
+  IF(size(observed) .NE. size(expected)) then
+     write(*,*) fieldName, " : ERROR: Array size differs!"
+     outValue = .FALSE.
+     return
+  end if
+
+  IF(ALL(observed.EQ.expected)) then
+     if(debugMode) write(*,*) fieldName, " : OK "
+  else
+     write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
+     outValue = .FALSE.
+     return
+  end if
+END FUNCTION assertField_CPX2DArray
+
+! =================================================================
+FUNCTION assertField_CPX3DArray(observed, isSliceMode, fieldName) RESULT (outValue)
+  IMPLICIT NONE
+  COMPLEX(ids_real), DIMENSION(:,:,:), POINTER      :: observed, expected
+  LOGICAL, INTENT (IN)    :: isSliceMode
+  
+  CHARACTER*(*),INTENT(IN) :: fieldName
+  LOGICAL    :: outValue
+  
+  INTEGER     :: lastDim
+  
+  outValue = .TRUE.
+
+  IF(.not. associated(observed)) then
+     write(*,*) fieldName, " : ERROR: Field is not associated!!!"
+     outValue = .FALSE.
+     return
+  END IF
+
+  IF( isSliceMode ) then
+     lastDim = 1
+  ELSE
+     lastDim = DIM3
+  END IF
+  expected => getComplex3DArray(DIM1, DIM2, lastDim)
+        
+  IF(.NOT. ALL(shape(observed).EQ.shape( expected))) then
+     write(*,*) fieldName, " : ERROR: Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
+     outValue = .FALSE.
+     return
+  end if
+
+  IF(size(observed) .NE. size(expected)) then
+     write(*,*) fieldName, " : ERROR: Array size differs!"
+     outValue = .FALSE.
+     return
+  end if
+  
+  IF(ALL(observed.EQ.expected)) then
+     if(debugMode) write(*,*) fieldName, " : OK "
+  else
+     write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
+     outValue = .FALSE.
+     return
+  end if
+END FUNCTION assertField_CPX3DArray
 
 
 ! =================================================================

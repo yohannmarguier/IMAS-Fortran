@@ -122,6 +122,28 @@ CONTAINS
 END FUNCTION getDoubleArray
 
 
+FUNCTION getComplex() RESULT (outValue)
+  COMPLEX(ids_real):: outValue
+  REAL(ids_real):: r,i
+  !     outValue=rand() *1000.00
+  call random_number(r)
+  call random_number(i)
+  outValue = CMPLX(r*1000,i*1000)
+  
+  RETURN
+END FUNCTION getComplex
+
+FUNCTION getComplexArray(sizeOfArray) RESULT (outArray)
+  INTEGER, INTENT(in)::sizeOfArray
+  COMPLEX(ids_real),DIMENSION(:), POINTER :: outArray
+  INTEGER::I
+  
+  ALLOCATE(outArray(sizeofArray))
+  do I = 1, sizeOfArray
+     outArray(I) = getComplex()
+  end do
+  RETURN
+END FUNCTION getComplexArray
 
     FUNCTION getInteger() RESULT (outValue)
         INTEGER:: outValue
@@ -425,6 +447,71 @@ FUNCTION getDouble6DArray(dim1, dim2, dim3, dim4, dim5, dim6) RESULT (outArray)
 END FUNCTION getDouble6DArray
 
 ! =================================================================
+! 		COMPLEX ARRAYS
+! =================================================================
+FUNCTION getComplex1DArray(dim1) RESULT (outArray)
+    INTEGER, INTENT(in) :: dim1
+    INTEGER ::sizeOfArray
+    COMPLEX(ids_real),DIMENSION(:), POINTER :: outArray
+    COMPLEX(ids_real),DIMENSION(:), POINTER :: flatArray
+    INTEGER::I
+
+    !sizeOfArray = dim1
+    sizeOfArray = DIM_SIZE **1
+
+    flatArray => getComplexArray(sizeOfArray)
+
+    ALLOCATE(outArray(dim1))
+
+    outArray =  RESHAPE(flatArray(:dim1), (/dim1/))
+
+    RETURN
+  END FUNCTION getComplex1DArray
+
+! =================================================================
+
+  FUNCTION getComplex2DArray(dim1, dim2) RESULT (outArray)
+    INTEGER, INTENT(in) :: dim1, dim2
+    INTEGER ::sizeOfArray
+    COMPLEX(ids_real),DIMENSION(:), POINTER :: flatArray
+    COMPLEX(ids_real),DIMENSION(:,:), POINTER :: outArray
+    INTEGER::I
+
+    !sizeOfArray = dim1 * dim2
+    sizeOfArray = DIM_SIZE **2
+
+    flatArray => getComplexArray(sizeOfArray)
+
+    ALLOCATE(outArray(dim1, dim2))
+
+    outArray =  RESHAPE(flatArray(:dim1 * dim2),(/dim1, dim2/))
+
+    RETURN
+  END FUNCTION getComplex2DArray
+
+! =================================================================
+
+FUNCTION getComplex3DArray(dim1, dim2, dim3) RESULT (outArray)
+    INTEGER, INTENT(in) :: dim1, dim2, dim3
+
+    INTEGER ::sizeOfArray
+    COMPLEX(ids_real),DIMENSION(:), POINTER :: flatArray
+    COMPLEX(ids_real),DIMENSION(:,:,:), POINTER :: outArray
+    INTEGER :: I
+
+
+
+   !sizeOfArray = dim1 * dim2 * dim3
+    sizeOfArray = DIM_SIZE **3
+
+    flatArray => getComplexArray(sizeOfArray)
+    ALLOCATE(outArray(dim1, dim2, dim3))
+
+    outArray =  RESHAPE(flatArray(:dim1 * dim2 * dim3), (/dim1, dim2, dim3/))
+
+    RETURN
+  END FUNCTION getComplex3DArray
+
 
 END MODULE generator
 
