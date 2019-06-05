@@ -548,13 +548,14 @@ end interface
 
 <!-- subroutine for the whole IDS -->
 !!! Routines to PUT the full IDS !!!
-subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS)
+subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS, retstatus)
   use ids_schemas
   use ual_low_level_wrap
   use <xsl:value-of select="@name"/>_delete  
   implicit none
 
-  integer(ids_int) :: status = 0, retstatus
+  integer(ids_int), optional, intent(out) :: retstatus 
+  integer(ids_int) :: status = 0
   character*(*), intent(in) :: name
   integer(ids_int) :: pulsectx, opctx, aosctx
   type(ids_<xsl:value-of select="@name"/>) :: IDS
@@ -570,17 +571,24 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
 
   if (IDS%ids_properties%homogeneous_time.EQ.ids_int_invalid) then
      write(*,*) "Warning : <xsl:value-of select="@name"/> is found to be EMPTY (homogeneous_time undefined). PUT returns with no action."
+     if (present(retstatus)) retstatus = 0
      return
   endif
   homogeneous = IDS%ids_properties%homogeneous_time.EQ.1
   if ((homogeneous).AND.(.NOT.(associated(IDS%time)))) then
      write(*,*) "ERROR : time vector of homogeneous <xsl:value-of select="@name"/> must be associated."
+     if (present(retstatus)) retstatus = UNKNOWN_ERR
      return
   endif
 
   call ual_begin_global_action(pulsectx, name, WRITE_OP, opctx) 
   if (opctx.lt.0) then
-     STOP 'Error in ual_begin_global_action (from ids_put for IDS <xsl:value-of select="@name"/>)'
+     write(*,*) 'Error in ual_begin_global_action (from ids_put for IDS <xsl:value-of select="@name"/>)'
+     if (present(retstatus)) then 
+        retstatus = opctx
+     else
+        STOP 
+     end if
   end if
 
   timedparent=.false.
@@ -589,6 +597,8 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
     <xsl:with-param name="contextvar" select="'opctx'"/>
     <xsl:with-param name="timedparentexpr" select="''"/>
   </xsl:apply-templates>
+
+    if (present(retstatus)) retstatus = 0
 end subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
 
 <xsl:for-each select=".//field[@data_type='structure' or @data_type='struct_array']">
@@ -700,7 +710,7 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name($this-ty
     <xsl:with-param name="timedparentexpr" select="'timedparent.or.'"/>
     <xsl:with-param name="slice" select="'yes'"/>
   </xsl:apply-templates>      
-   retstatus = 0
+  retstatus = 0
 end subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>
 
   </xsl:if>
@@ -747,12 +757,13 @@ end interface
 
 <!-- subroutine for the whole IDS -->
 !!! Routines to PUT_SLICE one time slice of an IDS !!!
-subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS)
+subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS, retstatus)
   use ids_schemas
   use ual_low_level_wrap
   implicit none
 
-  integer(ids_int) :: status = 0, retstatus
+  integer(ids_int), intent(out), optional :: retstatus
+  integer(ids_int) :: status = 0
   character*(*) :: name
   integer(ids_int) :: pulsectx, opctx, aosctx
   type(ids_<xsl:value-of select="@name"/>) :: IDS
@@ -765,18 +776,25 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
 
   if (IDS%ids_properties%homogeneous_time.EQ.ids_int_invalid) then
      write(*,*) "Warning : <xsl:value-of select="@name"/> is found to be EMPTY (homogeneous_time undefined). PUTSLICE returns with no action."
+     if (present(retstatus)) retstatus = 0
      return
   endif
   homogeneous = IDS%ids_properties%homogeneous_time.EQ.1
   if ((homogeneous).AND.(.NOT.(associated(IDS%time)))) then
      write(*,*) "ERROR : time vector of homogeneous <xsl:value-of select="@name"/> must be associated."
+     if (present(retstatus)) retstatus = 0
      return
   endif
 
   call ual_begin_slice_action(pulsectx, name, WRITE_OP, UNDEFINED_TIME, UNDEFINED_INTERP, opctx)
   if (opctx.lt.0) then
      !! error when trying to get new ctx => stop!
-     STOP 'Error in ual_begin_slice_action (from ids_put_slice for IDS <xsl:value-of select="@name"/>)'
+     write(*,*) 'Error in ual_begin_slice_action (from ids_put_slice for IDS <xsl:value-of select="@name"/>)'     
+     if (present(retstatus)) then
+        retstatus = opctx
+     else
+        STOP 
+     end if
   end if
 
   timedparent=.false.
@@ -786,6 +804,8 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
     <xsl:with-param name="timedparentexpr" select="''"/>
     <xsl:with-param name="slice" select="'yes'"/>
   </xsl:apply-templates>
+
+  if (present(retstatus)) retstatus = 0
 end subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
 
 <xsl:for-each select=".//field[@data_type='structure' or @data_type='struct_array']">
@@ -822,7 +842,8 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name($this-ty
     <xsl:with-param name="timedparentexpr" select="'timedparent.or.'"/>
     <xsl:with-param name="slice" select="'yes'"/>
   </xsl:apply-templates>      
-   retstatus = 0
+
+  retstatus = 0
 end subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>
 
   </xsl:if>
@@ -948,12 +969,13 @@ end interface
 
 <!-- subroutine for the whole IDS -->
 !!! Routines to GET the full IDS !!!
-subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS)
+subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS, retstatus)
   use ids_schemas
   use ual_low_level_wrap
   implicit none
 
-  integer(ids_int) :: status = 0, retstatus
+  integer(ids_int), intent(out), optional :: retstatus
+  integer(ids_int) :: status = 0
   character*(*) :: name
   integer(ids_int) :: pulsectx, opctx, aosctx
   type(ids_<xsl:value-of select="@name"/>) :: IDS
@@ -968,7 +990,12 @@ subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   call ual_begin_global_action(pulsectx, name, READ_OP, opctx) 
   if (opctx.lt.0) then
      !! error when trying to get new ctx => stop!
-     STOP 'Error in ual_begin_global_action (from ids_get for IDS <xsl:value-of select="@name"/>)'
+     write(*,*) 'Error in ual_begin_global_action (from ids_get for IDS <xsl:value-of select="@name"/>)'
+     if (present(retstatus)) then
+        retstatus = opctx
+     else
+        STOP 
+     end if
   end if
 
   timedparent=.false.
@@ -983,6 +1010,7 @@ subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
 
   call ual_end_action(opctx, status)
 
+  if (present(retstatus)) retstatus = status
   return
 end subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
 
@@ -1051,12 +1079,13 @@ end interface
 
 <!-- subroutine for the whole IDS -->
 !!! Routines to GET one time slice of an IDS, with time interpolation !!!
-subroutine get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS, twant, interpol)
+subroutine get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS, twant, interpol, retstatus)
   use ids_schemas
   use ual_low_level_wrap
   implicit none
 
-  integer(ids_int) :: status = 0, retstatus
+  integer(ids_int), intent(out), optional :: retstatus
+  integer(ids_int) :: status = 0
   character*(*) :: name
   real(ids_real), intent(in) :: twant
   integer(ids_int), intent(in) :: interpol
@@ -1073,7 +1102,12 @@ subroutine get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   call ual_begin_slice_action(pulsectx, name, READ_OP, twant, interpol, opctx) 
   if (opctx.lt.0) then
      !! error when trying to get new ctx => stop!
-     STOP 'Error in ual_begin_slice_action (from ids_get_slice for IDS <xsl:value-of select="@name"/>)'
+     write(*,*) 'Error in ual_begin_slice_action (from ids_get_slice for IDS <xsl:value-of select="@name"/>)'    
+     if (present(retstatus)) then 
+        retstatus = opctx
+     else
+        STOP 
+     end if
   end if
 
   timedparent=.false.
@@ -1088,6 +1122,7 @@ subroutine get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
 
   call ual_end_action(opctx, status)
 
+  if (present(retstatus)) retstatus = status
   return
 end subroutine get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
 
@@ -1454,6 +1489,7 @@ end module
       <xsl:with-param name="ctx" select="$contextvar"/>
       <xsl:with-param name="path" select="$fieldpath"/>
       <xsl:with-param name="closectx" select="'yes'"/>
+      <xsl:with-param name="structvar" select="$structvar"/>
     </xsl:call-template>
   </xsl:when>
 
@@ -1468,6 +1504,7 @@ end module
          <xsl:with-param name="method" select="'put'"/>
 	 <xsl:with-param name="ctx" select="$contextvar"/>
 	 <xsl:with-param name="path" select="$fieldpath"/>
+	 <xsl:with-param name="structvar" select="$structvar"/>
        </xsl:call-template>
     endif
   </xsl:when>
@@ -1488,6 +1525,7 @@ end module
          <xsl:with-param name="method" select="'put'"/>
 	 <xsl:with-param name="ctx" select="$contextvar"/>
 	 <xsl:with-param name="path" select="$fieldpath"/>
+	 <xsl:with-param name="structvar" select="$structvar"/>
        </xsl:call-template>
     endif
   </xsl:when>
@@ -1502,6 +1540,7 @@ end module
 	    <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
 	    <xsl:with-param name="path" select="$fieldpath"/>
+	    <xsl:with-param name="structvar" select="$structvar"/>
 	  </xsl:call-template>
     endif
   </xsl:when>
@@ -1516,6 +1555,7 @@ end module
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
 	    <xsl:with-param name="path" select="$fieldpath"/>
+	    <xsl:with-param name="structvar" select="$structvar"/>
 	  </xsl:call-template>
     endif
   </xsl:when>
@@ -1536,6 +1576,7 @@ end module
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
 	    <xsl:with-param name="path" select="$fieldpath"/>
+	    <xsl:with-param name="structvar" select="$structvar"/>
 	  </xsl:call-template>
     endif
   </xsl:when>
@@ -1556,6 +1597,7 @@ end module
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
 	    <xsl:with-param name="path" select="$fieldpath"/>
+	    <xsl:with-param name="structvar" select="$structvar"/>
 	  </xsl:call-template>
     endif
   </xsl:when>
@@ -1578,6 +1620,7 @@ end module
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
 	    <xsl:with-param name="path" select="$fieldpath"/>
+	    <xsl:with-param name="structvar" select="$structvar"/>
 	  </xsl:call-template>
     endif
   </xsl:when>
@@ -1600,6 +1643,7 @@ end module
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
 	    <xsl:with-param name="path" select="$fieldpath"/>
+	    <xsl:with-param name="structvar" select="$structvar"/>
 	  </xsl:call-template>
     endif
   </xsl:when>
@@ -1623,6 +1667,7 @@ end module
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
 	    <xsl:with-param name="path" select="$fieldpath"/>
+	    <xsl:with-param name="structvar" select="$structvar"/>
 	  </xsl:call-template>
     endif
   </xsl:when>
@@ -1646,6 +1691,7 @@ end module
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
 	    <xsl:with-param name="path" select="$fieldpath"/>
+	    <xsl:with-param name="structvar" select="$structvar"/>
 	  </xsl:call-template>
     endif
   </xsl:when>
@@ -1670,6 +1716,7 @@ end module
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
 	    <xsl:with-param name="path" select="$fieldpath"/>
+	    <xsl:with-param name="structvar" select="$structvar"/>
 	  </xsl:call-template>
     endif
   </xsl:when>
@@ -1695,6 +1742,7 @@ end module
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
 	    <xsl:with-param name="path" select="$fieldpath"/>
+	    <xsl:with-param name="structvar" select="$structvar"/>
 	  </xsl:call-template>
     endif
   </xsl:when>
@@ -1721,6 +1769,7 @@ end module
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
 	    <xsl:with-param name="path" select="$fieldpath"/>
+	    <xsl:with-param name="structvar" select="$structvar"/>
 	  </xsl:call-template>
     endif
   </xsl:when>
@@ -1843,6 +1892,7 @@ end module
       <xsl:with-param name="ctx" select="$contextvar"/>
       <xsl:with-param name="path" select="$fieldpath"/>
       <xsl:with-param name="closectx" select="$closectx"/>
+      <xsl:with-param name="structvar" select="$structvar"/>
     </xsl:call-template>
   </xsl:when>
 
@@ -1859,6 +1909,7 @@ end module
 	<xsl:with-param name="method" select="'get'"/>
 	<xsl:with-param name="ctx" select="$contextvar"/>
 	<xsl:with-param name="path" select="$fieldpath"/>
+	<xsl:with-param name="structvar" select="$structvar"/>
       </xsl:call-template>
     endif
   </xsl:when>
@@ -1889,6 +1940,7 @@ end module
       <xsl:with-param name="method" select="'get'"/>
       <xsl:with-param name="ctx" select="$contextvar"/>
       <xsl:with-param name="path" select="$fieldpath"/>
+      <xsl:with-param name="structvar" select="$structvar"/>
     </xsl:call-template>
   </xsl:when>
 
@@ -1901,6 +1953,7 @@ end module
       <xsl:with-param name="method" select="'get'"/>
       <xsl:with-param name="ctx" select="$contextvar"/>
       <xsl:with-param name="path" select="$fieldpath"/>
+      <xsl:with-param name="structvar" select="$structvar"/>
     </xsl:call-template>
   </xsl:when>
 
@@ -1918,6 +1971,7 @@ end module
       <xsl:with-param name="method" select="'get'"/>
       <xsl:with-param name="ctx" select="$contextvar"/>
       <xsl:with-param name="path" select="$fieldpath"/>
+      <xsl:with-param name="structvar" select="$structvar"/>
     </xsl:call-template>
   </xsl:when>
 
@@ -1935,6 +1989,7 @@ end module
       <xsl:with-param name="method" select="'get'"/>
       <xsl:with-param name="ctx" select="$contextvar"/>
       <xsl:with-param name="path" select="$fieldpath"/>
+      <xsl:with-param name="structvar" select="$structvar"/>
     </xsl:call-template>
   </xsl:when>
 
@@ -1953,6 +2008,7 @@ end module
       <xsl:with-param name="method" select="'get'"/>
       <xsl:with-param name="ctx" select="$contextvar"/>
       <xsl:with-param name="path" select="$fieldpath"/>
+      <xsl:with-param name="structvar" select="$structvar"/>
     </xsl:call-template>
   </xsl:when>
 
@@ -1971,6 +2027,7 @@ end module
       <xsl:with-param name="method" select="'get'"/>
       <xsl:with-param name="ctx" select="$contextvar"/>
       <xsl:with-param name="path" select="$fieldpath"/>
+      <xsl:with-param name="structvar" select="$structvar"/>
     </xsl:call-template>
   </xsl:when>
 
@@ -1989,6 +2046,7 @@ end module
       <xsl:with-param name="method" select="'get'"/>
       <xsl:with-param name="ctx" select="$contextvar"/>
       <xsl:with-param name="path" select="$fieldpath"/>
+      <xsl:with-param name="structvar" select="$structvar"/>
     </xsl:call-template>
   </xsl:when>
 
@@ -2007,6 +2065,7 @@ end module
       <xsl:with-param name="method" select="'get'"/>
       <xsl:with-param name="ctx" select="$contextvar"/>
       <xsl:with-param name="path" select="$fieldpath"/>
+      <xsl:with-param name="structvar" select="$structvar"/>
     </xsl:call-template>
   </xsl:when>
 
@@ -2025,6 +2084,7 @@ end module
       <xsl:with-param name="method" select="'get'"/>
       <xsl:with-param name="ctx" select="$contextvar"/>
       <xsl:with-param name="path" select="$fieldpath"/>
+      <xsl:with-param name="structvar" select="$structvar"/>
     </xsl:call-template>
   </xsl:when>
 
@@ -2043,6 +2103,7 @@ end module
       <xsl:with-param name="method" select="'get'"/>
       <xsl:with-param name="ctx" select="$contextvar"/>
       <xsl:with-param name="path" select="$fieldpath"/>
+      <xsl:with-param name="structvar" select="$structvar"/>
     </xsl:call-template>
   </xsl:when>
 
@@ -2061,6 +2122,7 @@ end module
       <xsl:with-param name="method" select="'put'"/>
       <xsl:with-param name="ctx" select="$contextvar"/>
       <xsl:with-param name="path" select="$fieldpath"/>
+      <xsl:with-param name="structvar" select="$structvar"/>
     </xsl:call-template>
   </xsl:when>
   <xsl:otherwise>
@@ -2086,17 +2148,18 @@ end module
   <xsl:param name="ctx"/>
   <xsl:param name="path"/>
   <xsl:param name="closectx"/>
+  <xsl:param name="structvar"/>
   <xsl:choose>
     <xsl:when test="$method='put'">
   if(isErrorCritical(status, <xsl:value-of select="$ctx"/>, <xsl:value-of select="$path"/>)) then
-     retstatus = status
+     <xsl:if test="$structvar='IDS'">if (present(retstatus)) </xsl:if>retstatus = status
      <xsl:if test="$closectx='yes'">call ual_end_action(<xsl:value-of select="$ctx"/>, status)</xsl:if>
      return
   endif
     </xsl:when>
     <xsl:otherwise>
   if(isErrorCritical(status, <xsl:value-of select="$ctx"/>, <xsl:value-of select="$path"/>)) then
-     retstatus = status
+     <xsl:if test="$structvar='IDS'">if (present(retstatus)) </xsl:if>retstatus = status
      <xsl:if test="$closectx='yes'">call ual_end_action(<xsl:value-of select="$ctx"/>, status)</xsl:if>
      return
   endif
