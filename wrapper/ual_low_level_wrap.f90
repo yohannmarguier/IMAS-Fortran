@@ -752,32 +752,38 @@ contains
 
   !!! old API !!!
 
-  subroutine imas_create_env(name, shot, run, refShot, refRun, pulseCtx, user, tokamak, version)
+  subroutine imas_create_env(name, shot, run, refShot, refRun, pulseCtx, user, tokamak, version, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     character(*), intent(in) :: name, user, tokamak, version
     integer, intent(in) :: shot, run, refShot, refRun
     integer, intent(out) :: pulseCtx
+    integer, intent(out), optional :: retstatus
     integer :: status
     status = c_ual_create_env(trim(name)//C_NULL_CHAR, shot, run, refShot, refRun, pulseCtx, trim(user)//C_NULL_CHAR, trim(tokamak)//C_NULL_CHAR, trim(version)//C_NULL_CHAR)
+    if (present(retstatus)) retstatus = status
   end subroutine imas_create_env
 
-  subroutine imas_open_env(name, shot, run, pulseCtx, user, tokamak, version)
+  subroutine imas_open_env(name, shot, run, pulseCtx, user, tokamak, version, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     character(*), intent(in) :: name, user, tokamak, version
     integer, intent(in) :: shot, run
     integer, intent(out) :: pulseCtx
+    integer, optional, intent(out) :: retstatus
     integer :: status
     status = c_ual_open_env(trim(name)//C_NULL_CHAR, shot, run, pulseCtx, trim(user)//C_NULL_CHAR, trim(tokamak)//C_NULL_CHAR, trim(version)//C_NULL_CHAR)
+    if (present(retstatus)) retstatus = status
   end subroutine imas_open_env
 
-  subroutine imas_close(pulseCtx)
+  subroutine imas_close(pulseCtx, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: pulseCtx
+    integer, optional, intent(out) :: retstatus
     integer :: status
     status = c_ual_close(pulseCtx)
+    if (present(retstatus)) retstatus = status
   end subroutine imas_close
   
   subroutine put_char(opCtx, fieldPath, timebasePath, data, status)
