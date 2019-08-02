@@ -4,6 +4,9 @@
 <xsl:stylesheet xmlns:yaslt="http://www.mod-xslt2.com/ns/2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:xs="http://www.w3.org/2001/XMLSchema" version="2.0" extension-element-prefixes="yaslt" xmlns:fn="http://www.w3.org/2005/02/xpath-functions" xmlns:local="http://www.example.com/functions/local" exclude-result-prefixes="local xs">
 <xsl:output method="text" version="1.0" encoding="UTF-8" indent="yes"/>	<!-- This XSL translates the list of IMAS IDSDefs to Fortran 90 GET/PUT Routines for IDSs -->
 
+<xsl:param name="DD_GIT_DESCRIBE" as="xs:string" required="yes"/>
+<xsl:param name="UAL_GIT_DESCRIBE" as="xs:string" required="yes"/>
+
 <xsl:function name="local:unique_name" as="xs:string">
   <!-- Provides pseudo-unique 16 characters reference to arbitrary long field name  -->
   <xsl:param name="FullName" as="xs:string"/>
@@ -494,11 +497,23 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>
   character(len=100000) :: longstring
   character(len=300) :: timepath
 
-  <xsl:apply-templates select="./field" mode="PUT_FIELD">
-    <xsl:with-param name="structvar" select="'struct'"/>
-    <xsl:with-param name="contextvar" select="'ctx'"/>
-    <xsl:with-param name="timedparentexpr" select="'timedparent.or.'"/>
-  </xsl:apply-templates>      
+  <xsl:choose>
+    <xsl:when test="$this-type='version_dd_al'">
+      <xsl:apply-templates select="./field" mode="PUT_FIELD">
+	<xsl:with-param name="structvar" select="'struct'"/>
+	<xsl:with-param name="contextvar" select="'ctx'"/>
+	<xsl:with-param name="timedparentexpr" select="'timedparent.or.'"/>
+	<xsl:with-param name="provenance" select="'DD/AL/LANG'"/>
+      </xsl:apply-templates>
+    </xsl:when>
+    <xsl:otherwise>
+      <xsl:apply-templates select="./field" mode="PUT_FIELD">
+	<xsl:with-param name="structvar" select="'struct'"/>
+	<xsl:with-param name="contextvar" select="'ctx'"/>
+	<xsl:with-param name="timedparentexpr" select="'timedparent.or.'"/>
+      </xsl:apply-templates>
+    </xsl:otherwise>
+  </xsl:choose>
    retstatus = 0
 end subroutine put_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>
 
@@ -1409,6 +1424,7 @@ end module
   <xsl:param name="contextvar"/>
   <xsl:param name="timedparentexpr"/>
   <xsl:param name="slice"/>
+  <xsl:param name="provenance"/>
 
   <xsl:if test="$slice !='yes' or @type ='dynamic' or @data_type='structure' or (@data_type='struct_array' and .//field[@type='dynamic'])"> <!-- This skips the routine for non-timed fields when using this template in PUT_SLICE mode -->
 
@@ -1507,6 +1523,31 @@ end module
   <!-- String data -->
   <xsl:when test="@data_type='str_type' or @data_type='STR_0D'">
     ! Put <xsl:value-of select="@name"/>
+    <xsl:choose>
+      <xsl:when test="$provenance='DD/AL/LANG'">
+	<xsl:choose>
+	  <xsl:when test="@name='data_dictionary'">
+       longstring = "<xsl:value-of select="$DD_GIT_DESCRIBE"/>"
+	  </xsl:when>
+	  <xsl:when test="@name='access_layer'">
+       longstring = "<xsl:value-of select="$UAL_GIT_DESCRIBE"/>"
+	  </xsl:when>
+	  <xsl:when test="@name='access_layer_language'">
+       longstring = "fortran"
+	  </xsl:when>
+	  <xsl:otherwise>
+	  </xsl:otherwise>
+	</xsl:choose>
+       call put_string(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
+          '', TRIM(longstring), status)
+       <xsl:call-template name="checkErrorCtx">
+         <xsl:with-param name="method" select="'put'"/>
+	 <xsl:with-param name="ctx" select="$contextvar"/>
+	 <xsl:with-param name="path" select="$fieldpath"/>
+	 <xsl:with-param name="structvar" select="$structvar"/>
+       </xsl:call-template>
+      </xsl:when>
+      <xsl:otherwise>
     if (associated(<xsl:value-of select="$fieldvar"/>)) then
        call pack_string(<xsl:value-of select="$fieldvar"/>, longstring, lenstring)
        call put_string(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
@@ -1518,6 +1559,8 @@ end module
 	 <xsl:with-param name="structvar" select="$structvar"/>
        </xsl:call-template>
     endif
+      </xsl:otherwise>
+    </xsl:choose>
   </xsl:when>
 
   <!-- 1D array of string data -->
