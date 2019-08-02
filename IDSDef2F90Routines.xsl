@@ -1594,6 +1594,7 @@ end module
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
 	    <xsl:with-param name="path" select="$fieldpath"/>
+	    <xsl:with-param name="structvar" select="$structvar"/>
 	  </xsl:call-template>
     endif
   </xsl:when>
@@ -1635,6 +1636,7 @@ end module
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
 	    <xsl:with-param name="path" select="$fieldpath"/>
+	    <xsl:with-param name="structvar" select="$structvar"/>
 	  </xsl:call-template>
     endif
   </xsl:when>
@@ -1701,6 +1703,7 @@ end module
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
 	    <xsl:with-param name="path" select="$fieldpath"/>
+	    <xsl:with-param name="structvar" select="$structvar"/>
 	  </xsl:call-template>
     endif
   </xsl:when>
@@ -1771,6 +1774,7 @@ end module
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
 	    <xsl:with-param name="path" select="$fieldpath"/>
+	    <xsl:with-param name="structvar" select="$structvar"/>
 	  </xsl:call-template>
     endif
   </xsl:when>
@@ -1941,26 +1945,26 @@ end module
           timepath = ""
       </xsl:otherwise>
     </xsl:choose>
-       call ual_begin_arraystruct_action(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>, timepath, aoslen, aosctx)
-       if (aosctx.ge.0) then
-          if (aoslen.gt.0) allocate(<xsl:value-of select="$fieldvar"/>(aoslen))
-          do i = 1,aoslen
+          call ual_begin_arraystruct_action(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>, timepath, aoslen, aosctx)
+          if (aosctx.ge.0) then
+             if (aoslen.gt.0) allocate(<xsl:value-of select="$fieldvar"/>(aoslen))
+             do i = 1,aoslen
        <xsl:apply-templates select="." mode="GET_FIELD">
 	 <xsl:with-param name="structvar" select="$structvar"/>
 	 <xsl:with-param name="contextvar" select="'aosctx'"/>
 	 <xsl:with-param name="timedparentexpr" select="'timedparent.or.'"/>
 	 <xsl:with-param name="root" select="$root"/>
        </xsl:apply-templates> 
-             call ual_iterate_over_arraystruct(aosctx, 1, status)
-          enddo
-          call ual_end_action(aosctx, status)
-       else
-          write(*,*) "ERROR! with field "//<xsl:value-of select="$fieldpath"/>//" from context:"
-          call ual_print_context(<xsl:value-of select="$contextvar"/>)
-          call ual_end_action(<xsl:value-of select="$contextvar"/>, status)
-          return
-       endif
-    endif
+                call ual_iterate_over_arraystruct(aosctx, 1, status)
+             enddo
+             call ual_end_action(aosctx, status)
+          else
+             write(*,*) "ERROR! with field "//<xsl:value-of select="$fieldpath"/>//" from context:"
+             call ual_print_context(<xsl:value-of select="$contextvar"/>)
+             call ual_end_action(<xsl:value-of select="$contextvar"/>, status)
+             return
+          endif
+    <xsl:if test="@type='dynamic'">endif</xsl:if>
   </xsl:when>
 
   <!-- Structure -->
@@ -1991,7 +1995,7 @@ end module
       <xsl:when test="$contextvar='aosctx'">'', </xsl:when>
       <xsl:otherwise><xsl:value-of select="concat(substring($fieldpath,1,string-length($fieldpath)-1),'/&quot;')"/>, </xsl:otherwise>
     </xsl:choose>
-    <xsl:value-of select="$fieldvar"/><xsl:if test="@data_type='struct_array'">(i)</xsl:if>, <xsl:choose><xsl:when test="$root='yes'">IDS%ids_properties%homogeneous_time.eq.1</xsl:when><xsl:otherwise>homogeneous</xsl:otherwise></xsl:choose>, <xsl:value-of select="$timedexpr"/>, status)
+    <xsl:value-of select="$fieldvar"/><xsl:if test="@data_type='struct_array'">(i)</xsl:if>, <xsl:choose><xsl:when test="$root='yes'">IDS%ids_properties%homogeneous_time</xsl:when><xsl:otherwise>homogeneous</xsl:otherwise></xsl:choose>, <xsl:value-of select="$timedexpr"/>, status)
     <xsl:call-template name="checkErrorCtx">
       <xsl:with-param name="method" select="'get'"/>
       <xsl:with-param name="ctx" select="$contextvar"/>
@@ -2033,6 +2037,8 @@ end module
       <xsl:with-param name="method" select="'get'"/>
       <xsl:with-param name="ctx" select="$contextvar"/>
       <xsl:with-param name="path" select="$fieldpath"/>
+      <xsl:with-param name="structvar" select="$structvar"/>
+      <xsl:with-param name="withtimepath" select="'yes'"/>
     </xsl:call-template>
   </xsl:when>
 
@@ -2071,6 +2077,7 @@ end module
       <xsl:with-param name="method" select="'get'"/>
       <xsl:with-param name="ctx" select="$contextvar"/>
       <xsl:with-param name="path" select="$fieldpath"/>
+      <xsl:with-param name="structvar" select="$structvar"/>
     </xsl:call-template>
   </xsl:when>
 
@@ -2089,6 +2096,7 @@ end module
       <xsl:with-param name="ctx" select="$contextvar"/>
       <xsl:with-param name="path" select="$fieldpath"/>
       <xsl:with-param name="structvar" select="$structvar"/>
+      <xsl:with-param name="withtimepath" select="'yes'"/>
     </xsl:call-template>
   </xsl:when>
 
@@ -2106,6 +2114,8 @@ end module
       <xsl:with-param name="method" select="'get'"/>
       <xsl:with-param name="ctx" select="$contextvar"/>
       <xsl:with-param name="path" select="$fieldpath"/>
+      <xsl:with-param name="structvar" select="$structvar"/>
+      <xsl:with-param name="withtimepath" select="'yes'"/>
     </xsl:call-template>
   </xsl:when>
 
@@ -2124,6 +2134,7 @@ end module
       <xsl:with-param name="ctx" select="$contextvar"/>
       <xsl:with-param name="path" select="$fieldpath"/>
       <xsl:with-param name="structvar" select="$structvar"/>
+      <xsl:with-param name="withtimepath" select="'yes'"/>
     </xsl:call-template>
   </xsl:when>
 
@@ -2143,6 +2154,7 @@ end module
       <xsl:with-param name="ctx" select="$contextvar"/>
       <xsl:with-param name="path" select="$fieldpath"/>
       <xsl:with-param name="structvar" select="$structvar"/>
+      <xsl:with-param name="withtimepath" select="'yes'"/>
     </xsl:call-template>
   </xsl:when>
 
@@ -2161,6 +2173,8 @@ end module
       <xsl:with-param name="method" select="'get'"/>
       <xsl:with-param name="ctx" select="$contextvar"/>
       <xsl:with-param name="path" select="$fieldpath"/>
+      <xsl:with-param name="structvar" select="$structvar"/>
+      <xsl:with-param name="withtimepath" select="'yes'"/>
     </xsl:call-template>
   </xsl:when>
 
@@ -2180,6 +2194,7 @@ end module
       <xsl:with-param name="ctx" select="$contextvar"/>
       <xsl:with-param name="path" select="$fieldpath"/>
       <xsl:with-param name="structvar" select="$structvar"/>
+      <xsl:with-param name="withtimepath" select="'yes'"/>
     </xsl:call-template>
   </xsl:when>
 
@@ -2199,6 +2214,7 @@ end module
       <xsl:with-param name="ctx" select="$contextvar"/>
       <xsl:with-param name="path" select="$fieldpath"/>
       <xsl:with-param name="structvar" select="$structvar"/>
+      <xsl:with-param name="withtimepath" select="'yes'"/>
     </xsl:call-template>
   </xsl:when>
 
@@ -2217,6 +2233,8 @@ end module
       <xsl:with-param name="method" select="'get'"/>
       <xsl:with-param name="ctx" select="$contextvar"/>
       <xsl:with-param name="path" select="$fieldpath"/>
+      <xsl:with-param name="structvar" select="$structvar"/>
+      <xsl:with-param name="withtimepath" select="'yes'"/>
     </xsl:call-template>
   </xsl:when>
 
@@ -2236,6 +2254,7 @@ end module
       <xsl:with-param name="ctx" select="$contextvar"/>
       <xsl:with-param name="path" select="$fieldpath"/>
       <xsl:with-param name="structvar" select="$structvar"/>
+      <xsl:with-param name="withtimepath" select="'yes'"/>
     </xsl:call-template>
   </xsl:when>
 
@@ -2255,6 +2274,7 @@ end module
       <xsl:with-param name="ctx" select="$contextvar"/>
       <xsl:with-param name="path" select="$fieldpath"/>
       <xsl:with-param name="structvar" select="$structvar"/>
+      <xsl:with-param name="withtimepath" select="'yes'"/>
     </xsl:call-template>
   </xsl:when>
 
@@ -2274,6 +2294,7 @@ end module
       <xsl:with-param name="ctx" select="$contextvar"/>
       <xsl:with-param name="path" select="$fieldpath"/>
       <xsl:with-param name="structvar" select="$structvar"/>
+      <xsl:with-param name="withtimepath" select="'yes'"/>
     </xsl:call-template>
   </xsl:when>
 
@@ -2289,10 +2310,11 @@ end module
           trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
 	  size1, size2, size3, size4, size5, size6, status)
     <xsl:call-template name="checkErrorCtx">
-      <xsl:with-param name="method" select="'put'"/>
+      <xsl:with-param name="method" select="'get'"/>
       <xsl:with-param name="ctx" select="$contextvar"/>
       <xsl:with-param name="path" select="$fieldpath"/>
       <xsl:with-param name="structvar" select="$structvar"/>
+      <xsl:with-param name="withtimepath" select="'yes'"/>
     </xsl:call-template>
   </xsl:when>
   <xsl:otherwise>
@@ -2319,6 +2341,7 @@ end module
   <xsl:param name="path"/>
   <xsl:param name="closectx"/>
   <xsl:param name="structvar"/>
+  <xsl:param name="withtimepath"/>
   <xsl:choose>
     <xsl:when test="$method='put'">
   if(isErrorCritical(status, <xsl:value-of select="$ctx"/>, <xsl:value-of select="$path"/>)) then
@@ -2333,7 +2356,7 @@ end module
      <xsl:if test="$closectx='yes'">call ual_end_action(<xsl:value-of select="$ctx"/>, status)</xsl:if>
      return
   endif
-  <xsl:if test="@type='dynamic'">endif</xsl:if> <!-- closes the homogeneous.NE.2 test -->
+  <xsl:if test="@type='dynamic'"><xsl:if test="$withtimepath='yes'">endif</xsl:if></xsl:if> <!-- closes the homogeneous.NE.2 test -->
     </xsl:otherwise>
   </xsl:choose>
 </xsl:template>
