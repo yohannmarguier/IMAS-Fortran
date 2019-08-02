@@ -487,7 +487,8 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>
   integer(ids_int), intent(in) :: ctx
   character*(*), intent(in) :: path
   type(ids_<xsl:value-of select="$this-type"/>), intent(in) :: struct
-  logical, intent(in) :: homogeneous, timedparent
+  logical, intent(in) :: timedparent
+  integer, intent(in) :: homogeneous
   integer(ids_int), intent(out) :: retstatus
   integer(ids_int) :: i, aoslen, lenstring, aosctx, lastdimsize
   integer :: status
@@ -560,7 +561,8 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   integer(ids_int) :: pulsectx, opctx, aosctx
   type(ids_<xsl:value-of select="@name"/>) :: IDS
   ! internal variables declaration
-  logical :: homogeneous, timedparent
+  logical :: timedparent
+  integer :: homogeneous
   integer(ids_int) :: aoslen, i, lenstring, lastdimsize
   character(len=100000) :: longstring
   character(len=300) :: timepath
@@ -574,8 +576,8 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
      if (present(retstatus)) retstatus = 0
      return
   endif
-  homogeneous = IDS%ids_properties%homogeneous_time.EQ.1
-  if ((homogeneous).AND.(.NOT.(associated(IDS%time)))) then
+  homogeneous = IDS%ids_properties%homogeneous_time
+  if ((homogeneous.EQ.1).AND.(.NOT.(associated(IDS%time)))) then
      write(*,*) "ERROR : time vector of homogeneous <xsl:value-of select="@name"/> must be associated."
      if (present(retstatus)) retstatus = UNKNOWN_ERR
      return
@@ -622,7 +624,8 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>
   integer(ids_int), intent(in) :: ctx
   character*(*), intent(in) :: path
   type(ids_<xsl:value-of select="$this-type"/>), intent(in) :: struct      
-  logical, intent(in) :: homogeneous, timedparent
+  logical, intent(in) :: timedparent
+  integer, intent(in) :: homogeneous 
   integer(ids_int), intent(out) :: retstatus
   integer(ids_int) :: i, aoslen, lenstring, aosctx, lastdimsize
   integer :: status
@@ -697,7 +700,8 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name($this-ty
   integer(ids_int), intent(in) :: ctx
   character*(*), intent(in) :: path
   type(ids_<xsl:value-of select="$this-type"/>), intent(in) :: struct
-  logical, intent(in) :: homogeneous, timedparent
+  logical, intent(in) :: timedparent
+  integer, intent(in) :: homogeneous
   integer(ids_int), intent(out) :: retstatus
   integer(ids_int) :: i, aoslen, lenstring, aosctx, lastdimsize
   integer :: status
@@ -768,7 +772,8 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   integer(ids_int) :: pulsectx, opctx, aosctx
   type(ids_<xsl:value-of select="@name"/>) :: IDS
   ! internal variables declaration
-  logical :: homogeneous, timedparent
+  logical :: timedparent
+  integer :: homogeneous
   integer(ids_int) :: aoslen, i, lenstring, lastdimsize
   character(len=100000) :: longstring
   character(len=300) :: timepath
@@ -779,9 +784,14 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
      if (present(retstatus)) retstatus = 0
      return
   endif
-  homogeneous = IDS%ids_properties%homogeneous_time.EQ.1
-  if ((homogeneous).AND.(.NOT.(associated(IDS%time)))) then
+  homogeneous = IDS%ids_properties%homogeneous_time
+  if ((homogeneous.EQ.1).AND.(.NOT.(associated(IDS%time)))) then
      write(*,*) "ERROR : time vector of homogeneous <xsl:value-of select="@name"/> must be associated."
+     if (present(retstatus)) retstatus = 0
+     return
+  endif
+  if (homogeneous.EQ.2) then
+     write(*,*) "WARNING : homogeneous_time=2 mark an IDS <xsl:value-of select="@name"/> with static/constant data only. No static data stored with put_slice operation."
      if (present(retstatus)) retstatus = 0
      return
   endif
@@ -829,7 +839,8 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name($this-ty
   integer(ids_int), intent(in) :: ctx
   character*(*), intent(in) :: path
   type(ids_<xsl:value-of select="$this-type"/>), intent(in) :: struct      
-  logical, intent(in) :: homogeneous, timedparent
+  logical, intent(in) :: timedparent
+  integer, intent(in) :: homogeneous
   integer(ids_int), intent(out) :: retstatus
   integer(ids_int) :: i, aoslen, lenstring, aosctx, lastdimsize
   integer :: status
@@ -907,7 +918,8 @@ subroutine get_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>
   integer(ids_int), intent(in) :: ctx
   character*(*), intent(in) :: path
   type(ids_<xsl:value-of select="$this-type"/>), intent(inout) :: struct
-  logical, intent(in) :: homogeneous, timedparent
+  logical, intent(in) :: timedparent
+  integer, intent(in) :: homogeneous
   integer(ids_int), intent(out) :: retstatus
   integer(ids_int) :: i, aoslen, lenstring, aosctx
   integer(ids_int) :: size1, size2, size3, size4, size5, size6, size7
@@ -1036,7 +1048,8 @@ subroutine get_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>
   integer(ids_int), intent(in) :: ctx
   character*(*), intent(in) :: path
   type(ids_<xsl:value-of select="$this-type"/>), intent(inout) :: struct      
-  logical, intent(in) :: homogeneous, timedparent
+  logical, intent(in) :: timedparent
+  integer, intent(in) :: homogeneous
   integer(ids_int), intent(out) :: retstatus
   integer(ids_int) :: i, aoslen, lenstring, aosctx
   integer(ids_int) :: size1, size2, size3, size4, size5, size6, size7
@@ -1441,11 +1454,11 @@ end module
       </xsl:choose>
     </xsl:variable>
     ! Put <xsl:value-of select="@name"/>
-    if (associated(<xsl:value-of select="$fieldvar"/>)) then
+    if (<xsl:if test="@type='dynamic'">(homogeneous.NE.2) .AND. </xsl:if>associated(<xsl:value-of select="$fieldvar"/>)) then
        aoslen = size(<xsl:value-of select="$fieldvar"/>)
        <xsl:choose>
 	 <xsl:when test="@type='dynamic'">
-       if (homogeneous) then
+       if (homogeneous.EQ.1) then
           timepath = "/time"
        else
           timepath = <xsl:value-of select="$fieldpath"/>//"/time"
@@ -1469,9 +1482,9 @@ end module
           call ual_end_action(aosctx, status)
        else
           write(*,*) "ERROR! with field "//<xsl:value-of select="$fieldpath"/>//" from context:"
-	  call ual_print_context(<xsl:value-of select="$contextvar"/>)
+          call ual_print_context(<xsl:value-of select="$contextvar"/>)
           call ual_end_action(<xsl:value-of select="$contextvar"/>, status)
-	  return
+          return
        endif
     endif
   </xsl:when>
@@ -1588,7 +1601,7 @@ end module
   <!-- float 1D vector data -->
   <xsl:when test="@data_type='flt_1d_type' or @data_type='FLT_1D'">
     ! Put <xsl:value-of select="@name"/>
-    if (associated(<xsl:value-of select="$fieldvar"/>)) then
+    if (<xsl:if test="@type='dynamic'">(homogeneous.NE.2) .AND. </xsl:if>associated(<xsl:value-of select="$fieldvar"/>)) then
     <xsl:call-template name="set_timepath_and_lastdimsize">
       <xsl:with-param name="slice" select="$slice"/>
       <xsl:with-param name="fieldpath" select="$fieldpath"/>
@@ -1609,7 +1622,7 @@ end module
   <!-- complex 1D vector data -->
   <xsl:when test="@data_type='cpx_1d_type' or @data_type='CPX_1D'">
     ! Put <xsl:value-of select="@name"/>
-    if (associated(<xsl:value-of select="$fieldvar"/>)) then
+    if (<xsl:if test="@type='dynamic'">(homogeneous.NE.2) .AND. </xsl:if>associated(<xsl:value-of select="$fieldvar"/>)) then
     <xsl:call-template name="set_timepath_and_lastdimsize">
       <xsl:with-param name="slice" select="$slice"/>
       <xsl:with-param name="fieldpath" select="$fieldpath"/>
@@ -1629,7 +1642,7 @@ end module
   <!-- integer 1D vector data -->
   <xsl:when test="@data_type='int_1d_type' or @data_type='INT_1D'">
     ! Put <xsl:value-of select="@name"/>
-    if (associated(<xsl:value-of select="$fieldvar"/>)) then
+    if (<xsl:if test="@type='dynamic'">(homogeneous.NE.2) .AND. </xsl:if>associated(<xsl:value-of select="$fieldvar"/>)) then
     <xsl:call-template name="set_timepath_and_lastdimsize">
       <xsl:with-param name="slice" select="$slice"/>
       <xsl:with-param name="fieldpath" select="$fieldpath"/>
@@ -1650,7 +1663,7 @@ end module
   <!-- float 2D vector data -->
   <xsl:when test="@data_type='FLT_2D'">
     ! Put <xsl:value-of select="@name"/>
-    if (associated(<xsl:value-of select="$fieldvar"/>)) then
+    if (<xsl:if test="@type='dynamic'">(homogeneous.NE.2) .AND. </xsl:if>associated(<xsl:value-of select="$fieldvar"/>)) then
     <xsl:call-template name="set_timepath_and_lastdimsize">
       <xsl:with-param name="slice" select="$slice"/>
       <xsl:with-param name="fieldpath" select="$fieldpath"/>
@@ -1673,7 +1686,7 @@ end module
   <!-- complex 2D vector data -->
   <xsl:when test="@data_type='cpx_2d_type' or @data_type='CPX_2D'">
     ! Put <xsl:value-of select="@name"/>
-    if (associated(<xsl:value-of select="$fieldvar"/>)) then
+    if (<xsl:if test="@type='dynamic'">(homogeneous.NE.2) .AND. </xsl:if>associated(<xsl:value-of select="$fieldvar"/>)) then
     <xsl:call-template name="set_timepath_and_lastdimsize">
       <xsl:with-param name="slice" select="$slice"/>
       <xsl:with-param name="fieldpath" select="$fieldpath"/>
@@ -1695,7 +1708,7 @@ end module
   <!-- integer 2D vector data -->
   <xsl:when test="@data_type='INT_2D'">
     ! Put <xsl:value-of select="@name"/>
-    if (associated(<xsl:value-of select="$fieldvar"/>)) then
+    if (<xsl:if test="@type='dynamic'">(homogeneous.NE.2) .AND. </xsl:if>associated(<xsl:value-of select="$fieldvar"/>)) then
     <xsl:call-template name="set_timepath_and_lastdimsize">
       <xsl:with-param name="slice" select="$slice"/>
       <xsl:with-param name="fieldpath" select="$fieldpath"/>
@@ -1718,7 +1731,7 @@ end module
   <!-- float 3D vector data -->
   <xsl:when test="@data_type='FLT_3D'">
     ! Put <xsl:value-of select="@name"/>
-    if (associated(<xsl:value-of select="$fieldvar"/>)) then
+    if (<xsl:if test="@type='dynamic'">(homogeneous.NE.2) .AND. </xsl:if>associated(<xsl:value-of select="$fieldvar"/>)) then
     <xsl:call-template name="set_timepath_and_lastdimsize">
       <xsl:with-param name="slice" select="$slice"/>
       <xsl:with-param name="fieldpath" select="$fieldpath"/>
@@ -1742,7 +1755,7 @@ end module
   <!-- complex 3D vector data -->
   <xsl:when test="@data_type='CPX_3D'">
     ! Put <xsl:value-of select="@name"/>
-    if (associated(<xsl:value-of select="$fieldvar"/>)) then
+    if (<xsl:if test="@type='dynamic'">(homogeneous.NE.2) .AND. </xsl:if>associated(<xsl:value-of select="$fieldvar"/>)) then
     <xsl:call-template name="set_timepath_and_lastdimsize">
       <xsl:with-param name="slice" select="$slice"/>
       <xsl:with-param name="fieldpath" select="$fieldpath"/>
@@ -1765,7 +1778,7 @@ end module
   <!-- integer 3D vector data -->
   <xsl:when test="@data_type='INT_3D'">
     ! Put <xsl:value-of select="@path"/>
-    if (associated(<xsl:value-of select="$fieldvar"/>)) then
+    if (<xsl:if test="@type='dynamic'">(homogeneous.NE.2) .AND. </xsl:if>associated(<xsl:value-of select="$fieldvar"/>)) then
     <xsl:call-template name="set_timepath_and_lastdimsize">
       <xsl:with-param name="slice" select="$slice"/>
       <xsl:with-param name="fieldpath" select="$fieldpath"/>
@@ -1789,7 +1802,7 @@ end module
   <!-- float 4D vector data -->
   <xsl:when test="@data_type='FLT_4D'">
     ! Put <xsl:value-of select="@name"/>
-    if (associated(<xsl:value-of select="$fieldvar"/>)) then
+    if (<xsl:if test="@type='dynamic'">(homogeneous.NE.2) .AND. </xsl:if>associated(<xsl:value-of select="$fieldvar"/>)) then
     <xsl:call-template name="set_timepath_and_lastdimsize">
       <xsl:with-param name="slice" select="$slice"/>
       <xsl:with-param name="fieldpath" select="$fieldpath"/>
@@ -1814,7 +1827,7 @@ end module
   <!-- float 5D vector data -->
   <xsl:when test="@data_type='FLT_5D'">
     ! Put <xsl:value-of select="@name"/>
-    if (associated(<xsl:value-of select="$fieldvar"/>)) then
+    if (<xsl:if test="@type='dynamic'">(homogeneous.NE.2) .AND. </xsl:if>associated(<xsl:value-of select="$fieldvar"/>)) then
     <xsl:call-template name="set_timepath_and_lastdimsize">
       <xsl:with-param name="slice" select="$slice"/>
       <xsl:with-param name="fieldpath" select="$fieldpath"/>
@@ -1840,7 +1853,7 @@ end module
   <!-- float 6D vector data -->
   <xsl:when test="@data_type='FLT_6D'">
     ! Put <xsl:value-of select="@name"/>
-    if (associated(<xsl:value-of select="$fieldvar"/>)) then
+    if (<xsl:if test="@type='dynamic'">(homogeneous.NE.2) .AND. </xsl:if>associated(<xsl:value-of select="$fieldvar"/>)) then
     <xsl:call-template name="set_timepath_and_lastdimsize">
       <xsl:with-param name="slice" select="$slice"/>
       <xsl:with-param name="fieldpath" select="$fieldpath"/>
@@ -1917,34 +1930,36 @@ end module
     ! Get <xsl:value-of select="@name"/>
     <xsl:choose>
       <xsl:when test="@type='dynamic'">
-       if (<xsl:choose><xsl:when test="$root='yes'">IDS%ids_properties%homogeneous_time.eq.1</xsl:when><xsl:otherwise>homogeneous</xsl:otherwise></xsl:choose>) then
-          timepath = "/time"
-       else
-          timepath = <xsl:value-of select="$fieldpath"/>//"/time"
-       endif
+       if (<xsl:choose><xsl:when test="$root='yes'">IDS%ids_properties%homogeneous_time.NE.2</xsl:when><xsl:otherwise>homogeneous.NE.2</xsl:otherwise></xsl:choose>) then
+          if (<xsl:choose><xsl:when test="$root='yes'">IDS%ids_properties%homogeneous_time.EQ.1</xsl:when><xsl:otherwise>homogeneous.EQ.1</xsl:otherwise></xsl:choose>) then
+             timepath = "/time"
+          else
+             timepath = <xsl:value-of select="$fieldpath"/>//"/time"
+          endif
       </xsl:when>
       <xsl:otherwise>
-       timepath = ""
+          timepath = ""
       </xsl:otherwise>
     </xsl:choose>
-    call ual_begin_arraystruct_action(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>, timepath, aoslen, aosctx)
-    if (aosctx.ge.0) then
-       if (aoslen.gt.0) allocate(<xsl:value-of select="$fieldvar"/>(aoslen))
-       do i = 1,aoslen
+       call ual_begin_arraystruct_action(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>, timepath, aoslen, aosctx)
+       if (aosctx.ge.0) then
+          if (aoslen.gt.0) allocate(<xsl:value-of select="$fieldvar"/>(aoslen))
+          do i = 1,aoslen
        <xsl:apply-templates select="." mode="GET_FIELD">
 	 <xsl:with-param name="structvar" select="$structvar"/>
 	 <xsl:with-param name="contextvar" select="'aosctx'"/>
 	 <xsl:with-param name="timedparentexpr" select="'timedparent.or.'"/>
 	 <xsl:with-param name="root" select="$root"/>
        </xsl:apply-templates> 
-          call ual_iterate_over_arraystruct(aosctx, 1, status)
-       enddo
-       call ual_end_action(aosctx, status)
-    else
-       write(*,*) "ERROR! with field "//<xsl:value-of select="$fieldpath"/>//" from context:"
-       call ual_print_context(<xsl:value-of select="$contextvar"/>)
-       call ual_end_action(<xsl:value-of select="$contextvar"/>, status)
-       return
+             call ual_iterate_over_arraystruct(aosctx, 1, status)
+          enddo
+          call ual_end_action(aosctx, status)
+       else
+          write(*,*) "ERROR! with field "//<xsl:value-of select="$fieldpath"/>//" from context:"
+          call ual_print_context(<xsl:value-of select="$contextvar"/>)
+          call ual_end_action(<xsl:value-of select="$contextvar"/>, status)
+          return
+       endif
     endif
   </xsl:when>
 
@@ -2318,6 +2333,7 @@ end module
      <xsl:if test="$closectx='yes'">call ual_end_action(<xsl:value-of select="$ctx"/>, status)</xsl:if>
      return
   endif
+  <xsl:if test="@type='dynamic'">endif</xsl:if> <!-- closes the homogeneous.NE.2 test -->
     </xsl:otherwise>
   </xsl:choose>
 </xsl:template>
@@ -2330,15 +2346,16 @@ end module
   <xsl:param name="root"/>
   <xsl:choose>
     <xsl:when test="@type='dynamic'">
-      if (timedparent) then
-         timepath=""
-      else
-         if (<xsl:choose><xsl:when test="$root='yes'">IDS%ids_properties%homogeneous_time.eq.1</xsl:when><xsl:otherwise>homogeneous</xsl:otherwise></xsl:choose>) then
-            timepath="/time"
+      if (<xsl:choose><xsl:when test="$root='yes'">IDS%ids_properties%homogeneous_time.NE.2</xsl:when><xsl:otherwise>homogeneous.NE.2</xsl:otherwise></xsl:choose>) then 
+         if (timedparent) then
+            timepath=""
          else
-	    timepath=<xsl:if test="substring(@timebasepath,1,1)='\'">path//</xsl:if>"<xsl:value-of select="translate(@timebasepath,'\','')"/>"
+            if (<xsl:choose><xsl:when test="$root='yes'">IDS%ids_properties%homogeneous_time.EQ.1</xsl:when><xsl:otherwise>homogeneous.EQ.1</xsl:otherwise></xsl:choose>) then
+               timepath="/time"
+            else
+	       timepath=<xsl:if test="substring(@timebasepath,1,1)='\'">path//</xsl:if>"<xsl:value-of select="translate(@timebasepath,'\','')"/>"
+            endif
          endif
-      endif
     </xsl:when>
     <xsl:otherwise>
       timepath = ""
@@ -2359,7 +2376,7 @@ end module
          timepath=""
 	 lastdimsize = size(<xsl:value-of select="$fieldvar"/>,<xsl:value-of select="$rank"/>)
       else
-         if (homogeneous) then
+         if (homogeneous.EQ.1) then
             timepath="/time"
          else
 	    timepath=<xsl:if test="substring(@timebasepath,1,1)='\'">path//</xsl:if>"<xsl:value-of select="translate(@timebasepath,'\','')"/>"
