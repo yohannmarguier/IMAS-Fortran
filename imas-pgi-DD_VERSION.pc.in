@@ -9,4 +9,4 @@ Description: IMAS Fortran Libraries (pgi)
 URL: https://imas.iter.org
 Requires: imas-lowlevel = __UAL_GIT_DESCRIBE__
 Cflags: -I${includedir}/pgi
-Libs: -L${libdir} -limas-pgi-__DD_GIT_DESCRIBE__
+Libs: -L${libdir} -limas-pgi-__DD_GIT_DESCRIBE__ -Wl,--defsym,UAL_VER___UAL_SAFE_DESCRIBE__=0 -Wl,--defsym,DD_VER___DD_SAFE_DESCRIBE__=0
