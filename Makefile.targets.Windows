@@ -3,10 +3,10 @@ sources_install: $(SOURCES) ids_schemas.f90 id_f90_sources_install
 
 gfortran_install: $(IDSOBJECTS_gfortran) libimas-gfortran.dll libimas-gfortran.lib
 	$(mkdir_p) $(packagedir)/fortraninterface/include
-	cp gfortran/*.mod $(packagedir)/fortraninterface/include
+	$(CP) gfortran/*.mod $(packagedir)/fortraninterface/include
 	$(mkdir_p) $(packagedir)/fortraninterface/lib
 	for OBJECT in `find . -type f \( -name "*.lib" -or -name "*.dll" \)`; do \
-		cp $$OBJECT $(packagedir)/fortraninterface/lib; \
+		$(CP) $$OBJECT $(packagedir)/fortraninterface/lib; \
 	done
 
 #--------------------- gfortran --------------
