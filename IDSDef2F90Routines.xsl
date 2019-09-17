@@ -246,7 +246,7 @@ subroutine ids_deallocate_struct_<xsl:value-of select="local:unique_name(@name)"
   <xsl:apply-templates select="./field" mode="DEALLOCATE_FIELD">
     <xsl:with-param name="idxpath" select="''"/>
   </xsl:apply-templates>
-  call set_c_data(struct_in, c_data)
+  call set_c_data(struct_in, .FALSE.)
 end subroutine ids_deallocate_struct_<xsl:value-of select="local:unique_name(@name)"/>
 
 <xsl:for-each select=".//field[@data_type='structure' or @data_type='struct_array']">
