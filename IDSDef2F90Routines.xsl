@@ -1260,6 +1260,7 @@ end module
     else
       deallocate(struct_in<xsl:value-of select="$currentidxpath"/>)
     endif
+    nullify(struct_in<xsl:value-of select="$currentidxpath"/>)
   endif
     </xsl:when>
 
