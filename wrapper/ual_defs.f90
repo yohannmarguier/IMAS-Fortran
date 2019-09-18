@@ -51,6 +51,11 @@ module ual_defs
   integer, parameter :: BACKEND_ERR        = ERR_0-2
   integer, parameter :: LOWLEVEL_ERR       = ERR_0-3
 
+  integer, parameter :: IDS_TIME_MODE_UNKNOWN = -999999999
+  integer, parameter :: IDS_TIME_MODE_HETEROGENEOUS = 0
+  integer, parameter :: IDS_TIME_MODE_HOMOGENEOUS = 1
+  integer, parameter :: IDS_TIME_MODE_INDEPENDENT = 2
+
 end module ual_defs
 
 

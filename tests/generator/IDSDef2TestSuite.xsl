@@ -1037,6 +1037,18 @@ or
         </xsl:variable>
 
         <xsl:choose>
+	  <!-- SKIP VALUE CHECK FOR version_dd_al NODES -->
+	  <!-- (would require a cleaner implementation) -->
+            <xsl:when test="@name='data_dictionary'">
+              <xsl:text>&#9;&#9;&#9;!!! DON'T CHECK VALUE !!!&#10;</xsl:text>
+            </xsl:when>
+            <xsl:when test="@name='access_layer'">
+              <xsl:text>&#9;&#9;&#9;!!! DON'T CHECK VALUE !!!&#10;</xsl:text>
+            </xsl:when>
+            <xsl:when test="@name='access_layer_language'">
+              <xsl:text>&#9;&#9;&#9;!!! DON'T CHECK VALUE !!!&#10;</xsl:text>
+            </xsl:when>
+
             <xsl:when test="@name='homogeneous_time'">
                                            <xsl:text>&#9;&#9;&#9;isEqual = assertHomogeneousTimeField(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>, </xsl:text><xsl:value-of select="$sliceMode"/><xsl:text>, "</xsl:text><xsl:value-of select="ancestor::IDS/@name"/><xsl:text>:</xsl:text><xsl:value-of select="@path"/><xsl:text>")&#10;</xsl:text>
             </xsl:when>
