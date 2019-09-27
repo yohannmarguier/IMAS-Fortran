@@ -5,3 +5,4 @@ gfortran
 ifort
 pgi
 makefile-gen
+idsroutines
