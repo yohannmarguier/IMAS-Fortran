@@ -1,5 +1,7 @@
 sources_install: $(SOURCES) ids_schemas.f90 id_f90_sources_install
 	$(INSTALL_DATA) $(SOURCES) ids_schemas.f90 $(datadir)/src/fortraninterface
+sources_uninstall:
+	-rm -rf $(datadir)/src/fortraninterface
 
 pgi_install: $(IDSOBJECTS_pgi) libimas-pgi.a_install libimas-pgi.so_install | $(includedir)/pgi
 	$(INSTALL_DATA) $(MODDIR_pgi)/*.mod $(includedir)/pgi
@@ -11,6 +13,17 @@ nagfor_install: $(IDSOBJECTS_nagfor) libimas-nagfor.a_install libimas-nagfor.so_
 	$(INSTALL_DATA) $(MODDIR_nagfor)/*.mod $(includedir)/nagfor
 gfortran_install: $(IDSOBJECTS_gfortran) libimas-gfortran.a_install libimas-gfortran.so_install | $(includedir)/gfortran
 	$(INSTALL_DATA) $(MODDIR_gfortran)/*.mod $(includedir)/gfortran
+
+pgi_uninstall: libimas-pgi.a_uninstall libimas-pgi.so_uninstall
+	-rm -f $(includedir)/pgi/*.mod
+g95_uninstall: libimas-g95.a_uninstall libimas-g95.so_uninstall
+	-rm -f $(includedir)/g95/*.mod
+ifort_uninstall: libimas-ifort.a_uninstall libimas-ifort.so_uninstall
+	-rm -f $(includedir)/ifort/*.mod
+nagfor_uninstall: libimas-nagfor.a_uninstall libimas-nagfor.so_uninstall
+	-rm -f $(includedir)/nagfor/*.mod
+gfortran_uninstall: libimas-gfortran.a_uninstall libimas-gfortran.so_uninstall
+	-rm -f $(includedir)/gfortran/*.mod
 
 #--------------------- g95 --------------
 libimas-g95-$(DD_GIT_DESCRIBE).so.$(SO_NUM): $(LIBFILES_g95)
@@ -33,6 +46,14 @@ libimas-g95.a_install: %.a_install:%-$(DD_GIT_DESCRIBE).a | $(libdir)
 	$(INSTALL_DATA) $< $(libdir)
 	$(LN_S) $< $(libdir)/$*.a
 
+libimas-g95.a_uninstall: %.a_uninstall
+	-rm -f $(libdir)/$(*F).a
+	-rm -f $(libdir)/$(*F)-$(DD_GIT_DESCRIBE).a
+libimas-g95.so_uninstall: %.so_uninstall
+	-rm -f $(libdir)/$(*F).so
+	-rm -f $(libdir)/$(*F)-$(DD_GIT_DESCRIBE).so
+	-rm -f $(libdir)/$(*F)-$(DD_GIT_DESCRIBE).so.$(SO_NUM)
+
 #--------------------- gfortran --------------
 libimas-gfortran-$(DD_GIT_DESCRIBE).so.$(SO_NUM): $(LIBFILES_gfortran)
 	$(FC_gfortran) $(FCFLAGS_gfortran) -o $@ -shared -Wl,-soname,$@ $^ $(LIBS)
@@ -53,6 +74,14 @@ libimas-gfortran.a:libimas-gfortran-$(DD_GIT_DESCRIBE).a
 libimas-gfortran.a_install: %.a_install:%-$(DD_GIT_DESCRIBE).a | $(libdir)
 	$(INSTALL_DATA) $< $(libdir)
 	$(LN_S) $< $(libdir)/$*.a
+
+libimas-gfortran.a_uninstall: %.a_uninstall
+	-rm -f $(libdir)/$(*F).a
+	-rm -f $(libdir)/$(*F)-$(DD_GIT_DESCRIBE).a
+libimas-gfortran.so_uninstall: %.so_uninstall
+	-rm -f $(libdir)/$(*F).so
+	-rm -f $(libdir)/$(*F)-$(DD_GIT_DESCRIBE).so
+	-rm -f $(libdir)/$(*F)-$(DD_GIT_DESCRIBE).so.$(SO_NUM)
 
 #--------------------- nagfor --------------
 libimas-nagfor-$(DD_GIT_DESCRIBE).so.$(SO_NUM): $(LIBFILES_nagfor)
@@ -75,6 +104,14 @@ libimas-nagfor.a_install: %.a_install:%-$(DD_GIT_DESCRIBE).a | $(libdir)
 	$(INSTALL_DATA) $< $(libdir)
 	$(LN_S) $< $(libdir)/$*.a
 
+libimas-nagfor.a_uninstall: %.a_uninstall
+	-rm -f $(libdir)/$(*F).a
+	-rm -f $(libdir)/$(*F)-$(DD_GIT_DESCRIBE).a
+libimas-nagfor.so_uninstall: %.so_uninstall
+	-rm -f $(libdir)/$(*F).so
+	-rm -f $(libdir)/$(*F)-$(DD_GIT_DESCRIBE).so
+	-rm -f $(libdir)/$(*F)-$(DD_GIT_DESCRIBE).so.$(SO_NUM)
+
 #--------------------- pgi --------------
 libimas-pgi-$(DD_GIT_DESCRIBE).so.$(SO_NUM): $(LIBFILES_pgi)
 	$(FC_pgi) $(FCFLAGS_pgi) -o $@ -shared -Wl,-soname,$@ $^ $(LIBS)
@@ -96,6 +133,14 @@ libimas-pgi.a_install: %.a_install:%-$(DD_GIT_DESCRIBE).a | $(libdir)
 	$(INSTALL_DATA) $< $(libdir)
 	$(LN_S) $< $(libdir)/$*.a
 
+libimas-pgi.a_uninstall: %.a_uninstall
+	-rm -f $(libdir)/$(*F).a
+	-rm -f $(libdir)/$(*F)-$(DD_GIT_DESCRIBE).a
+libimas-pgi.so_uninstall: %.so_uninstall
+	-rm -f $(libdir)/$(*F).so
+	-rm -f $(libdir)/$(*F)-$(DD_GIT_DESCRIBE).so
+	-rm -f $(libdir)/$(*F)-$(DD_GIT_DESCRIBE).so.$(SO_NUM)
+
 #--------------------- ifort --------------
 libimas-ifort-$(DD_GIT_DESCRIBE).so.$(SO_NUM): $(LIBFILES_ifort)
 	$(FC_ifort) $(FCFLAGS_ifort) -o $@ -shared -Wl,-soname,$@ $^ $(LIBS)
@@ -116,3 +161,11 @@ libimas-ifort.a:libimas-ifort-$(DD_GIT_DESCRIBE).a
 libimas-ifort.a_install: %.a_install:%-$(DD_GIT_DESCRIBE).a | $(libdir)
 	$(INSTALL_DATA) $< $(libdir)
 	$(LN_S) $< $(libdir)/$*.a
+
+libimas-ifort.a_uninstall: %.a_uninstall
+	-rm -f $(libdir)/$(*F).a
+	-rm -f $(libdir)/$(*F)-$(DD_GIT_DESCRIBE).a
+libimas-ifort.so_uninstall: %.so_uninstall
+	-rm -f $(libdir)/$(*F).so
+	-rm -f $(libdir)/$(*F)-$(DD_GIT_DESCRIBE).so
+	-rm -f $(libdir)/$(*F)-$(DD_GIT_DESCRIBE).so.$(SO_NUM)

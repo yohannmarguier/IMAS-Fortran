@@ -1,5 +1,6 @@
 
 sources_install: $(SOURCES) ids_schemas.f90 id_f90_sources_install
+sources_uninstall: id_f90_sources_uninstall
 
 gfortran_install: $(IDSOBJECTS_gfortran) libimas-gfortran.dll libimas-gfortran.lib
 	$(mkdir_p) $(packagedir)/fortraninterface/include
@@ -8,6 +9,7 @@ gfortran_install: $(IDSOBJECTS_gfortran) libimas-gfortran.dll libimas-gfortran.l
 	for OBJECT in `find . -type f \( -name "*.lib" -or -name "*.dll" \)`; do \
 		$(CP) $$OBJECT $(packagedir)/fortraninterface/lib; \
 	done
+gfortran_uninstall:
 
 #--------------------- gfortran --------------
 # Windows libraries

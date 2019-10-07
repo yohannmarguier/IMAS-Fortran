@@ -240,4 +240,3 @@ ifort_test_%: $(IFORT_BIN_DIR)/%_all_test.exe $(IFORT_BIN_DIR)/%_put_test.exe $(
 
 #----------------------- classpath deps ---------------------
 include ../../../Makefile.classpath
-

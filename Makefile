@@ -11,7 +11,7 @@ SO_NUM=5
 
 
 ifeq ("no","$(strip $(IMAS_FORTRAN))")
-all sources sources_install install clean clean-src check test:
+all sources sources_install install uninstall clean clean-src check test:
 	$(warning "Ignoring fortraninterface (IMAS_FORTRAN=no).")
 else
 
@@ -75,6 +75,8 @@ endif
 all: $(SOURCES) $(TARGETS) pkgconfig
 
 install: all $(INSTALL_TARGETS) pkgconfig_install
+
+uninstall: $(subst %_install,%_uninstall, INSTALL_TARGETS) pkgconfig_uninstall
 
 $(libdir) $(addprefix $(includedir)/,nagfor pgi g95 gfortran ifort) $(datadir)/src/fortraninterface \
 $(MODDIR_nagfor) $(MODDIR_pgi) $(MODDIR_g95) $(MODDIR_gfortran) $(MODDIR_ifort):
