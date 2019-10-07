@@ -76,7 +76,7 @@ all: $(SOURCES) $(TARGETS) pkgconfig
 
 install: all $(INSTALL_TARGETS) pkgconfig_install
 
-uninstall: $(subst %_install,%_uninstall, INSTALL_TARGETS) pkgconfig_uninstall
+uninstall: $(INSTALL_TARGETS:%_install=%_uninstall) pkgconfig_uninstall
 
 $(libdir) $(addprefix $(includedir)/,nagfor pgi g95 gfortran ifort) $(datadir)/src/fortraninterface \
 $(MODDIR_nagfor) $(MODDIR_pgi) $(MODDIR_g95) $(MODDIR_gfortran) $(MODDIR_ifort):
