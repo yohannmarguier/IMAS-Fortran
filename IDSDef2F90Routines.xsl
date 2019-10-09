@@ -1498,8 +1498,7 @@ end module
           enddo
           call ual_end_action(aosctx, status)
        else
-          write(*,*) "ERROR! with field "//<xsl:value-of select="$fieldpath"/>//" from context:"
-          call ual_print_context(<xsl:value-of select="$contextvar"/>)
+          write(*,*) "ERROR! with field "//<xsl:value-of select="$fieldpath"/>
           call ual_end_action(<xsl:value-of select="$contextvar"/>, status)
           return
        endif
@@ -2003,8 +2002,7 @@ end module
              enddo
              call ual_end_action(aosctx, status)
           else
-             write(*,*) "ERROR! with field "//<xsl:value-of select="$fieldpath"/>//" from context:"
-             call ual_print_context(<xsl:value-of select="$contextvar"/>)
+             write(*,*) "ERROR! with field "//<xsl:value-of select="$fieldpath"/>
              call ual_end_action(<xsl:value-of select="$contextvar"/>, status)
              return
           endif
@@ -2484,8 +2482,7 @@ FUNCTION isErrorCritical(status, ctx, path) RESULT (exitRequest)
       return
    else
       exitRequest = .TRUE.
-      write(*,*) "ERROR! with field '",path,"' from context:"
-      call ual_print_context(ctx)
+      write(*,*) "ERROR! with field '",path,"'"
       return
    endif
 END FUNCTION isErrorCritical
