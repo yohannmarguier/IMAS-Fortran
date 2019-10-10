@@ -27,7 +27,7 @@ gfortran_uninstall: libimas-gfortran.a_uninstall libimas-gfortran.so_uninstall
 
 #--------------------- g95 --------------
 libimas-g95-$(DD_GIT_DESCRIBE).so.$(SO_NUM): $(LIBFILES_g95)
-	$(FC_g95) $(FCFLAGS_g95) -o $@ -shared -Wl,-soname,$@ $^ $(LIBS)
+	$(FC_g95) $(FCFLAGS_g95) -o $@ -shared -Wl,$(SONAME_OPT),$@ $^ $(LIBS)
 libimas-g95-$(DD_GIT_DESCRIBE).so: %:%.$(SO_NUM)
 	$(LN_S) $< $@
 libimas-g95.so:libimas-g95-$(DD_GIT_DESCRIBE).so
@@ -56,7 +56,7 @@ libimas-g95.so_uninstall:
 
 #--------------------- gfortran --------------
 libimas-gfortran-$(DD_GIT_DESCRIBE).so.$(SO_NUM): $(LIBFILES_gfortran)
-	$(FC_gfortran) $(FCFLAGS_gfortran) -o $@ -shared -Wl,-soname,$@ $^ $(LIBS)
+	$(FC_gfortran) $(FCFLAGS_gfortran) -o $@ -shared -Wl,$(SONAME_OPT),$@ $^ $(LIBS)
 libimas-gfortran-$(DD_GIT_DESCRIBE).so: %:%.$(SO_NUM)
 	$(LN_S) $< $@
 libimas-gfortran.so:libimas-gfortran-$(DD_GIT_DESCRIBE).so
@@ -85,7 +85,7 @@ libimas-gfortran.so_uninstall:
 
 #--------------------- nagfor --------------
 libimas-nagfor-$(DD_GIT_DESCRIBE).so.$(SO_NUM): $(LIBFILES_nagfor)
-	$(FC_nagfor) $(FCFLAGS_nagfor) -o $@ -Wl,-shared -Wl,-Wl,,-soname,,$@ $^ $(LIBS)
+	$(FC_nagfor) $(FCFLAGS_nagfor) -o $@ -Wl,-shared -Wl,-Wl,,$(SONAME_OPT),,$@ $^ $(LIBS)
 libimas-nagfor-$(DD_GIT_DESCRIBE).so: %:%.$(SO_NUM)
 	$(LN_S) $< $@
 libimas-nagfor.so:libimas-nagfor-$(DD_GIT_DESCRIBE).so
@@ -114,7 +114,7 @@ libimas-nagfor.so_uninstall:
 
 #--------------------- pgi --------------
 libimas-pgi-$(DD_GIT_DESCRIBE).so.$(SO_NUM): $(LIBFILES_pgi)
-	$(FC_pgi) $(FCFLAGS_pgi) -o $@ -shared -Wl,-soname,$@ $^ $(LIBS)
+	$(FC_pgi) $(FCFLAGS_pgi) -o $@ -shared -Wl,$(SONAME_OPT),$@ $^ $(LIBS)
 libimas-pgi-$(DD_GIT_DESCRIBE).so: %:%.$(SO_NUM)
 	$(LN_S) $< $@
 libimas-pgi.so:libimas-pgi-$(DD_GIT_DESCRIBE).so
@@ -143,7 +143,7 @@ libimas-pgi.so_uninstall:
 
 #--------------------- ifort --------------
 libimas-ifort-$(DD_GIT_DESCRIBE).so.$(SO_NUM): $(LIBFILES_ifort)
-	$(FC_ifort) $(FCFLAGS_ifort) -o $@ -shared -Wl,-soname,$@ $^ $(LIBS)
+	$(FC_ifort) $(FCFLAGS_ifort) -o $@ -shared -Wl,$(SONAME_OPT),$@ $^ $(LIBS)
 libimas-ifort-$(DD_GIT_DESCRIBE).so: %:%.$(SO_NUM)
 	$(LN_S) $< $@
 libimas-ifort.so:libimas-ifort-$(DD_GIT_DESCRIBE).so
