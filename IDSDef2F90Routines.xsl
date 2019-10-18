@@ -608,7 +608,10 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
 
   <xsl:if test="@specific_validation_rules='yes'">
   call ids_validate(IDS, validationstatus)
-  if (validationstatus.EQ.-1) return
+  if (validationstatus.EQ.-1) then
+     write(*,*) "PUT operation stopped"
+     return
+  endif
   </xsl:if>
   
   call ual_begin_global_action(pulsectx, name, WRITE_OP, opctx) 
