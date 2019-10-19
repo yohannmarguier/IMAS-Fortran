@@ -801,15 +801,11 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
 
   implicit none
 
-<<<<<<< HEAD
   integer(ids_int), intent(out), optional :: retstatus
   integer(ids_int) :: status = 0
-=======
-  integer(ids_int) :: status = 0, retstatus
   <xsl:if test="@specific_validation_rules='yes'">
   integer(ids_int) :: validationstatus = 0
   </xsl:if>
->>>>>>> Replaced Stop instructions by smoother Return instructions (IMAS-2162)
   character*(*) :: name
   integer(ids_int) :: pulsectx, opctx, aosctx
   type(ids_<xsl:value-of select="@name"/>) :: IDS
