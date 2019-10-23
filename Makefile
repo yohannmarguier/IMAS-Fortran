@@ -113,7 +113,7 @@ ual_low_level_wrap_g95.o: %_g95.o:wrapper/%.f90 ual_defs_g95.o
 	$(FC_g95) -c $(FCFLAGS_g95) $(INCDIR_g95) $< -o $@
 ids_schemas_g95.o: %_g95.o:%.f90 ual_defs_g95.o
 	$(FC_g95) -c $(FCFLAGS_g95) $(INCDIR_g95) $< -o $@
-specific_validation_rules_g95.o: %_g95.o:%.f90 ual_defs_g95.o
+specific_validation_rules_g95.o: %_g95.o:%.f90 ual_defs_g95.o ids_schemas_g95.o 
 	$(FC_g95) -c $(FCFLAGS_g95) $(INCDIR_g95) $< -o $@
 utilities_copy_struct_g95.o: utilities_copy_struct.f90 ids_schemas_g95.o
 	$(FC_g95) -c $(FCFLAGS_g95) $(INCDIR_g95) $< -o $@
@@ -151,9 +151,9 @@ ual_defs_gfortran.o: %_gfortran.o:wrapper/%.f90 | $(MODDIR_gfortran)
 	$(FC_gfortran) -c $(FCFLAGS_gfortran) $(INCDIR_gfortran) $< -o $@
 ual_low_level_wrap_gfortran.o: %_gfortran.o:wrapper/%.f90 ual_defs_gfortran.o
 	$(FC_gfortran) -c $(FCFLAGS_gfortran) $(INCDIR_gfortran) $< -o $@
-ids_schemas_gfortran.o: %_gfortran.o:%.f90 ual_defs_gfortran.o
+ids_schemas_gfortran.o: %_gfortran.o:%.f90 ual_defs_gfortran.o 
 	$(FC_gfortran) -c $(FCFLAGS_gfortran) $(INCDIR_gfortran) $< -o $@
-specific_validation_rules_gfortran.o: %_gfortran.o:%.f90 ual_defs_gfortran.o
+specific_validation_rules_gfortran.o: %_gfortran.o:%.f90 ual_defs_gfortran.o ids_schemas_gfortran.o
 	$(FC_gfortran) -c $(FCFLAGS_gfortran) $(INCDIR_gfortran) $< -o $@
 utilities_copy_struct_gfortran.o: utilities_copy_struct.f90 ids_schemas_gfortran.o ual_defs_gfortran.o ual_low_level_wrap_gfortran.o
 	$(FC_gfortran) -c $(FCFLAGS_gfortran) $(INCDIR_gfortran) $< -o $@
@@ -193,7 +193,7 @@ ual_low_level_wrap_nagfor.o: %_nagfor.o:wrapper/%.f90 ual_defs_nagfor.o
 	$(FC_nagfor) -c $(FCFLAGS_nagfor) $(INCDIR_nagfor) $< -o $@
 ids_schemas_nagfor.o: %_nagfor.o:%.f90 ual_defs_nagfor.o
 	$(FC_nagfor) -c $(FCFLAGS_nagfor) $(INCDIR_nagfor) $< -o $@
-specific_validation_rules_nagfor.o: %_nagfor.o:%.f90 ual_defs_nagfor.o
+specific_validation_rules_nagfor.o: %_nagfor.o:%.f90 ual_defs_nagfor.o ids_schemas_nagfor.o
 	$(FC_nagfor) -c $(FCFLAGS_nagfor) $(INCDIR_nagfor) $< -o $@
 utilities_copy_struct_nagfor.o: utilities_copy_struct.f90 ids_schemas_nagfor.o ual_defs_nagfor.o ual_low_level_wrap_nagfor.o
 	$(FC_nagfor) -c $(FCFLAGS_nagfor) $(INCDIR_nagfor) $< -o $@
@@ -233,7 +233,7 @@ ual_low_level_wrap_pgi.o: %_pgi.o:wrapper/%.f90 ual_defs_pgi.o
 	$(FC_pgi) -c $(FCFLAGS_pgi) $(INCDIR_pgi) $< -o $@
 ids_schemas_pgi.o: %_pgi.o:%.f90 ual_defs_pgi.o
 	$(FC_pgi) -c $(FCFLAGS_pgi) $(INCDIR_pgi) $< -o $@
-specific_validation_rules_pgi.o: %_pgi.o:%.f90 ual_defs_pgi.o
+specific_validation_rules_pgi.o: %_pgi.o:%.f90 ual_defs_pgi.o ids_schemas_pgi.o
 	$(FC_pgi) -c $(FCFLAGS_pgi) $(INCDIR_pgi) $< -o $@
 utilities_copy_struct_pgi.o: utilities_copy_struct.f90 ids_schemas_pgi.o ual_defs_pgi.o ual_low_level_wrap_pgi.o
 	$(FC_pgi) -c $(FCFLAGS_pgi) $(INCDIR_pgi) $< -o $@
@@ -273,7 +273,7 @@ ual_low_level_wrap_ifort.o: %_ifort.o:wrapper/%.f90 ual_defs_ifort.o
 	$(FC_ifort) -c $(FCFLAGS_ifort) $(INCDIR_ifort) $< -o $@
 ids_schemas_ifort.o: %_ifort.o:%.f90 ual_defs_ifort.o
 	$(FC_ifort) -c $(FCFLAGS_ifort) $(INCDIR_ifort) $< -o $@
-specific_validation_rules_ifort.o: %_ifort.o:%.f90 ual_defs_ifort.o
+specific_validation_rules_ifort.o: %_ifort.o:%.f90 ual_defs_ifort.o ids_schemas_ifort.o
 	$(FC_ifort) -c $(FCFLAGS_ifort) $(INCDIR_ifort) $< -o $@
 utilities_copy_struct_ifort.o: utilities_copy_struct.f90 ids_schemas_ifort.o ual_defs_ifort.o ual_low_level_wrap_ifort.o
 	$(FC_ifort) -c $(FCFLAGS_ifort) $(INCDIR_ifort) $< -o $@
