@@ -14,7 +14,7 @@ gfortran_uninstall:
 #--------------------- gfortran --------------
 # Windows libraries
 libimas-gfortran.dll: $(LIBFILES_gfortran)
-	$(FC_gfortran) $(COPTS_gfortran) -o $@ -shared -Wl,-soname,$@.$(SO_NUM) -Wl,--out-implib,$@.lib $^ $(LIBS)
+	$(FC_gfortran) $(COPTS_gfortran) -o $@ -shared -Wl,$(SONAME_OPT),$@.$(SO_NUM) -Wl,--out-implib,$@.lib $^ $(LIBS)
 
 libimas-gfortran.lib: $(LIBFILES_gfortran)
 	$(AR) rcvsu $@ $^
