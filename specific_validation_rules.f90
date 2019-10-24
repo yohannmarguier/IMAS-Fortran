@@ -18,6 +18,9 @@ interface ids_validate
   module procedure ids_validate_core_transport_1387
   module procedure ids_validate_core_transport_529
   module procedure ids_validate_core_transport
+  module procedure ids_validate_edge_profiles_io225
+  module procedure ids_validate_edge_profiles_ne552
+  module procedure ids_validate_edge_profiles_p1000
   module procedure ids_validate_edge_profiles_t1359
   module procedure ids_validate_edge_profiles_t1796
   module procedure ids_validate_edge_profiles_t938
@@ -413,7 +416,57 @@ subroutine ids_validate_core_transport(struct_in, status)
   
 end subroutine
 
+subroutine ids_validate_edge_profiles_io225(struct_in,path,status)
+  use ids_types
+  use ids_schemas, only: ids_edge_profile_ions
+  implicit none
 
+  integer(ids_int) :: i, status
+  character(len=200):: newpath,path
+  character(len=5) :: index_string
+
+  type(ids_edge_profile_ions) :: struct_in
+  
+  if (associated(struct_in%element)) then
+    do i=1,size(struct_in%element)
+       write(index_string,'(I5)') i
+       newpath = trim(path)//'element('//trim(adjustl(index_string))//')/'
+       call ids_validate(struct_in%element(i), newpath, status)
+!       if (status.EQ.-1) return
+    enddo
+  else
+    write(*,*) 'Invalid IDS : '//trim(path)//'element must be set'
+    status = -1
+    return
+  endif
+  
+end subroutine
+
+subroutine ids_validate_edge_profiles_ne552(struct_in,path,status)
+  use ids_types
+  use ids_schemas, only: ids_edge_profile_neutral
+  implicit none
+
+  integer(ids_int) :: i, status
+  character(len=200):: newpath,path
+  character(len=5) :: index_string
+
+  type(ids_edge_profile_neutral) :: struct_in
+  
+  if (associated(struct_in%element)) then
+    do i=1,size(struct_in%element)
+       write(index_string,'(I5)') i
+       newpath = trim(path)//'element('//trim(adjustl(index_string))//')/'
+       call ids_validate(struct_in%element(i), newpath, status)
+!       if (status.EQ.-1) return
+    enddo
+  else
+    write(*,*) 'Invalid IDS : '//trim(path)//'element must be set'
+    status = -1
+    return
+  endif
+  
+end subroutine
 
 subroutine ids_validate_edge_profiles_t1359(struct_in,path,status)
   use ids_types
@@ -477,6 +530,37 @@ subroutine ids_validate_edge_profiles_t938(struct_in, path, status)
   character(len=5) :: index_string
 
   type(ids_edge_profiles_time_slice) :: struct_in
+  
+  if (associated(struct_in%ion)) then
+    do i=1,size(struct_in%ion)
+       write(index_string,'(I5)') i
+       newpath = trim(path)//'ion('//trim(adjustl(index_string))//')/'
+       call ids_validate(struct_in%ion(i), newpath, status)
+!       if (status.EQ.-1) return
+    enddo
+  endif 
+ 
+  if (associated(struct_in%neutral)) then
+    do i=1,size(struct_in%neutral)
+       write(index_string,'(I5)') i
+       newpath = trim(path)//'neutral('//trim(adjustl(index_string))//')/'
+       call ids_validate(struct_in%neutral(i), newpath, status)
+!       if (status.EQ.-1) return
+    enddo
+  endif 
+ 
+end subroutine
+
+subroutine ids_validate_edge_profiles_p1000(struct_in, path, status)
+  use ids_types
+  use ids_schemas, only: ids_edge_profiles_profiles_1d
+  implicit none
+
+  integer(ids_int) :: i, status
+  character(len=200):: path, newpath
+  character(len=5) :: index_string
+
+  type(ids_edge_profiles_profiles_1d) :: struct_in
   
   if (associated(struct_in%ion)) then
     do i=1,size(struct_in%ion)
