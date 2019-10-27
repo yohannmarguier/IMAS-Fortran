@@ -72,7 +72,7 @@ else
 $(error No Makefile.$(SYSTEM) found for this system: $(UNAME_S))
 endif
 
-all: $(SOURCES) $(TARGETS) pkgconfig
+all: sources $(TARGETS) pkgconfig
 
 install: all $(INSTALL_TARGETS) pkgconfig_install
 
