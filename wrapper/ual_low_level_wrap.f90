@@ -84,7 +84,7 @@ module ual_low_level_wrap
        integer(C_INT), value, intent(in) :: ctx, datatype, dim
        character(C_CHAR), dimension(*), intent(in) :: fieldname, timebase
        type(C_PTR), intent(out) :: data
-       type(C_PTR), intent(inout) :: size
+       type(C_PTR), value, intent(in) :: size
      end function c_ual_read_data
 
      function c_ual_delete_data(ctx, path) bind(C,name="ual_delete_data")
@@ -111,246 +111,6 @@ module ual_low_level_wrap
 
 
      !!!!! wrappers to old API !!!!!
-
-     function c_ual_close(pulseCtx) bind(C,name="ual_close")
-       use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_ual_close
-       integer(C_INT), value, intent(in) :: pulseCtx
-     end function c_ual_close
-
-     function c_ual_create_env(name, shot, run, refShot, refRun, pulseCtx, user, tokamak, version) bind(C,name="ual_create_env")
-       use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_ual_create_env
-       character(C_CHAR), dimension(*), intent(in) :: name, user, tokamak, version
-       integer(C_INT), value, intent(in) :: shot, run, refShot, refRun
-       integer(C_INT), intent(out) :: pulseCtx   
-     end function c_ual_create_env
-
-     function c_ual_open_env(name, shot, run, pulseCtx, user, tokamak, version) bind(C,name="ual_open_env")
-       use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_ual_open_env
-       character(C_CHAR), dimension(*), intent(in) :: name, user, tokamak, version
-       integer(C_INT), value, intent(in) :: shot, run
-       integer(C_INT), intent(out) :: pulseCtx   
-     end function c_ual_open_env
-
-
-     function c_putChar(opCtx, fieldPath, timebasePath, cdata) BIND(C, name="putChar")
-       use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_putChar
-       integer(C_INT), value, intent(in) :: opCtx
-       character(C_CHAR), dimension(*), intent(in) :: fieldPath, timebasePath
-       character(C_CHAR), intent(in) :: cdata
-     end function c_putChar
-
-     function c_putInt(opCtx, fieldPath, timebasePath, cdata) bind(C,name="putInt")
-       use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_putInt
-       integer(C_INT), value, intent(in) :: opCtx, cdata
-       character(C_CHAR), dimension(*), intent(in) :: fieldPath, timebasePath
-     end function c_putInt
-
-     function c_putDouble(opCtx, fieldPath, timebasePath, cdata) bind(C,name="putDouble")
-       use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_putDouble
-       integer(C_INT), value, intent(in) :: opCtx
-       character(C_CHAR), dimension(*), intent(in) :: fieldPath, timebasePath
-       real(C_DOUBLE), value, intent(in) :: cdata
-     end function c_putDouble
-
-     function c_putComplex(opCtx, fieldPath, timebasePath, cdata) bind(C,name="putComplex")
-       use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_putComplex
-       integer(C_INT), value, intent(in) :: opCtx
-       character(C_CHAR), dimension(*), intent(in) :: fieldPath, timebasePath
-       complex(C_DOUBLE_COMPLEX), value, intent(in) :: cdata
-     end function c_putComplex
-
-     function c_putVect1DChar(opCtx, fieldPath, timebasePath, cdata, dim1) BIND(C, name="putVect1DChar")
-       use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_putVect1DChar
-       integer(C_INT), value, intent(in) :: opCtx
-       character(C_CHAR), dimension(*), intent(in) :: fieldPath, timebasePath
-       integer(C_INT), value, intent(in) :: dim1
-       type(C_PTR), value, intent(in) :: cdata
-     end function c_putVect1DChar
-     
-     function c_putVect1DInt(opCtx, fieldPath, timebasePath, cdata, dim1) bind(C,name="putVect1DInt")
-       use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_putVect1DInt
-       integer(C_INT), value, intent(in) :: opCtx, dim1
-       character(C_CHAR), dimension(*), intent(in) :: fieldPath, timebasePath
-       type(C_PTR), value, intent(in) :: cdata
-     end function c_putVect1DInt
-
-     function c_putVect1DDouble(opCtx, fieldPath, timebasePath, cdata, dim1) bind(C,name="putVect1DDouble")
-       use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_putVect1DDouble
-       integer(C_INT), value, intent(in) :: opCtx, dim1
-       character(C_CHAR), dimension(*), intent(in) :: fieldPath, timebasePath
-       type(C_PTR), value, intent(in) :: cdata
-     end function c_putVect1DDouble
-
-     function c_putVect1DComplex(opCtx, fieldPath, timebasePath, cdata, dim1) bind(C,name="putVect1DComplex")
-       use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_putVect1DComplex
-       integer(C_INT), value, intent(in) :: opCtx, dim1
-       character(C_CHAR), dimension(*), intent(in) :: fieldPath, timebasePath
-       type(C_PTR), value, intent(in) :: cdata
-     end function c_putVect1DComplex
-     
-     function c_putVect2DChar(opCtx, fieldPath, timebasePath, cdata, dim1, dim2) BIND(C, name="putVect2DChar")
-       use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_putVect2DChar
-       integer(C_INT), value, intent(in) :: opCtx
-       character(C_CHAR), dimension(*), intent(in) :: fieldPath, timebasePath
-       integer(C_INT), value, intent(in) :: dim1, dim2
-       type(C_PTR), value, intent(in) :: cdata
-     end function c_putVect2DChar
-
-     function c_putVect2DInt(opCtx, fieldPath, timebasePath, cdata, dim1, dim2) bind(C,name="putVect2DInt")
-       use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_putVect2DInt
-       integer(C_INT), value, intent(in) :: opCtx, dim1, dim2
-       character(C_CHAR), dimension(*), intent(in) :: fieldPath, timebasePath
-       type(C_PTR), value, intent(in) :: cdata
-     end function c_putVect2DInt
-
-     function c_putVect2DDouble(opCtx, fieldPath, timebasePath, cdata, dim1, dim2) bind(C,name="putVect2DDouble")
-       use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_putVect2DDouble
-       integer(C_INT), value, intent(in) :: opCtx, dim1, dim2
-       character(C_CHAR), dimension(*), intent(in) :: fieldPath, timebasePath
-       type(C_PTR), value, intent(in) :: cdata
-     end function c_putVect2DDouble
-
-     function c_putVect2DComplex(opCtx, fieldPath, timebasePath, cdata, dim1, dim2) bind(C,name="putVect2DComplex")
-       use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_putVect2DComplex
-       integer(C_INT), value, intent(in) :: opCtx, dim1, dim2
-       character(C_CHAR), dimension(*), intent(in) :: fieldPath, timebasePath
-       type(C_PTR), value, intent(in) :: cdata
-     end function c_putVect2DComplex
-
-     function c_putVect3DInt(opCtx, fieldPath, timebasePath, cdata, dim1, dim2, dim3) bind(C,name="putVect3DInt")
-       use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_putVect3DInt
-       integer(C_INT), value, intent(in) :: opCtx, dim1, dim2, dim3
-       character(C_CHAR), dimension(*), intent(in) :: fieldPath, timebasePath
-       type(C_PTR), value, intent(in) :: cdata
-     end function c_putVect3DInt
-
-     function c_putVect3DDouble(opCtx, fieldPath, timebasePath, cdata, dim1, dim2, dim3) bind(C,name="putVect3DDouble")
-       use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_putVect3DDouble
-       integer(C_INT), value, intent(in) :: opCtx, dim1, dim2, dim3
-       character(C_CHAR), dimension(*), intent(in) :: fieldPath, timebasePath
-       type(C_PTR), value, intent(in) :: cdata
-     end function c_putVect3DDouble
-
-     function c_putVect3DComplex(opCtx, fieldPath, timebasePath, cdata, dim1, dim2, dim3) bind(C,name="putVect3DComplex")
-       use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_putVect3DComplex
-       integer(C_INT), value, intent(in) :: opCtx, dim1, dim2, dim3
-       character(C_CHAR), dimension(*), intent(in) :: fieldPath, timebasePath
-       type(C_PTR), value, intent(in) :: cdata
-     end function c_putVect3DComplex
-
-     function c_putVect4DInt(opCtx, fieldPath, timebasePath, cdata, dim1, dim2, dim3, dim4) bind(C,name="putVect4DInt")
-       use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_putVect4DInt
-       integer(C_INT), value, intent(in) :: opCtx, dim1, dim2, dim3, dim4
-       character(C_CHAR), dimension(*), intent(in) :: fieldPath, timebasePath
-       type(C_PTR), value, intent(in) :: cdata
-     end function c_putVect4DInt
-
-     function c_putVect4DDouble(opCtx, fieldPath, timebasePath, cdata, dim1, dim2, dim3, dim4) bind(C,name="putVect4DDouble")
-       use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_putVect4DDouble
-       integer(C_INT), value, intent(in) :: opCtx, dim1, dim2, dim3, dim4
-       character(C_CHAR), dimension(*), intent(in) :: fieldPath, timebasePath
-       type(C_PTR), value, intent(in) :: cdata
-     end function c_putVect4DDouble
-
-     function c_putVect4DComplex(opCtx, fieldPath, timebasePath, cdata, dim1, dim2, dim3, dim4) bind(C,name="putVect4DComplex")
-       use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_putVect4DComplex
-       integer(C_INT), value, intent(in) :: opCtx, dim1, dim2, dim3, dim4
-       character(C_CHAR), dimension(*), intent(in) :: fieldPath, timebasePath
-       type(C_PTR), value, intent(in) :: cdata
-     end function c_putVect4DComplex
-
-     function c_putVect5DInt(opCtx, fieldPath, timebasePath, cdata, dim1, dim2, dim3, dim4, dim5) bind(C,name="putVect5DInt")
-       use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_putVect5DInt
-       integer(C_INT), value, intent(in) :: opCtx, dim1, dim2, dim3, dim4, dim5
-       character(C_CHAR), dimension(*), intent(in) :: fieldPath, timebasePath
-       type(C_PTR), value, intent(in) :: cdata
-     end function c_putVect5DInt
-
-     function c_putVect5DDouble(opCtx, fieldPath, timebasePath, cdata, dim1, dim2, dim3, dim4, dim5) bind(C,name="putVect5DDouble")
-       use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_putVect5DDouble
-       integer(C_INT), value, intent(in) :: opCtx, dim1, dim2, dim3, dim4, dim5
-       character(C_CHAR), dimension(*), intent(in) :: fieldPath, timebasePath
-       type(C_PTR), value, intent(in) :: cdata
-     end function c_putVect5DDouble
-
-     function c_putVect5DComplex(opCtx, fieldPath, timebasePath, cdata, dim1, dim2, dim3, dim4, dim5) bind(C,name="putVect5DComplex")
-       use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_putVect5DComplex
-       integer(C_INT), value, intent(in) :: opCtx, dim1, dim2, dim3, dim4, dim5
-       character(C_CHAR), dimension(*), intent(in) :: fieldPath, timebasePath
-       type(C_PTR), value, intent(in) :: cdata
-     end function c_putVect5DComplex
-
-     function c_putVect6DInt(opCtx, fieldPath, timebasePath, cdata, dim1, dim2, dim3, dim4, dim5, dim6) bind(C,name="putVect6DInt")
-       use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_putVect6DInt
-       integer(C_INT), value, intent(in) :: opCtx, dim1, dim2, dim3, dim4, dim5, dim6
-       character(C_CHAR), dimension(*), intent(in) :: fieldPath, timebasePath
-       type(C_PTR), value, intent(in) :: cdata
-     end function c_putVect6DInt
-
-     function c_putVect6DDouble(opCtx, fieldPath, timebasePath, cdata, dim1, dim2, dim3, dim4, dim5, dim6) bind(C,name="putVect6DDouble")
-       use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_putVect6DDouble
-       integer(C_INT), value, intent(in) :: opCtx, dim1, dim2, dim3, dim4, dim5, dim6
-       character(C_CHAR), dimension(*), intent(in) :: fieldPath, timebasePath
-       type(C_PTR), value, intent(in) :: cdata
-     end function c_putVect6DDouble
-
-     function c_putVect6DComplex(opCtx, fieldPath, timebasePath, cdata, dim1, dim2, dim3, dim4, dim5, dim6) bind(C,name="putVect6DComplex")
-       use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_putVect6DComplex
-       integer(C_INT), value, intent(in) :: opCtx, dim1, dim2, dim3, dim4, dim5, dim6
-       character(C_CHAR), dimension(*), intent(in) :: fieldPath, timebasePath
-       type(C_PTR), value, intent(in) :: cdata
-     end function c_putVect6DComplex
-
-     function c_putVect7DInt(opCtx, fieldPath, timebasePath, cdata, dim1, dim2, dim3, dim4, dim5, dim6, dim7) bind(C,name="putVect7DInt")
-       use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_putVect7DInt
-       integer(C_INT), value, intent(in) :: opCtx, dim1, dim2, dim3, dim4, dim5, dim6, dim7
-       character(C_CHAR), dimension(*), intent(in) :: fieldPath, timebasePath
-       type(C_PTR), value, intent(in) :: cdata
-     end function c_putVect7DInt
-
-     function c_putVect7DDouble(opCtx, fieldPath, timebasePath, cdata, dim1, dim2, dim3, dim4, dim5, dim6, dim7) bind(C,name="putVect7DDouble")
-       use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_putVect7DDouble
-       integer(C_INT), value, intent(in) :: opCtx, dim1, dim2, dim3, dim4, dim5, dim6, dim7
-       character(C_CHAR), dimension(*), intent(in) :: fieldPath, timebasePath
-       type(C_PTR), value, intent(in) :: cdata
-     end function c_putVect7DDouble
-
-     function c_putVect7DComplex(opCtx, fieldPath, timebasePath, cdata, dim1, dim2, dim3, dim4, dim5, dim6, dim7) bind(C,name="putVect7DComplex")
-       use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_putVect7DComplex
-       integer(C_INT), value, intent(in) :: opCtx, dim1, dim2, dim3, dim4, dim5, dim6, dim7
-       character(C_CHAR), dimension(*), intent(in) :: fieldPath, timebasePath
-       type(C_PTR), value, intent(in) :: cdata
-     end function c_putVect7DComplex
 
      function c_getChar(opCtx, fieldPath, timebasePath, cdata) BIND(C, name="getChar")
        use, intrinsic :: ISO_C_BINDING
@@ -750,6 +510,7 @@ contains
     status = c_ual_iterate_over_arraystruct(aosctx, step)
   end subroutine ual_iterate_over_arraystruct
 
+
   !!! old API !!!
 
   subroutine imas_create_env(name, shot, run, refShot, refRun, pulseCtx, user, tokamak, version, retstatus)
@@ -760,7 +521,12 @@ contains
     integer, intent(out) :: pulseCtx
     integer, intent(out), optional :: retstatus
     integer :: status
-    status = c_ual_create_env(trim(name)//C_NULL_CHAR, shot, run, refShot, refRun, pulseCtx, trim(user)//C_NULL_CHAR, trim(tokamak)//C_NULL_CHAR, trim(version)//C_NULL_CHAR)
+    call ual_begin_pulse_action(MDSPLUS_BACKEND, shot, run, user, tokamak, version, pulseCtx)
+    if (pulseCtx < 0) then 
+       status = pulseCtx
+    else
+       call ual_open_pulse(pulseCtx, FORCE_CREATE_PULSE, "", status)
+    end if
     if (present(retstatus)) retstatus = status
   end subroutine imas_create_env
 
@@ -772,7 +538,12 @@ contains
     integer, intent(out) :: pulseCtx
     integer, optional, intent(out) :: retstatus
     integer :: status
-    status = c_ual_open_env(trim(name)//C_NULL_CHAR, shot, run, pulseCtx, trim(user)//C_NULL_CHAR, trim(tokamak)//C_NULL_CHAR, trim(version)//C_NULL_CHAR)
+    call ual_begin_pulse_action(MDSPLUS_BACKEND, shot, run, user, tokamak, version, pulseCtx)
+    if (pulseCtx < 0) then 
+       status = pulseCtx
+    else
+       call ual_open_pulse(pulseCtx, OPEN_PULSE, "", status)
+    end if
     if (present(retstatus)) retstatus = status
   end subroutine imas_open_env
 
@@ -782,26 +553,33 @@ contains
     integer, intent(in) :: pulseCtx
     integer, optional, intent(out) :: retstatus
     integer :: status
-    status = c_ual_close(pulseCtx)
+    call ual_close_pulse(pulseCtx, CLOSE_PULSE, "", status)
     if (present(retstatus)) retstatus = status
   end subroutine imas_close
-  
+
   subroutine put_char(opCtx, fieldPath, timebasePath, data, status)
     use, intrinsic :: ISO_C_BINDING
     integer, intent(in) :: opCtx
     character(*), intent(in) :: fieldPath, timebasePath
-    character, intent(in) :: data
+    character, intent(in), target :: data
     integer, intent(out) :: status
-    status = c_putChar(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, data)
+    type(C_PTR) :: pdata
+    pdata = C_LOC(data)
+    status = c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, pdata, CHAR_DATA, 0, C_NULL_PTR)
+    !status = c_putChar(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, data)
   end subroutine put_char
 
   subroutine put_int(opCtx, fieldPath, timebasePath, data, status)
     use, intrinsic :: ISO_C_BINDING
     implicit none
-    integer, intent(in) :: opCtx, data
+    integer, intent(in) :: opCtx
     character(*), intent(in) :: fieldPath, timebasePath
+    integer, intent(in), target :: data
     integer, intent(out) :: status
-    status = c_putInt(opctx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, data)
+    type(C_PTR) :: pdata
+    pdata = C_LOC(data)
+    status = c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, pdata, INTEGER_DATA, 0, C_NULL_PTR)
+    !status = c_putInt(opctx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, data)
   end subroutine put_int
   
   subroutine put_double(opCtx, fieldPath, timebasePath, data, status)
@@ -809,9 +587,12 @@ contains
     implicit none
     integer, intent(in) :: opCtx
     character(*), intent(in) :: fieldPath, timebasePath
-    real(8), intent(in) :: data
+    real(8), intent(in), target :: data
     integer, intent(out) :: status
-    status = c_putDouble(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, data)
+    type(C_PTR) :: pdata
+    pdata = C_LOC(data)
+    status = c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, pdata, DOUBLE_DATA, 0, C_NULL_PTR)
+    !status = c_putDouble(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, data)
   end subroutine put_double
 
   subroutine put_complex(opCtx, fieldPath, timebasePath, data, status)
@@ -819,19 +600,13 @@ contains
     implicit none
     integer, intent(in) :: opCtx
     character(*), intent(in) :: fieldPath, timebasePath
-    complex(8), intent(in) :: data
+    complex(8), intent(in), target :: data
     integer, intent(out) :: status
-    status = c_putComplex(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, data)
+    type(C_PTR) :: pdata
+    pdata = C_LOC(data)
+    status = c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, pdata, COMPLEX_DATA, 0, C_NULL_PTR)
+    !status = c_putComplex(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, data)
   end subroutine put_complex
-
-  !TODO vect1DString cases to be clarified!!! 
-  !subroutine put_vect1_string(opCtx, fieldPath, data, dim1, status)
-  !use, intrinsic :: ISO_C_BINDING
-  !implicit none
-  !integer, intent(in) :: opCtx, dim1
-  !character(*), intent(in) :: fieldPath
-  !integer, intent(out) :: status
-  !end subroutine put_vect1d_string
 
   subroutine put_string(opCtx, fieldPath, timebasePath, data, status)
     use, intrinsic :: ISO_C_BINDING
@@ -839,17 +614,19 @@ contains
     integer, intent(in) :: opCtx
     character(*), intent(in) :: fieldPath, timebasePath, data
     integer, intent(out) :: status
-    type(C_PTR) :: cptr
+    type(C_PTR) :: cptr, csize
     character(C_CHAR), dimension(:), pointer :: cdata
-    integer(C_INT) :: csize
+    integer, target :: dsize(1)
     integer :: i
-    csize = len_trim(data)
-    allocate(cdata(csize))
-    do i=1,csize
+    dsize = (/ len_trim(data) /)
+    allocate(cdata(dsize(1)))
+    do i=1,dsize(1)
        cdata(i) = data(i:i)
     end do
     cptr = C_LOC(cdata(1))
-    status = c_putVect1DChar(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, csize)
+    csize = C_LOC(dsize(1))
+    status = c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, CHAR_DATA, 1, csize)
+    !status = c_putVect1DChar(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, csize)
     deallocate(cdata)
   end subroutine put_string
 
@@ -860,9 +637,13 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     integer, dimension(:), pointer :: data
     integer, intent(out) :: status
-    type(C_PTR) :: cptr
-    cptr = C_LOC(data(1))
-    status = c_putVect1DInt(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, dim1)
+    type(C_PTR) :: cptr, csize
+    integer, target :: dsize(1)
+    dsize = (/ dim1 /)
+    cptr = C_LOC(data(1))    
+    csize = C_LOC(dsize)
+    status = c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, 1, csize)
+    !status = c_putVect1DInt(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, dim1)
   end subroutine put_vect1d_int
 
   subroutine put_vect1d_double(opCtx, fieldPath, timebasePath, data, dim1, status)
@@ -872,9 +653,13 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     real(8), dimension(:), pointer :: data
     integer, intent(out) :: status
-    type(C_PTR) :: cptr
+    type(C_PTR) :: cptr, csize
+    integer, target :: dsize(1)
+    dsize = (/ dim1 /)
     cptr = C_LOC(data(1))
-    status = c_putVect1DDouble(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, dim1)
+    csize = C_LOC(dsize(1))
+    status = c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, 1, csize)
+    !status = c_putVect1DDouble(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, dim1)
   end subroutine put_vect1d_double
 
   subroutine put_vect1d_complex(opCtx, fieldPath, timebasePath, data, dim1, status)
@@ -884,9 +669,13 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     complex(8), dimension(:), pointer :: data
     integer, intent(out) :: status
-    type(C_PTR) :: cptr
+    type(C_PTR) :: cptr, csize
+    integer, target :: dsize(1)
+    dsize = (/ dim1 /)
     cptr = C_LOC(data(1))
-    status = c_putVect1DComplex(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, dim1)
+    csize = C_LOC(dsize(1))
+    status = c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, 1, csize)
+    !status = c_putVect1DComplex(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, dim1)
   end subroutine put_vect1d_complex
 
   subroutine put_vect1d_string(opCtx, fieldPath, timebasePath, data, dim1, status)
@@ -896,12 +685,14 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     character(132), dimension(:), pointer :: data
     integer, intent(out) :: status
-    type(C_PTR) :: cptr
+    type(C_PTR) :: cptr, csize
     character(C_CHAR), dimension(:,:), pointer :: cdata
     integer(C_INT) :: csize1, csize2
     integer :: i,j
+    integer, target :: dsize(2)
     csize1 = dim1
     csize2 = MAXVAL(len_trim(data(1:dim1)))
+    dsize = (/ csize1, csize2 /)
     allocate(cdata(csize1, csize2))
     do i=1,csize1
        do j=1,csize2
@@ -909,7 +700,9 @@ contains
        end do
     end do
     cptr = C_LOC(cdata(1,1))
-    status = c_putVect2DChar(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, csize1, csize2)    
+    csize = C_LOC(dsize(1))
+    status = c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, CHAR_DATA, 2, csize)
+    !status = c_putVect2DChar(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, csize1, csize2)    
     deallocate(cdata)
   end subroutine put_vect1d_string
 
@@ -920,9 +713,13 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     integer, dimension(:,:), pointer :: data
     integer, intent(out) :: status
-    type(C_PTR) :: cptr
+    type(C_PTR) :: cptr, csize
+    integer, target :: dsize(2)
+    dsize = (/ dim1, dim2 /)
     cptr = C_LOC(data(1,1))
-    status = c_putVect2DInt(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, dim1, dim2)
+    csize = C_LOC(dsize(1))
+    status = c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, 2, csize)
+    !status = c_putVect2DInt(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, dim1, dim2)
   end subroutine put_vect2d_int
 
   subroutine put_vect2d_double(opCtx, fieldPath, timebasePath, data, dim1, dim2, status)
@@ -932,9 +729,13 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     real(8), dimension(:,:), pointer :: data
     integer, intent(out) :: status
-    type(C_PTR) :: cptr
+    type(C_PTR) :: cptr, csize
+    integer, target :: dsize(2)
+    dsize = (/ dim1, dim2 /)
     cptr = C_LOC(data(1,1))
-    status = c_putVect2DDouble(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, dim1, dim2)
+    csize = C_LOC(dsize(1))
+    status = c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, 2, csize)
+    !status = c_putVect2DDouble(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, dim1, dim2)
   end subroutine put_vect2d_double
 
   subroutine put_vect2d_complex(opCtx, fieldPath, timebasePath, data, dim1, dim2, status)
@@ -944,9 +745,13 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     complex(8), dimension(:,:), pointer :: data
     integer, intent(out) :: status
-    type(C_PTR) :: cptr
+    type(C_PTR) :: cptr, csize
+    integer, target :: dsize(2)
+    dsize = (/ dim1, dim2 /)
     cptr = C_LOC(data(1,1))
-    status = c_putVect2DComplex(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, dim1, dim2)
+    csize = C_LOC(dsize(1))
+    status = c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, 2, csize)
+    !status = c_putVect2DComplex(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, dim1, dim2)
   end subroutine put_vect2d_complex
   
   subroutine put_vect3d_int(opCtx, fieldPath, timebasePath, data, dim1, dim2, dim3, status)
@@ -956,9 +761,13 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     integer, dimension(:,:,:), pointer :: data
     integer, intent(out) :: status
-    type(C_PTR) :: cptr
+    type(C_PTR) :: cptr, csize
+    integer, target :: dsize(3)
+    dsize = (/ dim1, dim2, dim3 /)
     cptr = C_LOC(data(1,1,1))
-    status = c_putVect3DInt(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, dim1, dim2, dim3)
+    csize = C_LOC(dsize(1))
+    status = c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, 3, csize)
+    !status = c_putVect3DInt(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, dim1, dim2, dim3)
   end subroutine put_vect3d_int
 
   subroutine put_vect3d_double(opCtx, fieldPath, timebasePath, data, dim1, dim2, dim3, status)
@@ -968,9 +777,13 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     real(8), dimension(:,:,:), pointer :: data
     integer, intent(out) :: status
-    type(C_PTR) :: cptr
+    type(C_PTR) :: cptr, csize
+    integer, target :: dsize(3)
+    dsize = (/ dim1, dim2, dim3 /)
     cptr = C_LOC(data(1,1,1))
-    status = c_putVect3DDouble(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, dim1, dim2, dim3)
+    csize = C_LOC(dsize(1))
+    status = c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, 3, csize)
+    !status = c_putVect3DDouble(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, dim1, dim2, dim3)
   end subroutine put_vect3d_double
 
   subroutine put_vect3d_complex(opCtx, fieldPath, timebasePath, data, dim1, dim2, dim3, status)
@@ -980,9 +793,13 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     complex(8), dimension(:,:,:), pointer :: data
     integer, intent(out) :: status
-    type(C_PTR) :: cptr
+    type(C_PTR) :: cptr, csize
+    integer, target :: dsize(3)
+    dsize = (/ dim1, dim2, dim3 /)
     cptr = C_LOC(data(1,1,1))
-    status = c_putVect3DComplex(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, dim1, dim2, dim3)
+    csize = C_LOC(dsize(1))
+    status = c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, 3, csize)
+    !status = c_putVect3DComplex(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, dim1, dim2, dim3)
   end subroutine put_vect3d_complex
   
   subroutine put_vect4d_int(opCtx, fieldPath, timebasePath, data, dim1, dim2, dim3, dim4, status)
@@ -992,9 +809,13 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     integer, dimension(:,:,:,:), pointer :: data
     integer, intent(out) :: status
-    type(C_PTR) :: cptr
+    type(C_PTR) :: cptr, csize
+    integer, target :: dsize(4)
+    dsize = (/ dim1, dim2, dim3, dim4 /)
     cptr = C_LOC(data(1,1,1,1))
-    status = c_putVect4DInt(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, dim1, dim2, dim3, dim4)
+    csize = C_LOC(dsize(1))
+    status = c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, 4, csize)
+    !status = c_putVect4DInt(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, dim1, dim2, dim3, dim4)
   end subroutine put_vect4d_int
 
   subroutine put_vect4d_double(opCtx, fieldPath, timebasePath, data, dim1, dim2, dim3, dim4, status)
@@ -1004,9 +825,13 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     real(8), dimension(:,:,:,:), pointer :: data
     integer, intent(out) :: status
-    type(C_PTR) :: cptr
+    type(C_PTR) :: cptr, csize
+    integer, target :: dsize(4)
+    dsize = (/ dim1, dim2, dim3, dim4 /)
     cptr = C_LOC(data(1,1,1,1))
-    status = c_putVect4DDouble(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, dim1, dim2, dim3, dim4)
+    csize = C_LOC(dsize(1))
+    status = c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, 4, csize)
+    !status = c_putVect4DDouble(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, dim1, dim2, dim3, dim4)
   end subroutine put_vect4d_double
 
   subroutine put_vect4d_complex(opCtx, fieldPath, timebasePath, data, dim1, dim2, dim3, dim4, status)
@@ -1016,9 +841,13 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     complex(8), dimension(:,:,:,:), pointer :: data
     integer, intent(out) :: status
-    type(C_PTR) :: cptr
+    type(C_PTR) :: cptr, csize
+    integer, target :: dsize(4)
+    dsize = (/ dim1, dim2, dim3, dim4 /)
     cptr = C_LOC(data(1,1,1,1))
-    status = c_putVect4DComplex(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, dim1, dim2, dim3, dim4)
+    csize = C_LOC(dsize(1))
+    status = c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, 4, csize)
+    !status = c_putVect4DComplex(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, dim1, dim2, dim3, dim4)
   end subroutine put_vect4d_complex
   
   subroutine put_vect5d_int(opCtx, fieldPath, timebasePath, data, dim1, dim2, dim3, dim4, dim5, status)
@@ -1028,9 +857,13 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     integer, dimension(:,:,:,:,:), pointer :: data
     integer, intent(out) :: status
-    type(C_PTR) :: cptr
+    type(C_PTR) :: cptr, csize
+    integer, target :: dsize(5)
+    dsize = (/ dim1, dim2, dim3, dim4, dim5 /)
     cptr = C_LOC(data(1,1,1,1,1))
-    status = c_putVect5DInt(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, dim1, dim2, dim3, dim4, dim5)
+    csize = C_LOC(dsize(1))
+    status = c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, 5, csize)
+    !status = c_putVect5DInt(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, dim1, dim2, dim3, dim4, dim5)
   end subroutine put_vect5d_int
 
   subroutine put_vect5d_double(opCtx, fieldPath, timebasePath, data, dim1, dim2, dim3, dim4, dim5, status)
@@ -1040,9 +873,13 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     real(8), dimension(:,:,:,:,:), pointer :: data
     integer, intent(out) :: status
-    type(C_PTR) :: cptr
+    type(C_PTR) :: cptr, csize
+    integer, target :: dsize(5)
+    dsize = (/ dim1, dim2, dim3, dim4, dim5 /)
     cptr = C_LOC(data(1,1,1,1,1))
-    status = c_putVect5DDouble(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, dim1, dim2, dim3, dim4, dim5)
+    csize = C_LOC(dsize(1))
+    status = c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, 5, csize)
+    !status = c_putVect5DDouble(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, dim1, dim2, dim3, dim4, dim5)
   end subroutine put_vect5d_double
 
   subroutine put_vect5d_complex(opCtx, fieldPath, timebasePath, data, dim1, dim2, dim3, dim4, dim5, status)
@@ -1052,9 +889,13 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     complex(8), dimension(:,:,:,:,:), pointer :: data
     integer, intent(out) :: status
-    type(C_PTR) :: cptr
+    type(C_PTR) :: cptr, csize
+    integer, target :: dsize(5)
+    dsize = (/ dim1, dim2, dim3, dim4, dim5 /)
     cptr = C_LOC(data(1,1,1,1,1))
-    status = c_putVect5DComplex(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, dim1, dim2, dim3, dim4, dim5)
+    csize = C_LOC(dsize(1))
+    status = c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, 5, csize)
+    !status = c_putVect5DComplex(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, dim1, dim2, dim3, dim4, dim5)
   end subroutine put_vect5d_complex
   
   subroutine put_vect6d_int(opCtx, fieldPath, timebasePath, data, dim1, dim2, dim3, dim4, dim5, dim6, status)
@@ -1064,9 +905,13 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     integer, dimension(:,:,:,:,:,:), pointer :: data
     integer, intent(out) :: status
-    type(C_PTR) :: cptr
+    type(C_PTR) :: cptr, csize
+    integer, target :: dsize(6)
+    dsize = (/ dim1, dim2, dim3, dim4, dim5, dim6 /)
     cptr = C_LOC(data(1,1,1,1,1,1))
-    status = c_putVect6DInt(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, dim1, dim2, dim3, dim4, dim5, dim6)
+    csize = C_LOC(dsize(1))
+    status = c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, 6, csize)
+    !status = c_putVect6DInt(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, dim1, dim2, dim3, dim4, dim5, dim6)
   end subroutine put_vect6d_int
 
   subroutine put_vect6d_double(opCtx, fieldPath, timebasePath, data, dim1, dim2, dim3, dim4, dim5, dim6, status)
@@ -1076,9 +921,13 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     real(8), dimension(:,:,:,:,:,:), pointer :: data
     integer, intent(out) :: status
-    type(C_PTR) :: cptr
+    type(C_PTR) :: cptr, csize
+    integer, target :: dsize(6)
+    dsize = (/ dim1, dim2, dim3, dim4, dim5, dim6 /)
     cptr = C_LOC(data(1,1,1,1,1,1))
-    status = c_putVect6DDouble(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, dim1, dim2, dim3, dim4, dim5, dim6)
+    csize = C_LOC(dsize(1))
+    status = c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, 6, csize)
+    !status = c_putVect6DDouble(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, dim1, dim2, dim3, dim4, dim5, dim6)
   end subroutine put_vect6d_double
 
   subroutine put_vect6d_complex(opCtx, fieldPath, timebasePath, data, dim1, dim2, dim3, dim4, dim5, dim6, status)
@@ -1088,9 +937,13 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     complex(8), dimension(:,:,:,:,:,:), pointer :: data
     integer, intent(out) :: status
-    type(C_PTR) :: cptr
+    type(C_PTR) :: cptr, csize
+    integer, target :: dsize(6)
+    dsize = (/ dim1, dim2, dim3, dim4, dim5, dim6 /)
     cptr = C_LOC(data(1,1,1,1,1,1))
-    status = c_putVect6DComplex(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, dim1, dim2, dim3, dim4, dim5, dim6)
+    csize = C_LOC(dsize(1))
+    status = c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, 6, csize)
+    !status = c_putVect6DComplex(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, dim1, dim2, dim3, dim4, dim5, dim6)
   end subroutine put_vect6d_complex
   
   subroutine put_vect7d_int(opCtx, fieldPath, timebasePath, data, dim1, dim2, dim3, dim4, dim5, dim6, dim7, status)
@@ -1100,9 +953,13 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     integer, dimension(:,:,:,:,:,:,:), pointer :: data
     integer, intent(out) :: status
-    type(C_PTR) :: cptr
+    type(C_PTR) :: cptr, csize
+    integer, target :: dsize(7)
+    dsize = (/ dim1, dim2, dim3, dim4, dim5, dim6, dim7 /)
     cptr = C_LOC(data(1,1,1,1,1,1,1))
-    status = c_putVect7DInt(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, dim1, dim2, dim3, dim4, dim5, dim6, dim7)
+    csize = C_LOC(dsize(1))
+    status = c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, 7, csize)
+    !status = c_putVect7DInt(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, dim1, dim2, dim3, dim4, dim5, dim6, dim7)
   end subroutine put_vect7d_int
 
   subroutine put_vect7d_double(opCtx, fieldPath, timebasePath, data, dim1, dim2, dim3, dim4, dim5, dim6, dim7, status)
@@ -1112,9 +969,13 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     real(8), dimension(:,:,:,:,:,:,:), pointer :: data
     integer, intent(out) :: status
-    type(C_PTR) :: cptr
+    type(C_PTR) :: cptr, csize
+    integer, target :: dsize(7)
+    dsize = (/ dim1, dim2, dim3, dim4, dim5, dim6, dim7 /)
     cptr = C_LOC(data(1,1,1,1,1,1,1))
-    status = c_putVect7DDouble(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, dim1, dim2, dim3, dim4, dim5, dim6, dim7)
+    csize = C_LOC(dsize(1))
+    status = c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, 7, csize)
+    !status = c_putVect7DDouble(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, dim1, dim2, dim3, dim4, dim5, dim6, dim7)
   end subroutine put_vect7d_double
 
   subroutine put_vect7d_complex(opCtx, fieldPath, timebasePath, data, dim1, dim2, dim3, dim4, dim5, dim6, dim7, status)
@@ -1124,9 +985,13 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     complex(8), dimension(:,:,:,:,:,:,:), pointer :: data
     integer, intent(out) :: status
-    type(C_PTR) :: cptr
+    type(C_PTR) :: cptr, csize
+    integer, target :: dsize(7)
+    dsize = (/ dim1, dim2, dim3, dim4, dim5, dim6, dim7 /)
     cptr = C_LOC(data(1,1,1,1,1,1,1))
-    status = c_putVect7DComplex(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, dim1, dim2, dim3, dim4, dim5, dim6, dim7)
+    csize = C_LOC(dsize(1))
+    status = c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, 7, csize)
+    !status = c_putVect7DComplex(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, dim1, dim2, dim3, dim4, dim5, dim6, dim7)
   end subroutine put_vect7d_complex
   
 
@@ -1137,9 +1002,13 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     character(1), intent(inout) :: data
     integer, intent(out) :: status
-    character(C_CHAR) :: cdata
-    status = c_getChar(opCtx, trim(fieldPath)//C_NULL_CHAR,&
-         trim(timebasePath)//C_NULL_CHAR, cdata)
+    character(C_CHAR), target :: cdata
+    type(C_PTR) :: cptr, csize
+    integer, target :: dsize(MAXDIM)
+    csize = C_LOC(dsize)
+    cptr = C_LOC(cdata)
+    status = c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+         trim(timebasePath)//C_NULL_CHAR, cptr, CHAR_DATA, 0, csize)
     if (status.eq.0) data = cdata
   end subroutine get_char
 
@@ -1150,9 +1019,13 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     integer, intent(inout) :: data
     integer, intent(out) :: status
-    integer(C_INT) :: cdata
-    status = c_getInt(opCtx, trim(fieldPath)//C_NULL_CHAR, &
-         trim(timebasePath)//C_NULL_CHAR, cdata)
+    integer(C_INT), target :: cdata
+    type(C_PTR) :: cptr, csize
+    integer, target :: dsize(MAXDIM)
+    csize = C_LOC(dsize)
+    cptr = C_LOC(cdata)
+    status = c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+         trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, 0, csize)
     if (status.eq.0) data = cdata
   end subroutine get_int
 
@@ -1163,9 +1036,13 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     real(8), intent(inout) :: data
     integer, intent(out) :: status
-    real(C_DOUBLE) :: cdata
-    status = c_getDouble(opCtx, trim(fieldPath)//C_NULL_CHAR, &
-         trim(timebasePath)//C_NULL_CHAR, cdata)
+    real(C_DOUBLE), target :: cdata
+    type(C_PTR) :: cptr, csize
+    integer, target :: dsize(MAXDIM)
+    csize = C_LOC(dsize)
+    cptr = C_LOC(cdata)
+    status = c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+         trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, 0, csize)
     if (status.eq.0) data = cdata
   end subroutine get_double
 
@@ -1176,19 +1053,15 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     complex(8), intent(inout) :: data
     integer, intent(out) :: status
-    complex(C_DOUBLE_COMPLEX) :: cdata
-    status = c_getComplex(opCtx, trim(fieldPath)//C_NULL_CHAR, &
-         trim(timebasePath)//C_NULL_CHAR, cdata)
+    complex(C_DOUBLE_COMPLEX), target :: cdata
+    type(C_PTR) :: cptr, csize
+    integer, target :: dsize(MAXDIM)
+    csize = C_LOC(dsize)
+    cptr = C_LOC(cdata)
+    status = c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+         trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, 0, csize)
     if (status.eq.0) data = cdata
   end subroutine get_complex
-
-  !TODO strings to be checked !
-  !subroutine get_vect1d_string(opCtx, fieldPath, timebasePath, data, dim1, status)
-  !use, intrinsic :: ISO_C_BINDING
-  !implicit none
-  !integer, intent(in) :: opCtx
-  !character(*), intent(in) :: fieldPath, timebasePath
-  !end subroutine get_vect1d_string
 
   subroutine get_vect1D_char(opCtx, fieldPath, timebasePath, data, dim1, status)
     use, intrinsic :: ISO_C_BINDING
@@ -1197,16 +1070,17 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     character, dimension(:), pointer :: data
     integer, intent(out) :: dim1, status
-    type(C_PTR) :: cptr
-    integer(C_INT) :: csize
+    type(C_PTR) :: cptr, csize
+    integer(C_INT), target :: dsize(MAXDIM)
+    csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = c_getVect1DChar(opCtx, trim(fieldPath)//C_NULL_CHAR, &
-         trim(timebasePath)//C_NULL_CHAR, cptr, csize)
+    status = c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+         trim(timebasePath)//C_NULL_CHAR, cptr, CHAR_DATA, 1, csize)
     if (status.eq.0) then
        if (C_ASSOCIATED(cptr)) then
-          call C_F_POINTER(cptr, data, (/csize/))
+          call C_F_POINTER(cptr, data, dsize(1:1))
        end if
-       dim1 = csize
+       dim1 = dsize(1)
     end if
   end subroutine get_vect1D_char
 
@@ -1241,16 +1115,17 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     integer, dimension(:), pointer :: data
     integer, intent(out) :: dim1, status
-    type(C_PTR) :: cptr
-    integer(C_INT) :: csize1
+    type(C_PTR) :: cptr, csize
+    integer(C_INT), target :: dsize(MAXDIM)
+    csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = c_getVect1DInt(opCtx, trim(fieldPath)//C_NULL_CHAR, &
-         trim(timebasePath)//C_NULL_CHAR, cptr, csize1)
+    status = c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+         trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, 1, csize)
     if (status.eq.0) then
        if (C_ASSOCIATED(cptr)) then
-          call C_F_POINTER(cptr, data, (/csize1/))
+          call C_F_POINTER(cptr, data, dsize(1:1))
        end if
-       dim1 = csize1
+       dim1 = dsize(1)
     end if
   end subroutine get_vect1d_int
 
@@ -1261,16 +1136,17 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     real(8), dimension(:), pointer :: data
     integer, intent(out) :: dim1, status
-    type(C_PTR) :: cptr
-    integer(C_INT) :: csize1
+    type(C_PTR) :: cptr, csize
+    integer(C_INT), target :: dsize(MAXDIM)
+    csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = c_getVect1DDouble(opCtx, trim(fieldPath)//C_NULL_CHAR, &
-         trim(timebasePath)//C_NULL_CHAR, cptr, csize1)
+    status = c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+         trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, 1, csize)
     if (status.eq.0) then
        if (C_ASSOCIATED(cptr)) then
-          call C_F_POINTER(cptr, data, (/csize1/))
+          call C_F_POINTER(cptr, data, dsize(1:1))
        end if
-       dim1 = csize1
+       dim1 = dsize(1)
     end if
   end subroutine get_vect1d_double
 
@@ -1281,16 +1157,17 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     complex(8), dimension(:), pointer :: data
     integer, intent(out) :: dim1, status
-    type(C_PTR) :: cptr
-    integer(C_INT) :: csize1
+    type(C_PTR) :: cptr, csize
+    integer(C_INT), target :: dsize(MAXDIM)
+    csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = c_getVect1DComplex(opCtx, trim(fieldPath)//C_NULL_CHAR, &
-         trim(timebasePath)//C_NULL_CHAR, cptr, csize1)
+    status = c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+         trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, 1, csize)
     if (status.eq.0) then
        if (C_ASSOCIATED(cptr)) then
-          call C_F_POINTER(cptr, data, (/csize1/))
+          call C_F_POINTER(cptr, data, dsize(1:1))
        end if
-       dim1 = csize1
+       dim1 = dsize(1)
     end if
   end subroutine get_vect1d_complex
   
@@ -1302,18 +1179,18 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     character, dimension(:,:), pointer :: data
     integer, intent(out) :: dim1, dim2, status
-    type(C_PTR) :: cptr
-    integer(C_INT) :: csize1, csize2
+    type(C_PTR) :: cptr, csize
+    integer(C_INT), target :: dsize(MAXDIM)
+    csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = c_getVect2DChar(opCtx, trim(fieldPath)//C_NULL_CHAR, &
-         trim(timebasePath)//C_NULL_CHAR, cptr, &
-         csize1, csize2)
+    status = c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+         trim(timebasePath)//C_NULL_CHAR, cptr, CHAR_DATA, 2, csize)
     if (status.eq.0) then
        if (C_ASSOCIATED(cptr)) then
-          call C_F_POINTER(cptr, data, (/csize1,csize2/))
+          call C_F_POINTER(cptr, data, dsize(1:2))
        end if
-       dim1 = csize1
-       dim2 = csize2
+       dim1 = dsize(1)
+       dim2 = dsize(2)
     end if
   end subroutine get_vect2D_char
 
@@ -1354,18 +1231,18 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     integer, dimension(:,:), pointer :: data
     integer, intent(out) :: dim1, dim2, status
-    type(C_PTR) :: cptr
-    integer(C_INT) :: csize1, csize2
+    type(C_PTR) :: cptr, csize
+    integer(C_INT), target :: dsize(MAXDIM)
+    csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = c_getVect2DInt(opCtx, trim(fieldPath)//C_NULL_CHAR, &
-         trim(timebasePath)//C_NULL_CHAR, cptr, &
-         csize1, csize2)
+    status = c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+         trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, 2, csize)
     if (status.eq.0) then
        if (C_ASSOCIATED(cptr)) then
-          call C_F_POINTER(cptr, data, (/csize1,csize2/))
+          call C_F_POINTER(cptr, data, dsize(1:2))
        end if
-       dim1 = csize1
-       dim2 = csize2
+       dim1 = dsize(1)
+       dim2 = dsize(2)
     end if
   end subroutine get_vect2d_int
 
@@ -1377,18 +1254,18 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     real(8), dimension(:,:), pointer :: data
     integer, intent(out) :: dim1, dim2, status
-    type(C_PTR) :: cptr
-    integer(C_INT) :: csize1, csize2
+    type(C_PTR) :: cptr, csize
+    integer(C_INT), target :: dsize(MAXDIM)
+    csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = c_getVect2DDouble(opCtx, trim(fieldPath)//C_NULL_CHAR, &
-         trim(timebasePath)//C_NULL_CHAR, cptr, &
-         csize1, csize2)
+    status = c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+         trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, 2, csize)
     if (status.eq.0) then
        if (C_ASSOCIATED(cptr)) then
-          call C_F_POINTER(cptr, data, (/csize1,csize2/))
+          call C_F_POINTER(cptr, data, dsize(1:2))
        end if
-       dim1 = csize1
-       dim2 = csize2
+       dim1 = dsize(1)
+       dim2 = dsize(2)
     end if
   end subroutine get_vect2d_double
 
@@ -1400,18 +1277,18 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     complex(8), dimension(:,:), pointer :: data
     integer, intent(out) :: dim1, dim2, status
-    type(C_PTR) :: cptr
-    integer(C_INT) :: csize1, csize2
+    type(C_PTR) :: cptr, csize
+    integer(C_INT), target :: dsize(MAXDIM)
+    csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = c_getVect2DComplex(opCtx, trim(fieldPath)//C_NULL_CHAR, &
-         trim(timebasePath)//C_NULL_CHAR, cptr, &
-         csize1, csize2)
+    status = c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+         trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, 2, csize)
     if (status.eq.0) then
        if (C_ASSOCIATED(cptr)) then
-          call C_F_POINTER(cptr, data, (/csize1,csize2/))
+          call C_F_POINTER(cptr, data, dsize(1:2))
        end if
-       dim1 = csize1
-       dim2 = csize2
+       dim1 = dsize(1)
+       dim2 = dsize(2)
     end if
   end subroutine get_vect2d_complex
 
@@ -1423,19 +1300,19 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     integer, dimension(:,:,:), pointer :: data
     integer, intent(out) :: dim1, dim2, dim3, status
-    type(C_PTR) :: cptr
-    integer(C_INT) :: csize1, csize2, csize3
+    type(C_PTR) :: cptr, csize
+    integer(C_INT), target :: dsize(MAXDIM)
+    csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = c_getVect3DInt(opCtx, trim(fieldPath)//C_NULL_CHAR, &
-         trim(timebasePath)//C_NULL_CHAR, cptr, &
-         csize1, csize2, csize3)
+    status = c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+         trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, 3, csize)
     if (status.eq.0) then
        if (C_ASSOCIATED(cptr)) then
-          call C_F_POINTER(cptr, data, (/csize1,csize2,csize3/))
+          call C_F_POINTER(cptr, data, dsize(1:3))
        end if
-       dim1 = csize1
-       dim2 = csize2
-       dim3 = csize3
+       dim1 = dsize(1)
+       dim2 = dsize(2)
+       dim3 = dsize(3)
     end if
   end subroutine get_vect3d_int
 
@@ -1447,19 +1324,19 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     real(8), dimension(:,:,:), pointer :: data
     integer, intent(out) :: dim1, dim2, dim3, status
-    type(C_PTR) :: cptr
-    integer(C_INT) :: csize1, csize2, csize3
+    type(C_PTR) :: cptr, csize
+    integer(C_INT), target :: dsize(MAXDIM)
+    csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = c_getVect3DDouble(opCtx, trim(fieldPath)//C_NULL_CHAR, &
-         trim(timebasePath)//C_NULL_CHAR, cptr, &
-         csize1, csize2, csize3)
+    status = c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+         trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, 3, csize)
     if (status.eq.0) then
        if (C_ASSOCIATED(cptr)) then
-          call C_F_POINTER(cptr, data, (/csize1,csize2,csize3/))
+          call C_F_POINTER(cptr, data, dsize(1:3))
        end if
-       dim1 = csize1
-       dim2 = csize2
-       dim3 = csize3
+       dim1 = dsize(1)
+       dim2 = dsize(2)
+       dim3 = dsize(3)
     end if
   end subroutine get_vect3d_double
 
@@ -1471,19 +1348,19 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     complex(8), dimension(:,:,:), pointer :: data
     integer, intent(out) :: dim1, dim2, dim3, status
-    type(C_PTR) :: cptr
-    integer(C_INT) :: csize1, csize2, csize3
+    type(C_PTR) :: cptr, csize
+    integer(C_INT), target :: dsize(MAXDIM)
+    csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = c_getVect3DComplex(opCtx, trim(fieldPath)//C_NULL_CHAR, &
-         trim(timebasePath)//C_NULL_CHAR, cptr, &
-         csize1, csize2, csize3)
+    status = c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+         trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, 3, csize)
     if (status.eq.0) then
        if (C_ASSOCIATED(cptr)) then
-          call C_F_POINTER(cptr, data, (/csize1,csize2,csize3/))
+          call C_F_POINTER(cptr, data, dsize(1:3))
        end if
-       dim1 = csize1
-       dim2 = csize2
-       dim3 = csize3
+       dim1 = dsize(1)
+       dim2 = dsize(2)
+       dim3 = dsize(3)
     end if
   end subroutine get_vect3d_complex
 
@@ -1495,20 +1372,20 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     integer, dimension(:,:,:,:), pointer :: data
     integer, intent(out) :: dim1, dim2, dim3, dim4, status
-    type(C_PTR) :: cptr
-    integer(C_INT) :: csize1, csize2, csize3, csize4
+    type(C_PTR) :: cptr, csize
+    integer(C_INT), target :: dsize(MAXDIM)
+    csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = c_getVect4DInt(opCtx, trim(fieldPath)//C_NULL_CHAR, &
-         trim(timebasePath)//C_NULL_CHAR, cptr, &
-         csize1, csize2, csize3, csize4)
+    status = c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+         trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, 4, csize)
     if (status.eq.0) then
        if (C_ASSOCIATED(cptr)) then
-          call C_F_POINTER(cptr, data, (/csize1,csize2,csize3,csize4/))
+          call C_F_POINTER(cptr, data, dsize(1:4))
        end if
-       dim1 = csize1
-       dim2 = csize2
-       dim3 = csize3
-       dim4 = csize4
+       dim1 = dsize(1)
+       dim2 = dsize(2)
+       dim3 = dsize(3)
+       dim4 = dsize(4)
     end if
   end subroutine get_vect4d_int
 
@@ -1520,20 +1397,20 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     real(8), dimension(:,:,:,:), pointer :: data
     integer, intent(out) :: dim1, dim2, dim3, dim4, status
-    type(C_PTR) :: cptr
-    integer(C_INT) :: csize1, csize2, csize3, csize4
+    type(C_PTR) :: cptr, csize
+    integer(C_INT), target :: dsize(MAXDIM)
+    csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = c_getVect4DDouble(opCtx, trim(fieldPath)//C_NULL_CHAR, &
-         trim(timebasePath)//C_NULL_CHAR, cptr, &
-         csize1, csize2, csize3, csize4)
+    status = c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+         trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, 4, csize)
     if (status.eq.0) then
        if (C_ASSOCIATED(cptr)) then
-          call C_F_POINTER(cptr, data, (/csize1,csize2,csize3,csize4/))
+          call C_F_POINTER(cptr, data, dsize(1:4))
        end if
-       dim1 = csize1
-       dim2 = csize2
-       dim3 = csize3
-       dim4 = csize4
+       dim1 = dsize(1)
+       dim2 = dsize(2)
+       dim3 = dsize(3)
+       dim4 = dsize(4)
     end if
   end subroutine get_vect4d_double
 
@@ -1545,20 +1422,20 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     complex(8), dimension(:,:,:,:), pointer :: data
     integer, intent(out) :: dim1, dim2, dim3, dim4, status
-    type(C_PTR) :: cptr
-    integer(C_INT) :: csize1, csize2, csize3, csize4
+    type(C_PTR) :: cptr, csize
+    integer(C_INT), target :: dsize(MAXDIM)
+    csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = c_getVect4DComplex(opCtx, trim(fieldPath)//C_NULL_CHAR, &
-         trim(timebasePath)//C_NULL_CHAR, cptr, &
-         csize1, csize2, csize3, csize4)
+    status = c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+         trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, 4, csize)
     if (status.eq.0) then
        if (C_ASSOCIATED(cptr)) then
-          call C_F_POINTER(cptr, data, (/csize1,csize2,csize3,csize4/))
+          call C_F_POINTER(cptr, data, dsize(1:4))
        end if
-       dim1 = csize1
-       dim2 = csize2
-       dim3 = csize3
-       dim4 = csize4
+       dim1 = dsize(1)
+       dim2 = dsize(2)
+       dim3 = dsize(3)
+       dim4 = dsize(4)
     end if
   end subroutine get_vect4d_complex
 
@@ -1570,21 +1447,21 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     integer, dimension(:,:,:,:,:), pointer :: data
     integer, intent(out) :: dim1, dim2, dim3, dim4, dim5, status
-    type(C_PTR) :: cptr
-    integer(C_INT) :: csize1, csize2, csize3, csize4, csize5
+    type(C_PTR) :: cptr, csize
+    integer(C_INT), target :: dsize(MAXDIM)
+    csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = c_getVect5DInt(opCtx, trim(fieldPath)//C_NULL_CHAR, &
-         trim(timebasePath)//C_NULL_CHAR, cptr, &
-         csize1, csize2, csize3, csize4, csize5)
+    status = c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+         trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, 5, csize)
     if (status.eq.0) then
        if (C_ASSOCIATED(cptr)) then
-          call C_F_POINTER(cptr, data, (/csize1,csize2,csize3,csize4,csize5/))
+          call C_F_POINTER(cptr, data, dsize(1:5))
        end if
-       dim1 = csize1
-       dim2 = csize2
-       dim3 = csize3
-       dim4 = csize4
-       dim5 = csize5
+       dim1 = dsize(1)
+       dim2 = dsize(2)
+       dim3 = dsize(3)
+       dim4 = dsize(4)
+       dim5 = dsize(5)
     end if
   end subroutine get_vect5d_int
 
@@ -1596,21 +1473,21 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     real(8), dimension(:,:,:,:,:), pointer :: data
     integer, intent(out) :: dim1, dim2, dim3, dim4, dim5, status
-    type(C_PTR) :: cptr
-    integer(C_INT) :: csize1, csize2, csize3, csize4, csize5
+    type(C_PTR) :: cptr, csize
+    integer(C_INT), target :: dsize(MAXDIM)
+    csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = c_getVect5DDouble(opCtx, trim(fieldPath)//C_NULL_CHAR, &
-         trim(timebasePath)//C_NULL_CHAR, cptr, &
-         csize1, csize2, csize3, csize4, csize5)
+    status = c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+         trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, 5, csize)
     if (status.eq.0) then
        if (C_ASSOCIATED(cptr)) then
-          call C_F_POINTER(cptr, data, (/csize1,csize2,csize3,csize4,csize5/))
+          call C_F_POINTER(cptr, data, dsize(1:5))
        end if
-       dim1 = csize1
-       dim2 = csize2
-       dim3 = csize3
-       dim4 = csize4
-       dim5 = csize5
+       dim1 = dsize(1)
+       dim2 = dsize(2)
+       dim3 = dsize(3)
+       dim4 = dsize(4)
+       dim5 = dsize(5)
     end if
   end subroutine get_vect5d_double
 
@@ -1622,21 +1499,21 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     complex(8), dimension(:,:,:,:,:), pointer :: data
     integer, intent(out) :: dim1, dim2, dim3, dim4, dim5, status
-    type(C_PTR) :: cptr
-    integer(C_INT) :: csize1, csize2, csize3, csize4, csize5
+    type(C_PTR) :: cptr, csize
+    integer(C_INT), target :: dsize(MAXDIM)
+    csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = c_getVect5DComplex(opCtx, trim(fieldPath)//C_NULL_CHAR, &
-         trim(timebasePath)//C_NULL_CHAR, cptr, &
-         csize1, csize2, csize3, csize4, csize5)
+    status = c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+         trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, 5, csize)
     if (status.eq.0) then
        if (C_ASSOCIATED(cptr)) then
-          call C_F_POINTER(cptr, data, (/csize1,csize2,csize3,csize4,csize5/))
+          call C_F_POINTER(cptr, data, dsize(1:5))
        end if
-       dim1 = csize1
-       dim2 = csize2
-       dim3 = csize3
-       dim4 = csize4
-       dim5 = csize5
+       dim1 = dsize(1)
+       dim2 = dsize(2)
+       dim3 = dsize(3)
+       dim4 = dsize(4)
+       dim5 = dsize(5)
     end if
   end subroutine get_vect5d_complex
 
@@ -1648,22 +1525,22 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     integer, dimension(:,:,:,:,:,:), pointer :: data
     integer, intent(out) :: dim1, dim2, dim3, dim4, dim5, dim6, status
-    type(C_PTR) :: cptr
-    integer(C_INT) :: csize1, csize2, csize3, csize4, csize5, csize6
+    type(C_PTR) :: cptr, csize
+    integer(C_INT), target :: dsize(MAXDIM)
+    csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = c_getVect6DInt(opCtx, trim(fieldPath)//C_NULL_CHAR, &
-         trim(timebasePath)//C_NULL_CHAR, cptr, &
-         csize1, csize2, csize3, csize4, csize5, csize6)
+    status = c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+         trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, 6, csize)
     if (status.eq.0) then
        if (C_ASSOCIATED(cptr)) then
-          call C_F_POINTER(cptr, data, (/csize1,csize2,csize3,csize4,csize5,csize6/))
+          call C_F_POINTER(cptr, data, dsize(1:6))
        end if
-       dim1 = csize1
-       dim2 = csize2
-       dim3 = csize3
-       dim4 = csize4
-       dim5 = csize5
-       dim6 = csize6
+       dim1 = dsize(1)
+       dim2 = dsize(2)
+       dim3 = dsize(3)
+       dim4 = dsize(4)
+       dim5 = dsize(5)
+       dim6 = dsize(6)
     end if
   end subroutine get_vect6d_int
 
@@ -1675,22 +1552,22 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     real(8), dimension(:,:,:,:,:,:), pointer :: data
     integer, intent(out) :: dim1, dim2, dim3, dim4, dim5, dim6, status
-    type(C_PTR) :: cptr
-    integer(C_INT) :: csize1, csize2, csize3, csize4, csize5, csize6
+    type(C_PTR) :: cptr, csize
+    integer(C_INT), target :: dsize(MAXDIM)
+    csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = c_getVect6DDouble(opCtx, trim(fieldPath)//C_NULL_CHAR, &
-         trim(timebasePath)//C_NULL_CHAR, cptr, &
-         csize1, csize2, csize3, csize4, csize5, csize6)
+    status = c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+         trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, 6, csize)
     if (status.eq.0) then
        if (C_ASSOCIATED(cptr)) then
-          call C_F_POINTER(cptr, data, (/csize1,csize2,csize3,csize4,csize5,csize6/))
+          call C_F_POINTER(cptr, data, dsize(1:6))
        end if
-       dim1 = csize1
-       dim2 = csize2
-       dim3 = csize3
-       dim4 = csize4
-       dim5 = csize5
-       dim6 = csize6
+       dim1 = dsize(1)
+       dim2 = dsize(2)
+       dim3 = dsize(3)
+       dim4 = dsize(4)
+       dim5 = dsize(5)
+       dim6 = dsize(6)
     end if
   end subroutine get_vect6d_double
 
@@ -1702,22 +1579,22 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     complex(8), dimension(:,:,:,:,:,:), pointer :: data
     integer, intent(out) :: dim1, dim2, dim3, dim4, dim5, dim6, status
-    type(C_PTR) :: cptr
-    integer(C_INT) :: csize1, csize2, csize3, csize4, csize5, csize6
+    type(C_PTR) :: cptr, csize
+    integer(C_INT), target :: dsize(MAXDIM)
+    csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = c_getVect6DComplex(opCtx, trim(fieldPath)//C_NULL_CHAR, &
-         trim(timebasePath)//C_NULL_CHAR, cptr, &
-         csize1, csize2, csize3, csize4, csize5, csize6)
+    status = c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+         trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, 6, csize)
     if (status.eq.0) then
        if (C_ASSOCIATED(cptr)) then
-          call C_F_POINTER(cptr, data, (/csize1,csize2,csize3,csize4,csize5,csize6/))
+          call C_F_POINTER(cptr, data, dsize(1:6))
        end if
-       dim1 = csize1
-       dim2 = csize2
-       dim3 = csize3
-       dim4 = csize4
-       dim5 = csize5
-       dim6 = csize6
+       dim1 = dsize(1)
+       dim2 = dsize(2)
+       dim3 = dsize(3)
+       dim4 = dsize(4)
+       dim5 = dsize(5)
+       dim6 = dsize(6)
     end if
   end subroutine get_vect6d_complex
 
@@ -1729,23 +1606,23 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     integer, dimension(:,:,:,:,:,:,:), pointer :: data
     integer, intent(out) :: dim1, dim2, dim3, dim4, dim5, dim6, dim7, status
-    type(C_PTR) :: cptr
-    integer(C_INT) :: csize1, csize2, csize3, csize4, csize5, csize6, csize7
+    type(C_PTR) :: cptr, csize
+    integer(C_INT), target :: dsize(MAXDIM)
+    csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = c_getVect7DInt(opCtx, trim(fieldPath)//C_NULL_CHAR, &
-         trim(timebasePath)//C_NULL_CHAR, cptr, &
-         csize1, csize2, csize3, csize4, csize5, csize6, csize7)
+    status = c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+         trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, 7, csize)
     if (status.eq.0) then
        if (C_ASSOCIATED(cptr)) then
-          call C_F_POINTER(cptr, data, (/csize1,csize2,csize3,csize4,csize5,csize6,csize7/))
+          call C_F_POINTER(cptr, data, dsize(1:7))
        end if
-       dim1 = csize1
-       dim2 = csize2
-       dim3 = csize3
-       dim4 = csize4
-       dim5 = csize5
-       dim6 = csize6
-       dim7 = csize7
+       dim1 = dsize(1)
+       dim2 = dsize(2)
+       dim3 = dsize(3)
+       dim4 = dsize(4)
+       dim5 = dsize(5)
+       dim6 = dsize(6)
+       dim7 = dsize(7)
     end if
   end subroutine get_vect7d_int
 
@@ -1757,23 +1634,23 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     real(8), dimension(:,:,:,:,:,:,:), pointer :: data
     integer, intent(out) :: dim1, dim2, dim3, dim4, dim5, dim6, dim7, status
-    type(C_PTR) :: cptr
-    integer(C_INT) :: csize1, csize2, csize3, csize4, csize5, csize6, csize7
+    type(C_PTR) :: cptr, csize
+    integer(C_INT), target :: dsize(MAXDIM)
+    csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = c_getVect7DDouble(opCtx, trim(fieldPath)//C_NULL_CHAR, &
-         trim(timebasePath)//C_NULL_CHAR, cptr, &
-         csize1, csize2, csize3, csize4, csize5, csize6, csize7)
+    status = c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+         trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, 7, csize)
     if (status.eq.0) then
        if (C_ASSOCIATED(cptr)) then 
-          call C_F_POINTER(cptr, data, (/csize1,csize2,csize3,csize4,csize5,csize6,csize7/))
+          call C_F_POINTER(cptr, data, dsize(1:7))
        end if
-       dim1 = csize1
-       dim2 = csize2
-       dim3 = csize3
-       dim4 = csize4
-       dim5 = csize5
-       dim6 = csize6
-       dim7 = csize7
+       dim1 = dsize(1)
+       dim2 = dsize(2)
+       dim3 = dsize(3)
+       dim4 = dsize(4)
+       dim5 = dsize(5)
+       dim6 = dsize(6)
+       dim7 = dsize(7)
     end if
   end subroutine get_vect7d_double
 
@@ -1785,23 +1662,23 @@ contains
     character(*), intent(in) :: fieldPath, timebasePath
     complex(8), dimension(:,:,:,:,:,:,:), pointer :: data
     integer, intent(out) :: dim1, dim2, dim3, dim4, dim5, dim6, dim7, status
-    type(C_PTR) :: cptr
-    integer(C_INT) :: csize1, csize2, csize3, csize4, csize5, csize6, csize7
+    type(C_PTR) :: cptr, csize
+    integer(C_INT), target :: dsize(MAXDIM)
+    csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = c_getVect7DComplex(opCtx, trim(fieldPath)//C_NULL_CHAR, &
-         trim(timebasePath)//C_NULL_CHAR, cptr, &
-         csize1, csize2, csize3, csize4, csize5, csize6, csize7)
+    status = c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+         trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, 7, csize)
     if (status.eq.0) then
        if (C_ASSOCIATED(cptr)) then 
-          call C_F_POINTER(cptr, data, (/csize1,csize2,csize3,csize4,csize5,csize6,csize7/))
+          call C_F_POINTER(cptr, data, dsize(1:7))
        end if
-       dim1 = csize1
-       dim2 = csize2
-       dim3 = csize3
-       dim4 = csize4
-       dim5 = csize5
-       dim6 = csize6
-       dim7 = csize7
+       dim1 = dsize(1)
+       dim2 = dsize(2)
+       dim3 = dsize(3)
+       dim4 = dsize(4)
+       dim5 = dsize(5)
+       dim6 = dsize(6)
+       dim7 = dsize(7)
     end if
   end subroutine get_vect7d_complex
 
