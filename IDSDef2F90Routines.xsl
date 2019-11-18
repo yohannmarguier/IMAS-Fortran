@@ -30,7 +30,7 @@ use ids_schemas
 use ual_low_level_wrap
 use utilities_copy_struct
 use utilities_deallocate_struct
-use specific_validate_struct
+<!--use specific_validate_struct-->
 
 <xsl:for-each select="IDS">
 use <xsl:value-of select="@name"/>_put_struct
@@ -569,17 +569,16 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   use ids_schemas
   use ual_low_level_wrap
   use <xsl:value-of select="@name"/>_delete
-  <xsl:if test="@specific_validation_rules='yes'">
+  <!--<xsl:if test="@specific_validation_rules='yes'">
   use specific_validate_struct
-  </xsl:if>
-
+  </xsl:if>-->
   implicit none
 
   integer(ids_int), optional, intent(out) :: retstatus 
   integer(ids_int) :: status = 0
-  <xsl:if test="@specific_validation_rules='yes'">
+  <!--<xsl:if test="@specific_validation_rules='yes'">
   integer(ids_int) :: validationstatus = 0
-  </xsl:if>
+  </xsl:if>-->
   character*(*), intent(in) :: name
   integer(ids_int) :: pulsectx, opctx, aosctx
   type(ids_<xsl:value-of select="@name"/>) :: IDS
@@ -606,13 +605,13 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
      return
   endif
 
-  <xsl:if test="@specific_validation_rules='yes'">
+  <!--<xsl:if test="@specific_validation_rules='yes'">
   call ids_validate(IDS, validationstatus)
   if (validationstatus.EQ.-1) then
      write(*,*) "PUT operation stopped"
      return
   endif
-  </xsl:if>
+  </xsl:if>-->
   
   call ual_begin_global_action(pulsectx, name, WRITE_OP, opctx) 
   if (opctx.lt.0) then
@@ -795,17 +794,17 @@ end interface
 subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS, retstatus)
   use ids_schemas
   use ual_low_level_wrap
-  <xsl:if test="@specific_validation_rules='yes'">
+  <!--<xsl:if test="@specific_validation_rules='yes'">
   use specific_validate_struct
-  </xsl:if>
+  </xsl:if>-->
 
   implicit none
 
   integer(ids_int), intent(out), optional :: retstatus
   integer(ids_int) :: status = 0
-  <xsl:if test="@specific_validation_rules='yes'">
+  <!--<xsl:if test="@specific_validation_rules='yes'">
   integer(ids_int) :: validationstatus = 0
-  </xsl:if>
+  </xsl:if>-->
   character*(*) :: name
   integer(ids_int) :: pulsectx, opctx, aosctx
   type(ids_<xsl:value-of select="@name"/>) :: IDS
@@ -845,10 +844,10 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
      end if
   end if
 
-  <xsl:if test="@specific_validation_rules='yes'">
+  <!--<xsl:if test="@specific_validation_rules='yes'">
   call ids_validate(IDS,validationstatus)
   if (validationstatus.EQ.-1) return
-  </xsl:if>
+  </xsl:if>-->
 
   timedparent=.false.
   <xsl:apply-templates select="./field" mode="PUT_FIELD">
