@@ -630,7 +630,8 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
     <xsl:with-param name="timedparentexpr" select="''"/>
   </xsl:apply-templates>
 
-    if (present(retstatus)) retstatus = 0
+  call ual_end_action(opctx, status)
+  if (present(retstatus)) retstatus = status
 end subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
 
 <xsl:for-each select=".//field[@data_type='structure' or @data_type='struct_array']">
@@ -857,7 +858,8 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
     <xsl:with-param name="slice" select="'yes'"/>
   </xsl:apply-templates>
 
-  if (present(retstatus)) retstatus = 0
+  call ual_end_action(opctx, status)
+  if (present(retstatus)) retstatus = status
 end subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
 
 <xsl:for-each select=".//field[@data_type='structure' or @data_type='struct_array']">
