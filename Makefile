@@ -17,27 +17,27 @@ else
 
 FC_g95         = g95
 MODDIR_g95      = g95
-FCFLAGS_g95       = -D__USE_XOPEN2K8 -r8 -ftrace=full -fPIC -fno-second-underscore -ffree-line-length-huge -g -fmod=$(MODDIR_g95)
+FCFLAGS_g95       = -g -O3 -D__USE_XOPEN2K8 -r8 -ftrace=full -fPIC -fno-second-underscore -ffree-line-length-huge -fmod=$(MODDIR_g95)
 INCDIR_g95      = -I$(MODDIR_g95)
 
 FC_gfortran    = gfortran
 MODDIR_gfortran = gfortran
-FCFLAGS_gfortran  = -O0 -D__USE_XOPEN2K8 -fdefault-real-8 -fdefault-double-8 -fPIC -fno-second-underscore -ffree-line-length-none -g -J$(MODDIR_gfortran)
+FCFLAGS_gfortran  = -g -O3 -D__USE_XOPEN2K8 -fdefault-real-8 -fdefault-double-8 -fPIC -fno-second-underscore -ffree-line-length-none -J$(MODDIR_gfortran)
 INCDIR_gfortran = -I$(MODDIR_gfortran)
 
 FC_nagfor      = nagfor
 MODDIR_nagfor   = nagfor
-FCFLAGS_nagfor    = -O0 -D__USE_XOPEN2K8 -free -maxcontin=4000 -w=unused -w=x95 -kind=byte -r8 -PIC -mdir ./$(MODDIR_nagfor) -g
+FCFLAGS_nagfor    = -g -O3 -D__USE_XOPEN2K8 -free -maxcontin=4000 -w=unused -w=x95 -kind=byte -r8 -PIC -mdir ./$(MODDIR_nagfor) 
 INCDIR_nagfor   = -I$(MODDIR_nagfor)
 
 FC_pgi         = pgf90
 MODDIR_pgi      = pgi
-FCFLAGS_pgi       = -D__USE_XOPEN2K8 -r8 -Mnosecond_underscore -fPIC -module=./$(MODDIR_pgi) -g
+FCFLAGS_pgi       = -g -O3 -D__USE_XOPEN2K8 -r8 -Mnosecond_underscore -fPIC -module=./$(MODDIR_pgi) 
 INCDIR_pgi      = -I$(MODDIR_pgi)
 
 FC_ifort       = ifort
 MODDIR_ifort    = ifort
-FCFLAGS_ifort     = -r8 -O0 -assume no2underscore -fPIC -module $(MODDIR_ifort) -g -shared-intel
+FCFLAGS_ifort     = -g -O3 -r8 -assume no2underscore -fPIC -module $(MODDIR_ifort) -g -shared-intel
 INCDIR_ifort    = -I$(MODDIR_ifort)
 
 # Get a list of IDS from IDSDEF file
