@@ -2082,7 +2082,7 @@ end module
     longstring = ' '
     call get_string(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
           '', longstring, lenstring, status)
-    if (status.EQ.0) then
+    if (status.EQ.0 .and. lenstring.gt.0) then
        call unpack_string(longstring, lenstring, <xsl:value-of select="$fieldvar"/>)
     else
       <xsl:call-template name="checkErrorCtx">
