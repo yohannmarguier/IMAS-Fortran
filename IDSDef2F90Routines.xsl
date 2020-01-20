@@ -2031,7 +2031,8 @@ end module
              enddo
              call ual_end_action(aosctx, status)
           else
-             write(*,*) "ERROR! with field "//<xsl:value-of select="$fieldpath"/>
+             write(*,*) "ERROR! with field "//<xsl:value-of select="$fieldpath"/><xsl:text>&#xa;</xsl:text>
+	     <xsl:if test="$structvar='IDS'">if (present(retstatus)) </xsl:if>retstatus = aosctx
              call ual_end_action(<xsl:value-of select="$contextvar"/>, status)
              return
           endif
