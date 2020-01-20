@@ -3,109 +3,161 @@
 ! data to void C pointers
 module ual_low_level_wrap
   use ual_defs
+  use iso_c_binding
+
+  type, bind(C) :: c_al_status_t
+     integer(C_INT) :: code
+     character(C_CHAR) :: message(MAX_ERR_MSG_LEN)
+  end type c_al_status_t
+
+  type :: al_status
+     integer :: code
+     character(MAX_ERR_MSG_LEN) :: message
+  end type al_status
+
   integer, parameter :: STRMAXLEN = 100000
 
   ! C functions interface
-  ! use iso_c_binding: only C_INT, C_CHAR, etc...
   interface
 
      !!! standard functions !!!
-     subroutine c_free(ptr) bind(C,name="free")
+     subroutine c_free(ptr) &
+          bind(C,name="free")
        use, intrinsic :: ISO_C_BINDING
        type(C_PTR), value, intent(in) :: ptr
      end subroutine c_free
 
-     !!!!! direct wrappers to new API !!!!!
-     function c_ual_print_context(ctx) bind(C,name="ual_print_context")
+     pure function c_strlen(str) &
+          bind(C,name="strlen")
        use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_ual_print_context
+       integer(C_INT) :: c_strlen
+       type(C_PTR), value, intent(in) :: str
+     end function c_strlen
+
+
+     !!!!! direct wrappers to new API !!!!!
+     function c_ual_context_info(ctx, info) &
+          bind(C,name="ual_context_info")
+       use, intrinsic :: ISO_C_BINDING
+       import c_al_status_t
+       type(c_al_status_t) :: c_ual_context_info
        integer(C_INT), value, intent(in) :: ctx
+       type(C_PTR), intent(out) :: info
      end function c_ual_print_context
 
-     function c_ual_get_backendID(ctx) bind(C,name="ual_get_backendID")
+     function c_ual_get_backendID(ctx, beid) &
+          bind(C,name="ual_get_backendID")
        use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_ual_get_backendID
+       import c_al_status_t
+       type(c_al_status_t) :: c_ual_get_backendID
        integer(C_INT), value, intent(in) :: ctx
+       integer(C_INT), intent(out) :: beid
      end function c_ual_get_backendID
 
-     function c_ual_begin_pulse_action(beid, shot, run, usr, tok, ver) bind(C,name="ual_begin_pulse_action")
+     function c_ual_begin_pulse_action(beid, shot, run, usr, tok, ver, pctx) &
+          bind(C,name="ual_begin_pulse_action")
        use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_ual_begin_pulse_action
+       import c_al_status_t
+       type(c_al_status_t) :: c_ual_begin_pulse_action
        integer(C_INT), value, intent(in) :: beid, shot, run
        character(C_CHAR), dimension(*), intent(in) :: usr, tok, ver
+       integer(C_INT), intent(out) :: pctx
      end function c_ual_begin_pulse_action
 
-     function c_ual_open_pulse(pctx, mode, opt) bind(C,name="ual_open_pulse")
+     function c_ual_open_pulse(pctx, mode, opt) &
+          bind(C,name="ual_open_pulse")
        use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_ual_open_pulse
+       import c_al_status_t
+       type(c_al_status_t) :: c_ual_open_pulse
        integer(C_INT), value, intent(in) :: pctx, mode
        character(C_CHAR), dimension(*), intent(in) :: opt
      end function c_ual_open_pulse
 
-     function c_ual_close_pulse(pctx, mode, opt) bind(C,name="ual_close_pulse")
+     function c_ual_close_pulse(pctx, mode, opt) &
+          bind(C,name="ual_close_pulse")
        use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_ual_close_pulse
+       import c_al_status_t
+       type(c_al_status_t) :: c_ual_close_pulse
        integer(C_INT), value, intent(in) :: pctx, mode
        character(C_CHAR), dimension(*), intent(in) :: opt
      end function c_ual_close_pulse
 
-     function c_ual_begin_global_action(pctx, dataobjectname, rwmode) bind(C,name="ual_begin_global_action")
+     function c_ual_begin_global_action(pctx, dataobjectname, rwmode, opctx) &
+          bind(C,name="ual_begin_global_action")
        use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_ual_begin_global_action
+       import c_al_status_t
+       type(c_al_status_t) :: c_ual_begin_global_action
        integer(C_INT), value, intent(in) :: pctx, rwmode
        character(C_CHAR), dimension(*), intent(in) :: dataobjectname
+       integer(C_INT), intent(out) :: opctx
      end function c_ual_begin_global_action
      
-     function c_ual_begin_slice_action(pctx, dataobjectname, rwmode, time, interpmode) bind(C,name="ual_begin_slice_action")
+     function c_ual_begin_slice_action(pctx, dataobjectname, rwmode, time, interpmode, opctx) &
+          bind(C,name="ual_begin_slice_action")
        use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_ual_begin_slice_action
+       import c_al_status_t
+       type(c_al_status_t) :: c_ual_begin_slice_action
        integer(C_INT), value, intent(in) :: pctx, rwmode, interpmode
        real(C_DOUBLE), value, intent(in) :: time
        character(C_CHAR), dimension(*), intent(in) :: dataobjectname
+       integer(C_INT), intent(out) :: opctx
      end function c_ual_begin_slice_action
 
-     function c_ual_end_action(ctx) bind(C,name="ual_end_action")
+     function c_ual_end_action(ctx) &
+          bind(C,name="ual_end_action")
        use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_ual_end_action
+       import c_al_status_t
+       type(c_al_status_t) :: c_ual_end_action
        integer(C_INT), value, intent(in) :: ctx
      end function c_ual_end_action
 
-     function c_ual_write_data(ctx, fieldname, timebasename, data, datatype, dim, size) bind(C,name="ual_write_data")
+     function c_ual_write_data(ctx, fieldname, timebasename, data, datatype, dim, size) &
+          bind(C,name="ual_write_data")
        use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_ual_write_data
+       import c_al_status_t
+       type(c_al_status_t) :: c_ual_write_data
        integer(C_INT), value, intent(in) :: ctx, datatype, dim
        character(C_CHAR), dimension(*), intent(in) :: fieldname, timebasename
        type(C_PTR), value, intent(in) :: data
        type(C_PTR), value, intent(in) :: size
      end function c_ual_write_data
 
-     function c_ual_read_data(ctx, fieldname, timebase, data, datatype, dim, size) bind(C,name="ual_read_data")
+     function c_ual_read_data(ctx, fieldname, timebase, data, datatype, dim, size) &
+          bind(C,name="ual_read_data")
        use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_ual_read_data
+       import c_al_status_t
+       type(c_al_status_t) :: c_ual_read_data
        integer(C_INT), value, intent(in) :: ctx, datatype, dim
        character(C_CHAR), dimension(*), intent(in) :: fieldname, timebase
        type(C_PTR), intent(out) :: data
        type(C_PTR), value, intent(in) :: size
      end function c_ual_read_data
 
-     function c_ual_delete_data(ctx, path) bind(C,name="ual_delete_data")
+     function c_ual_delete_data(ctx, path) &
+          bind(C,name="ual_delete_data")
        use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_ual_delete_data
+       import c_al_status_t
+       type(c_al_status_t) :: c_ual_delete_data
        integer(C_INT), value, intent(in) :: ctx
        character(C_CHAR), dimension(*), intent(in) :: path
      end function c_ual_delete_data
 
-     function c_ual_begin_arraystruct_action(ctx, path, timebase, size) bind(C,name="ual_begin_arraystruct_action")
+     function c_ual_begin_arraystruct_action(ctx, path, timebase, size, aosctx) &
+          bind(C,name="ual_begin_arraystruct_action")
        use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_ual_begin_arraystruct_action
+       import c_al_status_t
+       type(c_al_status_t) :: c_ual_begin_arraystruct_action
        integer(C_INT), value, intent(in) :: ctx
        integer(C_INT), intent(inout) :: size
        character(C_CHAR), dimension(*), intent(in) :: path, timebase
+       integer(C_INT), intent(out) :: aosctx
      end function c_ual_begin_arraystruct_action
 
-     function c_ual_iterate_over_arraystruct(aosctx, step) bind(C,name="ual_iterate_over_arraystruct")
+     function c_ual_iterate_over_arraystruct(aosctx, step) &
+          bind(C,name="ual_iterate_over_arraystruct")
        use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_ual_iterate_over_arraystruct
+       import c_al_status_t
+       type(c_al_status_t) :: c_ual_iterate_over_arraystruct
        integer(C_INT), value, intent(in) :: aosctx, step
      end function c_ual_iterate_over_arraystruct
 
@@ -114,6 +166,23 @@ module ual_low_level_wrap
 
 
 contains 
+
+  pure function fstatus(cstatus)
+    use, intrinsic :: ISO_C_BINDING
+    implicit none
+    type(al_status_t) :: fstatus
+    type(c_al_status_t), intent(in) :: cstatus
+    integer :: i
+    fstatus%code = cstatus%code
+    fstatus%message = ' '
+    if (cstatus%code .lt. 0) then
+       i = 1
+       do while (cstatus%message(i).ne.C_NULL_CHAR)
+          fstatus%message(i:i) = cstatus%message(i)
+          i = i+1
+       end do
+    end if
+  end function fstatus
 
   subroutine unpack_string(longstring, lenstring, cpostring)
     implicit none
@@ -151,80 +220,151 @@ contains
     endif
   end subroutine pack_string
 
-  subroutine ual_print_context(ctx)
+  subroutine ual_context_info(ctx, info, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: ctx
-    integer :: status
-    status = c_ual_print_context(ctx)
+    character(STRMAXLEN), intent(out) :: info
+    integer, optional, intent(out) :: retstatus
+    type(al_status_t) :: status
+    type(C_PTR) :: cptr
+    character, dimension(:), pointer :: chars
+    integer :: s,i
+    status = fstatus(c_ual_context_info(ctx, cptr))
+    if (status%code.ne.0) then
+       write(*,*) TRIM(status%message)
+    else
+       if C_ASSOCIATED(cptr) then
+          s = c_strlen(cptr)
+          call C_F_POINTER(cptr, chars, (/ s /))
+          info = ' '
+          do i=1,s
+             info(i:i) = chars(i:i)
+          end do
+          call c_free(cptr)
+       end if
+    end if
+    if (present(retstatus)) retstatus = status%code
   end subroutine ual_print_context
 
-  subroutine ual_get_backendID(ctx, beID)
+  subroutine ual_get_backendID(ctx, beID, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: ctx
     integer, intent(out) :: beID
-    beid = c_ual_get_backendID(ctx)
+    integer, optional, intent(out) :: retstatus
+    integer(C_INT) :: cdata
+    type(al_status_t) :: status
+    status = fstatus(c_ual_get_backendID(ctx,cdata))
+    if (status%code.ne.0) then
+       write(*,*) TRIM(status%message)
+    else
+       beID = cdata
+    end if
+    if (present(retstatus)) retstatus = status%code
   end subroutine ual_get_backendID
 
-  subroutine ual_begin_pulse_action(beid, shot, run, usr, tok, ver, pctx)
+  subroutine ual_begin_pulse_action(beid, shot, run, usr, tok, ver, pctx, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: beid, shot, run
     character(*), intent(in) :: usr, tok, ver
     integer, intent(out) :: pctx
-    pctx = c_ual_begin_pulse_action(beid, shot, run, trim(usr)//C_NULL_CHAR, &
-         trim(tok)//C_NULL_CHAR, trim(ver)//C_NULL_CHAR)
+    integer, optional, intent(out) :: retstatus
+    integer(C_INT) :: cid
+    type(al_status_t) :: status
+    status = fstatus(c_ual_begin_pulse_action(beid, shot, run, trim(usr)//C_NULL_CHAR, &
+         trim(tok)//C_NULL_CHAR, trim(ver)//C_NULL_CHAR, cid))
+    if (status%code.ne.0) then
+       write(*,*) TRIM(status%message)
+       pctx = 0
+    else
+       pctx = cid
+    end if
+    if (present(retstatus)) retstatus = status%code
   end subroutine ual_begin_pulse_action
 
-  subroutine ual_open_pulse(pctx, mode, opt, status)
+  subroutine ual_open_pulse(pctx, mode, opt, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: pctx, mode
     character(*), intent(in) :: opt
-    integer, intent(out) :: status
+    integer, optional, intent(out) :: retstatus
+    type(al_status_t) :: status
     status = c_ual_open_pulse(pctx, mode, trim(opt)//C_NULL_CHAR)
+    if (status%code.ne.0) then
+       write(*,*) TRIM(status%message)
+    else
+       retstatus = status%code
+    end if 
+    if (present(retstatus)) retstatus = status%code
   end subroutine ual_open_pulse
 
-  subroutine ual_close_pulse(pctx, mode, opt, status)
+  subroutine ual_close_pulse(pctx, mode, opt, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: pctx, mode
     character(*), intent(in) :: opt
-    integer, intent(out) :: status
-    status = c_ual_close_pulse(pctx, mode, trim(opt)//C_NULL_CHAR)
+    integer, optional, intent(out) :: retstatus
+    type(al_status_t) :: status
+    status = fstatus(c_ual_close_pulse(pctx, mode, trim(opt)//C_NULL_CHAR))
+    if (status%code.ne.0) then
+       write(*,*) TRIM(status%message)
+    else
+       retstatus = status%code
+    end if
+    if (present(retstatus)) retstatus = status%code
   end subroutine ual_close_pulse
 
-  subroutine ual_begin_global_action(pctx, cponame, rwmode, octx)
+  subroutine ual_begin_global_action(pctx, cponame, rwmode, octx, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: pctx, rwmode
     character(*), intent(in) :: cponame
     integer, intent(out) :: octx
-    octx = c_ual_begin_global_action(pctx, trim(cponame)//C_NULL_CHAR, rwmode)
+    integer, intent(out) :: retstatus
+    integer(C_INT) :: cctx
+    type(al_status_t) :: status
+    status = fstatus(c_ual_begin_global_action(pctx, trim(cponame)//C_NULL_CHAR, rwmode, cdata))
+    if (status%code.ne.0) then
+       write(*,*) TRIM(status%message)
+    else
+       octx = cctx
+    end if
+    retstatus = status%code
   end subroutine ual_begin_global_action
 
-  subroutine ual_begin_slice_action(pctx, cponame, rwmode, time, interpmode, octx)
+  subroutine ual_begin_slice_action(pctx, cponame, rwmode, time, interpmode, octx, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: pctx, rwmode, interpmode
     real(8), intent(in) :: time
     character(*), intent(in) :: cponame
     integer, intent(out) :: octx
-    octx = c_ual_begin_slice_action(pctx, trim(cponame)//C_NULL_CHAR, rwmode, time, interpmode)
+    integer, intent(out) :: retstatus
+    integer(C_INT) :: cctx
+    type(al_status_t) :: status
+    status = fstatus(c_ual_begin_slice_action(pctx, trim(cponame)//C_NULL_CHAR, rwmode, time, interpmode, cctx)
+    if (status%code.ne.0) then
+       write(*,*) TRIM(status%message)
+    else
+       octx = cctx
+    end if
+    retstatus = status%code
   end subroutine ual_begin_slice_action
 
-  subroutine ual_end_action(ctx, status)
+  subroutine ual_end_action(ctx, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: ctx
-    integer, intent(out) :: status
-    status = c_ual_end_action(ctx)
+    integer, intent(out) :: retstatus
+    type(al_status_t) :: status
+    status = fstatus(c_ual_end_action(ctx))
+    if (status%code.ne.0) then
+       write(*,*) TRIM(status%message)
+    end if
+    retstatus = status%code
   end subroutine ual_end_action
-
-  !WHAT TO DO WHEN EXPECTING VOID TYPE TO BE PASSED IN FORTRAN??? overloaded module procedure?
-  !subroutine ual_write_data(ctx, fieldname, timebase, data, datatype, dim, size)
-  !subroutine ual_read_data(ctx, fieldname, timebase, data, datatype, dim, size)
 
   subroutine ual_delete_data(ctx, path, status) 
     use, intrinsic :: ISO_C_BINDING

@@ -56,6 +56,8 @@ module ual_defs
   integer, parameter :: IDS_TIME_MODE_HOMOGENEOUS = 1
   integer, parameter :: IDS_TIME_MODE_INDEPENDENT = 2
 
+  integer, parameter :: MAX_ERR_MSG_LEN    = 256
+
 end module ual_defs
 
 
