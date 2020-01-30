@@ -366,36 +366,50 @@ contains
     retstatus = status%code
   end subroutine ual_end_action
 
-  subroutine ual_delete_data(ctx, path, status) 
+  subroutine ual_delete_data(ctx, path, retstatus) 
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: ctx
     character(*), intent(in) :: path
-    integer, intent(out) :: status
-    status = c_ual_delete_data(ctx, trim(path)//C_NULL_CHAR)
+    integer, intent(out) :: retstatus
+    type(al_status_t) :: status
+    status = fstatus(c_ual_delete_data(ctx, trim(path)//C_NULL_CHAR))
+    if (status%code.ne.0) then
+       write(*,*) TRIM(status%message)
+    end if
+    retstatus = status%code
   end subroutine ual_delete_data
 
-  subroutine ual_begin_arraystruct_action(ctx, path, timebase, size, aosctx)
+  subroutine ual_begin_arraystruct_action(ctx, path, timebase, size, aosctx, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: ctx
     integer(C_INT) :: csize
     integer, intent(inout) :: size
     character(*), intent(in) :: path, timebase
-    integer, intent(out) :: aosctx
+    integer, intent(out) :: aosctx, retstatus
+    type(al_status_t) :: status
     csize = size
-    aosctx = c_ual_begin_arraystruct_action(ctx, trim(path)//C_NULL_CHAR, trim(timebase)//C_NULL_CHAR, csize)
-    if (aosctx.ge.0) then
+    status = fstatus(c_ual_begin_arraystruct_action(ctx, trim(path)//C_NULL_CHAR, trim(timebase)//C_NULL_CHAR, csize, aosctx))
+    if (status%code.ne.0) then
+       write(*,*) TRIM(status%message)
+    else
        size = csize
-    endif
+    end if
+    retstatus = status%code
   end subroutine ual_begin_arraystruct_action
 
-  subroutine ual_iterate_over_arraystruct(aosctx, step, status)
+  subroutine ual_iterate_over_arraystruct(aosctx, step, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: aosctx, step
-    integer, intent(out) :: status
-    status = c_ual_iterate_over_arraystruct(aosctx, step)
+    integer, intent(out) :: retstatus
+    type(al_status_t) :: status
+    status = fstatus(c_ual_iterate_over_arraystruct(aosctx, step))
+    if (status%code.ne.0) then
+       write(*,*) TRIM(status%message)
+    end if
+    retstatus = status%code
   end subroutine ual_iterate_over_arraystruct
 
 
@@ -409,10 +423,8 @@ contains
     integer, intent(out) :: pulseCtx
     integer, intent(out), optional :: retstatus
     integer :: status
-    call ual_begin_pulse_action(MDSPLUS_BACKEND, shot, run, user, tokamak, version, pulseCtx)
-    if (pulseCtx < 0) then 
-       status = pulseCtx
-    else
+    call ual_begin_pulse_action(MDSPLUS_BACKEND, shot, run, user, tokamak, version, pulseCtx, status)
+    if (status.eq.0) then 
        call ual_open_pulse(pulseCtx, FORCE_CREATE_PULSE, "", status)
     end if
     if (present(retstatus)) retstatus = status
@@ -426,10 +438,8 @@ contains
     integer, intent(out) :: pulseCtx
     integer, optional, intent(out) :: retstatus
     integer :: status
-    call ual_begin_pulse_action(MDSPLUS_BACKEND, shot, run, user, tokamak, version, pulseCtx)
-    if (pulseCtx < 0) then 
-       status = pulseCtx
-    else
+    call ual_begin_pulse_action(MDSPLUS_BACKEND, shot, run, user, tokamak, version, pulseCtx, status)
+    if (pulseCtx.eq.0) then 
        call ual_open_pulse(pulseCtx, OPEN_PULSE, "", status)
     end if
     if (present(retstatus)) retstatus = status
