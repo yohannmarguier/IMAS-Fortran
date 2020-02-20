@@ -1275,17 +1275,72 @@ end module
 
     <!-- Case of all other vector data -->
     <xsl:when test="@data_type='flt_1d_type' or @data_type='int_1d_type' or 
-		    @data_type='flt_2d_type' or @data_type='int_2d_type' or 
-		    @data_type='FLT_1D' or @data_type='INT_1D' or @data_type='CPX_1D' or 
-		    @data_type='FLT_2D' or @data_type='INT_2D' or @data_type='CPX_2D' or 
-		    @data_type='FLT_3D' or @data_type='INT_3D' or @data_type='CPX_3D' or 
-		    @data_type='FLT_4D' or @data_type='INT_4D' or @data_type='CPX_4D' or 
-		    @data_type='FLT_5D' or @data_type='INT_5D' or @data_type='CPX_5D' or 
-		    @data_type='FLT_6D' or @data_type='INT_6D' or @data_type='CPX_6D'">
+		    @data_type='FLT_1D' or @data_type='INT_1D' or @data_type='CPX_1D'">
   ! deallocate <xsl:value-of select="$currentidxpath"/>
   if (associated(struct_in<xsl:value-of select="$currentidxpath"/>)) then
     if (c_data) then
-      call c_free(C_LOC(struct_in<xsl:value-of select="$currentidxpath"/>))
+      call c_free(C_LOC(struct_in<xsl:value-of select="$currentidxpath"/>(1)))
+    else
+      deallocate(struct_in<xsl:value-of select="$currentidxpath"/>)
+    endif
+    nullify(struct_in<xsl:value-of select="$currentidxpath"/>)
+  endif
+    </xsl:when>
+
+    <xsl:when test="@data_type='flt_2d_type' or @data_type='int_2d_type' or 
+		    @data_type='FLT_2D' or @data_type='INT_2D' or @data_type='CPX_2D'">
+  ! deallocate <xsl:value-of select="$currentidxpath"/>
+  if (associated(struct_in<xsl:value-of select="$currentidxpath"/>)) then
+    if (c_data) then
+      call c_free(C_LOC(struct_in<xsl:value-of select="$currentidxpath"/>(1,1)))
+    else
+      deallocate(struct_in<xsl:value-of select="$currentidxpath"/>)
+    endif
+    nullify(struct_in<xsl:value-of select="$currentidxpath"/>)
+  endif
+    </xsl:when>
+
+    <xsl:when test="@data_type='FLT_3D' or @data_type='INT_3D' or @data_type='CPX_3D'">
+  ! deallocate <xsl:value-of select="$currentidxpath"/>
+  if (associated(struct_in<xsl:value-of select="$currentidxpath"/>)) then
+    if (c_data) then
+      call c_free(C_LOC(struct_in<xsl:value-of select="$currentidxpath"/>(1,1,1)))
+    else
+      deallocate(struct_in<xsl:value-of select="$currentidxpath"/>)
+    endif
+    nullify(struct_in<xsl:value-of select="$currentidxpath"/>)
+  endif
+    </xsl:when>
+
+    <xsl:when test="@data_type='FLT_4D' or @data_type='INT_4D' or @data_type='CPX_4D'">
+  ! deallocate <xsl:value-of select="$currentidxpath"/>
+  if (associated(struct_in<xsl:value-of select="$currentidxpath"/>)) then
+    if (c_data) then
+      call c_free(C_LOC(struct_in<xsl:value-of select="$currentidxpath"/>(1,1,1,1)))
+    else
+      deallocate(struct_in<xsl:value-of select="$currentidxpath"/>)
+    endif
+    nullify(struct_in<xsl:value-of select="$currentidxpath"/>)
+  endif
+    </xsl:when>
+
+    <xsl:when test="@data_type='FLT_5D' or @data_type='INT_5D' or @data_type='CPX_5D'">
+  ! deallocate <xsl:value-of select="$currentidxpath"/>
+  if (associated(struct_in<xsl:value-of select="$currentidxpath"/>)) then
+    if (c_data) then
+      call c_free(C_LOC(struct_in<xsl:value-of select="$currentidxpath"/>(1,1,1,1,1)))
+    else
+      deallocate(struct_in<xsl:value-of select="$currentidxpath"/>)
+    endif
+    nullify(struct_in<xsl:value-of select="$currentidxpath"/>)
+  endif
+    </xsl:when>
+
+    <xsl:when test="@data_type='FLT_6D' or @data_type='INT_6D' or @data_type='CPX_6D'">
+  ! deallocate <xsl:value-of select="$currentidxpath"/>
+  if (associated(struct_in<xsl:value-of select="$currentidxpath"/>)) then
+    if (c_data) then
+      call c_free(C_LOC(struct_in<xsl:value-of select="$currentidxpath"/>(1,1,1,1,1,1)))
     else
       deallocate(struct_in<xsl:value-of select="$currentidxpath"/>)
     endif
