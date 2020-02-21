@@ -795,6 +795,7 @@ end interface
 subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS, retstatus)
   use ids_schemas
   use ual_low_level_wrap
+  use <xsl:value-of select="@name"/>_put_struct
   <!--<xsl:if test="@specific_validation_rules='yes'">
   use specific_validate_struct
   </xsl:if>-->
@@ -811,7 +812,7 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   type(ids_<xsl:value-of select="@name"/>) :: IDS
   ! internal variables declaration
   logical :: timedparent
-  integer :: timemode
+  integer :: timemode, storedtimemode
   integer(ids_int) :: aoslen, i, lenstring, lastdimsize
   character(len=100000) :: longstring
   character(len=300) :: timepath
@@ -832,6 +833,49 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
      write(*,*) "WARNING : homogeneous_time=2 mark an IDS <xsl:value-of select="@name"/> with static/constant data only. No static data stored with put_slice operation."
      if (present(retstatus)) retstatus = 0
      return
+  endif
+
+  storedtimemode = IDS_TIME_MODE_UNKNOWN
+  call ual_begin_global_action(pulsectx, name, READ_OP, opctx) 
+  if (opctx.lt.0) then
+     !! error when trying to get new ctx => stop!
+     write(*,*) 'Error in ual_begin_slice_action (from ids_put_slice for IDS <xsl:value-of select="@name"/>)'     
+     if (present(retstatus)) then
+        retstatus = opctx
+     else
+        STOP 
+     end if
+  else
+     ! Get homogeneous_time to check consistency
+     call get_int(opctx, "ids_properties/homogeneous_time",&amp;
+     '', storedtimemode, status)
+     if(isErrorCritical(status, opctx, "ids_properties/homogeneous_time")) then
+        if (present(retstatus)) then
+           retstatus = status
+	   return
+        else
+           STOP
+        endif
+     endif
+     call ual_end_action(opctx, status)
+  endif
+
+  if (storedtimemode.eq.IDS_TIME_MODE_UNKNOWN) then
+     write(*,*) 'Warning: Slice is being added to an empty IDS <xsl:value-of select="@name"/>. PUT is called to save time independent data.'
+     call put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS, status)
+     if (present(retstatus)) retstatus = status
+     return
+  endif
+
+  if (storedtimemode.ne.timemode) then
+     write(*,'(a,i0,a,i0)') 'ERROR: IDS <xsl:value-of select="@name"/> homogeneous_time mode = ',timemode,&amp;
+     ', differs from value already stored in database = ',storedtimemode
+     if (present(retstatus)) then 
+        retstatus = -1
+	return
+     else
+        STOP
+     endif
   endif
 
   call ual_begin_slice_action(pulsectx, name, WRITE_OP, UNDEFINED_TIME, UNDEFINED_INTERP, opctx)
