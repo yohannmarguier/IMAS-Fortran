@@ -1082,7 +1082,7 @@ contains
           data(i:i) = tmpdata(i)
        end do
        if (size.gt.0) then
-          call c_free(C_LOC(tmpdata))
+          call c_free(C_LOC(tmpdata(1)))
           nullify(tmpdata)
        endif
        dim1 = size
@@ -1214,7 +1214,7 @@ contains
              data(i) = trim(tmpstr)
           end do
           dim1 = size1
-          call c_free(C_LOC(tmpdata))
+          call c_free(C_LOC(tmpdata(1,1)))
           nullify(tmpdata)
        end if
     end if

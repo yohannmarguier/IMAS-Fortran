@@ -84,14 +84,16 @@ END SUBROUTINE initEnv
 
 SUBROUTINE create(idx)
   INTEGER, INTENT(OUT) :: idx
-  INTEGER :: status
+  INTEGER :: status, mode
 
   CALL initTime()
   CALL initEnv()
   !CALL imas_create_env('ids',TESTSHOT,TESTRUN, TESTSHOT,TESTRUN,idx, userName, 'test', dataVersion)
   CALL ual_begin_pulse_action(BEID, TESTSHOT, TESTRUN, userName, 'test', dataVersion, idx)
+  mode = FORCE_CREATE_PULSE
+  if (BEID.eq.MDSPLUS_BACKEND) mode = OPEN_PULSE
   if (idx .ge. 0) then
-     CALL ual_open_pulse(idx, FORCE_CREATE_PULSE, '', status)
+     CALL ual_open_pulse(idx, mode, '', status)
      if (status .eq. 0) then
         print *, "IDX:", idx
         return
@@ -101,14 +103,16 @@ END SUBROUTINE create
 
 SUBROUTINE createslice(idx)
   INTEGER, INTENT(OUT) :: idx
-  INTEGER :: status
+  INTEGER :: status, mode
 
   CALL initTime()
   CALL initEnv()
   !CALL imas_create_env('ids',TESTSHOT+1,TESTRUN+1, TESTSHOT+1,TESTRUN+1,idx, userName, 'test', dataVersion)
   CALL ual_begin_pulse_action(BEID, TESTSHOT+1, TESTRUN+1, userName, 'test', dataVersion, idx)
+  mode = FORCE_CREATE_PULSE
+  if (BEID.eq.MDSPLUS_BACKEND) mode = OPEN_PULSE
   if (idx .ge. 0) then
-     CALL ual_open_pulse(idx, FORCE_CREATE_PULSE, '', status)
+     CALL ual_open_pulse(idx, mode, '', status)
      if (status .eq. 0) then
         print *, "IDX:", idx
         return

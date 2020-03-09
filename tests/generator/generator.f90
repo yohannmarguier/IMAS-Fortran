@@ -3,7 +3,7 @@ MODULE generator
 use ids_types, only: ids_real
   implicit none
 
-INTEGER, PARAMETER :: DIM_SIZE = 1
+INTEGER, PARAMETER :: DIM_SIZE = 3
 
 INTEGER, PARAMETER :: noOfSlices = DIM_SIZE
 INTEGER, DIMENSION(:),allocatable :: SEED

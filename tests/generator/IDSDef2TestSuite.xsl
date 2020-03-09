@@ -1,24 +1,26 @@
- <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-    xmlns:fn="http://www.w3.org/2005/xpath-functions">
+ <xsl:stylesheet version="1.0" 
+		 xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+		 xmlns:fn="http://www.w3.org/2005/xpath-functions">
     <xsl:output method="text"/>
     <xsl:strip-space elements="*"/>
 
     <xsl:param name="newLowLevel" select="'no'" />
 
-    <!-- Initial c ode -->
+    <!-- Initial code -->
     <xsl:template match="IDSs">
 
       <xsl:if test="$newLowLevel ='yes'">
 	######### GENERATION FOR NEW LOW LEVEL #####
       </xsl:if>
 
-	  <xsl:apply-templates select="child::IDS" mode="init_static"/>
-	  <xsl:apply-templates select="child::IDS" mode="init_dynamic"/>
-	  <xsl:apply-templates select="child::IDS" mode="test_static"/>
-          <xsl:apply-templates select="child::IDS" mode="test_dynamic"/>
-	  <xsl:apply-templates select="child::IDS" mode="all_test"/>
-	  <xsl:apply-templates select="child::IDS" mode="put_test"/>
-	  <xsl:apply-templates select="child::IDS" mode="get_test"/>
+      <xsl:apply-templates select="child::IDS" mode="init_static"/>
+      <xsl:apply-templates select="child::IDS" mode="init_dynamic"/>
+      <xsl:apply-templates select="child::IDS" mode="test_static"/>
+      <xsl:apply-templates select="child::IDS" mode="test_dynamic"/>
+      <xsl:apply-templates select="child::IDS" mode="all_test"/>
+      <xsl:apply-templates select="child::IDS" mode="put_test"/>
+      <xsl:apply-templates select="child::IDS" mode="get_test"/>
+
     </xsl:template>
 
  <!-- ============================= END OF GENRATED FILE ============================== -->
@@ -312,6 +314,7 @@
 	<xsl:text>&#9;INTEGER :: N_SEED=1&#10;</xsl:text>
 	<xsl:text>&#9;call random_seed(SIZE=N_SEED)&#10;</xsl:text>
 	<xsl:text>&#9;ALLOCATE(SEED(N_SEED))&#10;</xsl:text>
+	<xsl:text>&#9;SEED = 0&#10;</xsl:text>
         
         <xsl:text>&#10;</xsl:text>
 	
@@ -371,7 +374,8 @@
 	<xsl:text>&#9;INTEGER :: N_SEED=1&#10;</xsl:text>
 	<xsl:text>&#9;call random_seed(SIZE=N_SEED)&#10;</xsl:text>
 	<xsl:text>&#9;ALLOCATE(SEED(N_SEED))&#10;</xsl:text>
-        
+        <xsl:text>&#9;SEED = 0&#10;</xsl:text>
+
         <xsl:text>&#10;</xsl:text>
 	
         <xsl:text>&#9;call open(idx)&#10;</xsl:text>
