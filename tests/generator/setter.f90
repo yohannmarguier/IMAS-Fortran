@@ -20,16 +20,6 @@ INTEGER, PARAMETER :: dim1 = DIM_SIZE, dim2 = DIM_SIZE, dim3 = DIM_SIZE, dim4 = 
 
 
 contains
-
-
-SUBROUTINE initHomogeneousTime(idsField) 
-    IMPLICIT NONE  
-    INTEGER, INTENT (INOUT)  :: idsField
-
-    idsField = getHomogeneousTime()
-       
-END SUBROUTINE initHomogeneousTime
-  
   
 SUBROUTINE initTimeField(idsField, isSliceMode, idx)
     IMPLICIT NONE  

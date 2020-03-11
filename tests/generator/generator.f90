@@ -3,7 +3,7 @@ MODULE generator
 use ids_types, only: ids_real
   implicit none
 
-INTEGER, PARAMETER :: DIM_SIZE = 3
+INTEGER, PARAMETER :: DIM_SIZE = 1
 
 INTEGER, PARAMETER :: noOfSlices = DIM_SIZE
 INTEGER, DIMENSION(:),allocatable :: SEED
@@ -21,28 +21,6 @@ CONTAINS
     end do
   END SUBROUTINE initTime
  
-  function getHomogeneousTime() result(homogeneousTime)
-    integer :: homogeneousTime
-    character(len=255) :: buffer
-    integer :: bufferSize, stat
-    
-    call get_environment_variable("TESTHOMOGENEOUS", buffer)
-    bufferSize = LEN_TRIM(buffer)
-    if(bufferSize < 1) then
-       homogeneousTime = 1
-    else
-       read(buffer,*,iostat=stat) homogeneousTime 
-       if (stat .eq. 0) then
-          print *,"selected homogeneousTime = ",homogeneousTime
-       else
-          print *,"wrong homogeneousTime read as ",homogeneousTime
-          STOP
-       end if
-    endif
-    RETURN
-  end function getHomogeneousTime
-
-
   
       FUNCTION getTimeScalar(idxTime) RESULT (outTime)
         REAL(ids_real) :: outTime

@@ -24,7 +24,8 @@ contains
 !              TIME
 ! =================================================================
   
-FUNCTION assertHomogeneousTimeField(observed, isSliceMode, fieldName) RESULT (outValue)
+FUNCTION assertHomogeneousTimeField(idsTimeMode, observed, isSliceMode, fieldName) RESULT (outValue)
+       INTEGER, INTENT (IN)      :: idsTimeMode 
        INTEGER, INTENT (IN)      :: observed 
        LOGICAL, INTENT (IN)    :: isSliceMode
        CHARACTER*(*),INTENT(IN) :: fieldName
@@ -34,7 +35,7 @@ FUNCTION assertHomogeneousTimeField(observed, isSliceMode, fieldName) RESULT (ou
 
         outValue = .TRUE.
         
-         expected = getHomogeneousTime()
+         expected = idsTimeMode
 
         if(observed == expected) then
                 if (debugMode) write(*,*) fieldName, " : OK "

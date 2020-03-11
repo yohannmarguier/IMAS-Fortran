@@ -36,8 +36,9 @@
         <xsl:text>module </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_static_mod&#10;</xsl:text>
         <xsl:text>&#xA;</xsl:text>
         <xsl:text>&#9;use ids_schemas, only: ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>&#10;</xsl:text>
-        <xsl:text>&#9;use generator&#10;</xsl:text>
+        <xsl:text>&#9;!use generator&#10;</xsl:text>
          <xsl:text>&#9;use setter&#10;</xsl:text>
+         <xsl:text>&#9;!use helper&#10;</xsl:text>
         <xsl:text>&#xA;</xsl:text> 
         <xsl:text>&#9;implicit none&#10;</xsl:text>
         <xsl:text>&#xA;</xsl:text> 
@@ -47,7 +48,8 @@
         <xsl:text>!==================================================================&#10;</xsl:text>
         <xsl:text>!&#9;&#9; INIT STATIC DATA: </xsl:text><xsl:value-of select="@name"/> <xsl:text> &#10;</xsl:text>
         <xsl:text>!==================================================================&#10;</xsl:text>
-        <xsl:text>SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_static( ids )&#10;</xsl:text>
+        <xsl:text>SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_static( idsTimeMode, ids )&#10;</xsl:text>
+        <xsl:text>&#9;INTEGER, INTENT(IN) :: idsTimeMode &#10;</xsl:text>
         <xsl:text>&#9;TYPE (ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>), INTENT(INOUT) :: ids &#10;</xsl:text>
         <xsl:text>&#10;</xsl:text>
 
@@ -70,7 +72,7 @@
         <xsl:text>module </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_dynamic_mod&#10;</xsl:text>
         <xsl:text>&#xA;</xsl:text>
         <xsl:text>&#9;use ids_schemas, only: ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>&#10;</xsl:text>
-        <xsl:text>&#9;use generator&#10;</xsl:text>
+        <xsl:text>&#9;!use generator&#10;</xsl:text>
             <xsl:text>&#9;use setter&#10;</xsl:text>
         <xsl:text>&#xA;</xsl:text> 
         <xsl:text>&#9;implicit none&#10;</xsl:text>
@@ -116,7 +118,8 @@
         <xsl:text>!==================================================================&#10;</xsl:text>
         <xsl:text>!&#9;&#9; TEST STATIC DATA: </xsl:text><xsl:value-of select="@name"/> <xsl:text> &#10;</xsl:text>
         <xsl:text>!==================================================================&#10;</xsl:text>
-        <xsl:text>SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_static( ids )&#10;</xsl:text>
+        <xsl:text>SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_static( idsTimeMode, ids )&#10;</xsl:text>
+        <xsl:text>&#9;INTEGER, INTENT(IN) :: idsTimeMode &#10;</xsl:text>
         <xsl:text>&#9;TYPE (ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>), INTENT(INOUT) :: ids &#10;</xsl:text>
         <xsl:text>&#9;LOGICAL :: isEqual &#10;</xsl:text>
         
@@ -238,57 +241,83 @@
 
     <!-- IDS perform the tests -->
     <xsl:template match="IDS" mode="all_test">
-      <xsl:result-document href="src/{@name}_all_test.f90" standalone="yes" method="text">
+      <xsl:result-document href="src/{@name}_test_routines.f90" standalone="yes" method="text">
 	
-	<!-- ================================ MAIN PROGRAM ================================= -->
-        <xsl:text>PROGRAM </xsl:text><xsl:value-of select="@name"/><xsl:text>_test&#10;</xsl:text>
-	<xsl:text>&#9;!use comparator &#10;</xsl:text>
-	<xsl:text>&#9;!use ids_schemas &#10;</xsl:text>
-	<xsl:text>&#9;use helper&#10;</xsl:text>
-	<xsl:text>&#9;use generator&#10;</xsl:text>
-        
-        <xsl:text>&#9;implicit none&#10;   </xsl:text>
+    <!-- ================================ MODULE TEST SUBROUTINES ================================= -->
+    <xsl:text>MODULE </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_routines&#10;</xsl:text>
+    <xsl:text>&#9;use ids_routines &#10;</xsl:text>
+    <xsl:text>&#9;INTEGER, PARAMETER :: IDS_PATH_LEN = 30&#10;</xsl:text>
+    <xsl:text>&#9;CHARACTER (LEN = *), PARAMETER :: IDS_NAME = "</xsl:text><xsl:value-of select="@name"/><xsl:text>"&#10;</xsl:text>
+    <xsl:text>&#9;INTEGER, PARAMETER :: MAX_OCCURENCES = </xsl:text><xsl:value-of select="@maxoccur"/><xsl:text>&#10;</xsl:text>
+    <xsl:text>CONTAINS&#10;</xsl:text>
 
-	<xsl:text>&#9;INTEGER :: idx,idxslice&#10;</xsl:text>
-	<xsl:text>&#9;INTEGER, PARAMETER :: IDS_PATH_LEN = 30&#10;</xsl:text>
-	<xsl:text>&#9;INTEGER :: N_SEED&#10;</xsl:text>
-	<xsl:text>&#9;call random_seed(SIZE=N_SEED)&#10;</xsl:text>
-	<xsl:text>&#9;ALLOCATE(SEED(N_SEED))&#10;</xsl:text>
-	
-        <xsl:text>&#10;</xsl:text>
-	
-        <xsl:text>&#9;call create(idx);&#10;</xsl:text>
-	<!-- <xsl:apply-templates select="child::IDS[@name='temporary']" mode="all_test"/>   -->
-	<!--<xsl:apply-templates select="." mode="testCalls"/>-->
-	<xsl:text>&#10;</xsl:text>
-	<xsl:text>&#9;! --- IDS: </xsl:text><xsl:value-of select="@name"/><xsl:text> ---&#10;</xsl:text>
-	<xsl:text>&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_put()&#10;</xsl:text>
-	<xsl:text>&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_get()&#10;</xsl:text>
-        <!-- Procedure put_slice should exist only for time-dependent IDSs -->
-        <xsl:text>&#9;call createslice(idxslice);&#10;</xsl:text>
-	<xsl:if test=".//field[@type='dynamic']">
-       	  <xsl:text>&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_putSlice()&#10;</xsl:text>
-	</xsl:if>
-	<xsl:text>&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_getSlice()&#10;</xsl:text>
-	
-        <xsl:text>&#9;call close(idx);&#10;</xsl:text>
-        <xsl:text>&#9;call close(idxslice);&#10;</xsl:text>
-
-	<xsl:text>CONTAINS&#10;</xsl:text>
-	<!-- sdd       <xsl:call-template name="getArrayGenerator"/> -->
-	<!--      <xsl:apply-templates select="child::IDS[@name='temporary' or @name='sdn']" mode="put"/>
+    <!-- sdd       <xsl:call-template name="getArrayGenerator"/> -->
+    <!--      <xsl:apply-templates select="child::IDS[@name='temporary' or @name='sdn']" mode="put"/>
              <xsl:apply-templates select="child::IDS[@name='temporary' or @name='sdn']" mode="get"/>
-	-->
+    -->
 
         <xsl:apply-templates select="." mode="put"/>
         <xsl:apply-templates select="." mode="get"/>
 
-	<!--
+    <!--
             <xsl:apply-templates select="child::IDS[.//field[@type='dynamic'] and @name='temporary']" mode="putSlice"/>
             <xsl:apply-templates select="child::IDS[@name='temporary']" mode="getSlice"/>
-	-->
-	<xsl:apply-templates select=".[.//field[@type='dynamic']]" mode="putSlice"/>
+    -->
+    <xsl:apply-templates select=".[.//field[@type='dynamic']]" mode="putSlice"/>
         <xsl:apply-templates select="." mode="getSlice"/>
+    <xsl:text>END MODULE </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_routines&#10;</xsl:text>
+      </xsl:result-document>
+
+	<!-- ================================ MAIN PROGRAM ================================= -->
+      <xsl:result-document href="src/{@name}_all_test.f90" standalone="yes" method="text">
+    <xsl:text>!==================================================================&#10;</xsl:text>
+    <xsl:text>!&#9;&#9;&#9;&#9;MAIN PROGRAM   &#10;</xsl:text>
+    <xsl:text>!==================================================================&#10;</xsl:text>
+        <xsl:text>PROGRAM </xsl:text><xsl:value-of select="@name"/><xsl:text>_test&#10;</xsl:text>
+	<xsl:text>&#9;use helper&#10;</xsl:text>
+        <xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_routines&#10;</xsl:text>
+        <xsl:text>&#9;implicit none&#10;   </xsl:text>
+    <xsl:text>&#9;INTEGER :: i, j&#10;</xsl:text>
+	<xsl:text>&#9;INTEGER :: idx,idxslice&#10;</xsl:text>
+    <xsl:text>&#9;INTEGER :: backendID = NO_BACKEND&#10;</xsl:text>
+    <xsl:text>&#9;INTEGER :: idsTimeMode = IDS_TIME_MODE_HOMOGENEOUS&#10;</xsl:text>
+    <xsl:text>&#9;LOGICAL :: useExistingPulseFile&#10;</xsl:text>
+
+	<xsl:text>&#9;INTEGER :: N_SEED&#10;</xsl:text>
+	<xsl:text>&#9;call random_seed(SIZE=N_SEED)&#10;</xsl:text>
+	<xsl:text>&#9;ALLOCATE(SEED(N_SEED))&#10;</xsl:text>
+	
+    <xsl:text>&#10;</xsl:text>
+    <xsl:text>&#9;CALL initEnv()&#10;</xsl:text>
+    <xsl:text>&#9;&#9;&#9;WRITE(*,*) "--- --- TIME MODE ARRTAY ", config%idsTimeModeArray &#10;</xsl:text>
+    <xsl:text>&#10;</xsl:text>
+    <xsl:text>&#9;DO i = 1, SIZE(config%backendIDArray)&#10;</xsl:text>
+    <xsl:text>&#9;&#9;backendID = config%backendIDArray(i)&#10;</xsl:text>
+    <xsl:text>&#9;&#9;IF (backendID == NO_BACKEND) CYCLE&#10;</xsl:text>
+    <xsl:text>&#9;&#9;WRITE(*,*) "--- BACKEND ", backendID &#10;</xsl:text>
+    <xsl:text>&#10;</xsl:text>
+    <xsl:text>&#9;&#9;call create_db(backendID, TEST_SHOT, TEST_RUN, idx);&#10;</xsl:text>
+    <xsl:text>&#9;&#9;call create_db(backendID, TEST_SHOT + 1, TEST_RUN + 1, idxslice);&#10;</xsl:text>
+	<xsl:text>&#10;</xsl:text>
+    <xsl:text>&#9;&#9;DO j = 1, SIZE(config%idsTimeModeArray)&#10;</xsl:text>
+    <xsl:text>&#9;&#9;&#9;idsTimeMode = config%idsTimeModeArray(j)&#10;</xsl:text>
+    <xsl:text>&#9;&#9;&#9;WRITE(*,*) "--- --- TIME MODE ", idsTimeMode &#10;</xsl:text>
+    <xsl:text>&#9;&#9;&#9;IF (idsTimeMode == IDS_TIME_MODE_UNKNOWN) CYCLE&#10;</xsl:text>
+    <xsl:text>&#9;&#9;&#9;WRITE(*,*) "--- --- X TIME MODE ", idsTimeMode &#10;</xsl:text>
+    <xsl:text>&#10;</xsl:text>
+	<xsl:text>&#9;&#9;&#9;! --- IDS: </xsl:text><xsl:value-of select="@name"/><xsl:text> ---&#10;</xsl:text>
+	<xsl:text>&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_put(idx, idsTimeMode)&#10;</xsl:text>
+	<xsl:text>&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_get(idx, idsTimeMode)&#10;</xsl:text>
+
+
+    <xsl:text>&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_putSlice(idxslice, idsTimeMode)&#10;</xsl:text>
+	<xsl:text>&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_getSlice(idxslice, idsTimeMode)&#10;</xsl:text>
+    <xsl:text>&#9;&#9;END DO  ! time mode  &#10;</xsl:text>
+    <xsl:text>&#10;</xsl:text>
+    <xsl:text>&#9;&#9;call close_db(idx);&#10;</xsl:text>
+    <xsl:text>&#9;&#9;call close_db(idxslice);&#10;</xsl:text>
+    <xsl:text>&#9;END DO  ! backend  &#10;</xsl:text>
+    <xsl:text>&#10;</xsl:text>
         <xsl:text>END PROGRAM </xsl:text><xsl:value-of select="@name"/><xsl:text>_test&#10;</xsl:text>
         <xsl:text>&#10;</xsl:text>
 	<!-- ================================ MAIN PROGRAM (end)================================= -->
@@ -307,49 +336,35 @@
 	<xsl:text>&#9;use ids_schemas &#10;</xsl:text>
 	
 	<xsl:text>&#9;use helper&#10;</xsl:text>
+    <xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_routines&#10;</xsl:text>
         <xsl:text>&#9;implicit none&#10;</xsl:text>
 	
 	<xsl:text>&#9;INTEGER :: idx, idxslice&#10;</xsl:text>
-	<xsl:text>&#9;INTEGER, PARAMETER :: IDS_PATH_LEN = 30&#10;</xsl:text>
 	<xsl:text>&#9;INTEGER :: N_SEED=1&#10;</xsl:text>
+    <xsl:text>&#9;INTEGER :: backendID&#10;</xsl:text>
+    <xsl:text>&#9;INTEGER :: idsTimeMode&#10;</xsl:text>
+    <xsl:text>&#9;LOGICAL :: useExistingPulseFile&#10;</xsl:text>
+    <xsl:text>&#10;</xsl:text>
 	<xsl:text>&#9;call random_seed(SIZE=N_SEED)&#10;</xsl:text>
 	<xsl:text>&#9;ALLOCATE(SEED(N_SEED))&#10;</xsl:text>
 	<xsl:text>&#9;SEED = 0&#10;</xsl:text>
         
         <xsl:text>&#10;</xsl:text>
-	
-        <xsl:text>&#9;call open(idx)&#10;</xsl:text>
+	<xsl:text>&#9;CALL initEnv()&#10;</xsl:text>
+    <xsl:text>&#9;call open_db(backendID, TEST_SHOT, TEST_RUN, idx)&#10;</xsl:text>
+    <xsl:text>&#9;call open_db(backendID, TEST_SHOT + 1, TEST_RUN + 1, idxslice)&#10;</xsl:text>
 	<xsl:text>&#10;</xsl:text>
 	<xsl:text>&#9;! --- IDS: </xsl:text><xsl:value-of select="@name"/><xsl:text> ---&#10;</xsl:text>
-	<xsl:text>&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_put()&#10;</xsl:text>
+	<xsl:text>&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_put(idx, idsTimeMode)&#10;</xsl:text>
 
 	<xsl:if test=".//field[@type='dynamic']">
-          <xsl:text>&#9;call openslice(idxslice)&#10;</xsl:text>
-       	  <xsl:text>&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_putSlice()&#10;</xsl:text>
+
+       	  <xsl:text>&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_putSlice(idxslice, idsTimeMode)&#10;</xsl:text>
 	</xsl:if>
 
-        <xsl:text>&#9;call close(idx);&#10;</xsl:text>
-        <xsl:text>&#9;call close(idxslice);&#10;</xsl:text>
+        <xsl:text>&#9;call close_db(idx);&#10;</xsl:text>
+        <xsl:text>&#9;call close_db(idxslice);&#10;</xsl:text>
       
-	<!-- <xsl:apply-templates select="child::IDS[@name='temporary']" mode="all_test"/>   -->
-	<!--<xsl:apply-templates select="." mode="testPutCalls"/>-->
-	
-	<xsl:text>CONTAINS&#10;</xsl:text>
-	<!-- sdd       <xsl:call-template name="getArrayGenerator"/> -->
-	<!--      <xsl:apply-templates select="child::IDS[@name='temporary' or @name='sdn']" mode="put"/>
-             <xsl:apply-templates select="child::IDS[@name='temporary' or @name='sdn']" mode="get"/>
-	-->
-	
-        <xsl:apply-templates select="." mode="put"/>
-        <!--<xsl:apply-templates select="." mode="get"/>-->
-	
-	<!--
-            <xsl:apply-templates select="child::IDS[.//field[@type='dynamic'] and @name='temporary']" mode="putSlice"/>
-            <xsl:apply-templates select="child::IDS[@name='temporary']" mode="getSlice"/>
-	-->
-
-	<xsl:apply-templates select=".[.//field[@type='dynamic']]" mode="putSlice"/>
-        <!--<xsl:apply-templates select="." mode="getSlice"/>-->
         <xsl:text>END PROGRAM </xsl:text><xsl:value-of select="@name"/><xsl:text>_put_test&#10;</xsl:text>
         <xsl:text>&#10;</xsl:text>
 	<!-- ================================ MAIN PROGRAM (end)================================= -->
@@ -362,51 +377,39 @@
       <xsl:result-document href="src/{@name}_get_test.f90" standalone="yes" method="text">
 
 	<!-- ================================ MAIN PROGRAM ================================= -->
-        <xsl:text>PROGRAM </xsl:text><xsl:value-of select="@name"/><xsl:text>_get_test&#10;</xsl:text>
+
+    <xsl:text>PROGRAM </xsl:text><xsl:value-of select="@name"/><xsl:text>_get_test&#10;</xsl:text>
 	<xsl:text>&#9;use comparator &#10;</xsl:text>
 	<xsl:text>&#9;use ids_schemas &#10;</xsl:text>
 	
 	<xsl:text>&#9;use helper&#10;</xsl:text>
+    <xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_routines&#10;</xsl:text>
         <xsl:text>&#9;implicit none&#10;</xsl:text>
 	
 	<xsl:text>&#9;INTEGER :: idx, idxslice&#10;</xsl:text>
-	<xsl:text>&#9;INTEGER, PARAMETER :: IDS_PATH_LEN = 30&#10;</xsl:text>
 	<xsl:text>&#9;INTEGER :: N_SEED=1&#10;</xsl:text>
+    <xsl:text>&#9;INTEGER :: backendID&#10;</xsl:text>
+    <xsl:text>&#9;INTEGER :: idsTimeMode&#10;</xsl:text>
+    <xsl:text>&#9;LOGICAL :: useExistingPulseFile&#10;</xsl:text>
 	<xsl:text>&#9;call random_seed(SIZE=N_SEED)&#10;</xsl:text>
 	<xsl:text>&#9;ALLOCATE(SEED(N_SEED))&#10;</xsl:text>
         <xsl:text>&#9;SEED = 0&#10;</xsl:text>
 
         <xsl:text>&#10;</xsl:text>
 	
-        <xsl:text>&#9;call open(idx)&#10;</xsl:text>
+    <xsl:text>&#9;CALL initEnv()&#10;</xsl:text>
+
+        <xsl:text>&#9;call open_db(backendID, TEST_SHOT, TEST_RUN, idx)&#10;</xsl:text>
 	<xsl:text>&#10;</xsl:text>
 	<xsl:text>&#9;! --- IDS: </xsl:text><xsl:value-of select="@name"/><xsl:text> ---&#10;</xsl:text>
-	<xsl:text>&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_get()&#10;</xsl:text>
+	<xsl:text>&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_get(idx, idsTimeMode)&#10;</xsl:text>
 
-        <xsl:text>&#9;call openslice(idxslice)&#10;</xsl:text>
-	<xsl:text>&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_getSlice()&#10;</xsl:text>
+        <xsl:text>&#9;call open_db(backendID, TEST_SHOT + 1, TEST_RUN + 1, idxslice)&#10;</xsl:text>
+	<xsl:text>&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_getSlice(idxslice, idsTimeMode)&#10;</xsl:text>
 
-        <xsl:text>&#9;call close(idx);&#10;</xsl:text>
-        <xsl:text>&#9;call close(idxslice);&#10;</xsl:text>
+        <xsl:text>&#9;call close_db(idx);&#10;</xsl:text>
+        <xsl:text>&#9;call close_db(idxslice);&#10;</xsl:text>
 
-	<!-- <xsl:apply-templates select="child::IDS[@name='temporary']" mode="all_test"/>   -->
-	<!-- <xsl:apply-templates select="." mode="testGetCalls"/> -->
-
-	<xsl:text>CONTAINS&#10;</xsl:text>
-	<!-- sdd       <xsl:call-template name="getArrayGenerator"/> -->
-	<!--      <xsl:apply-templates select="child::IDS[@name='temporary' or @name='sdn']" mode="put"/>
-             <xsl:apply-templates select="child::IDS[@name='temporary' or @name='sdn']" mode="get"/>
-	-->
-	
-        <!--<xsl:apply-templates select="." mode="put"/>-->
-        <xsl:apply-templates select="." mode="get"/>
-	
-	<!--
-            <xsl:apply-templates select="child::IDS[.//field[@type='dynamic'] and @name='temporary']" mode="putSlice"/>
-            <xsl:apply-templates select="child::IDS[@name='temporary']" mode="getSlice"/>
-	-->
-
-        <xsl:apply-templates select="." mode="getSlice"/>
         <xsl:text>END PROGRAM </xsl:text><xsl:value-of select="@name"/><xsl:text>_get_test&#10;</xsl:text>
         <xsl:text>&#10;</xsl:text>
 	<!-- ================================ MAIN PROGRAM (end)================================= -->
@@ -420,10 +423,11 @@
         <xsl:text>!==================================================================&#10;</xsl:text>
        <xsl:text>!&#9;&#9; PUT </xsl:text><xsl:value-of select="@name"/> <xsl:text> &#10;</xsl:text>
        <xsl:text>!==================================================================&#10;</xsl:text>
-	<xsl:text>SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_put&#10;</xsl:text>
+	<xsl:text>SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_put( pulseCtx, idsTimeMode )&#10;</xsl:text>
 	<xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_static_mod&#10;</xsl:text> 
 	<xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_dynamic_mod&#10;</xsl:text> 
-	<xsl:text>&#9;CHARACTER (LEN = *), parameter :: idsName = "</xsl:text><xsl:value-of select="@name"/><xsl:text>"&#10;</xsl:text>
+    <xsl:text>&#9;INTEGER, INTENT(IN) :: pulseCtx &#10;</xsl:text>
+    <xsl:text>&#9;INTEGER, INTENT(IN) :: idsTimeMode &#10;</xsl:text>
 	<xsl:text>&#9;TYPE (ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>) :: ids &#10;</xsl:text>
 	<xsl:text>&#9;CHARACTER (LEN=IDS_PATH_LEN) :: idspath &#10;</xsl:text>
 	<xsl:text>&#9;CHARACTER (LEN=2) :: occurence = "" &#10;</xsl:text>
@@ -431,20 +435,20 @@
         <xsl:text>&#9;WRITE(*,*) "Testing put() on </xsl:text><xsl:value-of select="@name"/><xsl:text>"&#10;</xsl:text>
         <xsl:text>&#9;!CALL srand(seed)&#10;</xsl:text>
 	<xsl:text>&#9;CALL random_seed(PUT = seed)&#10;</xsl:text>
-        <xsl:text>&#9;do i = 0, </xsl:text><xsl:value-of select="@maxoccur"/><xsl:text> - 1 &#10;</xsl:text>
+        <xsl:text>&#9;do i = 0, MAX_OCCURENCES - 1 &#10;</xsl:text>
     	<xsl:text>&#9;WRITE(*,*) "--- occurence: ", i&#10;</xsl:text>
-	<xsl:text>&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_static(ids);&#10;</xsl:text> 
+	<xsl:text>&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_static(idsTimeMode, ids);&#10;</xsl:text> 
        	<xsl:text>&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_dynamic(ids, .FALSE., -1);&#10;</xsl:text> 
 	<xsl:text>&#9;&#9;!------------&#10;</xsl:text>
 	<xsl:text>&#9;&#9;if (i == 0) then &#10;</xsl:text>
-	<xsl:text>&#9;&#9;&#9;idspath = idsName  &#10;</xsl:text>
+	<xsl:text>&#9;&#9;&#9;idspath = IDS_NAME  &#10;</xsl:text>
 	<xsl:text>&#9;&#9;else&#10;</xsl:text>
 	<xsl:text>&#9;&#9;&#9;WRITE( occurence, '(i2)' )  i &#10;</xsl:text>
-        <xsl:text>&#9;&#9;&#9;idspath = idsName//'/'//ADJUSTL(occurence)&#10;</xsl:text>
+        <xsl:text>&#9;&#9;&#9;idspath = IDS_NAME//'/'//ADJUSTL(occurence)&#10;</xsl:text>
 	<xsl:text>&#9;&#9;end if &#10;</xsl:text>
 	<xsl:text>  &#10;</xsl:text>
 
-	<xsl:text>&#9;&#9;call ids_put(idx, idspath, ids);&#10;</xsl:text>
+	<xsl:text>&#9;&#9;call ids_put(pulseCtx, idspath, ids);&#10;</xsl:text>
 
 
 	<!-- <xsl:text>&#9;call ids_deallocate(ids)&#10;</xsl:text> -->
@@ -459,26 +463,28 @@
         <xsl:text>!==================================================================&#10;</xsl:text>
        <xsl:text>!&#9;&#9; PUT SLICE </xsl:text><xsl:value-of select="@name"/> <xsl:text> &#10;</xsl:text>
        <xsl:text>!==================================================================&#10;</xsl:text>
-	<xsl:text>SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_putSlice&#10;</xsl:text>
+	<xsl:text>SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_putSlice( pulseCtx, idsTimeMode )&#10;</xsl:text>
 	<xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_static_mod&#10;</xsl:text> 
         <xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_dynamic_mod&#10;</xsl:text> 
-	<xsl:text>&#9;CHARACTER (LEN = *), parameter :: idsName = "</xsl:text><xsl:value-of select="@name"/><xsl:text>"&#10;</xsl:text>
+    <xsl:text>&#9;INTEGER, INTENT(IN) :: pulseCtx &#10;</xsl:text>
+        <xsl:text>&#9;INTEGER, INTENT(IN) :: idsTimeMode &#10;</xsl:text>
+
 	<xsl:text>&#9;TYPE (ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>) :: ids &#10;</xsl:text>
 	<xsl:text>&#9;CHARACTER (LEN=IDS_PATH_LEN) :: idspath &#10;</xsl:text>
 	<xsl:text>&#9;CHARACTER (LEN=2) :: occurence = "" &#10;</xsl:text>
 	<xsl:text>&#9;INTEGER :: i, j &#10;</xsl:text>
         <xsl:text>&#9;WRITE(*,*) "Testing putSlice() on </xsl:text><xsl:value-of select="@name"/><xsl:text>"&#10;</xsl:text>
         <xsl:text>&#9;CALL random_seed(PUT = seed)&#10;</xsl:text>
-        <xsl:text>&#9;do i = 0, </xsl:text><xsl:value-of select="@maxoccur"/><xsl:text> - 1 &#10;</xsl:text>
+        <xsl:text>&#9;do i = 0, MAX_OCCURENCES - 1 &#10;</xsl:text>
 	<xsl:text>&#9;WRITE(*,*) "--- occurence: ", i&#10;</xsl:text>
  	<xsl:text>&#9;&#9;do j = 1, noOfSlices &#10;</xsl:text>
  	<xsl:text>&#9;&#9;WRITE(*,*) "--- --- slice : ", j&#10;</xsl:text>
         <xsl:text>&#9;&#9;&#9;!------------&#10;</xsl:text>
 	<xsl:text>&#9;&#9;&#9;if (i == 0) then &#10;</xsl:text>
-	<xsl:text>&#9;&#9;&#9;&#9;idspath = idsName  &#10;</xsl:text>
+	<xsl:text>&#9;&#9;&#9;&#9;idspath = IDS_NAME  &#10;</xsl:text>
 	<xsl:text>&#9;&#9;&#9;else&#10;</xsl:text>
 	<xsl:text>&#9;&#9;&#9;&#9;WRITE( occurence, '(i2)' )  i &#10;</xsl:text>
-        <xsl:text>&#9;&#9;&#9;&#9;idspath = idsName//'/'//ADJUSTL(occurence)&#10;</xsl:text>
+        <xsl:text>&#9;&#9;&#9;&#9;idspath = IDS_NAME//'/'//ADJUSTL(occurence)&#10;</xsl:text>
 	<xsl:text>&#9;&#9;&#9;end if &#10;</xsl:text>
 	<xsl:text>  &#10;</xsl:text>
 
@@ -486,23 +492,23 @@
             <xsl:when test="$newLowLevel!='yes'">
             <xsl:text>&#9;&#9;&#9;if (j == 1) then &#10;</xsl:text>
 		<xsl:text>&#9;&#9;&#9;! ------ PUT STATIC DATA (ONCE)   &#10;</xsl:text>
-		<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_static(ids);&#10;</xsl:text> 
-         <xsl:text>&#9;&#9;&#9;&#9;call ids_put_non_timed(idxslice, idspath, ids);&#10;</xsl:text> 
+		<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_static(idsTimeMode, ids);&#10;</xsl:text> 
+         <xsl:text>&#9;&#9;&#9;&#9;call ids_put_non_timed(pulseCtx, idspath, ids);&#10;</xsl:text> 
 	<xsl:text>&#9;&#9;&#9;end if &#10;</xsl:text>
 
 		<xsl:text>&#9;&#9;&#9;! ------ PUT DYNAMIC DATA (LOOP) &#10;</xsl:text>
        		<xsl:text>&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_dynamic(ids, j);&#10;</xsl:text> 
 
-	<xsl:text>&#9;&#9;&#9;call ids_put_slice(idxslice, idspath, ids);&#10;</xsl:text>
+	<xsl:text>&#9;&#9;&#9;call ids_put_slice(pulseCtx, idspath, ids);&#10;</xsl:text>
             </xsl:when>
 	    <xsl:otherwise>
 		<xsl:text>&#9;&#9;&#9;if (j == 1) then &#10;</xsl:text>
-		<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_static(ids);&#10;</xsl:text> 
+		<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_static(idsTimeMode, ids);&#10;</xsl:text> 
        		<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_dynamic(ids, .TRUE., j);&#10;</xsl:text> 
-        	<xsl:text>&#9;&#9;&#9;&#9;call ids_put(idxslice ,idspath, ids);&#10;</xsl:text> 
+        	<xsl:text>&#9;&#9;&#9;&#9;call ids_put(pulseCtx ,idspath, ids);&#10;</xsl:text> 
 		<xsl:text>&#9;&#9;&#9;else&#10;</xsl:text>
        		<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_dynamic(ids, .TRUE., j);&#10;</xsl:text> 
-		<xsl:text>&#9;&#9;&#9;&#9;call ids_put_slice(idxslice ,idspath, ids);&#10;</xsl:text>
+		<xsl:text>&#9;&#9;&#9;&#9;call ids_put_slice(pulseCtx ,idspath, ids);&#10;</xsl:text>
 		<xsl:text>&#9;&#9;&#9;end if &#10;</xsl:text>
 	   </xsl:otherwise>
 	</xsl:choose>
@@ -523,29 +529,30 @@
        <xsl:text>!==================================================================&#10;</xsl:text>
        <xsl:text>!&#9;&#9; GET </xsl:text><xsl:value-of select="@name"/> <xsl:text> &#10;</xsl:text>
        <xsl:text>!==================================================================&#10;</xsl:text>
-	<xsl:text>SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_get&#10;</xsl:text>
+	<xsl:text>SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_get( pulseCtx, idsTimeMode )&#10;</xsl:text>
 	<xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_static_mod&#10;</xsl:text> 
         <xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_dynamic_mod&#10;</xsl:text> 
-	<xsl:text>&#9;CHARACTER (LEN = *), parameter :: idsName = "</xsl:text><xsl:value-of select="@name"/><xsl:text>"&#10;</xsl:text>
+    <xsl:text>&#9;INTEGER, INTENT(IN) :: pulseCtx &#10;</xsl:text>
+        <xsl:text>&#9;INTEGER, INTENT(IN) :: idsTimeMode &#10;</xsl:text>
 	<xsl:text>&#9;TYPE (ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>) :: ids &#10;</xsl:text>
 	<xsl:text>&#9;CHARACTER (LEN=IDS_PATH_LEN) :: idspath &#10;</xsl:text>
 	<xsl:text>&#9;CHARACTER (LEN=2) :: occurence = "" &#10;</xsl:text>
 	<xsl:text>&#9;INTEGER :: i &#10;</xsl:text>
         <xsl:text>&#9;WRITE(*,*) "Testing get() on </xsl:text><xsl:value-of select="@name"/><xsl:text>"&#10;</xsl:text>
 	<xsl:text>&#9;CALL random_seed(PUT = seed)&#10;</xsl:text>
-        <xsl:text>&#9;do i = 0, </xsl:text><xsl:value-of select="@maxoccur"/><xsl:text> - 1 &#10;</xsl:text>
+        <xsl:text>&#9;do i = 0, MAX_OCCURENCES - 1 &#10;</xsl:text>
  	<xsl:text>&#9;WRITE(*,*) "--- occurence: ", i&#10;</xsl:text>
         <xsl:text>&#9;&#9;!------------&#10;</xsl:text>
 	<xsl:text>&#9;&#9;if (i == 0) then &#10;</xsl:text>
-	<xsl:text>&#9;&#9;&#9;idspath = idsName  &#10;</xsl:text>
+	<xsl:text>&#9;&#9;&#9;idspath = IDS_NAME  &#10;</xsl:text>
 	<xsl:text>&#9;&#9;else&#10;</xsl:text>
 	<xsl:text>&#9;&#9;&#9;WRITE( occurence, '(i2)' )  i &#10;</xsl:text>
-        <xsl:text>&#9;&#9;&#9;idspath = idsName//'/'//ADJUSTL(occurence)&#10;</xsl:text>
+        <xsl:text>&#9;&#9;&#9;idspath = IDS_NAME//'/'//ADJUSTL(occurence)&#10;</xsl:text>
 	<xsl:text>&#9;&#9;end if &#10;</xsl:text>
 	<xsl:text>  &#10;</xsl:text>
 
-	<xsl:text>&#9;&#9;call ids_get(idx, idspath, ids);&#10;</xsl:text>
-	<xsl:text>&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_static(ids)&#10;</xsl:text> 
+	<xsl:text>&#9;&#9;call ids_get(pulseCtx, idspath, ids);&#10;</xsl:text>
+	<xsl:text>&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_static(idsTimeMode, ids)&#10;</xsl:text> 
        	<xsl:text>&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_dynamic(ids, .FALSE., -1)&#10;</xsl:text> 
 		
 		
@@ -565,34 +572,35 @@
        <xsl:text>!==================================================================&#10;</xsl:text>
        <xsl:text>!&#9;&#9; GET </xsl:text><xsl:value-of select="@name"/> <xsl:text> &#10;</xsl:text>
        <xsl:text>!==================================================================&#10;</xsl:text>
-	<xsl:text>SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_getSlice&#10;</xsl:text>
+	<xsl:text>SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_getSlice( pulseCtx, idsTimeMode )&#10;</xsl:text>
 	<xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_static_mod&#10;</xsl:text> 
         <xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_dynamic_mod&#10;</xsl:text> 
+    <xsl:text>&#9;INTEGER, INTENT(IN) :: pulseCtx &#10;</xsl:text>
+        <xsl:text>&#9;INTEGER, INTENT(IN) :: idsTimeMode &#10;</xsl:text>
 	<xsl:text>&#9;LOGICAL :: isEqual &#10;</xsl:text>
-	<xsl:text>&#9;CHARACTER (LEN = *), parameter :: idsName = "</xsl:text><xsl:value-of select="@name"/><xsl:text>"&#10;</xsl:text>
 	<xsl:text>&#9;TYPE (ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>) :: ids &#10;</xsl:text>
 	<xsl:text>&#9;CHARACTER (LEN=IDS_PATH_LEN) :: idspath &#10;</xsl:text>
 	<xsl:text>&#9;CHARACTER (LEN=2) :: occurence = "" &#10;</xsl:text>
 	<xsl:text>&#9;INTEGER :: i, j &#10;</xsl:text>
         <xsl:text>&#9;WRITE(*,*) "Testing getSlice() on </xsl:text><xsl:value-of select="@name"/><xsl:text>"&#10;</xsl:text>
 	<xsl:text>&#9;CALL random_seed(PUT = seed)&#10;</xsl:text>
-        <xsl:text>&#9;do i = 0, </xsl:text><xsl:value-of select="@maxoccur"/><xsl:text> - 1  &#10;</xsl:text>
+        <xsl:text>&#9;do i = 0, MAX_OCCURENCES - 1  &#10;</xsl:text>
 	<xsl:text>&#9;&#9;WRITE(*,*) "---  occurence: ", i&#10;</xsl:text>
 	<xsl:text>&#9;&#9;if (i == 0) then &#10;</xsl:text>
-	<xsl:text>&#9;&#9;&#9;idspath = idsName  &#10;</xsl:text>
+	<xsl:text>&#9;&#9;&#9;idspath = IDS_NAME  &#10;</xsl:text>
 	<xsl:text>&#9;&#9;else&#10;</xsl:text>
 	<xsl:text>&#9;&#9;&#9;WRITE( occurence, '(i2)' )  i &#10;</xsl:text>
-        <xsl:text>&#9;&#9;&#9;idspath = idsName//'/'//ADJUSTL(occurence)&#10;</xsl:text>
+        <xsl:text>&#9;&#9;&#9;idspath = IDS_NAME//'/'//ADJUSTL(occurence)&#10;</xsl:text>
 	<xsl:text>&#9;&#9;end if &#10;</xsl:text>
 
 	<xsl:text>&#9;&#9;do j = 1, noOfSlices &#10;</xsl:text>
 	<xsl:text>&#9;WRITE(*,*) "--- --- slice : ", j&#10;</xsl:text>
 
-	<xsl:text>&#9;&#9;&#9;call ids_get_slice(idxslice ,idspath, ids, getTimeScalar(j), 1);&#10;</xsl:text>
+	<xsl:text>&#9;&#9;&#9;call ids_get_slice(pulseCtx ,idspath, ids, getTimeScalar(j), 1);&#10;</xsl:text>
 
 	<xsl:text>&#9;&#9;&#9;if (j == 1) then &#10;</xsl:text>
 	<xsl:text>  &#10;</xsl:text>
-	<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_static(ids);&#10;</xsl:text> 
+	<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_static(idsTimeMode, ids);&#10;</xsl:text> 
 	<xsl:text>&#9;&#9;&#9;end if &#10;</xsl:text>
        	<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_dynamic(ids, .TRUE., j);&#10;</xsl:text> 
   	<xsl:text>&#9;&#9;end do &#10;</xsl:text>
@@ -992,7 +1000,7 @@ or
 
         <xsl:choose>
             <xsl:when test="@name='homogeneous_time'">
-                        <xsl:text>&#9;&#9;&#9;call initHomogeneousTime( </xsl:text><xsl:value-of select="$fieldPath"/><xsl:text> )</xsl:text>
+                        <xsl:text>&#9;&#9;&#9;</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text> = idsTimeMode</xsl:text>
             </xsl:when>
 
             <xsl:when test="@name='time' and (@data_type='flt_1d_type' or @data_type='FLT_1D')">
@@ -1054,7 +1062,7 @@ or
             </xsl:when>
 
             <xsl:when test="@name='homogeneous_time'">
-                                           <xsl:text>&#9;&#9;&#9;isEqual = assertHomogeneousTimeField(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>, </xsl:text><xsl:value-of select="$sliceMode"/><xsl:text>, "</xsl:text><xsl:value-of select="ancestor::IDS/@name"/><xsl:text>:</xsl:text><xsl:value-of select="@path"/><xsl:text>")&#10;</xsl:text>
+                                           <xsl:text>&#9;&#9;&#9;isEqual = assertHomogeneousTimeField(idsTimeMode, </xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>, </xsl:text><xsl:value-of select="$sliceMode"/><xsl:text>, "</xsl:text><xsl:value-of select="ancestor::IDS/@name"/><xsl:text>:</xsl:text><xsl:value-of select="@path"/><xsl:text>")&#10;</xsl:text>
             </xsl:when>
 
             <xsl:when test="@name='time' and (@data_type='flt_1d_type' or @data_type='FLT_1D')">

@@ -7,14 +7,28 @@ MODULE helper
 !INTEGER, PARAMETER :: DIM_SIZE = 1
 
 !INTEGER, PARAMETER :: noOfSlices = DIM_SIZE
-INTEGER, PARAMETER :: TESTSHOT = 9998
-INTEGER, PARAMETER :: TESTRUN = 9998
+INTEGER, PARAMETER :: TEST_SHOT = 9998
+INTEGER, PARAMETER :: TEST_RUN = 9998
+
+ ! All backends (/ASCII_BACKEND, MDSPLUS_BACKEND, HDF5_BACKEND,  MEMORY_BACKEND, UDA_BACKEND/)
+INTEGER, dimension(3), PARAMETER   :: ARRAY_ALL_BACKENDS = (/MDSPLUS_BACKEND,  MEMORY_BACKEND, NO_BACKEND/)
+INTEGER, dimension(3), PARAMETER   :: ARRAY_ALL_TIME_MODES = (/IDS_TIME_MODE_HOMOGENEOUS, IDS_TIME_MODE_HETEROGENEOUS, IDS_TIME_MODE_INDEPENDENT/)
+
 !INTEGER, DIMENSION(:),allocatable :: SEED
 !REAL(ids_real), DIMENSION(DIM_SIZE) :: timeVector
 
 CHARACTER(len=:), ALLOCATABLE :: dataVersion
 CHARACTER(len=:), ALLOCATABLE :: userName
-INTEGER :: BEID = MDSPLUS_BACKEND
+
+
+TYPE settings_type
+    INTEGER, dimension(3) :: backendIDArray = NO_BACKEND
+    INTEGER, dimension(3) :: idsTimeModeArray = IDS_TIME_MODE_UNKNOWN
+    LOGICAL :: useExistingPulseFile = .FALSE.
+END TYPE settings_type
+
+
+type (settings_type) :: config
 
 !CHARACTER (LEN=*), PARAMETER ::PRINTABLE = '0123456789abcdef'
 !CHARACTER(LEN=*), PARAMETER :: PRINTABLE = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!\\"#$%&amp;\'()*+,-./:;&lt;=&gt;?@[\\]^_`{|}~\t\n\r"
@@ -66,32 +80,169 @@ SUBROUTINE getDataVersion(dataVersion)
 	dataVersion = trim(buffer)
 END SUBROUTINE getDataVersion
 
+
+SUBROUTINE setAllTests()
+    
+    ! All backends (/ASCII_BACKEND, MDSPLUS_BACKEND, HDF5_BACKEND,  MEMORY_BACKEND, UDA_BACKEND/)
+    config%backendIDArray = ARRAY_ALL_BACKENDS
+    config%idsTimeModeArray = ARRAY_ALL_TIME_MODES
+
+END SUBROUTINE setAllTests
+
+SUBROUTINE setCmdlOptions()
+
+    character(len=32)           :: arg, argValue
+    integer                     :: i, argCount
+
+    i = 1
+    argCount = command_argument_count()
+
+
+    do 
+        if (i > argCount) exit
+
+        call get_command_argument(i, arg)
+        
+        select case (arg)
+            !!! IDS Time Mode
+            case ('-m', '--time-mode')
+                i = i + 1
+                call get_command_argument(i, argValue)
+                select case (argValue)
+
+                   ! ALL (default)
+                    case ('0')
+                            config%idsTimeModeArray = ARRAY_ALL_TIME_MODES
+
+                    ! IDS_TIME_MODE_HOMOGENEOUS
+                    case ('1')
+                            ! clear the array
+                            config%idsTimeModeArray = IDS_TIME_MODE_UNKNOWN
+                            ! set user chosen mode
+                            config%idsTimeModeArray(1) = IDS_TIME_MODE_HOMOGENEOUS
+
+                    !IDS_TIME_MODE_HETEROGENEOUS
+                    case ('2')
+                            ! clear the array
+                            config%idsTimeModeArray = IDS_TIME_MODE_UNKNOWN
+                            ! set user chosen mode
+                            config%idsTimeModeArray(1) = IDS_TIME_MODE_HETEROGENEOUS
+
+                    !IDS_TIME_MODE_INDEPENDENT
+                    case ('3')
+                            ! clear the array
+                            config%idsTimeModeArray = IDS_TIME_MODE_UNKNOWN
+                            ! set user chosen mode
+                            config%idsTimeModeArray(1) = IDS_TIME_MODE_INDEPENDENT
+
+                    case default
+                        print *, 'Error! IDS Time Mode: Unrecognised value [ ', trim(argValue), ' ]'
+                       call print_help()
+                        call exit(1)
+                    
+                end select
+
+            !!! Backend
+            case ('-b', '--backend')
+                i = i + 1
+                call get_command_argument(i, argValue)
+                select case (argValue)
+
+                   ! ALL (default)
+                    case ('0')
+                            config%backendIDArray = ARRAY_ALL_BACKENDS
+                    ! MDSPLUS_BACKEND
+                    case ('1')                   
+                            ! clear array
+                            config%backendIDArray = NO_BACKEND        
+                            ! set user chosen backend
+                            config%backendIDArray(1) = MDSPLUS_BACKEND
+
+                    ! MEMORY_BACKEND
+                    case ('2')
+                            ! clear array
+                            config%backendIDArray = NO_BACKEND        
+                            ! set user chosen backend
+                            config%backendIDArray(1) = MEMORY_BACKEND
+
+                   ! ASCII_BACKEND
+                    case ('3')
+                            ! clear array
+                            config%backendIDArray = NO_BACKEND        
+                            ! set user chosen backend
+                            config%backendIDArray(1) = ASCII_BACKEND
+
+                    case default
+                        print *, 'Error! Backend: Unrecognised value [ ', trim(argValue), ' ]'
+                        call print_help()
+                        call exit(1)
+                end select
+            
+           !!! Use existing pulse file
+            case ('-u', '--use-pulsefile')
+                    config%useExistingPulseFile = .TRUE.
+
+            case ('-h', '--help')
+                call print_help()
+                call exit(1)
+            case default
+                print '(2a, /)', 'Unrecognised command-line option: ',arg
+                call print_help()
+                call exit(1)
+        end select
+                i = i + 1
+    end do
+END SUBROUTINE setCmdlOptions
+
+SUBROUTINE print_help()
+        print '(a, /)', 'Options:'
+        print '(a)',    '  -m, --time-mode <value>  - Sets time mode'
+        print '(a)',    '                Values:'
+        print '(a)',    '                       0 - All modes (default)'
+        print '(a)',    '                       1 - Homogeneous'
+        print '(a)',    '                       2 - Heterogeneous'
+        print '(a)',    '                       3 - Time-independent'
+        print '(a)',    '  -b, --backend  <value>   - Sets AL backend:'
+        print '(a)',    '                Values:'
+        print '(a)',    '                       0 - All backends (default)'
+        print '(a)',    '                       1 - MDSPlus'
+        print '(a)',    '                       2 - Memory Backend'
+        print '(a)',    '                       3 - ASCII Backend'
+        print '(a)',    '  -u, --use-pulsefile     - use existing pulse file'
+        print '(a)',    '  -h, --help       print usage information and exit'
+! stop at first error
+END SUBROUTINE print_help
+
 SUBROUTINE initEnv()
-  CHARACTER(len=255) :: buffer
 
-  CALL getDataVersion(dataVersion) 
-  CALL getUser(userName)
+    INTEGER     :: argCount
 
-  call get_environment_variable("TEST_SUITE_MEMORY", buffer)
-  if (LEN_TRIM(buffer)>0) then
-     if (BEID .ne. MEMORY_BACKEND) then
-        print *,"*** TESTING OF MEMORY_BACKEND ***"
-        BEID = MEMORY_BACKEND
-     end if
-  end if
+    CALL getDataVersion(dataVersion) 
+    CALL getUser(userName)
+
+    CALL setAllTests()
+    argCount = command_argument_count()
+    if (argCount > 1) then  
+        CALL setCmdlOptions()
+    end if
+    
+
+
 
 END SUBROUTINE initEnv
 
-SUBROUTINE create(idx)
+SUBROUTINE create_db(backendID, shot, run, idx)
+  INTEGER, INTENT(IN)   :: backendID
+  INTEGER, INTENT(IN)   :: shot
+  INTEGER, INTENT(IN)   :: run
   INTEGER, INTENT(OUT) :: idx
   INTEGER :: status, mode
 
-  CALL initTime()
-  CALL initEnv()
+
   !CALL imas_create_env('ids',TESTSHOT,TESTRUN, TESTSHOT,TESTRUN,idx, userName, 'test', dataVersion)
-  CALL ual_begin_pulse_action(BEID, TESTSHOT, TESTRUN, userName, 'test', dataVersion, idx)
+  CALL ual_begin_pulse_action(backendID, shot, run, userName, 'test', dataVersion, idx)
   mode = FORCE_CREATE_PULSE
-  if (BEID.eq.MDSPLUS_BACKEND) mode = OPEN_PULSE
+
   if (idx .ge. 0) then
      CALL ual_open_pulse(idx, mode, '', status)
      if (status .eq. 0) then
@@ -99,39 +250,19 @@ SUBROUTINE create(idx)
         return
      end if
   end if
-END SUBROUTINE create
-
-SUBROUTINE createslice(idx)
-  INTEGER, INTENT(OUT) :: idx
-  INTEGER :: status, mode
-
-  CALL initTime()
-  CALL initEnv()
-  !CALL imas_create_env('ids',TESTSHOT+1,TESTRUN+1, TESTSHOT+1,TESTRUN+1,idx, userName, 'test', dataVersion)
-  CALL ual_begin_pulse_action(BEID, TESTSHOT+1, TESTRUN+1, userName, 'test', dataVersion, idx)
-  mode = FORCE_CREATE_PULSE
-  if (BEID.eq.MDSPLUS_BACKEND) mode = OPEN_PULSE
-  if (idx .ge. 0) then
-     CALL ual_open_pulse(idx, mode, '', status)
-     if (status .eq. 0) then
-        print *, "IDX:", idx
-        return
-     end if
-  end if
-
-  print *, "IDX:", idx
-
-END SUBROUTINE createslice
+END SUBROUTINE create_db
 
 
-SUBROUTINE open(idx)
-  INTEGER, INTENT(OUT) :: idx
+
+SUBROUTINE open_db(backendID, shot, run, idx)
+  INTEGER, INTENT(IN)   :: backendID
+  INTEGER, INTENT(IN)   :: shot
+  INTEGER, INTENT(IN)   :: run
+  INTEGER, INTENT(OUT)  :: idx
   INTEGER :: status
 
-  CALL initTime()
-  CALL initEnv()
   !CALL imas_open_env('ids',TESTSHOT,TESTRUN, idx, userName, 'test', dataVersion)
-  CALL ual_begin_pulse_action(BEID, TESTSHOT, TESTRUN, userName, 'test', dataVersion, idx)
+  CALL ual_begin_pulse_action(backendID, shot, run, userName, 'test', dataVersion, idx)
   if (idx .ge. 0) then
      CALL ual_open_pulse(idx, OPEN_PULSE, '', status)
      if (status .eq. 0) then
@@ -142,35 +273,17 @@ SUBROUTINE open(idx)
 
   print *, "IDX:", idx
 
-END SUBROUTINE open
+END SUBROUTINE open_db
 
-SUBROUTINE openslice(idx)
-  INTEGER, INTENT(OUT) :: idx
-  INTEGER :: status
 
-  CALL initTime()
-  CALL initEnv()
-  !CALL imas_open_env('ids',TESTSHOT+1,TESTRUN+1, idx, userName, 'test', dataVersion)
-  CALL ual_begin_pulse_action(BEID, TESTSHOT+1, TESTRUN+1, userName, 'test', dataVersion, idx)
-  if (idx .ge. 0) then
-     CALL ual_open_pulse(idx, OPEN_PULSE, '', status)
-     if (status .eq. 0) then
-        print *, "IDX:", idx
-        return
-     end if
-  end if
-
-  print *, "IDX:", idx
-
-END SUBROUTINE openslice
 	
 
-SUBROUTINE close(idx)
+SUBROUTINE close_db(idx)
 
   INTEGER, INTENT(IN) :: idx
   call imas_close(idx)
 
-END SUBROUTINE close
+END SUBROUTINE close_db
 
 END MODULE helper
 
