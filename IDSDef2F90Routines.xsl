@@ -836,12 +836,12 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   endif
 
   storedtimemode = IDS_TIME_MODE_UNKNOWN
-  call ual_begin_global_action(pulsectx, name, READ_OP, opctx) 
-  if (opctx.lt.0) then
+  call ual_begin_global_action(pulsectx, name, READ_OP, opctx, status) 
+  if (status.ne.0) then
      !! error when trying to get new ctx => stop!
      write(*,*) 'Error in ual_begin_slice_action (from ids_put_slice for IDS <xsl:value-of select="@name"/>)'     
      if (present(retstatus)) then
-        retstatus = opctx
+        retstatus = status
      else
         STOP 
      end if
