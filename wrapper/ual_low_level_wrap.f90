@@ -30,7 +30,7 @@ module ual_low_level_wrap
      pure function c_strlen(str) &
           bind(C,name="strlen")
        use, intrinsic :: ISO_C_BINDING
-       integer(C_INT) :: c_strlen
+       integer(C_SIZE_T) :: c_strlen
        type(C_PTR), value, intent(in) :: str
      end function c_strlen
 
