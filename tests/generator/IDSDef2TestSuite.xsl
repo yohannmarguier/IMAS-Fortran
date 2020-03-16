@@ -72,6 +72,7 @@
         <xsl:text>module </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_dynamic_mod&#10;</xsl:text>
         <xsl:text>&#xA;</xsl:text>
         <xsl:text>&#9;use ids_schemas, only: ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>&#10;</xsl:text>
+        <xsl:text>&#9;use ids_routines, only: IDS_TIME_MODE_INDEPENDENT&#10;</xsl:text>
         <xsl:text>&#9;!use generator&#10;</xsl:text>
             <xsl:text>&#9;use setter&#10;</xsl:text>
         <xsl:text>&#xA;</xsl:text> 
@@ -83,12 +84,14 @@
         <xsl:text>!==================================================================&#10;</xsl:text>
         <xsl:text>!&#9;&#9; INIT DYNAMIC DATA: </xsl:text><xsl:value-of select="@name"/> <xsl:text> &#10;</xsl:text>
         <xsl:text>!==================================================================&#10;</xsl:text>
-        <xsl:text>SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_dynamic( ids, isSliceMode, j )&#10;</xsl:text>
+        <xsl:text>SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_dynamic( ids, idsTimeMode, isSliceMode, j )&#10;</xsl:text>
         <xsl:text>&#9;TYPE (ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>), INTENT(INOUT) :: ids &#10;</xsl:text>
+        <xsl:text>&#9;INTEGER, INTENT(IN) :: idsTimeMode &#10;</xsl:text>
         <xsl:text>&#9;LOGICAL, INTENT(IN) :: isSliceMode &#10;</xsl:text>
         <xsl:text>&#9;INTEGER, INTENT(IN) :: j &#10;</xsl:text>
         <xsl:text>&#10;</xsl:text>
-
+        <xsl:text>&#9;&#9;&#9;IF (idsTimeMode == IDS_TIME_MODE_INDEPENDENT) RETURN&#10;</xsl:text>
+        <xsl:text>&#10;</xsl:text>
         <xsl:apply-templates select="field" mode="putDynamic"/> 
 
         <xsl:text>&#10;</xsl:text>
@@ -146,6 +149,7 @@
         <xsl:text>&#9;use generator&#10;</xsl:text>
         <xsl:text>&#9;use comparator &#10;</xsl:text>
         <xsl:text>&#9;use ids_schemas, only: ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>&#10;</xsl:text>
+        <xsl:text>&#9;use ids_routines, only: IDS_TIME_MODE_INDEPENDENT&#10;</xsl:text>
         <xsl:text>&#xA;</xsl:text> 
         <xsl:text>&#9;implicit none&#10;</xsl:text>
         <xsl:text>&#xA;</xsl:text> 
@@ -155,13 +159,15 @@
         <xsl:text>!==================================================================&#10;</xsl:text>
         <xsl:text>!&#9;&#9; TEST DYNAMIC DATA: </xsl:text><xsl:value-of select="@name"/> <xsl:text> &#10;</xsl:text>
         <xsl:text>!==================================================================&#10;</xsl:text>
-        <xsl:text>SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_dynamic( ids, isSliceMode, j )&#10;</xsl:text>
+        <xsl:text>SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_dynamic( ids, idsTimeMode, isSliceMode, j )&#10;</xsl:text>
         <xsl:text>&#9;TYPE (ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>), INTENT(INOUT) :: ids &#10;</xsl:text>
+        <xsl:text>&#9;INTEGER, INTENT(IN) :: idsTimeMode &#10;</xsl:text>
         <xsl:text>&#9;LOGICAL, INTENT(IN) :: isSliceMode &#10;</xsl:text>
         <xsl:text>&#9;INTEGER, INTENT(IN) :: j &#10;</xsl:text>
         <xsl:text>&#9;LOGICAL :: isEqual &#10;</xsl:text>
         <xsl:text>&#10;</xsl:text>
-
+        <xsl:text>&#9;&#9;&#9;IF (idsTimeMode == IDS_TIME_MODE_INDEPENDENT) RETURN&#10;</xsl:text>
+        <xsl:text>&#10;</xsl:text>
         <xsl:apply-templates select="field" mode="getDynamic"/> 
 
         <xsl:text>&#10;</xsl:text>
@@ -289,7 +295,6 @@
 	
     <xsl:text>&#10;</xsl:text>
     <xsl:text>&#9;CALL initEnv()&#10;</xsl:text>
-    <xsl:text>&#9;&#9;&#9;WRITE(*,*) "--- --- TIME MODE ARRTAY ", config%idsTimeModeArray &#10;</xsl:text>
     <xsl:text>&#10;</xsl:text>
     <xsl:text>&#9;DO i = 1, SIZE(config%backendIDArray)&#10;</xsl:text>
     <xsl:text>&#9;&#9;backendID = config%backendIDArray(i)&#10;</xsl:text>
@@ -301,9 +306,8 @@
 	<xsl:text>&#10;</xsl:text>
     <xsl:text>&#9;&#9;DO j = 1, SIZE(config%idsTimeModeArray)&#10;</xsl:text>
     <xsl:text>&#9;&#9;&#9;idsTimeMode = config%idsTimeModeArray(j)&#10;</xsl:text>
-    <xsl:text>&#9;&#9;&#9;WRITE(*,*) "--- --- TIME MODE ", idsTimeMode &#10;</xsl:text>
     <xsl:text>&#9;&#9;&#9;IF (idsTimeMode == IDS_TIME_MODE_UNKNOWN) CYCLE&#10;</xsl:text>
-    <xsl:text>&#9;&#9;&#9;WRITE(*,*) "--- --- X TIME MODE ", idsTimeMode &#10;</xsl:text>
+    <xsl:text>&#9;&#9;&#9;WRITE(*,*) "--- --- TIME MODE ", idsTimeMode &#10;</xsl:text>
     <xsl:text>&#10;</xsl:text>
 	<xsl:text>&#9;&#9;&#9;! --- IDS: </xsl:text><xsl:value-of select="@name"/><xsl:text> ---&#10;</xsl:text>
 	<xsl:text>&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_put(idx, idsTimeMode)&#10;</xsl:text>
@@ -438,7 +442,7 @@
         <xsl:text>&#9;do i = 0, MAX_OCCURENCES - 1 &#10;</xsl:text>
     	<xsl:text>&#9;WRITE(*,*) "--- occurence: ", i&#10;</xsl:text>
 	<xsl:text>&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_static(idsTimeMode, ids);&#10;</xsl:text> 
-       	<xsl:text>&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_dynamic(ids, .FALSE., -1);&#10;</xsl:text> 
+       	<xsl:text>&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_dynamic(ids, idsTimeMode, .FALSE., -1);&#10;</xsl:text> 
 	<xsl:text>&#9;&#9;!------------&#10;</xsl:text>
 	<xsl:text>&#9;&#9;if (i == 0) then &#10;</xsl:text>
 	<xsl:text>&#9;&#9;&#9;idspath = IDS_NAME  &#10;</xsl:text>
@@ -504,10 +508,10 @@
 	    <xsl:otherwise>
 		<xsl:text>&#9;&#9;&#9;if (j == 1) then &#10;</xsl:text>
 		<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_static(idsTimeMode, ids);&#10;</xsl:text> 
-       		<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_dynamic(ids, .TRUE., j);&#10;</xsl:text> 
+       		<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_dynamic(ids, idsTimeMode, .TRUE., j);&#10;</xsl:text> 
         	<xsl:text>&#9;&#9;&#9;&#9;call ids_put(pulseCtx ,idspath, ids);&#10;</xsl:text> 
 		<xsl:text>&#9;&#9;&#9;else&#10;</xsl:text>
-       		<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_dynamic(ids, .TRUE., j);&#10;</xsl:text> 
+       		<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_dynamic(ids, idsTimeMode, .TRUE., j);&#10;</xsl:text> 
 		<xsl:text>&#9;&#9;&#9;&#9;call ids_put_slice(pulseCtx ,idspath, ids);&#10;</xsl:text>
 		<xsl:text>&#9;&#9;&#9;end if &#10;</xsl:text>
 	   </xsl:otherwise>
@@ -553,7 +557,7 @@
 
 	<xsl:text>&#9;&#9;call ids_get(pulseCtx, idspath, ids);&#10;</xsl:text>
 	<xsl:text>&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_static(idsTimeMode, ids)&#10;</xsl:text> 
-       	<xsl:text>&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_dynamic(ids, .FALSE., -1)&#10;</xsl:text> 
+       	<xsl:text>&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_dynamic(ids, idsTimeMode, .FALSE., -1)&#10;</xsl:text> 
 		
 		
 		 <!-- <xsl:text>&#9;call ids_deallocate(ids)&#10;</xsl:text> -->
@@ -602,7 +606,7 @@
 	<xsl:text>  &#10;</xsl:text>
 	<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_static(idsTimeMode, ids);&#10;</xsl:text> 
 	<xsl:text>&#9;&#9;&#9;end if &#10;</xsl:text>
-       	<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_dynamic(ids, .TRUE., j);&#10;</xsl:text> 
+       	<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_dynamic(ids, idsTimeMode, .TRUE., j);&#10;</xsl:text> 
   	<xsl:text>&#9;&#9;end do &#10;</xsl:text>
         <xsl:text>&#9;end do &#10;</xsl:text>
         <xsl:text>&#9;&#10;</xsl:text>
