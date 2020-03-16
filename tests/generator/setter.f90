@@ -38,6 +38,25 @@ SUBROUTINE initTimeField(idsField, isSliceMode, idx)
         
 END SUBROUTINE initTimeField
   
+
+SUBROUTINE initTimeFieldScalar(idsField, isSliceMode, idx)
+    IMPLICIT NONE  
+    REAL(ids_real) :: idsField
+    LOGICAL, INTENT (IN)    :: isSliceMode
+    INTEGER, INTENT(IN)     :: idx 
+
+
+        IF(idx < 1) then
+             idsField = timeVector(1)
+        ELSE
+            idsField = timeVector(idx)
+        END IF
+
+
+   write(*,*) "AoS/time: ", idsField, " idx:  ", idx
+
+        
+END SUBROUTINE initTimeFieldScalar
   
 !
 ! ===============================================================================================

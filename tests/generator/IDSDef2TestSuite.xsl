@@ -1006,6 +1006,9 @@ or
             <xsl:when test="@name='time' and (@data_type='flt_1d_type' or @data_type='FLT_1D')">
                           <xsl:text>&#9;&#9;&#9;call initTimeField( </xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>, isSliceMode, j)</xsl:text>
             </xsl:when>
+            <xsl:when test="@name='time' and @data_type='flt_type' and parent::field[@data_type='struct_array' and @type ='dynamic']">
+                          <xsl:text>&#9;&#9;&#9;call initTimeFieldScalar( </xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>, isSliceMode, j)</xsl:text>
+            </xsl:when>
 
             <xsl:when test="@data_type='str_type' or @data_type='STR_0D' or
                             @data_type='str_1d_type' or @data_type='STR_1D' or
@@ -1067,6 +1070,9 @@ or
 
             <xsl:when test="@name='time' and (@data_type='flt_1d_type' or @data_type='FLT_1D')">
                               <xsl:text>&#9;&#9;&#9;isEqual = assertTimeField(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>, </xsl:text><xsl:value-of select="$sliceMode"/><xsl:text>, j, "</xsl:text><xsl:value-of select="ancestor::IDS/@name"/><xsl:text>:</xsl:text><xsl:value-of select="@path"/><xsl:text>")&#10;</xsl:text>
+            </xsl:when>
+            <xsl:when test="@name='time' and @data_type='flt_type' and parent::field[@data_type='struct_array' and @type ='dynamic']">
+                              <xsl:text>&#9;&#9;&#9;isEqual = assertTimeFieldScalar(</xsl:text><xsl:value-of select="$fieldPath"/><xsl:text>, </xsl:text><xsl:value-of select="$sliceMode"/><xsl:text>, j, "</xsl:text><xsl:value-of select="ancestor::IDS/@name"/><xsl:text>:</xsl:text><xsl:value-of select="@path"/><xsl:text>")&#10;</xsl:text>
             </xsl:when>
 
             <xsl:when test="@data_type='str_type' or @data_type='STR_0D' or

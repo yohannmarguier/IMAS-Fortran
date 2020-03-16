@@ -92,6 +92,35 @@ FUNCTION assertHomogeneousTimeField(idsTimeMode, observed, isSliceMode, fieldNam
         
 
  END FUNCTION assertTimeField
+
+
+ FUNCTION assertTimeFieldScalar(observed, isSliceMode, idx, fieldName) RESULT (outValue)
+       REAL(ids_real)      :: observed, expected 
+        INTEGER, INTENT (IN)      :: idx 
+       LOGICAL, INTENT (IN)    :: isSliceMode
+       CHARACTER*(*),INTENT(IN) :: fieldName
+
+        LOGICAL    :: outValue
+
+        outValue = .TRUE.
+
+        IF( idx < 1 ) then
+            expected = timeVector(1)
+        ELSE
+            expected = timeVector(idx)
+        END IF
+        
+
+    if(observed == expected) then
+        if (debugMode) write(*,*) fieldName, " : OK "
+    else
+        write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
+        outValue = .FALSE.
+        return
+    end if
+        
+
+ END FUNCTION assertTimeFieldScalar
  
 ! =================================================================
 ! 		INTEGER
