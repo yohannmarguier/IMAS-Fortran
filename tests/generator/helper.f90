@@ -208,7 +208,7 @@ SUBROUTINE print_help()
         print '(a)',    '                       1 - MDSPlus'
         print '(a)',    '                       2 - Memory Backend'
         print '(a)',    '                       3 - ASCII Backend'
-        print '(a)',    '  -u, --use-pulsefile     - use existing pulse file'
+!        print '(a)',    '  -u, --use-pulsefile     - use existing pulse file'
         print '(a)',    '  -h, --help       print usage information and exit'
 ! stop at first error
 END SUBROUTINE print_help
@@ -220,9 +220,10 @@ SUBROUTINE initEnv()
     CALL getDataVersion(dataVersion) 
     CALL getUser(userName)
 
+    CALL initTime()
     CALL setAllTests()
     argCount = command_argument_count()
-    if (argCount > 1) then  
+    if (argCount > 0) then  
         CALL setCmdlOptions()
     end if
     
