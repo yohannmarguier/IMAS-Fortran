@@ -52,10 +52,6 @@ SUBROUTINE initTimeFieldScalar(idsField, isSliceMode, idx)
             idsField = timeVector(idx)
         END IF
 
-
-   write(*,*) "AoS/time: ", idsField, " idx:  ", idx
-
-        
 END SUBROUTINE initTimeFieldScalar
   
 !
