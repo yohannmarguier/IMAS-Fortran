@@ -4,6 +4,7 @@ MODULE helper
   use ual_low_level_wrap
   implicit none
 
+
 !INTEGER, PARAMETER :: DIM_SIZE = 1
 
 !INTEGER, PARAMETER :: noOfSlices = DIM_SIZE
@@ -11,7 +12,7 @@ INTEGER, PARAMETER :: TEST_SHOT = 9998
 INTEGER, PARAMETER :: TEST_RUN = 9998
 
  ! All backends (/ASCII_BACKEND, MDSPLUS_BACKEND, HDF5_BACKEND,  MEMORY_BACKEND, UDA_BACKEND/)
-INTEGER, dimension(3), PARAMETER   :: ARRAY_ALL_BACKENDS = (/MDSPLUS_BACKEND,  MEMORY_BACKEND, NO_BACKEND/)
+INTEGER, dimension(3), PARAMETER   :: ARRAY_ALL_BACKENDS = (/MDSPLUS_BACKEND,  MEMORY_BACKEND, ASCII_BACKEND/)
 INTEGER, dimension(3), PARAMETER   :: ARRAY_ALL_TIME_MODES = (/IDS_TIME_MODE_HOMOGENEOUS, IDS_TIME_MODE_HETEROGENEOUS, IDS_TIME_MODE_INDEPENDENT/)
 
 !INTEGER, DIMENSION(:),allocatable :: SEED
@@ -35,8 +36,60 @@ type (settings_type) :: config
 
 CONTAINS
 
+FUNCTION backend2str( backendID ) RESULT (strBackend)
+    INTEGER, INTENT(IN) :: backendID
+    CHARACTER(len=10) :: strBackend
+
+    SELECT CASE (backendID)
+
+        ! MDSPLUS_BACKEND
+        CASE (MDSPLUS_BACKEND)                   
+              strBackend =  "MDSPLUS"               
+
+        ! MEMORY_BACKEND
+        CASE (MEMORY_BACKEND)                   
+              strBackend =  "MEMORY"               
+
+        ! ASCII_BACKEND
+        CASE (ASCII_BACKEND)                   
+              strBackend =  "ASCII"               
+
+        ! UDA_BACKEND
+        CASE (UDA_BACKEND)                   
+              strBackend =  "UDA"               
+
+        CASE default
+              strBackend = "UNKNOWN"
+    END SELECT 
 
 
+
+END FUNCTION backend2str
+
+
+FUNCTION timeMode2str( idsTimeMode ) RESULT (strTimeMode)
+    INTEGER, INTENT(IN) :: idsTimeMode
+    CHARACTER(len=14) :: strTimeMode
+
+    SELECT CASE (idsTimeMode)
+
+        ! MDSPLUS_BACKEND
+        CASE (IDS_TIME_MODE_HOMOGENEOUS)                   
+              strTimeMode =  "HOMOGENEOUS"               
+
+        ! MEMORY_BACKEND
+        CASE (IDS_TIME_MODE_HETEROGENEOUS)                   
+              strTimeMode =  "HETEROGENEOUS"               
+
+        ! ASCII_BACKEND
+        CASE (IDS_TIME_MODE_INDEPENDENT)                   
+              strTimeMode =  "INDEPENDENT"               
+
+        CASE default
+              strTimeMode = "UNKNOWN"
+    END SELECT 
+
+END FUNCTION timeMode2str
 
 
 SUBROUTINE getUser(userName) 
