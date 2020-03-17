@@ -325,8 +325,6 @@ SUBROUTINE open_db(backendID, shot, run, idx)
      end if
   end if
 
-  print *, "IDX:", idx
-
 END SUBROUTINE open_db
 
 
