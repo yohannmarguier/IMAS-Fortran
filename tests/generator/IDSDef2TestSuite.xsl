@@ -19,6 +19,7 @@
       <xsl:apply-templates select="child::IDS" mode="test_dynamic"/>
       <xsl:apply-templates select="child::IDS" mode="all_test"/>
 
+
     </xsl:template>
 
  <!-- ============================= END OF GENRATED FILE ============================== -->
@@ -701,7 +702,7 @@ or
 	<xsl:param name="dynamicOnly"/>
 	<xsl:param name="staticOnly"/>
 
-	
+	      <xsl:call-template name="COMMENT_FIELD"/>
 	<!-- This skips the routine for timed fields when using this template in staticOnly mode -->
 	<xsl:if test="(not($dynamicOnly) and (@type !='dynamic' or not(@type) or @data_type='structure' or (@data_type='struct_array' and @type !='dynamic')))
 or
@@ -782,7 +783,7 @@ or
       <xsl:param name="dynamicOnly"/>
       <xsl:param name="staticOnly"/>
       
-      
+            <xsl:call-template name="COMMENT_FIELD"/>
         <xsl:if test="(not($dynamicOnly) and (@type !='dynamic' or not(@type) or @data_type='structure' or (@data_type='struct_array' and @type !='dynamic')))
 		    or
 		     (not($staticOnly) and (@type ='dynamic' or (@data_type='structure' and .//field[@type='dynamic'])  or  (@data_type='struct_array' and .//field[@type='dynamic'])))"> 
@@ -878,8 +879,11 @@ or
           </xsl:call-template>
         </xsl:for-each>
         <xsl:for-each select="field[@data_type='struct_array']">
-	 <!-- <xsl:call-template name="COMMENT_FIELD"/>
-	  -->
+      <xsl:if test="(not($dynamicOnly) and (@type !='dynamic' or not(@type) or @data_type='structure' or (@data_type='struct_array' and @type !='dynamic')))
+            or
+            (not($staticOnly) and (@type ='dynamic' or @data_type='structure' or @data_type='struct_array'))"> 
+	  !XXX<xsl:call-template name="COMMENT_FIELD"/>
+	 
 	  <xsl:text>&#9;&#9;if(.not. associated(ids%</xsl:text>  <xsl:value-of select="concat($path, '%', @name)" /> <xsl:text>)) then &#10;</xsl:text>
 	  <xsl:text>&#9;&#9;&#9; write(*,*) "ERROR! IDS: </xsl:text>  <xsl:value-of select="ancestor::IDS/@name"/> <xsl:text> Field: </xsl:text><xsl:value-of select="concat($path, '%', @name, '(1)')" /> <xsl:text> is not associated!"&#10; </xsl:text>
 	  <xsl:text>&#9;&#9;&#9; STOP &#10;</xsl:text>  
@@ -892,6 +896,7 @@ or
 	    
           </xsl:call-template>
 	  <xsl:text>&#9;&#9;end if &#10;</xsl:text>
+      </xsl:if>
         </xsl:for-each>
       </xsl:if>
     </xsl:template>
