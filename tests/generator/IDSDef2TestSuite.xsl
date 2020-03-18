@@ -18,8 +18,6 @@
       <xsl:apply-templates select="child::IDS" mode="test_static"/>
       <xsl:apply-templates select="child::IDS" mode="test_dynamic"/>
       <xsl:apply-templates select="child::IDS" mode="all_test"/>
-      <xsl:apply-templates select="child::IDS" mode="put_test"/>
-      <xsl:apply-templates select="child::IDS" mode="get_test"/>
 
     </xsl:template>
 
@@ -332,99 +330,6 @@
 	
       </xsl:result-document>
     </xsl:template>
-
-
-    <!-- IDS perform the put tests -->
-    <xsl:template match="IDS" mode="put_test">
-      <xsl:result-document href="src/{@name}_put_test.f90" standalone="yes" method="text">
-
-	<!-- ================================ MAIN PROGRAM ================================= -->
-        <xsl:text>PROGRAM </xsl:text><xsl:value-of select="@name"/><xsl:text>_put_test&#10;</xsl:text>
-	<xsl:text>&#9;use comparator &#10;</xsl:text>
-	<xsl:text>&#9;use ids_schemas &#10;</xsl:text>
-	
-	<xsl:text>&#9;use helper&#10;</xsl:text>
-    <xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_routines&#10;</xsl:text>
-        <xsl:text>&#9;implicit none&#10;</xsl:text>
-	
-	<xsl:text>&#9;INTEGER :: idx, idxslice&#10;</xsl:text>
-	<xsl:text>&#9;INTEGER :: N_SEED=1&#10;</xsl:text>
-    <xsl:text>&#9;INTEGER :: backendID&#10;</xsl:text>
-    <xsl:text>&#9;INTEGER :: idsTimeMode&#10;</xsl:text>
-    <xsl:text>&#9;LOGICAL :: useExistingPulseFile&#10;</xsl:text>
-    <xsl:text>&#10;</xsl:text>
-	<xsl:text>&#9;call random_seed(SIZE=N_SEED)&#10;</xsl:text>
-	<xsl:text>&#9;ALLOCATE(SEED(N_SEED))&#10;</xsl:text>
-	<xsl:text>&#9;SEED = 0&#10;</xsl:text>
-        
-        <xsl:text>&#10;</xsl:text>
-	<xsl:text>&#9;CALL initEnv()&#10;</xsl:text>
-    <xsl:text>&#9;call open_db(backendID, TEST_SHOT, TEST_RUN, idx)&#10;</xsl:text>
-    <xsl:text>&#9;call open_db(backendID, TEST_SHOT + 1, TEST_RUN + 1, idxslice)&#10;</xsl:text>
-	<xsl:text>&#10;</xsl:text>
-	<xsl:text>&#9;! --- IDS: </xsl:text><xsl:value-of select="@name"/><xsl:text> ---&#10;</xsl:text>
-	<xsl:text>&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_put(idx, idsTimeMode)&#10;</xsl:text>
-
-	<xsl:if test=".//field[@type='dynamic']">
-
-       	  <xsl:text>&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_putSlice(idxslice, idsTimeMode)&#10;</xsl:text>
-	</xsl:if>
-
-        <xsl:text>&#9;call close_db(idx);&#10;</xsl:text>
-        <xsl:text>&#9;call close_db(idxslice);&#10;</xsl:text>
-      
-        <xsl:text>END PROGRAM </xsl:text><xsl:value-of select="@name"/><xsl:text>_put_test&#10;</xsl:text>
-        <xsl:text>&#10;</xsl:text>
-	<!-- ================================ MAIN PROGRAM (end)================================= -->
-	
-      </xsl:result-document>
-    </xsl:template>
-
-    <!-- IDS perform the put tests -->
-    <xsl:template match="IDS" mode="get_test">
-      <xsl:result-document href="src/{@name}_get_test.f90" standalone="yes" method="text">
-
-	<!-- ================================ MAIN PROGRAM ================================= -->
-
-    <xsl:text>PROGRAM </xsl:text><xsl:value-of select="@name"/><xsl:text>_get_test&#10;</xsl:text>
-	<xsl:text>&#9;use comparator &#10;</xsl:text>
-	<xsl:text>&#9;use ids_schemas &#10;</xsl:text>
-	
-	<xsl:text>&#9;use helper&#10;</xsl:text>
-    <xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_routines&#10;</xsl:text>
-        <xsl:text>&#9;implicit none&#10;</xsl:text>
-	
-	<xsl:text>&#9;INTEGER :: idx, idxslice&#10;</xsl:text>
-	<xsl:text>&#9;INTEGER :: N_SEED=1&#10;</xsl:text>
-    <xsl:text>&#9;INTEGER :: backendID&#10;</xsl:text>
-    <xsl:text>&#9;INTEGER :: idsTimeMode&#10;</xsl:text>
-    <xsl:text>&#9;LOGICAL :: useExistingPulseFile&#10;</xsl:text>
-	<xsl:text>&#9;call random_seed(SIZE=N_SEED)&#10;</xsl:text>
-	<xsl:text>&#9;ALLOCATE(SEED(N_SEED))&#10;</xsl:text>
-        <xsl:text>&#9;SEED = 0&#10;</xsl:text>
-
-        <xsl:text>&#10;</xsl:text>
-	
-    <xsl:text>&#9;CALL initEnv()&#10;</xsl:text>
-
-        <xsl:text>&#9;call open_db(backendID, TEST_SHOT, TEST_RUN, idx)&#10;</xsl:text>
-	<xsl:text>&#10;</xsl:text>
-	<xsl:text>&#9;! --- IDS: </xsl:text><xsl:value-of select="@name"/><xsl:text> ---&#10;</xsl:text>
-	<xsl:text>&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_get(idx, idsTimeMode)&#10;</xsl:text>
-
-        <xsl:text>&#9;call open_db(backendID, TEST_SHOT + 1, TEST_RUN + 1, idxslice)&#10;</xsl:text>
-	<xsl:text>&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_getSlice(idxslice, idsTimeMode)&#10;</xsl:text>
-
-        <xsl:text>&#9;call close_db(idx);&#10;</xsl:text>
-        <xsl:text>&#9;call close_db(idxslice);&#10;</xsl:text>
-
-        <xsl:text>END PROGRAM </xsl:text><xsl:value-of select="@name"/><xsl:text>_get_test&#10;</xsl:text>
-        <xsl:text>&#10;</xsl:text>
-	<!-- ================================ MAIN PROGRAM (end)================================= -->
-	
-      </xsl:result-document>
-    </xsl:template>
-
 
     <!-- IDS put()-->
     <xsl:template match="IDS" mode="put">
