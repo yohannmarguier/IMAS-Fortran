@@ -54,8 +54,8 @@ character*(*) :: path
 real(ids_real), pointer :: time(:)
 integer(ids_int) :: dim1
 
-call ual_begin_global_action(pulsectx, path, READ_OP, opctx) 
-if (opctx.lt.0) then
+call ual_begin_global_action(pulsectx, path, READ_OP, opctx, status) 
+if (status.ne.0) then
    STOP 'Error in ual_begin_global_action from ids_get_times'
 end if
 
@@ -114,8 +114,8 @@ subroutine ids_delete_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx
   integer(ids_int) :: pulsectx, opctx, status
   type(ids_<xsl:value-of select="@name"/>) :: IDS
 
-  call ual_begin_global_action(pulsectx, IDSpath, WRITE_OP, opctx)
-  if (opctx.lt.0) then
+  call ual_begin_global_action(pulsectx, IDSpath, WRITE_OP, opctx, status)
+  if (status.ne.0) then
      STOP 'Error in ual_begin_global_action (from ids_delete for IDS <xsl:value-of select="@name"/>)'
   end if
 
@@ -613,8 +613,8 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   endif
   </xsl:if>-->
   
-  call ual_begin_global_action(pulsectx, name, WRITE_OP, opctx) 
-  if (opctx.lt.0) then
+  call ual_begin_global_action(pulsectx, name, WRITE_OP, opctx, status) 
+  if (status.ne.0) then
      write(*,*) 'Error in ual_begin_global_action (from ids_put for IDS <xsl:value-of select="@name"/>)'
      if (present(retstatus)) then 
         retstatus = opctx
@@ -836,12 +836,12 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   endif
 
   storedtimemode = IDS_TIME_MODE_UNKNOWN
-  call ual_begin_global_action(pulsectx, name, READ_OP, opctx) 
-  if (opctx.lt.0) then
+  call ual_begin_global_action(pulsectx, name, READ_OP, opctx, status) 
+  if (status.ne.0) then
      !! error when trying to get new ctx => stop!
      write(*,*) 'Error in ual_begin_slice_action (from ids_put_slice for IDS <xsl:value-of select="@name"/>)'     
      if (present(retstatus)) then
-        retstatus = opctx
+        retstatus = status
      else
         STOP 
      end if
@@ -878,8 +878,8 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
      endif
   endif
 
-  call ual_begin_slice_action(pulsectx, name, WRITE_OP, UNDEFINED_TIME, UNDEFINED_INTERP, opctx)
-  if (opctx.lt.0) then
+  call ual_begin_slice_action(pulsectx, name, WRITE_OP, UNDEFINED_TIME, UNDEFINED_INTERP, opctx, status)
+  if (status.ne.0) then
      !! error when trying to get new ctx => stop!
      write(*,*) 'Error in ual_begin_slice_action (from ids_put_slice for IDS <xsl:value-of select="@name"/>)'     
      if (present(retstatus)) then
@@ -1087,8 +1087,8 @@ subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   character(len=300) :: timepath
   character(*), parameter :: path = ''
 
-  call ual_begin_global_action(pulsectx, name, READ_OP, opctx) 
-  if (opctx.lt.0) then
+  call ual_begin_global_action(pulsectx, name, READ_OP, opctx, status) 
+  if (status.ne.0) then
      !! error when trying to get new ctx => stop!
      write(*,*) 'Error in ual_begin_global_action (from ids_get for IDS <xsl:value-of select="@name"/>)'
      if (present(retstatus)) then
@@ -1200,8 +1200,8 @@ subroutine get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   character(len=300) :: timepath
   character(*), parameter :: path = ''
 
-  call ual_begin_slice_action(pulsectx, name, READ_OP, twant, interpol, opctx) 
-  if (opctx.lt.0) then
+  call ual_begin_slice_action(pulsectx, name, READ_OP, twant, interpol, opctx, status) 
+  if (status.ne.0) then
      !! error when trying to get new ctx => stop!
      write(*,*) 'Error in ual_begin_slice_action (from ids_get_slice for IDS <xsl:value-of select="@name"/>)'    
      if (present(retstatus)) then 
@@ -1613,8 +1613,8 @@ end module
        timepath = ""
 	 </xsl:otherwise>
        </xsl:choose>
-       call ual_begin_arraystruct_action(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>, timepath, aoslen, aosctx)
-       if (aosctx.ge.0) then
+       call ual_begin_arraystruct_action(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>, timepath, aoslen, aosctx, status)
+       if (status.eq.0) then
           do i = 1,aoslen
 	  <xsl:apply-templates select="." mode="PUT_FIELD">
 	    <xsl:with-param name="structvar" select="$structvar"/>
@@ -2116,8 +2116,8 @@ end module
           timepath = ""
       </xsl:otherwise>
     </xsl:choose>
-          call ual_begin_arraystruct_action(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>, timepath, aoslen, aosctx)
-          if (aosctx.ge.0) then
+          call ual_begin_arraystruct_action(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>, timepath, aoslen, aosctx, status)
+          if (status.eq.0) then
              if (aoslen.gt.0) allocate(<xsl:value-of select="$fieldvar"/>(aoslen))
              do i = 1,aoslen
        <xsl:apply-templates select="." mode="GET_FIELD">
