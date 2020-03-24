@@ -5,7 +5,6 @@ use ids_types, only: ids_real
 
 INTEGER, PARAMETER :: DIM_SIZE = 2
 
-INTEGER, PARAMETER :: noOfSlices = DIM_SIZE
 INTEGER, DIMENSION(:),allocatable :: SEED
 REAL(ids_real), DIMENSION(DIM_SIZE), TARGET :: timeVector
 
@@ -181,8 +180,7 @@ FUNCTION getInteger1DArray(dim1) RESULT (outArray)
     INTEGER,DIMENSION(:), POINTER :: outArray
     INTEGER::I
 
-    !sizeOfArray = dim1
-     sizeOfArray = DIM_SIZE **1
+    sizeOfArray = dim1
 
     flatArray => getIntegerArray(sizeOfArray)
     ALLOCATE(outArray(dim1))
@@ -203,9 +201,8 @@ FUNCTION getInteger2DArray(dim1, dim2) RESULT (outArray)
     INTEGER::I
 
 
-    !sizeOfArray = dim1 * dim2
-    sizeOfArray = DIM_SIZE **2
-
+    sizeOfArray = dim1 * dim2
+    
     flatArray => getIntegerArray(sizeOfArray)
     ALLOCATE(outArray(dim1, dim2))
 
@@ -225,9 +222,8 @@ FUNCTION getInteger3DArray(dim1, dim2, dim3) RESULT (outArray)
     INTEGER::I
 
 
-    !sizeOfArray = dim1 * dim2 * dim3
-    sizeOfArray = DIM_SIZE **3
-
+    sizeOfArray = dim1 * dim2 * dim3
+    
     flatArray => getIntegerArray(sizeOfArray)
     ALLOCATE(outArray(dim1, dim2, dim3))
 
@@ -245,9 +241,8 @@ FUNCTION getInteger4DArray(dim1, dim2, dim3, dim4) RESULT (outArray)
     INTEGER::I
 
 
-    !sizeOfArray = dim1 * dim2 * dim3 * dim4
-    sizeOfArray = DIM_SIZE **4
-
+    sizeOfArray = dim1 * dim2 * dim3 * dim4
+    
     flatArray => getIntegerArray(sizeOfArray)
     ALLOCATE(outArray(dim1, dim2, dim3, dim4))
 
@@ -265,9 +260,8 @@ FUNCTION getInteger5DArray(dim1, dim2, dim3, dim4, dim5) RESULT (outArray)
     INTEGER::I
 
 
-    !sizeOfArray = dim1 * dim2 * dim3 * dim4 * dim5
-    sizeOfArray = DIM_SIZE **5
-
+    sizeOfArray = dim1 * dim2 * dim3 * dim4 * dim5
+    
     flatArray => getIntegerArray(sizeOfArray)
     ALLOCATE(outArray(dim1, dim2, dim3, dim4, dim5))
 
@@ -285,9 +279,8 @@ FUNCTION getInteger6DArray(dim1, dim2, dim3, dim4, dim5, dim6) RESULT (outArray)
     INTEGER::I
 
 
-    !sizeOfArray = dim1 * dim2 * dim3 * dim4 * dim5 * dim6
-    sizeOfArray = DIM_SIZE **5
-
+    sizeOfArray = dim1 * dim2 * dim3 * dim4 * dim5 * dim6
+    
     flatArray => getIntegerArray(sizeOfArray)
     ALLOCATE(outArray(dim1, dim2, dim3, dim4, dim5, dim6))
 
@@ -308,9 +301,8 @@ FUNCTION getDouble1DArray(dim1) RESULT (outArray)
     REAL(ids_real),DIMENSION(:), POINTER :: flatArray
     INTEGER::I
 
-    !sizeOfArray = dim1
-    sizeOfArray = DIM_SIZE **1
-
+    sizeOfArray = dim1
+    
     flatArray => getDoubleArray(sizeOfArray)
 
     ALLOCATE(outArray(dim1))
@@ -329,9 +321,8 @@ FUNCTION getDouble2DArray(dim1, dim2) RESULT (outArray)
     REAL(ids_real),DIMENSION(:,:), POINTER :: outArray
     INTEGER::I
 
-    !sizeOfArray = dim1 * dim2
-    sizeOfArray = DIM_SIZE **2
-
+    sizeOfArray = dim1 * dim2
+    
     flatArray => getDoubleArray(sizeOfArray)
 
     ALLOCATE(outArray(dim1, dim2))
@@ -353,9 +344,8 @@ FUNCTION getDouble3DArray(dim1, dim2, dim3) RESULT (outArray)
 
 
 
-   !sizeOfArray = dim1 * dim2 * dim3
-    sizeOfArray = DIM_SIZE **3
-
+    sizeOfArray = dim1 * dim2 * dim3
+    
     flatArray => getDoubleArray(sizeOfArray)
     ALLOCATE(outArray(dim1, dim2, dim3))
 
@@ -373,9 +363,8 @@ FUNCTION getDouble4DArray(dim1, dim2, dim3, dim4) RESULT (outArray)
     REAL(ids_real),DIMENSION(:,:,:, :), POINTER :: outArray
     INTEGER::I
 
-    !sizeOfArray = dim1 * dim2 * dim3 * dim4
-    sizeOfArray = DIM_SIZE **4
-
+    sizeOfArray = dim1 * dim2 * dim3 * dim4
+    
     flatArray => getDoubleArray(sizeOfArray)
     ALLOCATE(outArray(dim1, dim2, dim3, dim4))
 
@@ -392,9 +381,8 @@ FUNCTION getDouble5DArray(dim1, dim2, dim3, dim4, dim5) RESULT (outArray)
     REAL(ids_real),DIMENSION(:,:,:,:,:), POINTER :: outArray
     INTEGER::I
 
-    !sizeOfArray = dim1 * dim2 * dim3 * dim4 * dim5
-    sizeOfArray = DIM_SIZE **5
-
+    sizeOfArray = dim1 * dim2 * dim3 * dim4 * dim5
+    
     flatArray => getDoubleArray(sizeOfArray)
     ALLOCATE(outArray(dim1, dim2, dim3, dim4, dim5))
 
@@ -413,9 +401,8 @@ FUNCTION getDouble6DArray(dim1, dim2, dim3, dim4, dim5, dim6) RESULT (outArray)
     REAL(ids_real),DIMENSION(:,:,:,:,:,:), POINTER :: outArray
     INTEGER::I
 
-    !sizeOfArray = dim1 * dim2 * dim3 * dim4 * dim5 * dim6
-    sizeOfArray = DIM_SIZE **6
-
+    sizeOfArray = dim1 * dim2 * dim3 * dim4 * dim5 * dim6
+    
     flatArray => getDoubleArray(sizeOfArray)
     ALLOCATE(outArray(dim1, dim2, dim3, dim4, dim5, dim6))
 
@@ -434,9 +421,8 @@ FUNCTION getComplex1DArray(dim1) RESULT (outArray)
     COMPLEX(ids_real),DIMENSION(:), POINTER :: flatArray
     INTEGER::I
 
-    !sizeOfArray = dim1
-    sizeOfArray = DIM_SIZE **1
-
+    sizeOfArray = dim1
+    
     flatArray => getComplexArray(sizeOfArray)
 
     ALLOCATE(outArray(dim1))
@@ -455,9 +441,8 @@ FUNCTION getComplex1DArray(dim1) RESULT (outArray)
     COMPLEX(ids_real),DIMENSION(:,:), POINTER :: outArray
     INTEGER::I
 
-    !sizeOfArray = dim1 * dim2
-    sizeOfArray = DIM_SIZE **2
-
+    sizeOfArray = dim1 * dim2
+    
     flatArray => getComplexArray(sizeOfArray)
 
     ALLOCATE(outArray(dim1, dim2))
@@ -477,11 +462,8 @@ FUNCTION getComplex3DArray(dim1, dim2, dim3) RESULT (outArray)
     COMPLEX(ids_real),DIMENSION(:,:,:), POINTER :: outArray
     INTEGER :: I
 
-
-
-   !sizeOfArray = dim1 * dim2 * dim3
-    sizeOfArray = DIM_SIZE **3
-
+    sizeOfArray = dim1 * dim2 * dim3
+    
     flatArray => getComplexArray(sizeOfArray)
     ALLOCATE(outArray(dim1, dim2, dim3))
 
