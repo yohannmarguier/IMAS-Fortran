@@ -1,21 +1,21 @@
 MODULE generator
 
 use ids_types, only: ids_real
+use test_defs, only: dim1, dim2, dim3, dim4, dim5, dim6, PRINTABLE
+
   implicit none
 
-INTEGER, PARAMETER :: DIM_SIZE = 2
 
 INTEGER, DIMENSION(:),allocatable :: SEED
-REAL(ids_real), DIMENSION(DIM_SIZE), TARGET :: timeVector
-
-
-CHARACTER (LEN=*), PARAMETER ::PRINTABLE = '0123456789abcdef'
-!CHARACTER(LEN=*), PARAMETER :: PRINTABLE = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!\\"#$%&amp;\'()*+,-./:;&lt;=&gt;?@[\\]^_`{|}~\t\n\r"
+REAL(ids_real), DIMENSION(:), ALLOCATABLE, TARGET :: timeVector
 
 CONTAINS
-  SUBROUTINE initTime
+  SUBROUTINE initTime(timeSize)
+    INTEGER, INTENT(in)::timeSize
     INTEGER :: I
-    do I = 1, DIM_SIZE
+
+    allocate(timeVector(timeSize))
+    do I = 1, timeSize
        timeVector(I) = I
     end do
   END SUBROUTINE initTime

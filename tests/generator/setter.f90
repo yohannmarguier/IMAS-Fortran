@@ -1,6 +1,7 @@
 MODULE setter
 
 use ids_types, only: ids_real
+use test_defs
 use generator
 
 implicit none
@@ -12,12 +13,6 @@ implicit none
 			initField_CPX, initField_CPX1DArray, initField_CPX2DArray, initField_CPX3DArray, initField_CPX4DArray, initField_CPX5DArray, initField_CPX6DArray,&
 			initField_STR
        END INTERFACE
-
-
-LOGICAL, PARAMETER :: debugMode = .FALSE.
-INTEGER, PARAMETER :: dim1 = DIM_SIZE, dim2 = DIM_SIZE, dim3 = DIM_SIZE, dim4 = DIM_SIZE, dim5 = DIM_SIZE, dim6 = DIM_SIZE
-
-
 
 contains
   
@@ -32,8 +27,8 @@ SUBROUTINE initTimeField(idsField, isSliceMode, idx)
             allocate(idsField(1))
             idsField = timeVector(idx:idx)
         ELSE
-            allocate(idsField(DIM_SIZE))
-            idsField = timeVector(:DIM_SIZE)
+            allocate(idsField(dim1))
+            idsField = timeVector(:dim1)
         END IF
         
 END SUBROUTINE initTimeField
@@ -83,7 +78,7 @@ SUBROUTINE initField_INT1DArray(idsField, isSliceMode)
     IF( isSliceMode ) then
         lastDim = 1
     ELSE
-        lastDim = DIM_SIZE
+        lastDim = dim1
     END IF
 
     IF(.NOT. associated(idsField)) then

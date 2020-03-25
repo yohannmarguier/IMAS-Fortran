@@ -102,7 +102,10 @@ gfortran_clean:
 	$(RM) -r $(GFORTRAN_BUILD_DIR)
 	$(RM) gfortran_initpulse
 	
-$(GFORTRAN_BUILD_DIR)/generator.o: $(GFORTRAN_BUILD_DIR)/%.o: %.f90 | $(GFORTRAN_BUILD_DIR)
+$(GFORTRAN_BUILD_DIR)/test_defs.o: $(GFORTRAN_BUILD_DIR)/%.o: %.f90 | $(GFORTRAN_BUILD_DIR)
+	$(FC_gfortran) $(COPTS_gfortran) -c $< -o $@
+
+$(GFORTRAN_BUILD_DIR)/generator.o: $(GFORTRAN_BUILD_DIR)/%.o: %.f90 $(GFORTRAN_BUILD_DIR)/test_defs.o
 	$(FC_gfortran) $(COPTS_gfortran) -c $< -o $@
 
 $(GFORTRAN_BUILD_DIR)/helper.o \
@@ -128,7 +131,7 @@ $(GFORTRAN_BUILD_DIR)/%_test_routines.o: $(TEST_SRC_DIR)/%_test_routines.f90  $(
 $(GFORTRAN_BUILD_DIR)/%_all_test.o: $(TEST_SRC_DIR)/%_all_test.f90 $(GFORTRAN_BUILD_DIR)/%_test_routines.o $(GFORTRAN_BUILD_DIR)/helper.o
 	$(FC_gfortran) $(COPTS_gfortran) -c $< -o $@
 	
-$(GFORTRAN_BIN_DIR)/%_all_test.exe: $(GFORTRAN_BUILD_DIR)/%_all_test.o  $(GFORTRAN_BUILD_DIR)/comparator.o  $(GFORTRAN_BUILD_DIR)/generator.o $(GFORTRAN_BUILD_DIR)/helper.o $(GFORTRAN_BUILD_DIR)/%_test_routines.o   $(GFORTRAN_BUILD_DIR)/%_init_static.o $(GFORTRAN_BUILD_DIR)/setter.o $(GFORTRAN_BUILD_DIR)/%_init_dynamic.o $(GFORTRAN_BUILD_DIR)/%_test_static.o $(GFORTRAN_BUILD_DIR)/%_test_dynamic.o | $(GFORTRAN_BIN_DIR)
+$(GFORTRAN_BIN_DIR)/%_all_test.exe: $(GFORTRAN_BUILD_DIR)/%_all_test.o  $(GFORTRAN_BUILD_DIR)/comparator.o  $(GFORTRAN_BUILD_DIR)/generator.o $(GFORTRAN_BUILD_DIR)/helper.o $(GFORTRAN_BUILD_DIR)/%_test_routines.o   $(GFORTRAN_BUILD_DIR)/%_init_static.o $(GFORTRAN_BUILD_DIR)/setter.o $(GFORTRAN_BUILD_DIR)/%_init_dynamic.o $(GFORTRAN_BUILD_DIR)/%_test_static.o $(GFORTRAN_BUILD_DIR)/%_test_dynamic.o $(GFORTRAN_BUILD_DIR)/test_defs.o| $(GFORTRAN_BIN_DIR)
 	$(FC_gfortran) $(COPTS_gfortran) -o $@   $^ $(LIBS_gfortran)
 	
 #-------------
@@ -147,21 +150,24 @@ ifort_clean:
 	$(RM) -r $(IFORT_BUILD_DIR)
 	$(RM) ifort_initpulse
 	
-$(IFORT_BUILD_DIR)/generator.o: $(IFORT_BUILD_DIR)/%.o: %.f90 | $(IFORT_BUILD_DIR)
+$(IFORT_BUILD_DIR)/test_defs.o: $(IFORT_BUILD_DIR)/%.o: %.f90 | $(IFORT_BUILD_DIR)
+	$(FC_ifort) $(COPTS_ifort) -c $< -o $@
+
+$(IFORT_BUILD_DIR)/generator.o: $(IFORT_BUILD_DIR)/%.o: %.f90  $(IFORT_BUILD_DIR)/test_defs.o 
 	$(FC_ifort) $(COPTS_ifort) -c $< -o $@
 
 $(IFORT_BUILD_DIR)/helper.o \
 $(IFORT_BUILD_DIR)/setter.o \
-$(IFORT_BUILD_DIR)/comparator.o: $(IFORT_BUILD_DIR)/%.o: %.f90 $(IFORT_BUILD_DIR)/generator.o
+$(IFORT_BUILD_DIR)/comparator.o: $(IFORT_BUILD_DIR)/%.o: %.f90 $(IFORT_BUILD_DIR)/generator.o $(IFORT_BUILD_DIR)/test_defs.o
 	$(FC_ifort) $(COPTS_ifort) -c $< -o $@
 	
-$(IFORT_BUILD_DIR)/%_init_static.o: $(TEST_SRC_DIR)/%_init_static.f90 $(IFORT_BUILD_DIR)/setter.o
+$(IFORT_BUILD_DIR)/%_init_static.o: $(TEST_SRC_DIR)/%_init_static.f90 $(IFORT_BUILD_DIR)/setter.o $(IFORT_BUILD_DIR)/test_defs.o
 	$(FC_ifort) $(COPTS_ifort) -c $< -o $@
 	
-$(IFORT_BUILD_DIR)/%_init_dynamic.o: $(TEST_SRC_DIR)/%_init_dynamic.f90 $(IFORT_BUILD_DIR)/setter.o
+$(IFORT_BUILD_DIR)/%_init_dynamic.o: $(TEST_SRC_DIR)/%_init_dynamic.f90 $(IFORT_BUILD_DIR)/setter.o $(IFORT_BUILD_DIR)/test_defs.o
 	$(FC_ifort) $(COPTS_ifort) -c $< -o $@
 	
-$(IFORT_BUILD_DIR)/%_test_static.o: $(TEST_SRC_DIR)/%_test_static.f90 $(IFORT_BUILD_DIR)/comparator.o
+$(IFORT_BUILD_DIR)/%_test_static.o: $(TEST_SRC_DIR)/%_test_static.f90 $(IFORT_BUILD_DIR)/comparator.o $(IFORT_BUILD_DIR)/test_defs.o
 	$(FC_ifort) $(COPTS_ifort) -c $< -o $@
 
 $(IFORT_BUILD_DIR)/%_test_dynamic.o: $(TEST_SRC_DIR)/%_test_dynamic.f90 $(IFORT_BUILD_DIR)/comparator.o  
@@ -173,8 +179,9 @@ $(IFORT_BUILD_DIR)/%_test_routines.o: $(TEST_SRC_DIR)/%_test_routines.f90 $(IFOR
 $(IFORT_BUILD_DIR)/%_all_test.o: $(TEST_SRC_DIR)/%_all_test.f90 $(IFORT_BUILD_DIR)/helper.o $(IFORT_BUILD_DIR)/%_test_routines.o
 	$(FC_ifort) $(COPTS_ifort) -c $< -o $@
 	
-$(IFORT_BIN_DIR)/%_all_test.exe:  $(IFORT_BUILD_DIR)/%_all_test.o $(IFORT_BUILD_DIR)/%_test_routines.o $(IFORT_BUILD_DIR)/%_init_static.o $(IFORT_BUILD_DIR)/%_init_dynamic.o $(IFORT_BUILD_DIR)/%_test_static.o $(IFORT_BUILD_DIR)/%_test_dynamic.o $(IFORT_BUILD_DIR)/comparator.o $(IFORT_BUILD_DIR)/setter.o $(IFORT_BUILD_DIR)/helper.o  $(IFORT_BUILD_DIR)/generator.o | $(IFORT_BIN_DIR)
-	$(FC_ifort) $(COPTS_ifort) -o $@ -Wl,--start-group $^ -Wl,--end-group $(LIBS_ifort) 
+#$(IFORT_BIN_DIR)/%_all_test.exe:  $(IFORT_BUILD_DIR)/%_all_test.o $(IFORT_BUILD_DIR)/%_test_routines.o $(IFORT_BUILD_DIR)/%_init_static.o $(IFORT_BUILD_DIR)/%_init_dynamic.o $(IFORT_BUILD_DIR)/%_test_static.o $(IFORT_BUILD_DIR)/%_test_dynamic.o $(IFORT_BUILD_DIR)/comparator.o $(IFORT_BUILD_DIR)/setter.o $(IFORT_BUILD_DIR)/helper.o  $(IFORT_BUILD_DIR)/generator.o $(GFORTRAN_BUILD_DIR)/test_defs.o | $(IFORT_BIN_DIR)
+$(IFORT_BIN_DIR)/%_all_test.exe: $(IFORT_BUILD_DIR)/%_all_test.o  $(IFORT_BUILD_DIR)/comparator.o  $(IFORT_BUILD_DIR)/generator.o $(IFORT_BUILD_DIR)/helper.o $(IFORT_BUILD_DIR)/%_test_routines.o   $(IFORT_BUILD_DIR)/%_init_static.o $(IFORT_BUILD_DIR)/setter.o $(IFORT_BUILD_DIR)/%_init_dynamic.o $(IFORT_BUILD_DIR)/%_test_static.o $(IFORT_BUILD_DIR)/%_test_dynamic.o $(IFORT_BUILD_DIR)/test_defs.o| $(IFORT_BIN_DIR)
+	$(FC_ifort) $(COPTS_ifort) -o $@  $^  $(LIBS_ifort)
 
 #-------------
 

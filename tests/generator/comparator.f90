@@ -1,6 +1,7 @@
 MODULE comparator
 
 use ids_types, only: ids_real
+use test_defs, only: dim1, debugMode
 use generator
 
 implicit none
@@ -14,8 +15,7 @@ implicit none
        END INTERFACE
 
 
-LOGICAL, PARAMETER :: debugMode = .FALSE.
-INTEGER, PARAMETER :: dim1 = DIM_SIZE, dim2 = DIM_SIZE, dim3 = DIM_SIZE, dim4 = DIM_SIZE, dim5 = DIM_SIZE, dim6 = DIM_SIZE
+
 contains
 !
 

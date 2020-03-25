@@ -1,38 +1,16 @@
 MODULE helper
+  use test_defs
   use generator
   use ids_routines
   use ual_low_level_wrap
   implicit none
 
 
-!INTEGER, PARAMETER :: DIM_SIZE = 1
-
-!INTEGER, PARAMETER :: noOfSlices = DIM_SIZE
-INTEGER, PARAMETER :: TEST_SHOT = 9998
-INTEGER, PARAMETER :: TEST_RUN = 9998
-
- ! All backends (/ASCII_BACKEND, MDSPLUS_BACKEND, HDF5_BACKEND,  MEMORY_BACKEND, UDA_BACKEND/)
-INTEGER, dimension(3), PARAMETER   :: ARRAY_ALL_BACKENDS = (/MDSPLUS_BACKEND,  MEMORY_BACKEND, ASCII_BACKEND/)
-INTEGER, dimension(3), PARAMETER   :: ARRAY_ALL_TIME_MODES = (/IDS_TIME_MODE_HOMOGENEOUS, IDS_TIME_MODE_HETEROGENEOUS, IDS_TIME_MODE_INDEPENDENT/)
-
-!INTEGER, DIMENSION(:),allocatable :: SEED
-!REAL(ids_real), DIMENSION(DIM_SIZE) :: timeVector
-
 CHARACTER(len=:), ALLOCATABLE :: dataVersion
 CHARACTER(len=:), ALLOCATABLE :: userName
 
 
-TYPE settings_type
-    INTEGER, dimension(3) :: backendIDArray = NO_BACKEND
-    INTEGER, dimension(3) :: idsTimeModeArray = IDS_TIME_MODE_UNKNOWN
-    LOGICAL :: useExistingPulseFile = .FALSE.
-END TYPE settings_type
-
-
 type (settings_type) :: config
-
-!CHARACTER (LEN=*), PARAMETER ::PRINTABLE = '0123456789abcdef'
-!CHARACTER(LEN=*), PARAMETER :: PRINTABLE = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!\\"#$%&amp;\'()*+,-./:;&lt;=&gt;?@[\\]^_`{|}~\t\n\r"
 
 CONTAINS
 
@@ -134,13 +112,6 @@ SUBROUTINE getDataVersion(dataVersion)
 END SUBROUTINE getDataVersion
 
 
-SUBROUTINE setAllTests()
-    
-    ! All backends (/ASCII_BACKEND, MDSPLUS_BACKEND, HDF5_BACKEND,  MEMORY_BACKEND, UDA_BACKEND/)
-    config%backendIDArray = ARRAY_ALL_BACKENDS
-    config%idsTimeModeArray = ARRAY_ALL_TIME_MODES
-
-END SUBROUTINE setAllTests
 
 SUBROUTINE setCmdlOptions()
 
@@ -235,6 +206,18 @@ SUBROUTINE setCmdlOptions()
             case ('-u', '--use-pulsefile')
                     config%useExistingPulseFile = .TRUE.
 
+            case ('-o', '--num-occurr')
+                i = i + 1
+                call get_command_argument(i, argValue)
+                read(argValue, *) config%occToTest
+
+            case ('-s', '--num-slices')
+                i = i + 1
+                call get_command_argument(i, argValue)
+                read(argValue, *) config%slicesToTest
+                config%dataSize = config%slicesToTest
+
+
             case ('-h', '--help')
                 call print_help()
                 call exit(1)
@@ -261,6 +244,8 @@ SUBROUTINE print_help()
         print '(a)',    '                       1 - MDSPlus'
         print '(a)',    '                       2 - Memory Backend'
         print '(a)',    '                       3 - ASCII Backend'
+        print '(a)',    '  -o, --num-occurr <value> - Set maximum number of occurrences to be tested'
+        print '(a)',    '  -s, --num-slices <value> - Set maximum number of slices to be tested'
 !        print '(a)',    '  -u, --use-pulsefile     - use existing pulse file'
         print '(a)',    '  -h, --help       print usage information and exit'
 ! stop at first error
@@ -273,15 +258,20 @@ SUBROUTINE initEnv()
     CALL getDataVersion(dataVersion) 
     CALL getUser(userName)
 
-    CALL initTime()
-    CALL setAllTests()
+
     argCount = command_argument_count()
     if (argCount > 0) then  
         CALL setCmdlOptions()
     end if
     
+    CALL initTime(config%dataSize)
 
-
+    dim1 = config%dataSize
+    dim2 = config%dataSize
+    dim3 = config%dataSize
+    dim4 = config%dataSize
+    dim5 = config%dataSize
+    dim6 = config%dataSize
 
 END SUBROUTINE initEnv
 
