@@ -205,7 +205,7 @@ define run-tests
 	@( \
 	echo 1..$(words $^) \# Tests: $(^F) ;\
 	N=1;for prog in $^ ;do \
-	 ( $(test_ENV) ./$$prog -m 1 -b 1 2>&1 | tee ./$$prog.log ) && \
+	 ( $(test_ENV) ./$$prog 2>&1 | tee ./$$prog.log ) && \
 	 test 0 -eq $$(grep -c -i error ./$$prog.log ) && \
 	 echo ok $$N - $$prog passed. || echo not ok $$N - $$prog failed. ;\
 	done \
