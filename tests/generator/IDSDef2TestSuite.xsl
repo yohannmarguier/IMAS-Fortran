@@ -350,6 +350,7 @@
 	<xsl:text>&#9;CHARACTER (LEN=2) :: occurence = "" &#10;</xsl:text>
 	<xsl:text>&#9;INTEGER :: i &#10;</xsl:text>
         <xsl:text>&#9;WRITE(*,*) "--- --- --- Testing put() on </xsl:text><xsl:value-of select="@name"/><xsl:text>"&#10;</xsl:text>
+    <xsl:text>&#9;WRITE(*,*) "--- --- --- WARNING: Only AoS of size ONE are tested by PUT/GET methods! Efficiency tests using put/get can be unreliable!"&#10;</xsl:text>
         <xsl:text>&#9;!CALL srand(seed)&#10;</xsl:text>
 	<xsl:text>&#9;CALL random_seed(PUT = seed)&#10;</xsl:text>
         <xsl:text>&#9;do i = 0, MIN(MAX_OCCURENCES, numOccurrences) - 1 &#10;</xsl:text>
@@ -459,6 +460,7 @@
 	<xsl:text>&#9;CHARACTER (LEN=2) :: occurence = "" &#10;</xsl:text>
 	<xsl:text>&#9;INTEGER :: i &#10;</xsl:text>
         <xsl:text>&#9;WRITE(*,*) "--- --- --- Testing get() on </xsl:text><xsl:value-of select="@name"/><xsl:text>"&#10;</xsl:text>
+    <xsl:text>&#9;WRITE(*,*) "--- --- --- WARNING: Only AoS of size ONE are tested by PUT/GET methods! Efficiency tests using put/get can be unreliable!"&#10;</xsl:text>
 	<xsl:text>&#9;CALL random_seed(PUT = seed)&#10;</xsl:text>
         <xsl:text>&#9;do i = 0, MIN(MAX_OCCURENCES, numOccurrences) - 1 &#10;</xsl:text>
  	<xsl:text>&#9;WRITE(*,*) "--- --- --- --- occurence: ", i&#10;</xsl:text>
