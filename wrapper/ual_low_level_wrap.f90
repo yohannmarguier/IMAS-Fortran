@@ -452,6 +452,9 @@ contains
     integer, optional, intent(out) :: retstatus
     integer :: status
     call ual_close_pulse(pulseCtx, CLOSE_PULSE, "", status)
+    if (status.eq.0) then
+       call ual_end_action(pulseCtx, status)
+    endif
     if (present(retstatus)) retstatus = status
   end subroutine imas_close
 
