@@ -2575,14 +2575,7 @@ end module
          else
 	    timepath=<xsl:if test="substring(@timebasepath,1,1)='\'">path//</xsl:if>"<xsl:value-of select="translate(@timebasepath,'\','')"/>"
          endif
-	 <xsl:choose>
-	   <xsl:when test="$slice='yes'">
-         lastdimsize = 1
-	   </xsl:when>
-	   <xsl:otherwise>
          lastdimsize = size(<xsl:value-of select="$fieldvar"/>,<xsl:value-of select="$rank"/>)
-	   </xsl:otherwise>
-	 </xsl:choose>
       endif
     </xsl:when>
     <xsl:otherwise>
