@@ -129,7 +129,7 @@ SUBROUTINE setCmdlOptions()
         
         select case (arg)
             !!! IDS Time Mode
-            case ('-m', '--time-mode')
+            case ('-t', '--time-mode')
                 i = i + 1
                 call get_command_argument(i, argValue)
                 select case (argValue)
@@ -202,6 +202,31 @@ SUBROUTINE setCmdlOptions()
                         call exit(1)
                 end select
             
+             !!! TEST MODE
+            case ('-m', '--test-mode')
+                i = i + 1
+                call get_command_argument(i, argValue)
+                select case (argValue)
+
+                   ! ALL (default)
+                    case ('a', 'all')
+                            config%testMode = TEST_MODE_ALL
+
+                    ! TEST_MODE_GLOBAL
+                    case ('g', 'global')
+                            config%testMode = TEST_MODE_GLOBAL
+
+                    ! TEST_MODE_SLICE
+                    case ('s', 'slice')
+                            config%testMode = TEST_MODE_SLICE
+
+                    case default
+                        print *, 'Error! Test Mode: Unrecognised value [ ', trim(argValue), ' ]'
+                       call print_help()
+                       call exit(1)
+                    
+            end select
+
            !!! Use existing pulse file
             case ('-u', '--use-pulsefile')
                     config%useExistingPulseFile = .TRUE.
@@ -232,7 +257,7 @@ END SUBROUTINE setCmdlOptions
 
 SUBROUTINE print_help()
         print '(a, /)', 'Options:'
-        print '(a)',    '  -m, --time-mode <value>  - Sets time mode'
+        print '(a)',    '  -t, --time-mode <value>  - Sets time mode'
         print '(a)',    '                Values:'
         print '(a)',    '                       0 - All modes (default)'
         print '(a)',    '                       1 - Homogeneous'
@@ -246,6 +271,11 @@ SUBROUTINE print_help()
         print '(a)',    '                       3 - ASCII Backend'
         print '(a)',    '  -o, --num-occurr <value> - Set maximum number of occurrences to be tested'
         print '(a)',    '  -s, --num-slices <value> - Set maximum number of slices to be tested'
+        print '(a)',    '  -m, --test-mode  <value> - Sets if slice and/or global operations should be tested:'
+        print '(a)',    '                Values:'
+        print '(a)',    '                       a, all    - All operations (default)'
+        print '(a)',    '                       g, global - Global operations (put/get)'
+        print '(a)',    '                       s, slice  - Slice operations (putSlice/getSlice)'
 !        print '(a)',    '  -u, --use-pulsefile     - use existing pulse file'
         print '(a)',    '  -h, --help       print usage information and exit'
 ! stop at first error
@@ -270,6 +300,7 @@ SUBROUTINE initEnv()
     dim2 = config%dataSize
     dim3 = config%dataSize
     dim4 = config%dataSize
+
     dim5 = config%dataSize
     dim6 = config%dataSize
 
