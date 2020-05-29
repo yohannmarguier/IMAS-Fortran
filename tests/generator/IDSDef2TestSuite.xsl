@@ -368,9 +368,10 @@
         <xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_routines&#10;</xsl:text>
         <xsl:text>&#9;implicit none&#10;   </xsl:text>
     <xsl:text>&#9;INTEGER :: i, sliceIdx&#10;</xsl:text>
-	<xsl:text>&#9;INTEGER :: idx,idxslice&#10;</xsl:text>
+	<xsl:text>&#9;INTEGER :: idx&#10;</xsl:text>
     <xsl:text>&#9;INTEGER :: backendID = NO_BACKEND&#10;</xsl:text>
     <xsl:text>&#9;INTEGER :: idsTimeMode = IDS_TIME_MODE_HOMOGENEOUS&#10;</xsl:text>
+    <xsl:text>&#9;INTEGER :: testMode = TEST_MODE_ALL&#10;</xsl:text>
     <xsl:text>&#9;LOGICAL :: useExistingPulseFile&#10;</xsl:text>
 
 	<xsl:text>&#9;INTEGER :: N_SEED&#10;</xsl:text>
@@ -380,13 +381,14 @@
     <xsl:text>&#10;</xsl:text>
     <xsl:text>&#9;CALL initEnv()&#10;</xsl:text>
     <xsl:text>&#10;</xsl:text>
+    <xsl:text>&#9;&#9;&#9;testMode = config%testMode&#10;</xsl:text>
+    <xsl:text>&#10;</xsl:text>
     <xsl:text>&#9;DO i = 1, SIZE(config%backendIDArray)&#10;</xsl:text>
     <xsl:text>&#9;&#9;backendID = config%backendIDArray(i)&#10;</xsl:text>
     <xsl:text>&#9;&#9;IF (backendID == NO_BACKEND) CYCLE&#10;</xsl:text>
     <xsl:text>&#9;&#9;WRITE(*,*) "=== BACKEND : ", backend2str(backendID), "=== === === === === === === ==="&#10;</xsl:text>
     <xsl:text>&#10;</xsl:text>
     <xsl:text>&#9;&#9;call create_db(backendID, TEST_SHOT, TEST_RUN, idx);&#10;</xsl:text>
-    <xsl:text>&#9;&#9;call create_db(backendID, TEST_SHOT + 1, TEST_RUN + 1, idxslice);&#10;</xsl:text>
 	<xsl:text>&#10;</xsl:text>
     <xsl:text>&#9;&#9;DO sliceIdx = 1, SIZE(config%idsTimeModeArray)&#10;</xsl:text>
     <xsl:text>&#9;&#9;&#9;idsTimeMode = config%idsTimeModeArray(sliceIdx)&#10;</xsl:text>
@@ -394,16 +396,18 @@
     <xsl:text>&#9;&#9;&#9;WRITE(*,*) "--- --- TIME MODE ", timeMode2str(idsTimeMode), "--- --- --- --- --- ---" &#10;</xsl:text>
     <xsl:text>&#10;</xsl:text>
 	<xsl:text>&#9;&#9;&#9;! --- IDS: </xsl:text><xsl:value-of select="@name"/><xsl:text> ---&#10;</xsl:text>
-	<xsl:text>&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_put(idx, idsTimeMode, config%occToTest)&#10;</xsl:text>
-	<xsl:text>&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_get(idx, idsTimeMode, config%occToTest)&#10;</xsl:text>
-    <xsl:text>&#9;&#9;&#9;IF (backendID /= ASCII_BACKEND .AND. idsTimeMode /= IDS_TIME_MODE_INDEPENDENT) THEN&#10;</xsl:text>
-    <xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_putSlice(idxslice, idsTimeMode, config%occToTest, config%slicesToTest)&#10;</xsl:text>
-	<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_getSlice(idxslice, idsTimeMode, config%occToTest, config%slicesToTest)&#10;</xsl:text>
+    <xsl:text>&#9;&#9;&#9;IF (testMode == TEST_MODE_ALL .OR. testMode == TEST_MODE_GLOBAL) THEN&#10;</xsl:text>
+	<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_put(idx, idsTimeMode, config%occToTest)&#10;</xsl:text>
+	<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_get(idx, idsTimeMode, config%occToTest)&#10;</xsl:text>
+    <xsl:text>&#9;&#9;&#9;END IF&#10;</xsl:text>
+    <xsl:text>&#10;</xsl:text>
+    <xsl:text>&#9;&#9;&#9;IF (backendID /= ASCII_BACKEND .AND. (testMode == TEST_MODE_ALL .OR. testMode == TEST_MODE_SLICE)) THEN&#10;</xsl:text>
+    <xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_putSlice(idx, idsTimeMode, config%occToTest, config%slicesToTest)&#10;</xsl:text>
+	<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_getSlice(idx, idsTimeMode, config%occToTest, config%slicesToTest)&#10;</xsl:text>
    <xsl:text>&#9;&#9;&#9;END IF&#10;</xsl:text>
     <xsl:text>&#9;&#9;END DO  ! time mode  &#10;</xsl:text>
     <xsl:text>&#10;</xsl:text>
     <xsl:text>&#9;&#9;call close_db(idx);&#10;</xsl:text>
-    <xsl:text>&#9;&#9;call close_db(idxslice);&#10;</xsl:text>
     <xsl:text>&#9;END DO  ! backend  &#10;</xsl:text>
     <xsl:text>&#10;</xsl:text>
         <xsl:text>END PROGRAM </xsl:text><xsl:value-of select="@name"/><xsl:text>_test&#10;</xsl:text>

@@ -12,7 +12,10 @@ MODULE test_defs
     INTEGER, dimension(3), PARAMETER   :: ARRAY_ALL_BACKENDS = (/MDSPLUS_BACKEND,  MEMORY_BACKEND, ASCII_BACKEND/)
     INTEGER, dimension(3), PARAMETER   :: ARRAY_ALL_TIME_MODES = (/IDS_TIME_MODE_HOMOGENEOUS, IDS_TIME_MODE_HETEROGENEOUS, IDS_TIME_MODE_INDEPENDENT/)
     
-    !INTEGER, DIMENSION(:),allocatable :: SEED
+    INTEGER, PARAMETER   :: TEST_MODE_ALL    = 1
+    INTEGER, PARAMETER   :: TEST_MODE_GLOBAL = 2
+    INTEGER, PARAMETER   :: TEST_MODE_SLICE  = 3
+
     
     CHARACTER (LEN=*), PARAMETER ::PRINTABLE = '0123456789abcdef'
     !CHARACTER(LEN=*), PARAMETER :: PRINTABLE = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!\\"#$%&amp;\'()*+,-./:;&lt;=&gt;?@[\\]^_`{|}~\t\n\r"
@@ -20,6 +23,7 @@ MODULE test_defs
     TYPE settings_type
         INTEGER, dimension(3) :: backendIDArray = ARRAY_ALL_BACKENDS
         INTEGER, dimension(3) :: idsTimeModeArray = ARRAY_ALL_TIME_MODES
+        INTEGER               :: testMode = TEST_MODE_ALL
         INTEGER               :: slicesToTest = 3
         INTEGER               :: dataSize = 3
         INTEGER               :: occToTest = 2
