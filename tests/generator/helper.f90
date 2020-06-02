@@ -295,7 +295,7 @@ SUBROUTINE initEnv()
         CALL setCmdlOptions()
     end if
     
-    CALL initTime(config%dataSize)
+    CALL initTime(config%timeSize)
 
     dim1 = config%dataSize
     dim2 = config%dataSize
