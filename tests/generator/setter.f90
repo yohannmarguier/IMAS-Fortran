@@ -27,8 +27,8 @@ SUBROUTINE initTimeField(idsField, isSliceMode, idx)
             allocate(idsField(1))
             idsField = timeVector(idx:idx)
         ELSE
-            allocate(idsField(dim1))
-            idsField = timeVector(:dim1)
+            allocate(idsField(config%timeSize))
+            idsField = timeVector(:config%timeSize)
         END IF
         
 END SUBROUTINE initTimeField
@@ -78,7 +78,7 @@ SUBROUTINE initField_INT1DArray(idsField, isSliceMode)
     IF( isSliceMode ) then
         lastDim = 1
     ELSE
-        lastDim = dim1
+        lastDim = config%timeSize
     END IF
 
     IF(.NOT. associated(idsField)) then
@@ -101,7 +101,7 @@ SUBROUTINE initField_INT2DArray(idsField, isSliceMode)
     IF( isSliceMode ) then
         lastDim = 1
     ELSE
-        lastDim = dim2
+        lastDim = config%timeSize
     END IF
         
         
@@ -124,7 +124,7 @@ SUBROUTINE initField_INT3DArray(idsField, isSliceMode)
     IF( isSliceMode ) then
         lastDim = 1
     ELSE
-        lastDim = dim3
+        lastDim = config%timeSize
     END IF
         
         
@@ -148,7 +148,7 @@ SUBROUTINE initField_INT4DArray(idsField, isSliceMode)
     IF( isSliceMode ) then
         lastDim = 1
     ELSE
-        lastDim = dim4
+        lastDim = config%timeSize
     END IF
         
         
@@ -173,7 +173,7 @@ SUBROUTINE initField_INT5DArray(idsField, isSliceMode)
     IF( isSliceMode ) then
         lastDim = 1
     ELSE
-        lastDim = dim5
+        lastDim = config%timeSize
     END IF
         
         
@@ -197,7 +197,7 @@ SUBROUTINE initField_INT6DArray(idsField, isSliceMode)
     IF( isSliceMode ) then
         lastDim = 1
     ELSE
-        lastDim = dim6
+        lastDim = config%timeSize
     END IF
         
         
@@ -238,7 +238,7 @@ SUBROUTINE initField_FLT1DArray(idsField, isSliceMode)
     IF( isSliceMode ) then
         lastDim = 1
     ELSE
-        lastDim = dim1
+        lastDim = config%timeSize
     END IF
         
     IF(.NOT. associated(idsField)) then
@@ -261,7 +261,7 @@ END SUBROUTINE initField_FLT1DArray
     IF( isSliceMode ) then
         lastDim = 1
     ELSE
-        lastDim = dim2
+        lastDim = config%timeSize
     END IF
             
     IF(.NOT. associated(idsField)) then
@@ -284,7 +284,7 @@ SUBROUTINE initField_FLT3DArray(idsField, isSliceMode)
     IF( isSliceMode ) then
         lastDim = 1
     ELSE
-        lastDim = dim3
+        lastDim = config%timeSize
     END IF
                 
     IF(.NOT. associated(idsField)) then
@@ -307,7 +307,7 @@ SUBROUTINE initField_FLT4DArray(idsField, isSliceMode)
     IF( isSliceMode ) then
         lastDim = 1
     ELSE
-        lastDim = dim4
+        lastDim = config%timeSize
     END IF
             
     IF(.NOT. associated(idsField)) then
@@ -330,7 +330,7 @@ SUBROUTINE initField_FLT5DArray(idsField, isSliceMode)
     IF( isSliceMode ) then
         lastDim = 1
     ELSE
-        lastDim = dim5
+        lastDim = config%timeSize
     END IF
                
     IF(.NOT. associated(idsField)) then
@@ -353,7 +353,7 @@ SUBROUTINE initField_FLT6DArray(idsField, isSliceMode)
     IF( isSliceMode ) then
         lastDim = 1
     ELSE
-        lastDim = dim6
+        lastDim = config%timeSize
     END IF       
         
     IF(.NOT. associated(idsField)) then
@@ -393,7 +393,7 @@ SUBROUTINE initField_CPX1DArray(idsField, isSliceMode)
     IF( isSliceMode ) then
         lastDim = 1
     ELSE
-        lastDim = dim1
+        lastDim = config%timeSize
     END IF
         
     IF(.NOT. associated(idsField)) then
@@ -416,7 +416,7 @@ SUBROUTINE initField_CPX2DArray(idsField, isSliceMode)
     IF( isSliceMode ) then
         lastDim = 1
     ELSE
-        lastDim = dim2
+        lastDim = config%timeSize
     END IF
             
     IF(.NOT. associated(idsField)) then
@@ -439,7 +439,7 @@ SUBROUTINE initField_CPX3DArray(idsField, isSliceMode)
     IF( isSliceMode ) then
         lastDim = 1
     ELSE
-        lastDim = dim3
+        lastDim = config%timeSize
     END IF
                 
     IF(.NOT. associated(idsField)) then

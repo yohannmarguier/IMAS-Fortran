@@ -1,7 +1,7 @@
 MODULE comparator
 
 use ids_types, only: ids_real
-use test_defs, only: dim1, debugMode
+use test_defs, only: config, debugMode
 use generator
 
 implicit none
@@ -66,7 +66,7 @@ FUNCTION assertHomogeneousTimeField(idsTimeMode, observed, isSliceMode, fieldNam
         IF( isSliceMode ) then
             expected => timeVector(idx:idx)
         ELSE
-            expected => timeVector(:DIM1)
+            expected => timeVector(:config%timeSize)
         END IF
         
 
@@ -173,7 +173,7 @@ FUNCTION assertField_INT1DArray(observed, isSliceMode, fieldName) RESULT (outVal
 	IF( isSliceMode ) then
             lastDim = 1
         ELSE
-            lastDim = DIM1
+            lastDim = config%timeSize
         END IF
         expected => getInteger1DArray(lastDim)
         
@@ -222,7 +222,7 @@ FUNCTION assertField_INT2DArray(observed, isSliceMode, fieldName) RESULT (outVal
 	IF( isSliceMode ) then
             lastDim = 1
         ELSE
-            lastDim = DIM2
+            lastDim = config%timeSize
         END IF
         expected => getInteger2DArray(DIM1, lastDim)
         
@@ -272,7 +272,7 @@ FUNCTION assertField_INT3DArray(observed, isSliceMode, fieldName) RESULT (outVal
 	IF( isSliceMode ) then
             lastDim = 1
         ELSE
-            lastDim = DIM3
+            lastDim = config%timeSize
         END IF
         expected => getInteger3DArray(DIM1, DIM2, lastDim)
         
@@ -321,7 +321,7 @@ FUNCTION assertField_INT4DArray(observed, isSliceMode, fieldName) RESULT (outVal
 	IF( isSliceMode ) then
             lastDim = 1
         ELSE
-            lastDim = DIM4
+            lastDim = config%timeSize
         END IF
         expected => getInteger4DArray(DIM1, DIM2, DIM3, lastDim)
         
@@ -371,7 +371,7 @@ END FUNCTION assertField_INT4DArray
 	IF( isSliceMode ) then
             lastDim = 1
         ELSE
-            lastDim = DIM5
+            lastDim = config%timeSize
         END IF
         expected => getInteger5DArray(DIM1, DIM2, DIM3, DIM4, lastDim)
         
@@ -420,7 +420,7 @@ FUNCTION assertField_INT6DArray(observed, isSliceMode, fieldName) RESULT (outVal
         IF( isSliceMode ) then
             lastDim = 1
         ELSE
-            lastDim = DIM6
+            lastDim = config%timeSize
         END IF
         expected => getInteger6DArray(DIM1, DIM2, DIM3, DIM4, DIM5, lastDim) 
         
@@ -500,7 +500,7 @@ FUNCTION assertField_FLT1DArray(observed, isSliceMode, fieldName) RESULT (outVal
 	IF( isSliceMode ) then
             lastDim = 1
         ELSE
-            lastDim = DIM1
+            lastDim = config%timeSize
         END IF
         expected => getDouble1DArray(lastDim)
         
@@ -551,7 +551,7 @@ END FUNCTION assertField_FLT1DArray
 	IF( isSliceMode ) then
             lastDim = 1
         ELSE
-            lastDim = DIM2
+            lastDim = config%timeSize
         END IF
         expected => getDouble2DArray(DIM1, lastDim)
         
@@ -602,7 +602,7 @@ END FUNCTION assertField_FLT2DArray
         IF( isSliceMode ) then
             lastDim = 1
         ELSE
-            lastDim = DIM3
+            lastDim = config%timeSize
         END IF
         expected => getDouble3DArray(DIM1, DIM2, lastDim)
         
@@ -653,7 +653,7 @@ END FUNCTION assertField_FLT3DArray
 	IF( isSliceMode ) then
             lastDim = 1
         ELSE
-            lastDim = DIM4
+            lastDim = config%timeSize
         END IF
         expected => getDouble4DArray(DIM1, DIM2, DIM3, lastDim)
         
@@ -701,7 +701,7 @@ FUNCTION assertField_FLT5DArray(observed, isSliceMode, fieldName) RESULT (outVal
 	IF( isSliceMode ) then
             lastDim = 1
         ELSE
-            lastDim = DIM5
+            lastDim = config%timeSize
         END IF
         expected => getDouble5DArray(DIM1, DIM2, DIM3, DIM4, lastDim) 
         
@@ -749,7 +749,7 @@ END FUNCTION assertField_FLT5DArray
 	IF( isSliceMode ) then
             lastDim = 1
         ELSE
-            lastDim = DIM6
+            lastDim = config%timeSize
         END IF
 	expected => getDouble6DArray(DIM1, DIM2, DIM3, DIM4, DIM5, lastDim) 
 
@@ -827,7 +827,7 @@ FUNCTION assertField_CPX1DArray(observed, isSliceMode, fieldName) RESULT (outVal
   IF( isSliceMode ) then
      lastDim = 1
   ELSE
-     lastDim = DIM1
+     lastDim = config%timeSize
   END IF
   expected => getComplex1DArray(lastDim)
         
@@ -873,7 +873,7 @@ FUNCTION assertField_CPX2DArray(observed, isSliceMode, fieldName) RESULT (outVal
   IF( isSliceMode ) then
      lastDim = 1
   ELSE
-     lastDim = DIM2
+     lastDim = config%timeSize
   END IF
   expected => getComplex2DArray(DIM1, lastDim)
   
@@ -920,7 +920,7 @@ FUNCTION assertField_CPX3DArray(observed, isSliceMode, fieldName) RESULT (outVal
   IF( isSliceMode ) then
      lastDim = 1
   ELSE
-     lastDim = DIM3
+     lastDim = config%timeSize
   END IF
   expected => getComplex3DArray(DIM1, DIM2, lastDim)
         

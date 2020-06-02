@@ -105,11 +105,8 @@
 
     <xsl:template match="field[@data_type='structure' or @data_type='struct_array']" mode="define_init_sbrt">
         <xsl:text>!===========================================================================================&#10;</xsl:text>
-        <xsl:text>!&#9;&#9; INIT : </xsl:text><xsl:value-of select="@name"/><xsl:text> &#10;</xsl:text>
-        <xsl:text>!&#9;&#9;&#9; </xsl:text><xsl:value-of select="@path"/> <xsl:text> &#10;</xsl:text>
+        <xsl:text>!&#9;&#9; INIT : </xsl:text><xsl:value-of select="@name"/>::<xsl:value-of select="@path"/>&#9;[<xsl:value-of select="@data_type"/>:<xsl:value-of select="@type"/>:<xsl:value-of select="@maxoccur"/><xsl:text>]&#xA;</xsl:text>
         <xsl:text>!===========================================================================================&#10;</xsl:text>
- 		 <xsl:text>!</xsl:text><xsl:value-of select="(substring(@path,16))"/> <xsl:text>&#10;</xsl:text>
-		<xsl:text>!</xsl:text><xsl:value-of select="string-to-codepoints(substring(@path,16))"/><xsl:text>&#10;</xsl:text>
         <xsl:text>SUBROUTINE init_</xsl:text><xsl:value-of select="local:unique_name(translate(@path, '/', '_'))" /><xsl:text>( idsNode, setStatic, setDynamic, idsTimeMode, isSliceMode, sliceIdx)&#10;</xsl:text>
         <xsl:text>&#9;TYPE (ids_</xsl:text><xsl:value-of select="@structure_reference"/><xsl:text>), INTENT(INOUT) :: idsNode &#10;</xsl:text>
         <xsl:text>&#9;LOGICAL, INTENT(IN) :: setStatic &#10;</xsl:text>
@@ -117,7 +114,7 @@
         <xsl:text>&#9;INTEGER, INTENT(IN) :: idsTimeMode &#10;</xsl:text>
         <xsl:text>&#9;LOGICAL, INTENT(IN) :: isSliceMode &#10;</xsl:text>
         <xsl:text>&#9;INTEGER, INTENT(IN) :: sliceIdx &#10;</xsl:text>
-    	<xsl:text>&#9;INTEGER  :: dataSize &#10;</xsl:text>
+    	<xsl:text>&#9;INTEGER  :: aosSize &#10;</xsl:text>
 		<xsl:text>&#9;INTEGER  :: i &#10;</xsl:text>
 
 
@@ -175,7 +172,7 @@
         <xsl:text>&#9;INTEGER, INTENT(IN) :: idsTimeMode &#10;</xsl:text>
         <xsl:text>&#9;LOGICAL, INTENT(IN) :: isSliceMode &#10;</xsl:text>
         <xsl:text>&#9;INTEGER, INTENT(IN) :: sliceIdx &#10;</xsl:text>
-    	<xsl:text>&#9;INTEGER  :: dataSize &#10;</xsl:text>
+    	<xsl:text>&#9;INTEGER  :: aosSize &#10;</xsl:text>
 		<xsl:text>&#9;INTEGER  :: i &#10;</xsl:text>
 
         <xsl:text>&#10;</xsl:text>
@@ -201,8 +198,7 @@
 
     <xsl:template match="field[@data_type='structure' or @data_type='struct_array']" mode="define_test_sbrt">
         <xsl:text>!===========================================================================================&#10;</xsl:text>
-        <xsl:text>!&#9;&#9; TEST : </xsl:text><xsl:value-of select="@name"/><xsl:text> &#10;</xsl:text>
-        <xsl:text>!&#9;&#9;&#9; </xsl:text><xsl:value-of select="@path"/> <xsl:text> &#10;</xsl:text>
+        <xsl:text>!&#9;&#9; TEST : </xsl:text><xsl:value-of select="@name"/>::<xsl:value-of select="@path"/>&#9;[<xsl:value-of select="@data_type"/>:<xsl:value-of select="@type"/>:<xsl:value-of select="@maxoccur"/><xsl:text>]&#xA;</xsl:text>
         <xsl:text>!===========================================================================================&#10;</xsl:text>
         <xsl:text>SUBROUTINE test_</xsl:text><xsl:value-of select="local:unique_name(translate(@path, '/', '_'))" /><xsl:text>(  idsNode, setStatic, setDynamic, idsTimeMode, isSliceMode, sliceIdx)&#10;</xsl:text>
         <xsl:text>&#9;TYPE (ids_</xsl:text><xsl:value-of select="@structure_reference"/><xsl:text>), INTENT(INOUT) :: idsNode &#10;</xsl:text>
@@ -211,7 +207,7 @@
         <xsl:text>&#9;INTEGER, INTENT(IN) :: idsTimeMode &#10;</xsl:text>
         <xsl:text>&#9;LOGICAL, INTENT(IN) :: isSliceMode &#10;</xsl:text>
         <xsl:text>&#9;INTEGER, INTENT(IN) :: sliceIdx &#10;</xsl:text>
-    	<xsl:text>&#9;INTEGER  :: dataSize &#10;</xsl:text>
+    	<xsl:text>&#9;INTEGER  :: aosSize &#10;</xsl:text>
 		<xsl:text>&#9;INTEGER  :: i &#10;</xsl:text>
         <xsl:text>&#9;LOGICAL :: isEqual &#10;</xsl:text>
 
@@ -253,7 +249,7 @@
         <xsl:text>&#9;INTEGER, INTENT(IN) :: idsTimeMode &#10;</xsl:text>
         <xsl:text>&#9;LOGICAL, INTENT(IN) :: isSliceMode &#10;</xsl:text>
         <xsl:text>&#9;INTEGER, INTENT(IN) :: sliceIdx &#10;</xsl:text>
-    	<xsl:text>&#9;INTEGER  :: dataSize &#10;</xsl:text>
+    	<xsl:text>&#9;INTEGER  :: aosSize &#10;</xsl:text>
 		<xsl:text>&#9;INTEGER  :: i &#10;</xsl:text>
         <xsl:text>&#9;LOGICAL :: isEqual &#10;</xsl:text>
         <xsl:text>&#10;</xsl:text>
@@ -295,42 +291,6 @@
 		<xsl:text>&#9;&#9;!-----------------------------------------------------------------------------------------!&#xA;</xsl:text>
 
 	  </xsl:if>
-    </xsl:template>
-
-
-    <!-- IDS perform the tests -->
-    <xsl:template match="IDS" mode="testCalls">
-      <xsl:text>&#10;</xsl:text>
-      <xsl:text>&#9;! --- IDS: </xsl:text><xsl:value-of select="@name"/><xsl:text> ---&#10;</xsl:text>
-
-      <xsl:text>&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_put()&#10;</xsl:text>
-      <xsl:text>&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_get()&#10;</xsl:text>
-      
-      <!-- Procedure put_slice should exist only for time-dependent IDSs -->
-
-      <xsl:text>&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_putSlice()&#10;</xsl:text>
-      <xsl:text>&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_getSlice()&#10;</xsl:text>
-    </xsl:template>
-
-    <!-- IDS perform the put tests -->
-    <xsl:template match="IDS" mode="testPutCalls">
-      <xsl:text>&#10;</xsl:text>
-      <xsl:text>&#9;! --- IDS: </xsl:text><xsl:value-of select="@name"/><xsl:text> ---&#10;</xsl:text>
-
-      <xsl:text>&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_put()&#10;</xsl:text>
-      <xsl:if test=".//field[@type='dynamic']">
-       	<xsl:text>&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_putSlice()&#10;</xsl:text>
-      </xsl:if>
-      
-    </xsl:template>
-
-    <!-- IDS perform the get tests -->
-    <xsl:template match="IDS" mode="testGetCalls">
-      <xsl:text>&#10;</xsl:text>
-      <xsl:text>&#9;! --- IDS: </xsl:text><xsl:value-of select="@name"/><xsl:text> ---&#10;</xsl:text>
-
-      <xsl:text>&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_get()&#10;</xsl:text>
-      <xsl:text>&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_getSlice()&#10;</xsl:text>
     </xsl:template>
 
 
@@ -401,9 +361,9 @@
 	<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_get(idx, idsTimeMode, config%occToTest)&#10;</xsl:text>
     <xsl:text>&#9;&#9;&#9;END IF&#10;</xsl:text>
     <xsl:text>&#10;</xsl:text>
-    <xsl:text>&#9;&#9;&#9;IF (backendID /= ASCII_BACKEND .AND. (testMode == TEST_MODE_ALL .OR. testMode == TEST_MODE_SLICE)) THEN&#10;</xsl:text>
-    <xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_putSlice(idx, idsTimeMode, config%occToTest, config%slicesToTest)&#10;</xsl:text>
-	<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_getSlice(idx, idsTimeMode, config%occToTest, config%slicesToTest)&#10;</xsl:text>
+    <xsl:text>&#9;&#9;&#9;IF (backendID /= ASCII_BACKEND .AND. idsTimeMode /= IDS_TIME_MODE_INDEPENDENT .AND. (testMode == TEST_MODE_ALL .OR. testMode == TEST_MODE_SLICE)) THEN&#10;</xsl:text>
+    <xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_putSlice(idx, idsTimeMode, config%occToTest, config%timeSize)&#10;</xsl:text>
+	<xsl:text>&#9;&#9;&#9;&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_getSlice(idx, idsTimeMode, config%occToTest, config%timeSize)&#10;</xsl:text>
    <xsl:text>&#9;&#9;&#9;END IF&#10;</xsl:text>
     <xsl:text>&#9;&#9;END DO  ! time mode  &#10;</xsl:text>
     <xsl:text>&#10;</xsl:text>
@@ -623,59 +583,21 @@
     <!-- ======================================================= TEMPLATES ======================================================= -->
     <!-- ========================================================================================================================= -->
     <!-- ========================================================================================================================= -->
-    
-    
-    <xsl:template match="field" mode="putDynamic">
-		<xsl:apply-templates select="." mode="put">
-            <xsl:with-param name="dynamicOnly" select="true()"/>
-			<xsl:with-param name="staticOnly" select="false()"/>
-        </xsl:apply-templates>
-    </xsl:template>
-
-
-    <xsl:template match="field" mode="putStatic">
-		<xsl:apply-templates select="." mode="put">
-            <xsl:with-param name="dynamicOnly" select="false()"/>
-			<xsl:with-param name="staticOnly" select="true()"/>
-        </xsl:apply-templates>
-    </xsl:template>
-    
-    
-    <xsl:template match="field" mode="getDynamic">
-        <xsl:apply-templates select="." mode="get">
-            <xsl:with-param name="dynamicOnly" select="true()"/>
-			<xsl:with-param name="staticOnly" select="false()"/>
-        </xsl:apply-templates>
-    </xsl:template>
-
-
-    <xsl:template match="field" mode="getStatic">
-    	<xsl:apply-templates select="." mode="get">
-            <xsl:with-param name="dynamicOnly" select="false()"/>
-			<xsl:with-param name="staticOnly" select="true()"/>
-        </xsl:apply-templates>
-    </xsl:template>
-    
 
 
     <!-- ========================================================================================================================= -->
     <!-- field put() -->
     <xsl:template match="field[not(@data_type='structure' or @data_type='struct_array')]" mode="put">
-        <xsl:param name="dynamicOnly"/>
-	    <xsl:param name="staticOnly"/>
-        
+       
         <xsl:call-template name="COMMENT_FIELD"/>
-            <xsl:if test="(@type !='dynamic' or not(@type)) and not(ancestor::field[@type='dynamic'] or descendant::field[@type='dynamic'])">
+            <xsl:if test="(@type !='dynamic' or not(@type)) and not(ancestor::field[@type='dynamic'])">
              <xsl:text>&#9;&#9;if ( setStatic ) then&#10;</xsl:text>
         </xsl:if>        
-        <xsl:if test="@type='dynamic' or ancestor::field[@type='dynamic'] or descendant::field[@type='dynamic']"> 
+        <xsl:if test="@type='dynamic' or ancestor::field[@type='dynamic']"> 
             <xsl:text>&#9;&#9;if ( setDynamic ) then&#10;</xsl:text>
         </xsl:if>
  
-        <xsl:call-template name="setValue">
-                <xsl:with-param name="fieldPath" select="concat('idsNode%',translate(@path, '/', '%'))"/>
-		        <xsl:with-param name="slice" select="$dynamicOnly or $staticOnly"/>
-        </xsl:call-template>
+        <xsl:call-template name="setValue"/>
         <xsl:text>&#9;&#9;endif&#10;</xsl:text>
     </xsl:template>
 
@@ -684,36 +606,49 @@
 	    <xsl:param name="dynamicOnly"/>
 	    <xsl:param name="staticOnly"/>
 	      <xsl:call-template name="COMMENT_FIELD"/>
-    <xsl:text>&#9;&#9;&#9;CALL init_</xsl:text><xsl:value-of select="local:unique_name(translate(@path, '/', '_'))" /><xsl:text>(idsNode%</xsl:text><xsl:value-of select="@name"/><xsl:text>, setStatic, setDynamic, idsTimeMode, isSliceMode, sliceIdx)!! INIT STRU&#10;</xsl:text>
+		<xsl:if test="not(descendant::field[@type='dynamic'])">
+			<xsl:text>&#9;&#9;if ( setStatic ) then&#10;</xsl:text>
+			<xsl:text>&#9;&#9;&#9;! Static fields only. No dynamic descendants. &#10;</xsl:text>
+		</xsl:if>        
+		<xsl:if test="not(descendant::field[@type!='dynamic'])"> 
+			<xsl:text>&#9;&#9;if ( setDynamic ) then&#10;</xsl:text>
+			<xsl:text>&#9;&#9;&#9;! Dynamic fields only. No static descendants. &#10;</xsl:text>
+		</xsl:if>
+		<xsl:text>&#9;&#9;&#9;CALL init_</xsl:text><xsl:value-of select="local:unique_name(translate(@path, '/', '_'))" /><xsl:text>(idsNode%</xsl:text><xsl:value-of select="@name"/><xsl:text>, setStatic, setDynamic, idsTimeMode, isSliceMode, sliceIdx)&#10;</xsl:text>
+		<xsl:if test="not(descendant::field[@type='dynamic']) or not(descendant::field[@type!='dynamic'])"> 
+			<xsl:text>&#9;&#9;endif&#10;</xsl:text>
+		</xsl:if>
     </xsl:template>
 
     <xsl:template match="field[ @data_type='struct_array']" mode="put">
-    <xsl:param name="dynamicOnly"/>
-    <xsl:param name="staticOnly"/>
-          <xsl:call-template name="COMMENT_FIELD"/>
+        <xsl:call-template name="COMMENT_FIELD"/>
+
+		<xsl:text>&#9;&#9;&#9;aosSize = config%timeSize&#10;</xsl:text>
         <xsl:if test="(@type !='dynamic' or not(@type)) and not(ancestor::field[@type='dynamic'] or descendant::field[@type='dynamic'])">
              <xsl:text>&#9;&#9;if ( setStatic ) then&#10;</xsl:text>
-			 <xsl:text>&#9;&#9;&#9;dataSize = config%dataSize&#10;</xsl:text>
-        </xsl:if>
-        <xsl:if test="@type='dynamic' or ancestor::field[@type='dynamic'] or descendant::field[@type='dynamic']"> 
-            <xsl:text>&#9;&#9;if ( setDynamic ) then&#10;</xsl:text>
+			 
+       </xsl:if>
+       <xsl:if test="@type='dynamic' and not(descendant::field[@type!='dynamic'])"> 
+			<xsl:text>&#9;&#9;if ( setDynamic ) then&#10;</xsl:text>
+       
+       </xsl:if>
+		<xsl:if test="@type='dynamic'">    
 			<xsl:text>&#9;&#9;&#9;if ( isSliceMode ) then&#10;</xsl:text>
-			<xsl:text>&#9;&#9;&#9;&#9;dataSize = 1&#10;</xsl:text>
+			<xsl:text>&#9;&#9;&#9;&#9;aosSize = 1&#10;</xsl:text>
 			<xsl:text>&#9;&#9;&#9;else&#10;</xsl:text>
-			<xsl:text>&#9;&#9;&#9;&#9;dataSize = config%dataSize&#10;</xsl:text>
+			<xsl:text>&#9;&#9;&#9;&#9;aosSize = config%timeSize&#10;</xsl:text>
 			<xsl:text>&#9;&#9;&#9;end if&#10;</xsl:text>
         </xsl:if>
 
-     
         <xsl:text>&#9;&#9;&#9;if ( .NOT. associated(idsNode%</xsl:text><xsl:value-of select="@name"/><xsl:text>)) then&#10; </xsl:text>
-        <xsl:text>&#9;&#9;&#9;&#9;allocate(idsNode%</xsl:text><xsl:value-of select="@name"/><xsl:text> (dataSize))&#10; </xsl:text>
+        <xsl:text>&#9;&#9;&#9;&#9;allocate(idsNode%</xsl:text><xsl:value-of select="@name"/><xsl:text> (aosSize))&#10; </xsl:text>
         <xsl:text>&#9;&#9;&#9;endif&#10; </xsl:text>
-    	<xsl:text>&#9;&#9;&#9;DO i = 1, dataSize&#10;</xsl:text>
-        <xsl:text>&#9;&#9;&#9;&#9;CALL init_</xsl:text><xsl:value-of select="local:unique_name(translate(@path, '/', '_'))" /><xsl:text>(idsNode%</xsl:text><xsl:value-of select="@name"/><xsl:text>(i), setStatic, setDynamic, idsTimeMode, isSliceMode, sliceIdx)!! INIT AOS&#10;</xsl:text>
+    	<xsl:text>&#9;&#9;&#9;DO i = 1, aosSize&#10;</xsl:text>
+        <xsl:text>&#9;&#9;&#9;&#9;CALL init_</xsl:text><xsl:value-of select="local:unique_name(translate(@path, '/', '_'))" /><xsl:text>(idsNode%</xsl:text><xsl:value-of select="@name"/><xsl:text>(i), setStatic, setDynamic, idsTimeMode, isSliceMode, sliceIdx)&#10;</xsl:text>
     	<xsl:text>&#9;&#9;&#9;END DO&#10;</xsl:text>
-
-        <xsl:text>&#9;&#9;endif&#10;</xsl:text>
-
+		  <xsl:if test="((@type !='dynamic' or not(@type)) and not(ancestor::field[@type='dynamic'] or descendant::field[@type='dynamic'])) or (@type='dynamic' and not(descendant::field[@type!='dynamic']))">
+			<xsl:text>&#9;&#9;endif&#10;</xsl:text>
+		</xsl:if>
     </xsl:template>
 
 
@@ -722,70 +657,67 @@
 
     <!-- ========================================================================================================================= -->
     <xsl:template match="field[not(@data_type='structure' or @data_type='struct_array') ]" mode="get">
-    <xsl:param name="dynamicOnly"/>
-    <xsl:param name="staticOnly"/>
-
-                 <xsl:call-template name="COMMENT_FIELD"/>
-            <xsl:if test="(@type !='dynamic' or not(@type)) and not(ancestor::field[@type='dynamic'] or descendant::field[@type='dynamic'])">
-             <xsl:text>&#9;&#9;if ( setStatic ) then&#10;</xsl:text>
-        </xsl:if>        
-        <xsl:if test="@type='dynamic' or ancestor::field[@type='dynamic'] or descendant::field[@type='dynamic']"> 
-            <xsl:text>&#9;&#9;if ( setDynamic ) then&#10;</xsl:text>
-        </xsl:if>
-
-            <xsl:call-template name="getValue">
-              
-            </xsl:call-template>
-
-
-        <xsl:text>&#9;&#9;endif&#10;</xsl:text>
-    </xsl:template>
+		<xsl:call-template name="COMMENT_FIELD"/>
+		<xsl:if test="(@type !='dynamic' or not(@type)) and not(ancestor::field[@type='dynamic'])">
+			<xsl:text>&#9;&#9;if ( setStatic ) then&#10;</xsl:text>
+		</xsl:if>        
+		<xsl:if test="@type='dynamic' or ancestor::field[@type='dynamic']"> 
+			<xsl:text>&#9;&#9;if ( setDynamic ) then&#10;</xsl:text>
+		</xsl:if>
+		<xsl:call-template name="getValue"/>
+		<xsl:text>&#9;&#9;endif&#10;</xsl:text>
+	</xsl:template>
 
 
     <!-- field get() for array of structures -->
 
     <xsl:template match="field[@data_type='structure']" mode="get">
-      <xsl:param name="dynamicOnly"/>
-      <xsl:param name="staticOnly"/>
-      
-    <xsl:call-template name="COMMENT_FIELD"/>
-    <xsl:text>&#9;&#9;&#9;CALL test_</xsl:text><xsl:value-of select="local:unique_name(translate(@path, '/', '_'))" /><xsl:text>(idsNode%</xsl:text><xsl:value-of select="@name"/><xsl:text>, setStatic, setDynamic, idsTimeMode, isSliceMode, sliceIdx)!! INIT STRU&#10;</xsl:text>
-
-    </xsl:template>
-
-    <!-- field get() for array of structures -->
+		<xsl:call-template name="COMMENT_FIELD"/>
+		<xsl:if test="not(descendant::field[@type='dynamic'])">
+			<xsl:text>&#9;&#9;if ( setStatic ) then&#10;</xsl:text>
+			<xsl:text>&#9;&#9;&#9;! Static fields only. No dynamic descendants. &#10;</xsl:text>
+		</xsl:if>        
+		<xsl:if test="not(descendant::field[@type!='dynamic'])"> 
+			<xsl:text>&#9;&#9;if ( setDynamic ) then&#10;</xsl:text>
+			<xsl:text>&#9;&#9;&#9;! Dynamic fields only. No static descendants. &#10;</xsl:text>
+		</xsl:if>
+		<xsl:text>&#9;&#9;&#9;CALL test_</xsl:text><xsl:value-of select="local:unique_name(translate(@path, '/', '_'))" /><xsl:text>(idsNode%</xsl:text><xsl:value-of select="@name"/><xsl:text>, setStatic, setDynamic, idsTimeMode, isSliceMode, sliceIdx)&#10;</xsl:text>
+		<xsl:if test="not(descendant::field[@type='dynamic']) or not(descendant::field[@type!='dynamic'])"> 
+			<xsl:text>&#9;&#9;endif&#10;</xsl:text>
+		</xsl:if>
+	</xsl:template>
+	
+		<!-- field get() for array of structures -->
 
     <xsl:template match="field[@data_type='struct_array']" mode="get">
-      <xsl:param name="dynamicOnly"/>
-      <xsl:param name="staticOnly"/>
       
             <xsl:call-template name="COMMENT_FIELD"/>
-    	    
-		    
-              <xsl:if test="(@type !='dynamic' or not(@type)) and not(ancestor::field[@type='dynamic'] or descendant::field[@type='dynamic'])">
+	<xsl:text>&#9;&#9;&#9;aosSize = config%timeSize&#10;</xsl:text>
+        <xsl:if test="(@type !='dynamic' or not(@type)) and not(ancestor::field[@type='dynamic'] or descendant::field[@type='dynamic'])">
              <xsl:text>&#9;&#9;if ( setStatic ) then&#10;</xsl:text>
-			 <xsl:text>&#9;&#9;&#9;dataSize = config%dataSize&#10;</xsl:text>
-        </xsl:if>
-        <xsl:if test="@type='dynamic' or ancestor::field[@type='dynamic'] or descendant::field[@type='dynamic']"> 
-            <xsl:text>&#9;&#9;if ( setDynamic ) then&#10;</xsl:text>
+			 
+       </xsl:if>
+       <xsl:if test="@type='dynamic' and not(descendant::field[@type!='dynamic'])"> 
+			<xsl:text>&#9;&#9;if ( setDynamic ) then&#10;</xsl:text>
+       
+       </xsl:if>
+		<xsl:if test="@type='dynamic'">    
 			<xsl:text>&#9;&#9;&#9;if ( isSliceMode ) then&#10;</xsl:text>
-			<xsl:text>&#9;&#9;&#9;&#9;dataSize = 1&#10;</xsl:text>
+			<xsl:text>&#9;&#9;&#9;&#9;aosSize = 1&#10;</xsl:text>
 			<xsl:text>&#9;&#9;&#9;else&#10;</xsl:text>
-			<xsl:text>&#9;&#9;&#9;&#9;dataSize = config%dataSize&#10;</xsl:text>
+			<xsl:text>&#9;&#9;&#9;&#9;aosSize = config%timeSize&#10;</xsl:text>
 			<xsl:text>&#9;&#9;&#9;end if&#10;</xsl:text>
         </xsl:if>
-      
-      <xsl:text>&#9;&#9;&#9;if(.not. associated(idsNode%</xsl:text>  <xsl:value-of select="@name" /> <xsl:text>)) then &#10;</xsl:text>
-      <xsl:text>&#9;&#9;&#9;&#9;write(*,*) "ERROR! IDS: </xsl:text> <xsl:value-of select="ancestor::IDS/@name"/> <xsl:text> Field: </xsl:text> <xsl:value-of select="@path" /> <xsl:text> is not associated!"&#10; </xsl:text>
-      <!-- <xsl:text>&#9;&#9;&#9;return &#10;</xsl:text> -->
-      <xsl:text>&#9;&#9;&#9;&#9;STOP &#10;</xsl:text>
-      <xsl:text>&#9;&#9;&#9;end if &#10;</xsl:text>
 
-    	<xsl:text>&#9;&#9;&#9;DO i = 1, dataSize&#10;</xsl:text>
-        <xsl:text>&#9;&#9;&#9;&#9;CALL test_</xsl:text><xsl:value-of select="local:unique_name(translate(@path, '/', '_'))" /><xsl:text>(idsNode%</xsl:text><xsl:value-of select="@name"/><xsl:text>(i), setStatic, setDynamic, idsTimeMode, isSliceMode, sliceIdx)!! INIT AOS&#10;</xsl:text>
+        <xsl:text>&#9;&#9;&#9;if ( .NOT. associated(idsNode%</xsl:text><xsl:value-of select="@name"/><xsl:text>)) then&#10; </xsl:text>
+        <xsl:text>&#9;&#9;&#9;&#9;allocate(idsNode%</xsl:text><xsl:value-of select="@name"/><xsl:text> (aosSize))&#10; </xsl:text>
+        <xsl:text>&#9;&#9;&#9;endif&#10; </xsl:text>
+    	<xsl:text>&#9;&#9;&#9;DO i = 1, aosSize&#10;</xsl:text>
+        <xsl:text>&#9;&#9;&#9;&#9;CALL test_</xsl:text><xsl:value-of select="local:unique_name(translate(@path, '/', '_'))" /><xsl:text>(idsNode%</xsl:text><xsl:value-of select="@name"/><xsl:text>(i), setStatic, setDynamic, idsTimeMode, isSliceMode, sliceIdx)&#10;</xsl:text>
     	<xsl:text>&#9;&#9;&#9;END DO&#10;</xsl:text>
-        <xsl:text>&#9;&#9;endif&#10;</xsl:text>
-
+		  <xsl:if test="((@type !='dynamic' or not(@type)) and not(ancestor::field[@type='dynamic'] or descendant::field[@type='dynamic'])) or (@type='dynamic' and not(descendant::field[@type!='dynamic']))">
+			<xsl:text>&#9;&#9;endif&#10;</xsl:text>
+		</xsl:if>
 
     </xsl:template>
     
@@ -841,7 +773,6 @@
     
     
           <xsl:template name="getValue">
-        <xsl:param name="fieldPath"/>
         <xsl:variable name="sliceMode">
                 <xsl:choose>
                         <xsl:when test="@type ='dynamic' and not(ancestor::field[@data_type='struct_array' and @maxoccur='unbounded'])" >

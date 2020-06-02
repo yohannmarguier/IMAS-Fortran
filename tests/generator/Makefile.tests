@@ -204,14 +204,14 @@ gfortran_initpulse_test: gfortran_initpulse | $(TMP_DIR)
 	$(run-tests)
 # Run all tests grouped by IDS:
 gfortran_test: $(IDSNAMES:%=gfortran_test_%) | gfortran_initpulse_test
-gfortran_test_%: $(GFORTRAN_BIN_DIR)/%_all_test.exe | gfortran_initpulse_test
+gfortran_test_%: $(GFORTRAN_BIN_DIR)/%_all_tests.exe | gfortran_initpulse_test
 	$(run-tests)
 
 ifort_initpulse_test: ifort_initpulse | $(TMP_DIR)
 	$(run-tests)
 # Run all tests by IDS:
 ifort_test: $(IDSNAMES:%=ifort_test_%) | ifort_initpulse_test
-ifort_test_%: $(IFORT_BIN_DIR)/%_all_test.exe | ifort_initpulse_test
+ifort_test_%: $(IFORT_BIN_DIR)/%_all_tests.exe | ifort_initpulse_test
 	$(run-tests)
 
 #----------------------- classpath deps ---------------------

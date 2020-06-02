@@ -24,11 +24,12 @@ MODULE test_defs
         INTEGER, dimension(3) :: backendIDArray = ARRAY_ALL_BACKENDS
         INTEGER, dimension(3) :: idsTimeModeArray = ARRAY_ALL_TIME_MODES
         INTEGER               :: testMode = TEST_MODE_ALL
-        INTEGER               :: slicesToTest = 3
+        INTEGER               :: timeSize = 3  !number of slices to be tested
         INTEGER               :: dataSize = 3
         INTEGER               :: occToTest = 2
         LOGICAL :: useExistingPulseFile = .FALSE.
     END TYPE settings_type
 
+	type (settings_type) :: config
 
 END MODULE test_defs

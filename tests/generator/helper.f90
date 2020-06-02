@@ -9,9 +9,6 @@ MODULE helper
 CHARACTER(len=:), ALLOCATABLE :: dataVersion
 CHARACTER(len=:), ALLOCATABLE :: userName
 
-
-type (settings_type) :: config
-
 CONTAINS
 
 FUNCTION backend2str( backendID ) RESULT (strBackend)
@@ -239,9 +236,12 @@ SUBROUTINE setCmdlOptions()
             case ('-s', '--num-slices')
                 i = i + 1
                 call get_command_argument(i, argValue)
-                read(argValue, *) config%slicesToTest
-                config%dataSize = config%slicesToTest
+                read(argValue, *) config%timeSize
 
+            case ('-d', '--data-size')
+                i = i + 1
+                call get_command_argument(i, argValue)
+                read(argValue, *) config%dataSize
 
             case ('-h', '--help')
                 call print_help()
@@ -257,6 +257,8 @@ END SUBROUTINE setCmdlOptions
 
 SUBROUTINE print_help()
         print '(a, /)', 'Options:'
+        print '(a)',    '  -d, --data-size <value>  - Set size of vectors'
+        print '(a)',    '  -s, --num-slices <value> - Set number of slices to be tested'
         print '(a)',    '  -t, --time-mode <value>  - Sets time mode'
         print '(a)',    '                Values:'
         print '(a)',    '                       0 - All modes (default)'
@@ -270,7 +272,6 @@ SUBROUTINE print_help()
         print '(a)',    '                       2 - Memory Backend'
         print '(a)',    '                       3 - ASCII Backend'
         print '(a)',    '  -o, --num-occurr <value> - Set maximum number of occurrences to be tested'
-        print '(a)',    '  -s, --num-slices <value> - Set maximum number of slices to be tested'
         print '(a)',    '  -m, --test-mode  <value> - Sets if slice and/or global operations should be tested:'
         print '(a)',    '                Values:'
         print '(a)',    '                       a, all    - All operations (default)'
