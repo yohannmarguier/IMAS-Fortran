@@ -622,8 +622,14 @@
 
     <xsl:template match="field[ @data_type='struct_array']" mode="put">
         <xsl:call-template name="COMMENT_FIELD"/>
-
-		<xsl:text>&#9;&#9;&#9;aosSize = config%timeSize&#10;</xsl:text>
+		<xsl:choose>
+			<xsl:when test="@maxoccur='unbounded'">
+				<xsl:text>&#9;&#9;&#9;aosSize = config%timeSize&#10;</xsl:text>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:text>&#9;&#9;&#9;aosSize = MIN(config%timeSize, </xsl:text><xsl:value-of select="@maxoccur"/><xsl:text>)&#9; ! AoS1 of size: </xsl:text> <xsl:value-of select="@maxoccur"/><xsl:text>&#10;</xsl:text>
+			</xsl:otherwise>
+		</xsl:choose>
         <xsl:if test="(@type !='dynamic' or not(@type)) and not(ancestor::field[@type='dynamic'] or descendant::field[@type='dynamic'])">
              <xsl:text>&#9;&#9;if ( setStatic ) then&#10;</xsl:text>
 			 
@@ -633,17 +639,13 @@
        
        </xsl:if>
 		<xsl:if test="@type='dynamic'">    
-			<xsl:text>&#9;&#9;&#9;if ( isSliceMode ) then&#10;</xsl:text>
-			<xsl:text>&#9;&#9;&#9;&#9;aosSize = 1&#10;</xsl:text>
-			<xsl:text>&#9;&#9;&#9;else&#10;</xsl:text>
-			<xsl:text>&#9;&#9;&#9;&#9;aosSize = config%timeSize&#10;</xsl:text>
-			<xsl:text>&#9;&#9;&#9;end if&#10;</xsl:text>
+			<xsl:text>&#9;&#9;&#9;if ( isSliceMode ) &#9;aosSize = 1&#10;</xsl:text>
         </xsl:if>
 
         <xsl:text>&#9;&#9;&#9;if ( .NOT. associated(idsNode%</xsl:text><xsl:value-of select="@name"/><xsl:text>)) then&#10; </xsl:text>
         <xsl:text>&#9;&#9;&#9;&#9;allocate(idsNode%</xsl:text><xsl:value-of select="@name"/><xsl:text> (aosSize))&#10; </xsl:text>
         <xsl:text>&#9;&#9;&#9;endif&#10; </xsl:text>
-    	<xsl:text>&#9;&#9;&#9;DO i = 1, aosSize&#10;</xsl:text>
+		<xsl:text>&#9;&#9;&#9;DO i = 1, aosSize&#10;</xsl:text>
         <xsl:text>&#9;&#9;&#9;&#9;CALL init_</xsl:text><xsl:value-of select="local:unique_name(translate(@path, '/', '_'))" /><xsl:text>(idsNode%</xsl:text><xsl:value-of select="@name"/><xsl:text>(i), setStatic, setDynamic, idsTimeMode, isSliceMode, sliceIdx)&#10;</xsl:text>
     	<xsl:text>&#9;&#9;&#9;END DO&#10;</xsl:text>
 		  <xsl:if test="((@type !='dynamic' or not(@type)) and not(ancestor::field[@type='dynamic'] or descendant::field[@type='dynamic'])) or (@type='dynamic' and not(descendant::field[@type!='dynamic']))">
@@ -689,17 +691,21 @@
 	
 		<!-- field get() for array of structures -->
 
-    <xsl:template match="field[@data_type='struct_array']" mode="get">
-      
-            <xsl:call-template name="COMMENT_FIELD"/>
-	<xsl:text>&#9;&#9;&#9;aosSize = config%timeSize&#10;</xsl:text>
-        <xsl:if test="(@type !='dynamic' or not(@type)) and not(ancestor::field[@type='dynamic'] or descendant::field[@type='dynamic'])">
+	<xsl:template match="field[@data_type='struct_array']" mode="get">
+		<xsl:call-template name="COMMENT_FIELD"/>
+		<xsl:choose>
+			<xsl:when test="@maxoccur='unbounded'">
+				<xsl:text>&#9;&#9;&#9;aosSize = config%timeSize&#10;</xsl:text>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:text>&#9;&#9;&#9;aosSize = MIN(config%timeSize, </xsl:text><xsl:value-of select="@maxoccur"/><xsl:text>)&#9; ! AoS1 of size: </xsl:text> <xsl:value-of select="@maxoccur"/><xsl:text>&#10;</xsl:text>
+			</xsl:otherwise>
+		</xsl:choose>
+		<xsl:if test="(@type !='dynamic' or not(@type)) and not(ancestor::field[@type='dynamic'] or descendant::field[@type='dynamic'])">
              <xsl:text>&#9;&#9;if ( setStatic ) then&#10;</xsl:text>
-			 
        </xsl:if>
        <xsl:if test="@type='dynamic' and not(descendant::field[@type!='dynamic'])"> 
 			<xsl:text>&#9;&#9;if ( setDynamic ) then&#10;</xsl:text>
-       
        </xsl:if>
 		<xsl:if test="@type='dynamic'">    
 			<xsl:text>&#9;&#9;&#9;if ( isSliceMode ) then&#10;</xsl:text>
