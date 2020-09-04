@@ -40,9 +40,9 @@ MODDIR_ifort    = ifort
 FCFLAGS_ifort     = -g -O3 -r8 -assume no2underscore -fPIC -module $(MODDIR_ifort) -g -shared-intel
 INCDIR_ifort    = -I$(MODDIR_ifort)
 
-# Get a list of IDS from IDSDEF file
-IDSDEFXSD   = dd_data_dictionary.xml.xsd
-IDSDEF= ../xml/IDSDef.xml
+# Get a list of IDS from IDSDEF file, allow override by DD in environment
+IDSDEFXSD?= ../xml/dd_data_dictionary.xml.xsd
+IDSDEF   ?= ../xml/IDSDef.xml
 IDSNAMES := $(shell sed '/<IDS name=/!d;s/.*name="\([^"]*\)".*/\1/' $(IDSDEF))
 
 IDSNAMES_FUNC=$(addsuffix _copy_struct,$(IDSNAMES))
@@ -299,9 +299,9 @@ idsroutines: IDSDef2F90Routines.xsl | saxonicajar
 
 # FIXME: xsd2F90TypeDef.xsl expects to be run in DD source dir
 ids_schemas.f90: xsd2F90TypeDef.xsl | $(shell mktemp -d -p .)
-      ln -sf $(abspath $<) $(dir $(IDSDEFXSD))* $|/
-      ( cd $| && xsltproc $< $(notdir $(IDSDEFXSD)) ) > $@ || { $(RM) $@; exit 1 ;}
-      $(RM) -r $|
+	ln -sf $(abspath $<) $(realpath $(dir $(IDSDEFXSD)))/* $|/
+	( cd $| && xsltproc $< $(notdir $(IDSDEFXSD)) ) > $@ || { $(RM) $@; exit 1 ;}
+	$(RM) -r $|
 
 # Include OS-specific Makefile.targets, if exists.
 ifneq (,$(wildcard Makefile.targets.$(SYSTEM)))
