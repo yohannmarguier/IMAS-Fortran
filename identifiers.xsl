@@ -14,8 +14,12 @@
    exclude-result-prefixes="my"
    extension-element-prefixes="yaslt exsl func str">
    <xsl:include href="../identifiers/identifiers.common.xsl"/>
-
+   
 <xsl:output method="text" version="1.0" encoding="UTF-8" indent="yes"/>
+
+<func:function name="my:truncate">
+  <xsl:param name="longstring" as="xs:string"/>
+</func:function>
 
 <!-- MAIN, FILE GENERATION -->
 <xsl:template match="/constants">
@@ -228,7 +232,14 @@
           <xsl:text>)&#xA;</xsl:text>
           <xsl:text>        </xsl:text>
           <xsl:text>get_type_description=&amp; &#xA;'</xsl:text>
-          <xsl:value-of select="@description"/>    
+	  <xsl:choose>
+	    <xsl:when test="string-length(@description) &gt; 132">
+	      <xsl:value-of select="concat(substring(@description,1,129),'...')"/>
+	    </xsl:when>
+	    <xsl:otherwise>
+	      <xsl:value-of select="@description"/>
+	    </xsl:otherwise>
+	  </xsl:choose>
           <xsl:text>'&#xA;</xsl:text>
         </xsl:if>
       </xsl:for-each>
