@@ -17,9 +17,6 @@
    
 <xsl:output method="text" version="1.0" encoding="UTF-8" indent="yes"/>
 
-<func:function name="my:truncate">
-  <xsl:param name="longstring" as="xs:string"/>
-</func:function>
 
 <!-- MAIN, FILE GENERATION -->
 <xsl:template match="/constants">
