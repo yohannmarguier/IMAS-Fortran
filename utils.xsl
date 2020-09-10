@@ -20,7 +20,7 @@
     </xsl:choose>
   </xsl:function>
 
-  <!-- function that breaks long strings into smaller ones over several lines (addind specified character at the end and begin of each new lines) -->
+  <!-- function that breaks long strings into smaller ones over several lines (adding specified character at the end and begin of each new lines) -->
   <xsl:function name="local:breakstring" as="xs:string">
     <xsl:param name="longstring" as="xs:string"/>
     <xsl:param name="breakchar" as="xs:string"/> 
