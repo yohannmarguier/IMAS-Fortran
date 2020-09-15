@@ -41,7 +41,6 @@ FCFLAGS_ifort     = -g -O3 -r8 -assume no2underscore -fPIC -module $(MODDIR_ifor
 INCDIR_ifort    = -I$(MODDIR_ifort)
 
 # Get a list of IDS from IDSDEF file, allow override by DD in environment
-IDSDEFXSD?= ../xml/dd_data_dictionary.xml.xsd
 IDSDEF   ?= ../xml/IDSDef.xml
 IDSNAMES := $(shell sed '/<IDS name=/!d;s/.*name="\([^"]*\)".*/\1/' $(IDSDEF))
 
