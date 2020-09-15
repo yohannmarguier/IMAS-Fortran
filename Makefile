@@ -297,11 +297,9 @@ $(SOURCES): idsroutines
 idsroutines: IDSDef2F90Routines.xsl | saxonicajar
 	$(if $(call allnewerthan,$(IDSROUTINES),$^),, $(JAVA) net.sf.saxon.Transform -t -s:$(IDSDEF) -xsl:IDSDef2F90Routines.xsl DD_GIT_DESCRIBE=$(DD_GIT_DESCRIBE) UAL_GIT_DESCRIBE=$(UAL_GIT_DESCRIBE))
 
-# FIXME: xsd2F90TypeDef.xsl expects to be run in DD source dir
-ids_schemas.f90: xsd2F90TypeDef.xsl | $(shell mktemp -d -p .)
-	ln -sf $(abspath $<) $(realpath $(dir $(IDSDEFXSD)))/* $|/
-	( cd $| && xsltproc $< $(notdir $(IDSDEFXSD)) ) > $@ || { $(RM) $@; exit 1 ;}
-	$(RM) -r $|
+ids_schemas.f90: IDSDef2F90TypeDef.xsl | saxonicajar
+	$(JAVA) net.sf.saxon.Transform -t -s:$(IDSDEF) -xsl:IDSDef2F90TypeDef.xsl
+
 
 # Include OS-specific Makefile.targets, if exists.
 ifneq (,$(wildcard Makefile.targets.$(SYSTEM)))
