@@ -1,0 +1,12 @@
+prefix=__PREFIX__
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: al-g95-__DD_GIT_DESCRIBE__
+Version: __UAL_GIT_DESCRIBE__
+Description: IMAS Access Layer Fortran Libraries (g95)
+URL: https://imas.iter.org
+Requires: al-lowlevel = __UAL_GIT_DESCRIBE__
+Cflags: -I${includedir}/g95
+Libs: -L${libdir} -lal-g95-__DD_GIT_DESCRIBE__ -Wl,--defsym,AL_VER___AL_SAFE_DESCRIBE__=0 -Wl,--defsym,DD_VER___DD_SAFE_DESCRIBE__=0

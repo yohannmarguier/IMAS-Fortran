@@ -1,0 +1,12 @@
+prefix=__PREFIX__
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: al-ifort-__DD_GIT_DESCRIBE__
+Version: __UAL_GIT_DESCRIBE__
+Description: IMAS Access Layer Fortran Libraries (ifort)
+URL: https://imas.iter.org
+Requires: al-lowlevel = __UAL_GIT_DESCRIBE__
+Cflags: -I${includedir}/ifort
+Libs: -L${libdir} -lal-ifort-__DD_GIT_DESCRIBE__ -Wl,--defsym,AL_VER___AL_SAFE_DESCRIBE__=0 -Wl,--defsym,DD_VER___DD_SAFE_DESCRIBE__=0

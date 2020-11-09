@@ -10,13 +10,13 @@ endif
 
 #------------------------------- gfortran ----------------------------------
 FC_gfortran=gfortran
-COPTS_gfortran = -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none `pkg-config imas-gfortran --cflags`
-LIBS_gfortran = `pkg-config imas-gfortran imas-lowlevel --libs` -lm
+COPTS_gfortran = -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none `pkg-config al-gfortran --cflags`
+LIBS_gfortran = `pkg-config al-gfortran al-lowlevel --libs` -lm
 
 #------------------------------- ifort ----------------------------------
 FC_ifort=ifort
-COPTS_ifort = -g -r8 -assume no2underscore  -fPIC `pkg-config imas-ifort --cflags` -shared-intel
-LIBS_ifort= `pkg-config imas-ifort imas-lowlevel --libs` -lm
+COPTS_ifort = -g -r8 -assume no2underscore  -fPIC `pkg-config al-ifort --cflags` -shared-intel
+LIBS_ifort= `pkg-config al-ifort al-lowlevel --libs` -lm
 
 IDSDEF = $(IMAS_PREFIX)/include/IDSDef.xml
 

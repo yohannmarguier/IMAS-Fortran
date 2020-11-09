@@ -1,0 +1,5 @@
+Name: al-g95
+Version: __DD_GIT_DESCRIBE__-__UAL_GIT_DESCRIBE__
+Description: IMAS Access Layer Fortran Libraries (g95)
+URL: https://imas.iter.org
+Requires: al-g95-__DD_GIT_DESCRIBE__ = __UAL_GIT_DESCRIBE__

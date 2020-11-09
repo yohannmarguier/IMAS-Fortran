@@ -12,7 +12,7 @@ $(error "Ignoring fortraninterface for Windows (IMAS_IFORT=yes).")
 endif
 
 # Windows
-LIBS		= ../lowlevel/libimas.lib
+LIBS		= ../lowlevel/libal.lib
 LIBS		+= -lm -lstdc++
 JAVA		= $(JAVA_HOME)/bin/java
 
@@ -48,10 +48,10 @@ LIBS	+= $(HDF5_HOME)/lib/libhdf5.a -ldl -lz -lstdc++
 endif
 
 ifneq ("no","$(strip $(IMAS_GFORTRAN))")
-TARGETS += libimas-gfortran.dll libimas-gfortran.lib
+TARGETS += libal-gfortran.dll libal-gfortran.lib
 TARGETS += id_gfortran_all
-PC_FILES += imas-gfortran.pc
-PC_FILES_VAR += imas-gfortran-$(DD_GIT_DESCRIBE).pc
+PC_FILES += al-gfortran.pc
+PC_FILES_VAR += al-gfortran-$(DD_GIT_DESCRIBE).pc
 PC_FILES_ALT += $(ID_gfortran_PC_FILES_2)
 INSTALL_TARGETS += gfortran_install id_gfortran_install
 IDSOBJECTS_gfortran=$(addsuffix _gfortran.o,$(IDSNAMES_FUNC))

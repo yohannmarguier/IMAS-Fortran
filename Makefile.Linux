@@ -1,46 +1,46 @@
-LIBS		= -L../lowlevel -limas -lm
+LIBS		= -L../lowlevel -lal -lm
 
 ifneq ("no","$(strip $(IMAS_G95))")
-TARGETS += libimas-g95.so libimas-g95.a id_g95_all
-PC_FILES += imas-g95.pc
-PC_FILES_VAR += imas-g95-$(DD_GIT_DESCRIBE).pc
+TARGETS += libal-g95.so libal-g95.a id_g95_all
+PC_FILES += al-g95.pc
+PC_FILES_VAR += al-g95-$(DD_GIT_DESCRIBE).pc
 PC_FILES_ALT += $(ID_g95_PC_FILES_2)
 INSTALL_TARGETS += g95_install id_g95_install
 IDSOBJECTS_g95=$(addsuffix _g95.o,$(IDSNAMES_FUNC))
 endif
 
 ifneq ("no","$(strip $(IMAS_GFORTRAN))")
-TARGETS += libimas-gfortran.so libimas-gfortran.a
+TARGETS += libal-gfortran.so libal-gfortran.a
 TARGETS += id_gfortran_all
-PC_FILES += imas-gfortran.pc
-PC_FILES_VAR += imas-gfortran-$(DD_GIT_DESCRIBE).pc
+PC_FILES += al-gfortran.pc
+PC_FILES_VAR += al-gfortran-$(DD_GIT_DESCRIBE).pc
 PC_FILES_ALT += $(ID_gfortran_PC_FILES_2)
 INSTALL_TARGETS += gfortran_install id_gfortran_install
 IDSOBJECTS_gfortran=$(addsuffix _gfortran.o,$(IDSNAMES_FUNC))
 endif
 
 ifneq ("no","$(strip $(IMAS_NAGFOR))")
-TARGETS += libimas-nagfor.so libimas-nagfor.a id_nagfor_all
-PC_FILES += imas-nagfor.pc
-PC_FILES_VAR += imas-nagfor-$(DD_GIT_DESCRIBE).pc
+TARGETS += libal-nagfor.so libal-nagfor.a id_nagfor_all
+PC_FILES += al-nagfor.pc
+PC_FILES_VAR += al-nagfor-$(DD_GIT_DESCRIBE).pc
 PC_FILES_ALT += $(ID_nagfor_PC_FILES_2)
 INSTALL_TARGETS += nagfor_install id_nagfor_install
 IDSOBJECTS_nagfor=$(addsuffix _nagfor.o,$(IDSNAMES_FUNC))
 endif
 
 ifneq ("no","$(strip $(IMAS_PGI))")
-TARGETS += libimas-pgi.so libimas-pgi.a id_pgi_all
-PC_FILES += imas-pgi.pc
-PC_FILES_VAR += imas-pgi-$(DD_GIT_DESCRIBE).pc
+TARGETS += libal-pgi.so libal-pgi.a id_pgi_all
+PC_FILES += al-pgi.pc
+PC_FILES_VAR += al-pgi-$(DD_GIT_DESCRIBE).pc
 PC_FILES_ALT += $(ID_pgi_PC_FILES_2)
 INSTALL_TARGETS += pgi_install id_pgi_install
 IDSOBJECTS_pgi=$(addsuffix _pgi.o,$(IDSNAMES_FUNC))
 endif
 
 ifneq ("no","$(strip $(IMAS_IFORT))")
-TARGETS += libimas-ifort.so libimas-ifort.a id_ifort_all
-PC_FILES += imas-ifort.pc
-PC_FILES_VAR += imas-ifort-$(DD_GIT_DESCRIBE).pc
+TARGETS += libal-ifort.so libal-ifort.a id_ifort_all
+PC_FILES += al-ifort.pc
+PC_FILES_VAR += al-ifort-$(DD_GIT_DESCRIBE).pc
 PC_FILES_ALT += $(ID_ifort_PC_FILES_2)
 INSTALL_TARGETS += ifort_install id_ifort_install
 IDSOBJECTS_ifort=$(addsuffix _ifort.o,$(IDSNAMES_FUNC))

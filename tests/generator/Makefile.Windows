@@ -1,7 +1,7 @@
 #------------------------- gfortran ----------------------------
 FC_gfortran = gfortran
 COPTS_gfortran = -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none -I$(UAL_BUILD)/fortraninterface/gfortran
-LIBS_gfortran = -L$(UAL_BUILD)/lowlevel -L$(UAL_BUILD)/fortraninterface $(UAL_BUILD)/fortraninterface/libimas-gfortran.lib $(UAL_BUILD)/lowlevel/libimas.lib -lm -lstdc++
+LIBS_gfortran = -L$(UAL_BUILD)/lowlevel -L$(UAL_BUILD)/fortraninterface $(UAL_BUILD)/fortraninterface/libal-gfortran.lib $(UAL_BUILD)/lowlevel/libal.lib -lm -lstdc++
 
 ifneq ("no","$(strip $(IMAS_MDSPLUS))")
 LIBS_gfortran+= -L$(MDSPLUS_DIR)/lib

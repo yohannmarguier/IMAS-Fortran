@@ -2,7 +2,7 @@
 sources_install: $(SOURCES) ids_schemas.f90 id_f90_sources_install
 sources_uninstall: id_f90_sources_uninstall
 
-gfortran_install: $(IDSOBJECTS_gfortran) libimas-gfortran.dll libimas-gfortran.lib
+gfortran_install: $(IDSOBJECTS_gfortran) libal-gfortran.dll libal-gfortran.lib
 	$(mkdir_p) $(packagedir)/fortraninterface/include
 	$(CP) gfortran/*.mod $(packagedir)/fortraninterface/include
 	$(mkdir_p) $(packagedir)/fortraninterface/lib
@@ -13,10 +13,10 @@ gfortran_uninstall:
 
 #--------------------- gfortran --------------
 # Windows libraries
-libimas-gfortran.dll: $(LIBFILES_gfortran)
+libal-gfortran.dll: $(LIBFILES_gfortran)
 	$(FC_gfortran) $(COPTS_gfortran) -o $@ -shared -Wl,$(SONAME_OPT),$@.$(SO_NUM) -Wl,--out-implib,$@.lib $^ $(LIBS)
 
-libimas-gfortran.lib: $(LIBFILES_gfortran)
+libal-gfortran.lib: $(LIBFILES_gfortran)
 	$(AR) rcvsu $@ $^
 	ranlib $@
 
