@@ -11,24 +11,26 @@ help:
 # Make NEW_LOW_LEVEL=yes default
 NEW_LOW_LEVEL?=yes
 
-IFORT_BIN_DIR:=./bin/ifort
-IFORT_BUILD_DIR:=./build/ifort
-GFORTRAN_BIN_DIR:=./bin/gfortran
-GFORTRAN_BUILD_DIR:=./build/gfortran
+FORTRAN_BIN_DIR:=./bin/fortran
+FORTRAN_BUILD_DIR:=./build/fortran
 TEST_SRC_DIR=./src
 TMP_DIR=./tmp
+FORTRAN_TESTS = fortran_initpulse_test fortran_test
 
-ifneq ("no","$(strip $(IMAS_GFORTRAN))")
-  TARGETS += $(GFORTRAN_BIN_FILES) 
-  TESTS += $(GFORTRAN_TESTS)
-  COPTS_gfortran+=-J$(GFORTRAN_BUILD_DIR)
+ifneq ("no","$(strip $(IMAS_FORTRAN))")
+  TARGETS += $(FORTRAN_BIN_FILES)
+  TESTS += $(FORTRAN_TESTS)
 endif
+	
+#------------------------- gfortran ----------------------------
+#------------------------- ifort ----------------------------
+ifeq ("ifort","$(strip $(FC))")
+  FCFLAGS_ifort+=-module $(FORTRAN_BUILD_DIR)
+else # assume gfortran style
+  FCFLAGS+=-J$(FORTRAN_BUILD_DIR)
+endif # ifort
 
-ifneq ("no","$(strip $(IMAS_IFORT))")
-  TARGETS += $(IFORT_BIN_FILES)
-  TESTS += $(IFORT_TESTS)
-  COPTS_ifort+=-module $(IFORT_BUILD_DIR)
-endif
+#------------------------- fortran ----------------------------
 
 # Get a list of IDS from IDSDEF file
 IDSNAMES := $(shell sed '/<IDS name=/!d;s/.*name="\([^"]*\)".*/\1/' $(IDSDEF))
@@ -39,9 +41,6 @@ IDS_SOURCES += $(patsubst %,$(TEST_SRC_DIR)/%_test.f90,$(IDSNAMES))
 IDS_SOURCES += $(patsubst %,$(TEST_SRC_DIR)/%_init.f90,$(IDSNAMES))
 
 
-GFORTRAN_TESTS = gfortran_initpulse_test gfortran_test
-IFORT_TESTS = ifort_initpulse_test ifort_test
-	
 all: $(TARGETS)
 check test: $(TESTS)
 sources: $(IDS_SOURCES)
@@ -50,19 +49,13 @@ sources: $(IDS_SOURCES)
 %.o : %.mod
 
 # Create src and bin dirs as needed
-$(TEST_SRC_DIR) $(IFORT_BIN_DIR) $(GFORTRAN_BIN_DIR) $(IFORT_BUILD_DIR) $(GFORTRAN_BUILD_DIR) $(TMP_DIR):
+$(TEST_SRC_DIR) $(FORTRAN_BIN_DIR) $(FORTRAN_BUILD_DIR) $(TMP_DIR):
 	$(mkdir_p) $@
 
 .PHONY: clean clean-src
 
 
-ifneq ("no","$(strip $(IMAS_GFORTRAN))")
-clean: gfortran_clean
-endif
-ifneq ("no","$(strip $(IMAS_IFORT))")
-clean: ifort_clean
-endif
-clean:
+clean: fortran_clean
 	$(RM) -r idspath-*
 	$(RM) -r *.log
 
@@ -91,100 +84,55 @@ sources_: IDSDef2TestSuite.xsl $(IDSDEF) | saxonicajar $(TEST_SRC_DIR)
 #################################################
 
 #------------------------- gfortran ----------------------------
-ifneq ("no","$(strip $(IMAS_GFORTRAN))")
-.PHONY: gfortran_clean
+ifeq ("gfortran","$(strip $(FC))")
+.PHONY: fortran_clean
 endif
 
-gfortran_clean:
-	$(RM) -r $(GFORTRAN_BIN_DIR)
-	$(RM) -r $(GFORTRAN_BUILD_DIR)
-	$(RM) gfortran_initpulse
+fortran_clean:
+	$(RM) -r $(FORTRAN_BIN_DIR)
+	$(RM) -r $(FORTRAN_BUILD_DIR)
+	$(RM) fortran_initpulse
 	
-$(GFORTRAN_BUILD_DIR)/test_defs.o: $(GFORTRAN_BUILD_DIR)/%.o: %.f90 | $(GFORTRAN_BUILD_DIR)
-	$(FC_gfortran) $(COPTS_gfortran) -c $< -o $@
+$(FORTRAN_BUILD_DIR)/test_defs.o: $(FORTRAN_BUILD_DIR)/%.o: %.f90 | $(FORTRAN_BUILD_DIR)
+	$(FC) $(FCFLAGS) -c $< -o $@
 
-$(GFORTRAN_BUILD_DIR)/generator.o: $(GFORTRAN_BUILD_DIR)/%.o: %.f90 $(GFORTRAN_BUILD_DIR)/test_defs.o
-	$(FC_gfortran) $(COPTS_gfortran) -c $< -o $@
+$(FORTRAN_BUILD_DIR)/generator.o: $(FORTRAN_BUILD_DIR)/%.o: %.f90 $(FORTRAN_BUILD_DIR)/test_defs.o
+	$(FC) $(FCFLAGS) -c $< -o $@
 
-$(GFORTRAN_BUILD_DIR)/helper.o \
-$(GFORTRAN_BUILD_DIR)/setter.o \
-$(GFORTRAN_BUILD_DIR)/comparator.o: $(GFORTRAN_BUILD_DIR)/%.o: %.f90 $(GFORTRAN_BUILD_DIR)/generator.o
-	$(FC_gfortran) $(COPTS_gfortran) -c $< -o $@
+$(FORTRAN_BUILD_DIR)/helper.o \
+$(FORTRAN_BUILD_DIR)/setter.o \
+$(FORTRAN_BUILD_DIR)/comparator.o: $(FORTRAN_BUILD_DIR)/%.o: %.f90 $(FORTRAN_BUILD_DIR)/generator.o
+	$(FC) $(FCFLAGS) -c $< -o $@
 	
-$(GFORTRAN_BUILD_DIR)/%_init.o: $(TEST_SRC_DIR)/%_init.f90 $(GFORTRAN_BUILD_DIR)/setter.o $(GFORTRAN_BUILD_DIR)/helper.o
-	$(FC_gfortran) $(COPTS_gfortran) -c $< -o $@
+$(FORTRAN_BUILD_DIR)/%_init.o: $(TEST_SRC_DIR)/%_init.f90 $(FORTRAN_BUILD_DIR)/setter.o $(FORTRAN_BUILD_DIR)/helper.o
+	$(FC) $(FCFLAGS) -c $< -o $@
 	
-$(GFORTRAN_BUILD_DIR)/%_test.o: $(TEST_SRC_DIR)/%_test.f90 $(GFORTRAN_BUILD_DIR)/comparator.o $(GFORTRAN_BUILD_DIR)/helper.o
-	$(FC_gfortran) $(COPTS_gfortran) -c $< -o $@
+$(FORTRAN_BUILD_DIR)/%_test.o: $(TEST_SRC_DIR)/%_test.f90 $(FORTRAN_BUILD_DIR)/comparator.o $(FORTRAN_BUILD_DIR)/helper.o
+	$(FC) $(FCFLAGS) -c $< -o $@
 
 
-$(GFORTRAN_BUILD_DIR)/%_test_routines.o: $(TEST_SRC_DIR)/%_test_routines.f90  $(GFORTRAN_BUILD_DIR)/%_init.o $(GFORTRAN_BUILD_DIR)/%_test.o
-	$(FC_gfortran) $(COPTS_gfortran) -c $< -o $@
+$(FORTRAN_BUILD_DIR)/%_test_routines.o: $(TEST_SRC_DIR)/%_test_routines.f90  $(FORTRAN_BUILD_DIR)/%_init.o $(FORTRAN_BUILD_DIR)/%_test.o
+	$(FC) $(FCFLAGS) -c $< -o $@
 
-$(GFORTRAN_BUILD_DIR)/%_all_tests.o: $(TEST_SRC_DIR)/%_all_tests.f90 $(GFORTRAN_BUILD_DIR)/%_test_routines.o $(GFORTRAN_BUILD_DIR)/helper.o
-	$(FC_gfortran) $(COPTS_gfortran) -c $< -o $@
+$(FORTRAN_BUILD_DIR)/%_all_tests.o: $(TEST_SRC_DIR)/%_all_tests.f90 $(FORTRAN_BUILD_DIR)/%_test_routines.o $(FORTRAN_BUILD_DIR)/helper.o
+	$(FC) $(FCFLAGS) -c $< -o $@
 	
-$(GFORTRAN_BIN_DIR)/%_all_tests.exe: $(GFORTRAN_BUILD_DIR)/%_all_tests.o  $(GFORTRAN_BUILD_DIR)/comparator.o  $(GFORTRAN_BUILD_DIR)/generator.o $(GFORTRAN_BUILD_DIR)/helper.o $(GFORTRAN_BUILD_DIR)/%_test_routines.o  $(GFORTRAN_BUILD_DIR)/setter.o $(GFORTRAN_BUILD_DIR)/%_init.o  $(GFORTRAN_BUILD_DIR)/%_test.o $(GFORTRAN_BUILD_DIR)/test_defs.o| $(GFORTRAN_BIN_DIR)
-	$(FC_gfortran) $(COPTS_gfortran) -o $@   $^ $(LIBS_gfortran)
+$(FORTRAN_BIN_DIR)/%_all_tests.exe: $(FORTRAN_BUILD_DIR)/%_all_tests.o  $(FORTRAN_BUILD_DIR)/comparator.o  $(FORTRAN_BUILD_DIR)/generator.o $(FORTRAN_BUILD_DIR)/helper.o $(FORTRAN_BUILD_DIR)/%_test_routines.o  $(FORTRAN_BUILD_DIR)/setter.o $(FORTRAN_BUILD_DIR)/%_init.o  $(FORTRAN_BUILD_DIR)/%_test.o $(FORTRAN_BUILD_DIR)/test_defs.o| $(FORTRAN_BIN_DIR)
+	$(FC) $(FCFLAGS) -o $@   $^ $(LIBS)
 	
 #-------------
 
-gfortran_initpulse: initpulse.f90
-	$(FC_gfortran) $(COPTS_gfortran) -o $@ $^ $(LIBS_gfortran)
+fortran_initpulse: initpulse.f90
+	$(FC) $(FCFLAGS) -o $@ $^ $(LIBS)
 
 
-#------------------------- ifort ----------------------------
-ifneq ("no","$(strip $(IMAS_IFORT))")
-.PHONY: ifort_clean
-endif
-
-ifort_clean:
-	$(RM) -r $(IFORT_BIN_DIR)
-	$(RM) -r $(IFORT_BUILD_DIR)
-	$(RM) ifort_initpulse
-	
-$(IFORT_BUILD_DIR)/test_defs.o: $(IFORT_BUILD_DIR)/%.o: %.f90 | $(IFORT_BUILD_DIR)
-	$(FC_ifort) $(COPTS_ifort) -c $< -o $@
-
-$(IFORT_BUILD_DIR)/generator.o: $(IFORT_BUILD_DIR)/%.o: %.f90  $(IFORT_BUILD_DIR)/test_defs.o 
-	$(FC_ifort) $(COPTS_ifort) -c $< -o $@
-
-$(IFORT_BUILD_DIR)/helper.o \
-$(IFORT_BUILD_DIR)/setter.o \
-$(IFORT_BUILD_DIR)/comparator.o: $(IFORT_BUILD_DIR)/%.o: %.f90 $(IFORT_BUILD_DIR)/generator.o $(IFORT_BUILD_DIR)/test_defs.o
-	$(FC_ifort) $(COPTS_ifort) -c $< -o $@
-	
-$(IFORT_BUILD_DIR)/%_init.o: $(TEST_SRC_DIR)/%_init.f90 $(IFORT_BUILD_DIR)/setter.o $(IFORT_BUILD_DIR)/helper.o
-	$(FC_ifort) $(COPTS_ifort) -c $< -o $@
-	
-$(IFORT_BUILD_DIR)/%_test.o: $(TEST_SRC_DIR)/%_test.f90 $(IFORT_BUILD_DIR)/comparator.o $(IFORT_BUILD_DIR)/helper.o
-	$(FC_ifort) $(COPTS_ifort) -c $< -o $@
-
-$(IFORT_BUILD_DIR)/%_test_routines.o: $(TEST_SRC_DIR)/%_test_routines.f90 $(IFORT_BUILD_DIR)/%_init.o $(IFORT_BUILD_DIR)/%_test.o
-	$(FC_ifort) $(COPTS_ifort) -c $< -o $@
-
-$(IFORT_BUILD_DIR)/%_all_tests.o: $(TEST_SRC_DIR)/%_all_tests.f90 $(IFORT_BUILD_DIR)/helper.o $(IFORT_BUILD_DIR)/%_test_routines.o
-	$(FC_ifort) $(COPTS_ifort) -c $< -o $@
-	
-$(IFORT_BIN_DIR)/%_all_tests.exe: $(IFORT_BUILD_DIR)/%_all_tests.o  $(IFORT_BUILD_DIR)/comparator.o  $(IFORT_BUILD_DIR)/generator.o $(IFORT_BUILD_DIR)/helper.o $(IFORT_BUILD_DIR)/%_test_routines.o   $(IFORT_BUILD_DIR)/%_init.o $(IFORT_BUILD_DIR)/setter.o  $(IFORT_BUILD_DIR)/%_test.o  $(IFORT_BUILD_DIR)/test_defs.o| $(IFORT_BIN_DIR)
-	$(FC_ifort) $(COPTS_ifort) -o $@  $^  $(LIBS_ifort)
-
-#-------------
-
-ifort_initpulse: initpulse.f90
-	$(FC_ifort) $(COPTS_ifort) -o $@ $^ $(LIBS_ifort)
 
 
 #################################################
 #			  TEST
 #################################################
 .PHONY: test
-ifneq ("no","$(strip $(IMAS_GFORTRAN))")
-.PHONY: gfortran_test
-endif
-ifneq ("no","$(strip $(IMAS_IFORT))")
-.PHONY: ifort_test
-endif
+.PHONY: fortran_test
 
 # Canned recipe that runs prerequisites as tests and produces TAP-like output
 define run-tests
@@ -199,18 +147,11 @@ define run-tests
 	@test 0 -eq $$(grep -c -i error $@.log) || exit 1
 endef
 
-gfortran_initpulse_test: gfortran_initpulse | $(TMP_DIR)
+fortran_initpulse_test: fortran_initpulse | $(TMP_DIR)
 	$(run-tests)
 # Run all tests grouped by IDS:
-gfortran_test: $(IDSNAMES:%=gfortran_test_%) | gfortran_initpulse_test
-gfortran_test_%: $(GFORTRAN_BIN_DIR)/%_all_tests.exe | gfortran_initpulse_test
-	$(run-tests)
-
-ifort_initpulse_test: ifort_initpulse | $(TMP_DIR)
-	$(run-tests)
-# Run all tests by IDS:
-ifort_test: $(IDSNAMES:%=ifort_test_%) | ifort_initpulse_test
-ifort_test_%: $(IFORT_BIN_DIR)/%_all_tests.exe | ifort_initpulse_test
+fortran_test: $(IDSNAMES:%=fortran_test_%) | fortran_initpulse_test
+fortran_test_%: $(FORTRAN_BIN_DIR)/%_all_tests.exe | fortran_initpulse_test
 	$(run-tests)
 
 #----------------------- classpath deps ---------------------

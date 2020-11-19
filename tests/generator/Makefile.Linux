@@ -1,13 +1,16 @@
 
 #------------------------- gfortran ----------------------------
-FC_gfortran = gfortran
-COPTS_gfortran = -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none -I$(UAL_BUILD)/fortraninterface/gfortran
-LIBS_gfortran = -L$(UAL_BUILD)/lowlevel -L$(UAL_BUILD)/fortraninterface -lal-gfortran -lal -lm
+ifeq ("gfortran","$(strip $(FC))")
+FCFLAGS += -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none -I$(UAL_BUILD)/fortraninterface/fortran
+endif
 
 #------------------------- ifort ----------------------------
-FC_ifort = ifort
-COPTS_ifort = -g -r8 -assume no2underscore  -fPIC -I$(UAL_BUILD)/fortraninterface/ifort -shared-intel
-LIBS_ifort = -L$(UAL_BUILD)/lowlevel -L$(UAL_BUILD)/fortraninterface -lal-ifort -lal -lm
+ifeq ("ifort","$(strip $(FC))")
+FCFLAGS += -g -r8 -assume no2underscore  -fPIC -I$(UAL_BUILD)/fortraninterface/fortran -shared-intel
+endif
+
+#------------------------- fortran ----------------------------
+LIBS  = -L$(UAL_BUILD)/lowlevel -L$(UAL_BUILD)/fortraninterface -lal-fortran -lal -lm
 
 IFORT_BIN_FILES=$(patsubst %.f90,$(IFORT_BIN_DIR)/%.exe,$(notdir $(TEST_IDS_FILES)))
 

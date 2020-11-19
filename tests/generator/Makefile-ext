@@ -9,14 +9,17 @@ $(error Please first install imas and then module load imas/... to populate envi
 endif
 
 #------------------------------- gfortran ----------------------------------
-FC_gfortran=gfortran
-COPTS_gfortran = -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none `pkg-config al-gfortran --cflags`
-LIBS_gfortran = `pkg-config al-gfortran al-lowlevel --libs` -lm
+ifeq ("gfortran","$(strip $(FC))")
+FCFLAGS = -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none `pkg-config al-fortran --cflags`
+endif
 
 #------------------------------- ifort ----------------------------------
-FC_ifort=ifort
-COPTS_ifort = -g -r8 -assume no2underscore  -fPIC `pkg-config al-ifort --cflags` -shared-intel
-LIBS_ifort= `pkg-config al-ifort al-lowlevel --libs` -lm
+ifeq ("ifort","$(strip $(FC))")
+FCFLAGS = -g -r8 -assume no2underscore  -fPIC `pkg-config al-fortran --cflags` -shared-intel
+endif
+
+#------------------------------- fortran ----------------------------------
+LIBS  = `pkg-config al-fortran al-lowlevel --libs` -lm
 
 IDSDEF = $(IMAS_PREFIX)/include/IDSDef.xml
 

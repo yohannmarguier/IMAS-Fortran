@@ -1,5 +1,0 @@
-Name: al-pgi
-Version: __DD_GIT_DESCRIBE__-__UAL_GIT_DESCRIBE__
-Description: IMAS Access Layer Fortran Libraries (pgi)
-URL: https://imas.iter.org
-Requires: al-pgi-__DD_GIT_DESCRIBE__ = __UAL_GIT_DESCRIBE__

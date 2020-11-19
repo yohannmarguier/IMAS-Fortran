@@ -1,36 +1,38 @@
 #------------------------- gfortran ----------------------------
-FC_gfortran = gfortran
-COPTS_gfortran = -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none -I$(UAL_BUILD)/fortraninterface/gfortran
-LIBS_gfortran = -L$(UAL_BUILD)/lowlevel -L$(UAL_BUILD)/fortraninterface $(UAL_BUILD)/fortraninterface/libal-gfortran.lib $(UAL_BUILD)/lowlevel/libal.lib -lm -lstdc++
+ifeq ("gfortran","$(strip $(FC))")
+FCFLAGS = -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none -I$(UAL_BUILD)/fortraninterface/fortran
+endif
+
+#------------------------- ifort ----------------------------
+# FIXME: no ifort tests for Windows?
+
+#------------------------- fortran ----------------------------
+LIBS = -L$(UAL_BUILD)/lowlevel -L$(UAL_BUILD)/fortraninterface $(UAL_BUILD)/fortraninterface/libal-fortran.lib $(UAL_BUILD)/lowlevel/libal.lib -lm -lstdc++
+
 
 ifneq ("no","$(strip $(IMAS_MDSPLUS))")
-LIBS_gfortran+= -L$(MDSPLUS_DIR)/lib
-LIBS_gfortran+= $(MDSPLUS_DIR)/lib/XTreeShr.a
-LIBS_gfortran+= $(MDSPLUS_DIR)/lib/MdsObjectsCppShr.a
-LIBS_gfortran+= $(MDSPLUS_DIR)/lib/TdiShr.a
-LIBS_gfortran+= $(MDSPLUS_DIR)/lib/TreeShr.a
-LIBS_gfortran+= $(MDSPLUS_DIR)/lib/MdsIpShr.a
-LIBS_gfortran+= $(MDSPLUS_DIR)/lib/MdsShr.a
-LIBS_gfortran+= -lxml2 -lws2_32 -ldl -liphlpapi -lstdc++
+LIBS+= -L$(MDSPLUS_DIR)/lib
+LIBS+= $(MDSPLUS_DIR)/lib/XTreeShr.a
+LIBS+= $(MDSPLUS_DIR)/lib/MdsObjectsCppShr.a
+LIBS+= $(MDSPLUS_DIR)/lib/TdiShr.a
+LIBS+= $(MDSPLUS_DIR)/lib/TreeShr.a
+LIBS+= $(MDSPLUS_DIR)/lib/MdsIpShr.a
+LIBS+= $(MDSPLUS_DIR)/lib/MdsShr.a
+LIBS+= -lxml2 -lws2_32 -ldl -liphlpapi -lstdc++
 endif
 
 ifneq ("no","$(strip $(IMAS_UDA))")
-LIBS_gfortran+= -L$(UDA_HOME)/lib
-LIBS_gfortran+= $(UDA_HOME)/lib/libuda_cpp.a
-LIBS_gfortran+= $(UDA_HOME)/lib/libportablexdr.a
-LIBS_gfortran+= -lws2_32 -lssl -lcrypto -lstdc++
+LIBS+= -L$(UDA_HOME)/lib
+LIBS+= $(UDA_HOME)/lib/libuda_cpp.a
+LIBS+= $(UDA_HOME)/lib/libportablexdr.a
+LIBS+= -lws2_32 -lssl -lcrypto -lstdc++
 endif
 
 ifneq ("no","$(strip $(IMAS_HDF5))")
-LIBS_gfortran+= -L$(HDF5_HOME)/lib
-LIBS_gfortran+= $(HDF5_HOME)/lib/libhdf5.a -ldl -lz
+LIBS+= -L$(HDF5_HOME)/lib
+LIBS+= $(HDF5_HOME)/lib/libhdf5.a -ldl -lz
 endif
 
 JAVA = $(JAVA_HOME)/bin/java
 
-#------------------------- ifort ----------------------------
-
-# FIXME: no ifort tests for Windows?
-
-
-GFORTRAN_BIN_FILES=$(patsubst %.f90,$(GFORTRAN_BIN_DIR)/%.exe,$(notdir $(TEST_IDS_FILES)))
+FORTRAN_BIN_FILES=$(patsubst %.f90,$(FORTRAN_BIN_DIR)/%.exe,$(notdir $(TEST_IDS_FILES)))
