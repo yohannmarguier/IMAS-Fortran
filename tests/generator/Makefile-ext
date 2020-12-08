@@ -8,15 +8,18 @@ ifeq (,$(ids_path))
 $(error Please first install imas and then module load imas/... to populate environment)
 endif
 
-#------------------------------- gfortran ----------------------------------
-FC_gfortran=gfortran
-COPTS_gfortran = -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none `pkg-config al-gfortran --cflags`
-LIBS_gfortran = `pkg-config al-gfortran al-lowlevel --libs` -lm
 
-#------------------------------- ifort ----------------------------------
-FC_ifort=ifort
-COPTS_ifort = -g -r8 -assume no2underscore  -fPIC `pkg-config al-ifort --cflags` -shared-intel
-LIBS_ifort= `pkg-config al-ifort al-lowlevel --libs` -lm
+ifeq ("yes","$(strip $(IMAS_GFORTRAN))")
+FC    = gfortran
+COPTS = -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none `pkg-config al-fortran --cflags`
+LIBS  = `pkg-config al-fortran --libs` 
+endif
+
+ifeq ("yes","$(strip $(IMAS_IFORT))")
+FC    = ifort
+COPTS = -g -r8 -assume no2underscore  -fPIC `pkg-config al-fortran --cflags` -shared-intel
+LIBS  = `pkg-config al-fortran --libs` 
+endif
 
 IDSDEF = $(IMAS_PREFIX)/include/IDSDef.xml
 
