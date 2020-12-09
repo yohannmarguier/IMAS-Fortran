@@ -15,16 +15,12 @@ ifeq ("nagfor","$(strip $(FC))")
 libal-fortran-$(DD_GIT_DESCRIBE).so.$(SO_NUM): $(LIBFILES_fortran)
 	$(FC) $(FCFLAGS) -o $@ -Wl,-shared -Wl,-Wl,,$(SONAME_OPT),,$@ $^ $(LIBS)
 else
-#--------------------- g95 --------------
-#--------------------- gfortran --------------
-#--------------------- pgi --------------
-#--------------------- ifort --------------
+#--------------------- g95 / gfortran / pgi / ifort --------------
 libal-fortran-$(DD_GIT_DESCRIBE).so.$(SO_NUM): $(LIBFILES_fortran)
 	$(FC) $(FCFLAGS) -o $@ -shared -Wl,$(SONAME_OPT),$@ $^ $(LIBS)
 
 endif
 
-#--------------------- fortran --------------
 libal-fortran-$(DD_GIT_DESCRIBE).so: %:%.$(SO_NUM)
 	$(LN_S) $< $@
 libal-fortran.so:libal-fortran-$(DD_GIT_DESCRIBE).so
@@ -50,3 +46,4 @@ libal-fortran.so_uninstall:
 	-rm -f $(libdir)/$(@:%.so_uninstall=%).so
 	-rm -f $(libdir)/$(@:%.so_uninstall=%)-$(DD_GIT_DESCRIBE).so
 	-rm -f $(libdir)/$(@:%.so_uninstall=%)-$(DD_GIT_DESCRIBE).so.$(SO_NUM)
+

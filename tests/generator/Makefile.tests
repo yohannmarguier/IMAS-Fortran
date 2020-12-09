@@ -11,26 +11,12 @@ help:
 # Make NEW_LOW_LEVEL=yes default
 NEW_LOW_LEVEL?=yes
 
-FORTRAN_BIN_DIR:=./bin
+BIN_DIR:=./bin
 BUILD_DIR:=./build
 TEST_SRC_DIR=./src
 TMP_DIR=./tmp
-FORTRAN_TESTS = fortran_initpulse_test fortran_test
-
-ifneq ("no","$(strip $(IMAS_FORTRAN))")
-  TARGETS += $(FORTRAN_BIN_FILES)
-  TESTS += $(FORTRAN_TESTS)
-endif
-	
-#------------------------- gfortran ----------------------------
-#------------------------- ifort ----------------------------
-ifeq ("ifort","$(strip $(FC))")
-  FCFLAGS_ifort+=-module $(BUILD_DIR)
-else # assume gfortran style
-  FCFLAGS+=-J$(BUILD_DIR)
-endif # ifort
-
-#------------------------- fortran ----------------------------
+TARGETS += $(BIN_FILES) 
+TESTS = initpulse_test all_tests
 
 # Get a list of IDS from IDSDEF file
 IDSNAMES := $(shell sed '/<IDS name=/!d;s/.*name="\([^"]*\)".*/\1/' $(IDSDEF))
@@ -46,7 +32,7 @@ check test: $(TESTS)
 sources: $(IDS_SOURCES)
 
 # sometimes GNU Make thinks, *.mod is modula file...
-%.o : %.mod
+%.o : %.f90
 
 # Create src and bin dirs as needed
 $(TEST_SRC_DIR) $(BIN_DIR) $(BUILD_DIR) $(TMP_DIR):
@@ -55,7 +41,10 @@ $(TEST_SRC_DIR) $(BIN_DIR) $(BUILD_DIR) $(TMP_DIR):
 .PHONY: clean clean-src
 
 
-clean: fortran_clean
+clean:
+	$(RM) -r $(BIN_DIR)
+	$(RM) -r $(BUILD_DIR)
+	$(RM) initpulse
 	$(RM) -r idspath-*
 	$(RM) -r *.log
 
@@ -77,22 +66,12 @@ endif
 # Target sources is reserved (used by user to build sources only)
 # Need a single target to prevent parallel building:
 sources_: IDSDef2TestSuite.xsl $(IDSDEF) | saxonicajar $(TEST_SRC_DIR)
-	$(JAVA) net.sf.saxon.Transform newLowLevel=$(NEW_LOW_LEVEL) -t -s:$(IDSDEF) -xsl:IDSDef2TestSuite.xsl
+	$(SAXON) newLowLevel=$(NEW_LOW_LEVEL) -t -s:$(IDSDEF) -xsl:IDSDef2TestSuite.xsl
 
 #################################################
 #			  BUILD
 #################################################
 
-#------------------------- gfortran ----------------------------
-ifeq ("gfortran","$(strip $(FC))")
-.PHONY: fortran_clean
-endif
-
-fortran_clean:
-	$(RM) -r $(BIN_DIR)
-	$(RM) -r $(BUILD_DIR)
-	$(RM) fortran_initpulse
-	
 $(BUILD_DIR)/test_defs.o: $(BUILD_DIR)/%.o: %.f90 | $(BUILD_DIR)
 	$(FC) $(FCFLAGS) -c $< -o $@
 
@@ -122,17 +101,15 @@ $(BIN_DIR)/%_all_tests.exe: $(BUILD_DIR)/%_all_tests.o  $(BUILD_DIR)/comparator.
 	
 #-------------
 
-fortran_initpulse: initpulse.f90
+initpulse: initpulse.f90
 	$(FC) $(FCFLAGS) -o $@ $^ $(LIBS)
-
 
 
 
 #################################################
 #			  TEST
 #################################################
-.PHONY: test
-.PHONY: fortran_test
+.PHONY: test all_tests
 
 # Canned recipe that runs prerequisites as tests and produces TAP-like output
 define run-tests
@@ -147,12 +124,14 @@ define run-tests
 	@test 0 -eq $$(grep -c -i error $@.log) || exit 1
 endef
 
-fortran_initpulse_test: fortran_initpulse | $(TMP_DIR)
+initpulse_test: initpulse | $(TMP_DIR)
 	$(run-tests)
+
 # Run all tests grouped by IDS:
-fortran_test: $(IDSNAMES:%=fortran_test_%) | fortran_initpulse_test
-fortran_test_%: $(BIN_DIR)/%_all_tests.exe | fortran_initpulse_test
+all_tests: $(IDSNAMES:%=test_%) | initpulse_test
+test_%: $(BIN_DIR)/%_all_tests.exe | initpulse_test
 	$(run-tests)
+
 
 #----------------------- classpath deps ---------------------
 include ../../../Makefile.classpath

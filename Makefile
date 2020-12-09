@@ -14,21 +14,44 @@ ifeq ("no","$(strip $(IMAS_FORTRAN))")
 all sources sources_install install uninstall clean clean-src check test:
 	$(warning "Ignoring fortraninterface (IMAS_FORTRAN=no).")
 else
-#--------------------- fortran --------------
+
 MODDIR = fortran
 MODINC = -I$(MODDIR)
 
-ifeq ("nagfor","$(strip $(FC))")
-FCFLAGS = -g -O3 -D__USE_XOPEN2K8 -free -maxcontin=4000 -w=unused -w=x95 -kind=byte -r8 -PIC -mdir ./$(MODDIR)
-else ("g95","$(strip $(FC))")
-FCFLAGS = -g -O3 -D__USE_XOPEN2K8 -r8 -ftrace=full -fPIC -fno-second-underscore -ffree-line-length-huge -fmod=$(MODDIR)
-else ("pgf90","$(strip $(FC))")
-FCFLAGS = -g -O3 -D__USE_XOPEN2K8 -r8 -Mnosecond_underscore -fPIC -module=./$(MODDIR)
-else ("ifort","$(strip $(FC))")
-FCFLAGS = -g -O3 -r8 -assume no2underscore -fPIC -module $(MODDIR) -g -shared-intel
-else # default to ("gfortran","$(strip $(FC))")
-FCFLAGS = -g -O3 -D__USE_XOPEN2K8 -fdefault-real-8 -fdefault-double-8 -fPIC -fno-second-underscore -ffree-line-length-none -J$(MODDIR)
+# The builder should specify FC, this is a fail safe if it wasn't.
+ifneq ("no","$(strip $(IMAS_G95))")
+FC      = g95
 endif
+ifneq ("no","$(strip $(IMAS_GFORTRAN))")
+FC      = gfortran
+endif
+ifneq ("no","$(strip $(IMAS_NAGFOR))")
+FC      = nagfor
+endif
+ifneq ("no","$(strip $(IMAS_PGI))")
+FC      = pgf90
+endif
+ifneq ("no","$(strip $(IMAS_IFORT))")
+FC      = ifort
+endif
+
+# The builder should specify FCFLAGS, these are some suggestions that are known to work.
+ifeq ("nagfor","$(strip $(FC))")
+FCFLAGS ?= -g -O3 -D__USE_XOPEN2K8 -free -maxcontin=4000 -w=unused -w=x95 -kind=byte -r8 -PIC -mdir ./$(MODDIR)
+endif
+ifeq ("g95","$(strip $(FC))")
+FCFLAGS ?= -g -O3 -D__USE_XOPEN2K8 -r8 -ftrace=full -fPIC -fno-second-underscore -ffree-line-length-huge -fmod=$(MODDIR)
+endif
+ifeq ("pgf90","$(strip $(FC))")
+FCFLAGS ?= -g -O3 -D__USE_XOPEN2K8 -r8 -Mnosecond_underscore -fPIC -module=./$(MODDIR)
+endif
+ifeq ("ifort","$(strip $(FC))")
+FCFLAGS ?= -g -O3 -r8 -assume no2underscore -fPIC -module $(MODDIR) -g -shared-intel
+endif
+ifeq ("gfortran","$(strip $(FC))")
+FCFLAGS ?= -g -O3 -D__USE_XOPEN2K8 -fdefault-real-8 -fdefault-double-8 -fPIC -fno-second-underscore -ffree-line-length-none -J$(MODDIR)
+endif
+
 
 # Get a list of IDS from IDSDEF file, allow override by DD in environment
 IDSDEF   ?= ../xml/IDSDef.xml
@@ -47,12 +70,12 @@ IDSROUTINES=$(addsuffix .f90,$(IDSNAMES_FUNC))
 SOURCES=ids_routines.f90 utilities_copy_struct.f90 utilities_deallocate_struct.f90 utilities_put_struct.f90 utilities_put_slice_struct.f90 utilities_get_struct.f90 $(IDSROUTINES)
 
 # pkg-config files
-PC_FILES=
-PC_FILES_VAR=
-PC_FILES_ALT=
+PC_FILES=al-fortran.pc
+PC_FILES_VAR=al-fortran-$(DD_GIT_DESCRIBE).pc
+PC_FILES_ALT=$(ID_fortran_PC_FILES_2)
 
 # Concatenated list
-IDSOBJECTS=$(IDSOBJECTS)
+IDSOBJECTS=$(addsuffix .o,$(IDSNAMES_FUNC))
 
 # Include OS-specific Makefile, if exists.
 ifneq (,$(wildcard Makefile.$(SYSTEM)))
@@ -60,6 +83,8 @@ include Makefile.$(SYSTEM)
 else
 $(error No Makefile.$(SYSTEM) found for this system: $(UNAME_S))
 endif
+
+
 
 all: sources $(TARGETS) pkgconfig
 
@@ -89,8 +114,6 @@ check-clean-src test-clean-src:
 	$(MAKE) -C tests/generator clean-src
 
 
-#--------------------- g95 --------------
-#--------------------- gfortran --------------
 LIBFILES_fortran = ids_schemas.o ual_defs.o ual_low_level_wrap.o utilities_copy_struct.o utilities_deallocate_struct.o utilities_put_struct.o utilities_put_slice_struct.o utilities_get_struct.o $(IDSOBJECTS) ids_routines.o $(DEP)
 
 ids_routines.o: ids_routines.f90 ual_defs.o ual_low_level_wrap.o utilities_copy_struct.o utilities_deallocate_struct.o utilities_put_struct.o utilities_put_slice_struct.o utilities_get_struct.o $(IDSOBJECTS)
@@ -128,18 +151,15 @@ $(filter %_copy_struct.o,$(IDSOBJECTS)): %.o:%.f90 ids_schemas.o utilities_copy_
 $(filter %_deallocate_struct.o,$(IDSOBJECTS)): %.o:%.f90 ids_schemas.o utilities_deallocate_struct.o ual_defs.o ual_low_level_wrap.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
 
-#--------------------- nagfor --------------
-#--------------------- pgi --------------
-#--------------------- ifort --------------
 
 #----------------------- xslt ---------------------
 # Test if all idsroutines are found to exist as files.
 $(SOURCES): idsroutines
 idsroutines: IDSDef2F90Routines.xsl | saxonicajar
-	$(if $(call allnewerthan,$(IDSROUTINES),$^),, $(JAVA) net.sf.saxon.Transform -t -s:$(IDSDEF) -xsl:IDSDef2F90Routines.xsl DD_GIT_DESCRIBE=$(DD_GIT_DESCRIBE) UAL_GIT_DESCRIBE=$(UAL_GIT_DESCRIBE))
+	$(if $(call allnewerthan,$(IDSROUTINES),$^),, $(SAXON) -t -s:$(IDSDEF) -xsl:IDSDef2F90Routines.xsl DD_GIT_DESCRIBE=$(DD_GIT_DESCRIBE) UAL_GIT_DESCRIBE=$(UAL_GIT_DESCRIBE))
 
 ids_schemas.f90: IDSDef2F90TypeDef.xsl | saxonicajar
-	$(JAVA) net.sf.saxon.Transform -t -s:$(IDSDEF) -xsl:IDSDef2F90TypeDef.xsl
+	$(SAXON) -t -s:$(IDSDEF) -xsl:IDSDef2F90TypeDef.xsl
 
 
 # Include OS-specific Makefile.targets, if exists.
