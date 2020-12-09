@@ -67,14 +67,13 @@ install: all $(INSTALL_TARGETS) pkgconfig_install
 
 uninstall: $(INSTALL_TARGETS:%_install=%_uninstall) pkgconfig_uninstall
 
-$(libdir) $(addprefix $(includedir)/,fortran) $(datadir)/src/fortraninterface \
-$(MODDIR):
+$(libdir) $(includedir) $(datadir)/src/fortraninterface $(MODDIR):
 	$(mkdir_p) $@
 
 sources: $(SOURCES) ids_schemas.f90 id_f90_sources
 
 clean: pkgconfig_clean id_fortran_clean check-clean
-	$(RM) -r *.o *.mod *.so* *~ fortran/ *.a *.lib *.dll
+	$(RM) -r *.o *.mod *.so* *~ $(MODDIR) *.a *.lib *.dll
 
 clean-src: clean id_f90_clean-src check-clean-src
 	$(RM) $(SOURCES)

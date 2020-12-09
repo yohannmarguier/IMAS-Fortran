@@ -11,8 +11,8 @@ help:
 # Make NEW_LOW_LEVEL=yes default
 NEW_LOW_LEVEL?=yes
 
-FORTRAN_BIN_DIR:=./bin/fortran
-BUILD_DIR:=./build/fortran
+FORTRAN_BIN_DIR:=./bin
+BUILD_DIR:=./build
 TEST_SRC_DIR=./src
 TMP_DIR=./tmp
 FORTRAN_TESTS = fortran_initpulse_test fortran_test

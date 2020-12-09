@@ -1,12 +1,12 @@
 
 #------------------------- gfortran ----------------------------
 ifeq ("gfortran","$(strip $(FC))")
-FCFLAGS += -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none -I$(UAL_BUILD)/fortraninterface/fortran
+FCFLAGS += -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none -I$(UAL_BUILD)/fortraninterface
 endif
 
 #------------------------- ifort ----------------------------
 ifeq ("ifort","$(strip $(FC))")
-FCFLAGS += -g -r8 -assume no2underscore  -fPIC -I$(UAL_BUILD)/fortraninterface/fortran -shared-intel
+FCFLAGS += -g -r8 -assume no2underscore  -fPIC -I$(UAL_BUILD)/fortraninterface -shared-intel
 endif
 
 #------------------------- fortran ----------------------------
