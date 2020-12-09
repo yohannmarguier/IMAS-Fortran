@@ -3,8 +3,8 @@ sources_install: $(SOURCES) ids_schemas.f90 id_f90_sources_install
 sources_uninstall:
 	-rm -rf $(datadir)/src/fortraninterface
 
-fortran_install: $(IDSOBJECTS_fortran) libal-fortran.a_install libal-fortran.so_install | $(includedir)/fortran
-	$(INSTALL_DATA) $(MODDIR_fortran)/*.mod $(includedir)/fortran
+fortran_install: $(IDSOBJECTS) libal-fortran.a_install libal-fortran.so_install | $(includedir)/fortran
+	$(INSTALL_DATA) $(MODDIR)/*.mod $(includedir)/fortran
 
 fortran_uninstall: libal-fortran.a_uninstall libal-fortran.so_uninstall
 	-rm -f $(includedir)/fortran/*.mod
@@ -13,14 +13,14 @@ fortran_uninstall: libal-fortran.a_uninstall libal-fortran.so_uninstall
 #--------------------- nagfor --------------
 ifeq ("nagfor","$(strip $(FC))")
 libal-fortran-$(DD_GIT_DESCRIBE).so.$(SO_NUM): $(LIBFILES_fortran)
-	$(FC_fortran) $(FCFLAGS_fortran) -o $@ -Wl,-shared -Wl,-Wl,,$(SONAME_OPT),,$@ $^ $(LIBS)
+	$(FC) $(FCFLAGS) -o $@ -Wl,-shared -Wl,-Wl,,$(SONAME_OPT),,$@ $^ $(LIBS)
 else
 #--------------------- g95 --------------
 #--------------------- gfortran --------------
 #--------------------- pgi --------------
 #--------------------- ifort --------------
 libal-fortran-$(DD_GIT_DESCRIBE).so.$(SO_NUM): $(LIBFILES_fortran)
-	$(FC_fortran) $(FCFLAGS_fortran) -o $@ -shared -Wl,$(SONAME_OPT),$@ $^ $(LIBS)
+	$(FC) $(FCFLAGS) -o $@ -shared -Wl,$(SONAME_OPT),$@ $^ $(LIBS)
 
 endif
 

@@ -12,7 +12,7 @@ help:
 NEW_LOW_LEVEL?=yes
 
 FORTRAN_BIN_DIR:=./bin/fortran
-FORTRAN_BUILD_DIR:=./build/fortran
+BUILD_DIR:=./build/fortran
 TEST_SRC_DIR=./src
 TMP_DIR=./tmp
 FORTRAN_TESTS = fortran_initpulse_test fortran_test
@@ -25,9 +25,9 @@ endif
 #------------------------- gfortran ----------------------------
 #------------------------- ifort ----------------------------
 ifeq ("ifort","$(strip $(FC))")
-  FCFLAGS_ifort+=-module $(FORTRAN_BUILD_DIR)
+  FCFLAGS_ifort+=-module $(BUILD_DIR)
 else # assume gfortran style
-  FCFLAGS+=-J$(FORTRAN_BUILD_DIR)
+  FCFLAGS+=-J$(BUILD_DIR)
 endif # ifort
 
 #------------------------- fortran ----------------------------
@@ -49,7 +49,7 @@ sources: $(IDS_SOURCES)
 %.o : %.mod
 
 # Create src and bin dirs as needed
-$(TEST_SRC_DIR) $(FORTRAN_BIN_DIR) $(FORTRAN_BUILD_DIR) $(TMP_DIR):
+$(TEST_SRC_DIR) $(BIN_DIR) $(BUILD_DIR) $(TMP_DIR):
 	$(mkdir_p) $@
 
 .PHONY: clean clean-src
@@ -89,35 +89,35 @@ ifeq ("gfortran","$(strip $(FC))")
 endif
 
 fortran_clean:
-	$(RM) -r $(FORTRAN_BIN_DIR)
-	$(RM) -r $(FORTRAN_BUILD_DIR)
+	$(RM) -r $(BIN_DIR)
+	$(RM) -r $(BUILD_DIR)
 	$(RM) fortran_initpulse
 	
-$(FORTRAN_BUILD_DIR)/test_defs.o: $(FORTRAN_BUILD_DIR)/%.o: %.f90 | $(FORTRAN_BUILD_DIR)
+$(BUILD_DIR)/test_defs.o: $(BUILD_DIR)/%.o: %.f90 | $(BUILD_DIR)
 	$(FC) $(FCFLAGS) -c $< -o $@
 
-$(FORTRAN_BUILD_DIR)/generator.o: $(FORTRAN_BUILD_DIR)/%.o: %.f90 $(FORTRAN_BUILD_DIR)/test_defs.o
+$(BUILD_DIR)/generator.o: $(BUILD_DIR)/%.o: %.f90 $(BUILD_DIR)/test_defs.o
 	$(FC) $(FCFLAGS) -c $< -o $@
 
-$(FORTRAN_BUILD_DIR)/helper.o \
-$(FORTRAN_BUILD_DIR)/setter.o \
-$(FORTRAN_BUILD_DIR)/comparator.o: $(FORTRAN_BUILD_DIR)/%.o: %.f90 $(FORTRAN_BUILD_DIR)/generator.o
+$(BUILD_DIR)/helper.o \
+$(BUILD_DIR)/setter.o \
+$(BUILD_DIR)/comparator.o: $(BUILD_DIR)/%.o: %.f90 $(BUILD_DIR)/generator.o
 	$(FC) $(FCFLAGS) -c $< -o $@
 	
-$(FORTRAN_BUILD_DIR)/%_init.o: $(TEST_SRC_DIR)/%_init.f90 $(FORTRAN_BUILD_DIR)/setter.o $(FORTRAN_BUILD_DIR)/helper.o
+$(BUILD_DIR)/%_init.o: $(TEST_SRC_DIR)/%_init.f90 $(BUILD_DIR)/setter.o $(BUILD_DIR)/helper.o
 	$(FC) $(FCFLAGS) -c $< -o $@
 	
-$(FORTRAN_BUILD_DIR)/%_test.o: $(TEST_SRC_DIR)/%_test.f90 $(FORTRAN_BUILD_DIR)/comparator.o $(FORTRAN_BUILD_DIR)/helper.o
+$(BUILD_DIR)/%_test.o: $(TEST_SRC_DIR)/%_test.f90 $(BUILD_DIR)/comparator.o $(BUILD_DIR)/helper.o
 	$(FC) $(FCFLAGS) -c $< -o $@
 
 
-$(FORTRAN_BUILD_DIR)/%_test_routines.o: $(TEST_SRC_DIR)/%_test_routines.f90  $(FORTRAN_BUILD_DIR)/%_init.o $(FORTRAN_BUILD_DIR)/%_test.o
+$(BUILD_DIR)/%_test_routines.o: $(TEST_SRC_DIR)/%_test_routines.f90  $(BUILD_DIR)/%_init.o $(BUILD_DIR)/%_test.o
 	$(FC) $(FCFLAGS) -c $< -o $@
 
-$(FORTRAN_BUILD_DIR)/%_all_tests.o: $(TEST_SRC_DIR)/%_all_tests.f90 $(FORTRAN_BUILD_DIR)/%_test_routines.o $(FORTRAN_BUILD_DIR)/helper.o
+$(BUILD_DIR)/%_all_tests.o: $(TEST_SRC_DIR)/%_all_tests.f90 $(BUILD_DIR)/%_test_routines.o $(BUILD_DIR)/helper.o
 	$(FC) $(FCFLAGS) -c $< -o $@
 	
-$(FORTRAN_BIN_DIR)/%_all_tests.exe: $(FORTRAN_BUILD_DIR)/%_all_tests.o  $(FORTRAN_BUILD_DIR)/comparator.o  $(FORTRAN_BUILD_DIR)/generator.o $(FORTRAN_BUILD_DIR)/helper.o $(FORTRAN_BUILD_DIR)/%_test_routines.o  $(FORTRAN_BUILD_DIR)/setter.o $(FORTRAN_BUILD_DIR)/%_init.o  $(FORTRAN_BUILD_DIR)/%_test.o $(FORTRAN_BUILD_DIR)/test_defs.o| $(FORTRAN_BIN_DIR)
+$(BIN_DIR)/%_all_tests.exe: $(BUILD_DIR)/%_all_tests.o  $(BUILD_DIR)/comparator.o  $(BUILD_DIR)/generator.o $(BUILD_DIR)/helper.o $(BUILD_DIR)/%_test_routines.o  $(BUILD_DIR)/setter.o $(BUILD_DIR)/%_init.o  $(BUILD_DIR)/%_test.o $(BUILD_DIR)/test_defs.o| $(BIN_DIR)
 	$(FC) $(FCFLAGS) -o $@   $^ $(LIBS)
 	
 #-------------
@@ -151,7 +151,7 @@ fortran_initpulse_test: fortran_initpulse | $(TMP_DIR)
 	$(run-tests)
 # Run all tests grouped by IDS:
 fortran_test: $(IDSNAMES:%=fortran_test_%) | fortran_initpulse_test
-fortran_test_%: $(FORTRAN_BIN_DIR)/%_all_tests.exe | fortran_initpulse_test
+fortran_test_%: $(BIN_DIR)/%_all_tests.exe | fortran_initpulse_test
 	$(run-tests)
 
 #----------------------- classpath deps ---------------------

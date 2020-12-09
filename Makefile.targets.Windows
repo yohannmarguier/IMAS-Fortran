@@ -2,7 +2,7 @@
 sources_install: $(SOURCES) ids_schemas.f90 id_f90_sources_install
 sources_uninstall: id_f90_sources_uninstall
 
-fortran_install: $(IDSOBJECTS_fortran) libal-fortran.dll libal-fortran.lib
+fortran_install: $(IDSOBJECTS) libal-fortran.dll libal-fortran.lib
 	$(mkdir_p) $(packagedir)/fortraninterface/include
 	$(CP) fortran/*.mod $(packagedir)/fortraninterface/include
 	$(mkdir_p) $(packagedir)/fortraninterface/lib
@@ -14,7 +14,7 @@ fortran_uninstall:
 #--------------------- fortran --------------
 # Windows libraries
 libal-fortran.dll: $(LIBFILES_fortran)
-	$(FC_fortran) $(COPTS_fortran) -o $@ -shared -Wl,$(SONAME_OPT),$@.$(SO_NUM) -Wl,--out-implib,$@.lib $^ $(LIBS)
+	$(FC) $(COPTS_fortran) -o $@ -shared -Wl,$(SONAME_OPT),$@.$(SO_NUM) -Wl,--out-implib,$@.lib $^ $(LIBS)
 
 libal-fortran.lib: $(LIBFILES_fortran)
 	$(AR) rcvsu $@ $^

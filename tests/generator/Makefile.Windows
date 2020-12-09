@@ -35,4 +35,4 @@ endif
 
 JAVA = $(JAVA_HOME)/bin/java
 
-FORTRAN_BIN_FILES=$(patsubst %.f90,$(FORTRAN_BIN_DIR)/%.exe,$(notdir $(TEST_IDS_FILES)))
+FORTRAN_BIN_FILES=$(patsubst %.f90,$(BIN_DIR)/%.exe,$(notdir $(TEST_IDS_FILES)))

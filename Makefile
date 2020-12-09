@@ -52,7 +52,7 @@ PC_FILES_VAR=
 PC_FILES_ALT=
 
 # Concatenated list
-IDSOBJECTS=$(IDSOBJECTS_fortran)
+IDSOBJECTS=$(IDSOBJECTS)
 
 # Include OS-specific Makefile, if exists.
 ifneq (,$(wildcard Makefile.$(SYSTEM)))
@@ -92,41 +92,41 @@ check-clean-src test-clean-src:
 
 #--------------------- g95 --------------
 #--------------------- gfortran --------------
-LIBFILES_fortran = ids_schemas_fortran.o ual_defs_fortran.o ual_low_level_wrap_fortran.o utilities_copy_struct_fortran.o utilities_deallocate_struct_fortran.o utilities_put_struct_fortran.o utilities_put_slice_struct_fortran.o utilities_get_struct_fortran.o $(IDSOBJECTS_fortran) ids_routines_fortran.o $(DEP_fortran)
+LIBFILES_fortran = ids_schemas.o ual_defs.o ual_low_level_wrap.o utilities_copy_struct.o utilities_deallocate_struct.o utilities_put_struct.o utilities_put_slice_struct.o utilities_get_struct.o $(IDSOBJECTS) ids_routines.o $(DEP)
 
-ids_routines_fortran.o: ids_routines.f90 ual_defs_fortran.o ual_low_level_wrap_fortran.o utilities_copy_struct_fortran.o utilities_deallocate_struct_fortran.o utilities_put_struct_fortran.o utilities_put_slice_struct_fortran.o utilities_get_struct_fortran.o $(IDSOBJECTS_fortran)
+ids_routines.o: ids_routines.f90 ual_defs.o ual_low_level_wrap.o utilities_copy_struct.o utilities_deallocate_struct.o utilities_put_struct.o utilities_put_slice_struct.o utilities_get_struct.o $(IDSOBJECTS)
 	$(FC) -c $(FCFLAGS) $(MODINC) ids_routines.f90 -o $@
 
-ual_defs_fortran.o: %_fortran.o:wrapper/%.f90 | $(MODDIR_fortran)
+ual_defs.o: %.o:wrapper/%.f90 | $(MODDIR)
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
-ual_low_level_wrap_fortran.o: %_fortran.o:wrapper/%.f90 ual_defs_fortran.o
+ual_low_level_wrap.o: %.o:wrapper/%.f90 ual_defs.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
-ids_schemas_fortran.o: %_fortran.o:%.f90 ual_defs_fortran.o
+ids_schemas.o: %.o:%.f90 ual_defs.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
-utilities_copy_struct_fortran.o: utilities_copy_struct.f90 ids_schemas_fortran.o ual_defs_fortran.o ual_low_level_wrap_fortran.o
+utilities_copy_struct.o: utilities_copy_struct.f90 ids_schemas.o ual_defs.o ual_low_level_wrap.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
-utilities_deallocate_struct_fortran.o: utilities_deallocate_struct.f90 ids_schemas_fortran.o ual_defs_fortran.o ual_low_level_wrap_fortran.o
+utilities_deallocate_struct.o: utilities_deallocate_struct.f90 ids_schemas.o ual_defs.o ual_low_level_wrap.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
-utilities_put_struct_fortran.o: utilities_put_struct.f90 ids_schemas_fortran.o ual_defs_fortran.o ual_low_level_wrap_fortran.o
+utilities_put_struct.o: utilities_put_struct.f90 ids_schemas.o ual_defs.o ual_low_level_wrap.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
-utilities_put_slice_struct_fortran.o: utilities_put_slice_struct.f90 ids_schemas_fortran.o ual_defs_fortran.o ual_low_level_wrap_fortran.o
+utilities_put_slice_struct.o: utilities_put_slice_struct.f90 ids_schemas.o ual_defs.o ual_low_level_wrap.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
-utilities_get_struct_fortran.o: utilities_get_struct.f90 ids_schemas_fortran.o ual_defs_fortran.o ual_low_level_wrap_fortran.o
+utilities_get_struct.o: utilities_get_struct.f90 ids_schemas.o ual_defs.o ual_low_level_wrap.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
 
-$(filter %_put_fortran.o,$(IDSOBJECTS)): %_put_fortran.o : %_put.f90 %_delete_fortran.o ids_schemas_fortran.o utilities_put_struct_fortran.o ual_defs_fortran.o ual_low_level_wrap_fortran.o
+$(filter %_put.o,$(IDSOBJECTS)): %_put.o : %_put.f90 %_delete.o ids_schemas.o utilities_put_struct.o ual_defs.o ual_low_level_wrap.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
-$(filter %_put_slice_fortran.o,$(IDSOBJECTS)): %_put_slice_fortran.o : %_put_slice.f90 ids_schemas_fortran.o %_put_fortran.o utilities_put_slice_struct_fortran.o ual_defs_fortran.o ual_low_level_wrap_fortran.o
+$(filter %_put_slice.o,$(IDSOBJECTS)): %_put_slice.o : %_put_slice.f90 ids_schemas.o %_put.o utilities_put_slice_struct.o ual_defs.o ual_low_level_wrap.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
-$(filter %_get_fortran.o,$(IDSOBJECTS)): %_get_fortran.o:%_get.f90 ids_schemas_fortran.o utilities_get_struct_fortran.o ual_defs_fortran.o ual_low_level_wrap_fortran.o
+$(filter %_get.o,$(IDSOBJECTS)): %_get.o:%_get.f90 ids_schemas.o utilities_get_struct.o ual_defs.o ual_low_level_wrap.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
-$(filter %_get_slice_fortran.o,$(IDSOBJECTS)): %_get_slice_fortran.o:%_get_slice.f90 ids_schemas_fortran.o utilities_get_struct_fortran.o %_get_fortran.o ual_defs_fortran.o ual_low_level_wrap_fortran.o
+$(filter %_get_slice.o,$(IDSOBJECTS)): %_get_slice.o:%_get_slice.f90 ids_schemas.o utilities_get_struct.o %_get.o ual_defs.o ual_low_level_wrap.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
-$(filter %_delete_fortran.o,$(IDSOBJECTS)): %_fortran.o:%.f90 ids_schemas_fortran.o ual_defs_fortran.o ual_low_level_wrap_fortran.o
+$(filter %_delete.o,$(IDSOBJECTS)): %.o:%.f90 ids_schemas.o ual_defs.o ual_low_level_wrap.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
-$(filter %_copy_struct_fortran.o,$(IDSOBJECTS)): %_fortran.o:%.f90 ids_schemas_fortran.o utilities_copy_struct_fortran.o ual_defs_fortran.o ual_low_level_wrap_fortran.o
+$(filter %_copy_struct.o,$(IDSOBJECTS)): %.o:%.f90 ids_schemas.o utilities_copy_struct.o ual_defs.o ual_low_level_wrap.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
-$(filter %_deallocate_struct_fortran.o,$(IDSOBJECTS)): %_fortran.o:%.f90 ids_schemas_fortran.o utilities_deallocate_struct_fortran.o ual_defs_fortran.o ual_low_level_wrap_fortran.o
+$(filter %_deallocate_struct.o,$(IDSOBJECTS)): %.o:%.f90 ids_schemas.o utilities_deallocate_struct.o ual_defs.o ual_low_level_wrap.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
 
 #--------------------- nagfor --------------
