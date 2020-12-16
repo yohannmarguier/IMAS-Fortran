@@ -3,11 +3,11 @@ sources_install: $(SOURCES) ids_schemas.f90 id_f90_sources_install
 sources_uninstall:
 	-rm -rf $(datadir)/src/fortraninterface
 
-fortran_install: $(IDSOBJECTS) libal-fortran.a_install libal-fortran.so_install | $(includedir)
-	$(INSTALL_DATA) $(MODDIR)/*.mod $(includedir)
+fortran_install: $(IDSOBJECTS) libal-fortran.a_install libal-fortran.so_install | $(includedir)/fortran
+	$(INSTALL_DATA) $(MODDIR)/*.mod $(includedir)/fortran
 
 fortran_uninstall: libal-fortran.a_uninstall libal-fortran.so_uninstall
-	-rm -f $(includedir)/*.mod
+	-rm -f $(includedir)/fortran/*.mod
 
 
 #--------------------- nagfor --------------

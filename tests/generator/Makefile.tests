@@ -15,7 +15,6 @@ BIN_DIR:=./bin
 BUILD_DIR:=./build
 TEST_SRC_DIR=./src
 TMP_DIR=./tmp
-TARGETS += $(BIN_FILES) 
 TESTS = initpulse_test all_tests
 
 # Get a list of IDS from IDSDEF file
@@ -26,6 +25,13 @@ IDS_SOURCES += $(patsubst %,$(TEST_SRC_DIR)/%_test_routines.f90,$(IDSNAMES))
 IDS_SOURCES += $(patsubst %,$(TEST_SRC_DIR)/%_test.f90,$(IDSNAMES))
 IDS_SOURCES += $(patsubst %,$(TEST_SRC_DIR)/%_init.f90,$(IDSNAMES))
 
+BIN_FILES = $(patsubst %.f90,$(BIN_DIR)/%.exe,$(notdir $(TEST_IDS_FILES)))
+
+ifeq ("yes","$(strip $(SOURCES_ONLY))")
+TARGETS = sources
+else
+TARGETS += $(BIN_FILES) 
+endif
 
 all: $(TARGETS)
 check test: $(TESTS)

@@ -15,39 +15,28 @@ all sources sources_install install uninstall clean clean-src check test:
 	$(warning "Ignoring fortraninterface (IMAS_FORTRAN=no).")
 else
 
-MODDIR = fortran
+MODDIR = include
 MODINC = -I$(MODDIR)
 
 # The builder should specify FC, this is a fail safe if it wasn't.
-ifeq ("yes","$(strip $(IMAS_G95))")
-FC      = g95
-else ifeq ("yes","$(strip $(IMAS_NAGFOR))")
-FC      = nagfor
-else ifeq ("yes","$(strip $(IMAS_PGI))")
-FC      = pgf90
+# The builder should specify FCFLAGS, these are some suggestions that are known to work.
+ifeq ("yes","$(strip $(IMAS_GFORTRAN))")
+FC      = gfortran
+FCFLAGS ?= -g -O3 -D__USE_XOPEN2K8 -fdefault-real-8 -fdefault-double-8 -fPIC -fno-second-underscore -ffree-line-length-none -J$(MODDIR)
 else ifeq ("yes","$(strip $(IMAS_IFORT))")
 FC      = ifort
-else ifeq ("yes","$(strip $(IMAS_GFORTRAN))")
-FC      = gfortran
-else
-SOURCES_ONLY=yes
-endif
-
-# The builder should specify FCFLAGS, these are some suggestions that are known to work.
-ifeq ("nagfor","$(strip $(FC))")
-FCFLAGS ?= -g -O3 -D__USE_XOPEN2K8 -free -maxcontin=4000 -w=unused -w=x95 -kind=byte -r8 -PIC -mdir ./$(MODDIR)
-endif
-ifeq ("g95","$(strip $(FC))")
-FCFLAGS ?= -g -O3 -D__USE_XOPEN2K8 -r8 -ftrace=full -fPIC -fno-second-underscore -ffree-line-length-huge -fmod=$(MODDIR)
-endif
-ifeq ("pgf90","$(strip $(FC))")
-FCFLAGS ?= -g -O3 -D__USE_XOPEN2K8 -r8 -Mnosecond_underscore -fPIC -module=./$(MODDIR)
-endif
-ifeq ("ifort","$(strip $(FC))")
 FCFLAGS ?= -g -O3 -r8 -assume no2underscore -fPIC -module $(MODDIR) -g -shared-intel
-endif
-ifeq ("gfortran","$(strip $(FC))")
-FCFLAGS ?= -g -O3 -D__USE_XOPEN2K8 -fdefault-real-8 -fdefault-double-8 -fPIC -fno-second-underscore -ffree-line-length-none -J$(MODDIR)
+else ifeq ("yes","$(strip $(IMAS_PGI))")
+FC      = pgf90
+FCFLAGS ?= -g -O3 -D__USE_XOPEN2K8 -r8 -Mnosecond_underscore -fPIC -module=./$(MODDIR)
+else ifeq ("yes","$(strip $(IMAS_NAGFOR))")
+FC      = nagfor
+FCFLAGS ?= -g -O3 -D__USE_XOPEN2K8 -free -maxcontin=4000 -w=unused -w=x95 -kind=byte -r8 -PIC -mdir ./$(MODDIR)
+else ifeq ("yes","$(strip $(IMAS_G95))")
+FC      = g95
+FCFLAGS ?= -g -O3 -D__USE_XOPEN2K8 -r8 -ftrace=full -fPIC -fno-second-underscore -ffree-line-length-huge -fmod=$(MODDIR)
+else 
+SOURCES_ONLY=yes
 endif
 
 
@@ -94,7 +83,7 @@ install: all $(INSTALL_TARGETS) pkgconfig_install
 
 uninstall: $(INSTALL_TARGETS:%_install=%_uninstall) pkgconfig_uninstall
 
-$(libdir) $(includedir) $(datadir)/src/fortraninterface $(MODDIR):
+$(libdir) $(includedir)/fortran $(datadir)/src/fortraninterface $(MODDIR):
 	$(mkdir_p) $@
 
 sources: $(SOURCES) ids_schemas.f90 id_f90_sources

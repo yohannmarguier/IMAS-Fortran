@@ -9,7 +9,7 @@ UAL_BUILD=../../..
 $(warning UAL_BUILD variable unset, probably not running 'make ual_test' from the Installer. Assuming UAL_BUILD=$(UAL_BUILD).)
 endif
 
-ifeq ("no","$(strip $(IMAS_FORTRAN))")
+ifneq ("yes","$(strip $(IMAS_FORTRAN))")
 all sources sources_install sources_uninstall install uninstall clean clean-src check test:
 	$(warning "Ignoring fortraninterface (IMAS_FORTRAN=no).")
 else
