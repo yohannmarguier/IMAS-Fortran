@@ -19,20 +19,18 @@ MODDIR = fortran
 MODINC = -I$(MODDIR)
 
 # The builder should specify FC, this is a fail safe if it wasn't.
-ifneq ("no","$(strip $(IMAS_G95))")
+ifeq ("yes","$(strip $(IMAS_G95))")
 FC      = g95
-endif
-ifneq ("no","$(strip $(IMAS_GFORTRAN))")
-FC      = gfortran
-endif
-ifneq ("no","$(strip $(IMAS_NAGFOR))")
+else ifeq ("yes","$(strip $(IMAS_NAGFOR))")
 FC      = nagfor
-endif
-ifneq ("no","$(strip $(IMAS_PGI))")
+else ifeq ("yes","$(strip $(IMAS_PGI))")
 FC      = pgf90
-endif
-ifneq ("no","$(strip $(IMAS_IFORT))")
+else ifeq ("yes","$(strip $(IMAS_IFORT))")
 FC      = ifort
+else ifeq ("yes","$(strip $(IMAS_GFORTRAN))")
+FC      = gfortran
+else
+SOURCES_ONLY=yes
 endif
 
 # The builder should specify FCFLAGS, these are some suggestions that are known to work.
@@ -85,8 +83,12 @@ $(error No Makefile.$(SYSTEM) found for this system: $(UNAME_S))
 endif
 
 
+BUILD_TARGETS = sources
+ifneq ("yes","$(strip $(SOURCES_ONLY))")
+	BUILD_TARGETS += $(TARGETS) pkgconfig
+endif
 
-all: sources $(TARGETS) pkgconfig
+all: $(BUILD_TARGETS) 
 
 install: all $(INSTALL_TARGETS) pkgconfig_install
 
