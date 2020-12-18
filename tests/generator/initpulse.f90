@@ -17,8 +17,7 @@ PROGRAM initpulse
   CALL get_environment_variable("USER", buffer)
   userNameSize = LEN_TRIM(buffer)
   if(userNameSize < 1) then
-     write(*,*) "PANIC: $USER not found! Exiting..."
-     CALL exit(1)
+     STOP "PANIC: $USER not found! Exiting..."
   endif
   allocate(character(userNameSize):: userName)
   userName = trim(buffer)
@@ -26,8 +25,7 @@ PROGRAM initpulse
   CALL get_environment_variable("IMAS_VERSION", buffer)
   dataVersionSize = LEN_TRIM(buffer)
   if(dataVersionSize < 1) then
-     write(*,*) "PANIC: $IMAS_VERSION not found! Exiting..."
-     CALL exit(1)
+     STOP "PANIC: $IMAS_VERSION not found! Exiting..."
   endif
   allocate(character(dataVersionSize):: dataVersion)
   dataVersion = trim(buffer)
