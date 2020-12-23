@@ -42,9 +42,6 @@ endif
 ifeq ("gfortran","$(strip $(FC))")
 TARGETS += libal-fortran.dll libal-fortran.lib
 TARGETS += id_fortran_all
-PC_FILES += al-fortran.pc
-PC_FILES_VAR += al-fortran-$(DD_GIT_DESCRIBE).pc
-PC_FILES_ALT += $(ID_fortran_PC_FILES_2)
 INSTALL_TARGETS += fortran_install id_fortran_install
 IDSOBJECTS=$(addsuffix .o,$(IDSNAMES_FUNC))
 endif
