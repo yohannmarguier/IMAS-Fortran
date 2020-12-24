@@ -10,7 +10,7 @@ endif
 LIBS = -L$(UAL_BUILD)/lowlevel -L$(UAL_BUILD)/fortraninterface $(UAL_BUILD)/fortraninterface/libal-fortran.lib $(UAL_BUILD)/lowlevel/libal.lib -lm -lstdc++
 
 
-ifneq ("no","$(strip $(IMAS_MDSPLUS))")
+ifeq ("yes","$(strip $(IMAS_MDSPLUS))")
 LIBS+= -L$(MDSPLUS_DIR)/lib
 LIBS+= $(MDSPLUS_DIR)/lib/XTreeShr.a
 LIBS+= $(MDSPLUS_DIR)/lib/MdsObjectsCppShr.a
@@ -21,14 +21,14 @@ LIBS+= $(MDSPLUS_DIR)/lib/MdsShr.a
 LIBS+= -lxml2 -lws2_32 -ldl -liphlpapi -lstdc++
 endif
 
-ifneq ("no","$(strip $(IMAS_UDA))")
+ifeq ("yes","$(strip $(IMAS_UDA))")
 LIBS+= -L$(UDA_HOME)/lib
 LIBS+= $(UDA_HOME)/lib/libuda_cpp.a
 LIBS+= $(UDA_HOME)/lib/libportablexdr.a
 LIBS+= -lws2_32 -lssl -lcrypto -lstdc++
 endif
 
-ifneq ("no","$(strip $(IMAS_HDF5))")
+ifeq ("yes","$(strip $(IMAS_HDF5))")
 LIBS+= -L$(HDF5_HOME)/lib
 LIBS+= $(HDF5_HOME)/lib/libhdf5.a -ldl -lz
 endif

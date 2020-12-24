@@ -10,7 +10,7 @@ include ../Makefile.common
 SO_NUM=5
 
 
-ifeq ("no","$(strip $(IMAS_FORTRAN))")
+ifneq ("yes","$(strip $(IMAS_FORTRAN))")
 all sources sources_install install uninstall clean clean-src check test:
 	$(warning "Ignoring fortraninterface (IMAS_FORTRAN=no).")
 else
