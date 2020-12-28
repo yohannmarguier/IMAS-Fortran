@@ -1,6 +1,6 @@
 #------------------------- gfortran ----------------------------
 ifeq ("gfortran","$(strip $(FC))")
-FCFLAGS = -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none -I$(UAL_BUILD)/fortraninterface/fortran
+FCFLAGS ?= -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none -I$(UAL_BUILD)/fortraninterface/fortran
 endif
 
 #------------------------- ifort ----------------------------

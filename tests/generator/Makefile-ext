@@ -9,20 +9,20 @@ $(error Please first install imas and then module load imas/... to populate envi
 endif
 
 ifeq ("yes","$(strip $(IMAS_GFORTRAN))")
-FC = gfortran
+FC ?= gfortran
 FCFLAGS ?= -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none `pkg-config al-fortran --cflags`
 else ifeq ("yes","$(strip $(IMAS_IFORT))")
-FC = ifort
+FC ?= ifort
 FCFLAGS ?= -g -r8 -assume no2underscore  -fPIC `pkg-config al-fortran --cflags` -shared-intel
 else ifeq ("yes","$(strip $(IMAS_PGI))")
-FC      = pgf90
-FCFLAGS = -r8  -Mnosecond_underscore -fPIC `pkg-config al-fortran --cflags`
+FC      ?= pgf90
+FCFLAGS ?= -r8  -Mnosecond_underscore -fPIC `pkg-config al-fortran --cflags`
 else ifeq ("yes","$(strip $(IMAS_NAGFOR))")
-FC      = nagfor
-FCFLAGS = -r8 -PIC `pkg-config al-fortran --cflags`
+FC      ?= nagfor
+FCFLAGS ?= -r8 -PIC `pkg-config al-fortran --cflags`
 else ifeq ("yes","$(strip $(IMAS_G95))")
-FC      =g95
-FCFLAGS = -r8 -ftrace=full -fPIC -fno-second-underscore -ffree-line-length-huge `pkg-config al-fortran --cflags`
+FC      ?= g95
+FCFLAGS ?= -r8 -ftrace=full -fPIC -fno-second-underscore -ffree-line-length-huge `pkg-config al-fortran --cflags`
 else 
 SOURCES_ONLY=yes
 endif

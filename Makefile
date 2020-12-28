@@ -21,19 +21,19 @@ MODINC = -I$(MODDIR)
 # The builder should specify FC, this is a fail safe if it wasn't.
 # The builder should specify FCFLAGS, these are some suggestions that are known to work.
 ifeq ("yes","$(strip $(IMAS_GFORTRAN))")
-FC      = gfortran
+FC      ?= gfortran
 FCFLAGS ?= -g -O3 -D__USE_XOPEN2K8 -fdefault-real-8 -fdefault-double-8 -fPIC -fno-second-underscore -ffree-line-length-none -J$(MODDIR)
 else ifeq ("yes","$(strip $(IMAS_IFORT))")
-FC      = ifort
+FC      ?= ifort
 FCFLAGS ?= -g -O3 -r8 -assume no2underscore -fPIC -module $(MODDIR) -g -shared-intel
 else ifeq ("yes","$(strip $(IMAS_PGI))")
-FC      = pgf90
+FC      ?= pgf90
 FCFLAGS ?= -g -O3 -D__USE_XOPEN2K8 -r8 -Mnosecond_underscore -fPIC -module=./$(MODDIR)
 else ifeq ("yes","$(strip $(IMAS_NAGFOR))")
-FC      = nagfor
+FC      ?= nagfor
 FCFLAGS ?= -g -O3 -D__USE_XOPEN2K8 -free -maxcontin=4000 -w=unused -w=x95 -kind=byte -r8 -PIC -mdir ./$(MODDIR)
 else ifeq ("yes","$(strip $(IMAS_G95))")
-FC      = g95
+FC      ?= g95
 FCFLAGS ?= -g -O3 -D__USE_XOPEN2K8 -r8 -ftrace=full -fPIC -fno-second-underscore -ffree-line-length-huge -fmod=$(MODDIR)
 else 
 SOURCES_ONLY=yes
