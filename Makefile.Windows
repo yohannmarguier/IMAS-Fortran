@@ -44,7 +44,7 @@ endif
  
 ifneq ("no","$(strip $(IMAS_HDF5))")
 LIBS	+= -L$(HDF5_HOME)/lib
-LIBS	+= $(HDF5_HOME)/lib/libhdf5.a -ldl -lz -lstdc++
+LIBS	+= $(HDF5_HOME)/lib/libhdf5.a -ldl -lz -lstdc++ -lboost_filesystem-mt -lboost_system-mt
 endif
 
 ifneq ("no","$(strip $(IMAS_GFORTRAN))")
