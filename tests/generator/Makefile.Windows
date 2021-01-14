@@ -23,7 +23,7 @@ endif
 
 ifneq ("no","$(strip $(IMAS_HDF5))")
 LIBS_gfortran+= -L$(HDF5_HOME)/lib
-LIBS_gfortran+= $(HDF5_HOME)/lib/libhdf5.a -ldl -lz
+LIBS_gfortran+= $(HDF5_HOME)/lib/libhdf5.a -ldl -lz -lboost_filesystem-mt -lboost_system-mt
 endif
 
 JAVA = $(JAVA_HOME)/bin/java
