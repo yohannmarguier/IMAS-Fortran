@@ -20,7 +20,7 @@ FUNCTION backend2str( backendID ) RESULT (strBackend)
         ! MDSPLUS_BACKEND
         CASE (MDSPLUS_BACKEND)                   
               strBackend =  "MDSPLUS"               
-
+        
         ! MEMORY_BACKEND
         CASE (MEMORY_BACKEND)                   
               strBackend =  "MEMORY"               
@@ -28,6 +28,10 @@ FUNCTION backend2str( backendID ) RESULT (strBackend)
         ! ASCII_BACKEND
         CASE (ASCII_BACKEND)                   
               strBackend =  "ASCII"               
+
+        ! HDF5_BACKEND
+        CASE (HDF5_BACKEND)                   
+              strBackend =  "HDF5"               
 
         ! UDA_BACKEND
         CASE (UDA_BACKEND)                   
@@ -193,6 +197,13 @@ SUBROUTINE setCmdlOptions()
                             ! set user chosen backend
                             config%backendIDArray(1) = ASCII_BACKEND
 
+                   ! HDF5_BACKEND
+                    case ('4')
+                            ! clear array
+                            config%backendIDArray = NO_BACKEND        
+                            ! set user chosen backend
+                            config%backendIDArray(1) = HDF5_BACKEND
+
                     case default
                         print *, 'Error! Backend: Unrecognised value [ ', trim(argValue), ' ]'
                         call print_help()
@@ -271,6 +282,7 @@ SUBROUTINE print_help()
         print '(a)',    '                       1 - MDSPlus'
         print '(a)',    '                       2 - Memory Backend'
         print '(a)',    '                       3 - ASCII Backend'
+        print '(a)',    '                       4 - HDF5 Backend'
         print '(a)',    '  -o, --num-occurr <value> - Set maximum number of occurrences to be tested'
         print '(a)',    '  -m, --test-mode  <value> - Sets if slice and/or global operations should be tested:'
         print '(a)',    '                Values:'
