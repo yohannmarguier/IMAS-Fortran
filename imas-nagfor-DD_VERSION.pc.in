@@ -8,5 +8,5 @@ Version: __UAL_GIT_DESCRIBE__
 Description: IMAS Fortran Libraries (nagfor)
 URL: https://imas.iter.org
 Requires: imas-lowlevel = __UAL_GIT_DESCRIBE__
-Cflags: -I${includedir}/nagfor
-Libs: -L${libdir} -limas-nagfor-__DD_GIT_DESCRIBE__ -Wl,--defsym,AL_VER___AL_SAFE_DESCRIBE__=0 -Wl,--defsym,DD_VER___DD_SAFE_DESCRIBE__=0
+Cflags: -kind=byte -r8 -I${includedir}/nagfor
+Libs: -L${libdir} -limas-nagfor-__DD_GIT_DESCRIBE__ -Wl,-Wl,,--defsym,,AL_VER___AL_SAFE_DESCRIBE__=0 -Wl,-Wl,,--defsym,,DD_VER___DD_SAFE_DESCRIBE__=0
