@@ -32,7 +32,7 @@ INCDIR_nagfor   = -I$(MODDIR_nagfor)
 
 FC_pgi         = pgf90
 MODDIR_pgi      = pgi
-FCFLAGS_pgi       = -g -O3 -D__USE_XOPEN2K8 -r8 -Mnosecond_underscore -fPIC -module=./$(MODDIR_pgi) 
+FCFLAGS_pgi       = -O3 -D__USE_XOPEN2K8 -r8 -Mnosecond_underscore -fPIC -module=./$(MODDIR_pgi) 
 INCDIR_pgi      = -I$(MODDIR_pgi)
 
 FC_ifort       = ifort
