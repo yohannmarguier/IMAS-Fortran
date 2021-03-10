@@ -1999,6 +1999,31 @@ end module
     endif
   </xsl:when>
 
+  <!-- complex 4D vector data -->
+  <xsl:when test="@data_type='CPX_4D'">
+    ! Put <xsl:value-of select="@name"/>
+    if (<xsl:if test="@type='dynamic'">(timemode.NE.IDS_TIME_MODE_INDEPENDENT) .AND. </xsl:if>associated(<xsl:value-of select="$fieldvar"/>)) then
+    <xsl:call-template name="set_timepath_and_lastdimsize">
+      <xsl:with-param name="slice" select="$slice"/>
+      <xsl:with-param name="fieldpath" select="$fieldpath"/>
+      <xsl:with-param name="fieldvar" select="$fieldvar"/>
+      <xsl:with-param name="rank" select="4"/>
+    </xsl:call-template>
+       call put_vect4d_complex(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
+          trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
+	  size(<xsl:value-of select="$fieldvar"/>,1),&amp;
+	  size(<xsl:value-of select="$fieldvar"/>,2),&amp;
+	  size(<xsl:value-of select="$fieldvar"/>,3),&amp;
+	  lastdimsize, status)
+	  <xsl:call-template name="checkErrorCtx">
+            <xsl:with-param name="method" select="'put'"/>
+	    <xsl:with-param name="ctx" select="$contextvar"/>
+	    <xsl:with-param name="path" select="$fieldpath"/>
+	    <xsl:with-param name="structvar" select="$structvar"/>
+	  </xsl:call-template>
+    endif
+  </xsl:when>
+
   <!-- float 5D vector data -->
   <xsl:when test="@data_type='FLT_5D'">
     ! Put <xsl:value-of select="@name"/>
@@ -2025,6 +2050,32 @@ end module
     endif
   </xsl:when>
 
+  <!-- complex 5D vector data -->
+  <xsl:when test="@data_type='CPX_5D'">
+    ! Put <xsl:value-of select="@name"/>
+    if (<xsl:if test="@type='dynamic'">(timemode.NE.IDS_TIME_MODE_INDEPENDENT) .AND. </xsl:if>associated(<xsl:value-of select="$fieldvar"/>)) then
+    <xsl:call-template name="set_timepath_and_lastdimsize">
+      <xsl:with-param name="slice" select="$slice"/>
+      <xsl:with-param name="fieldpath" select="$fieldpath"/>
+      <xsl:with-param name="fieldvar" select="$fieldvar"/>
+      <xsl:with-param name="rank" select="5"/>
+    </xsl:call-template>
+       call put_vect5d_complex(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
+          trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
+	  size(<xsl:value-of select="$fieldvar"/>,1),&amp;
+	  size(<xsl:value-of select="$fieldvar"/>,2),&amp;
+	  size(<xsl:value-of select="$fieldvar"/>,3),&amp;
+	  size(<xsl:value-of select="$fieldvar"/>,4),&amp;
+	  lastdimsize, status)
+	  <xsl:call-template name="checkErrorCtx">
+            <xsl:with-param name="method" select="'put'"/>
+	    <xsl:with-param name="ctx" select="$contextvar"/>
+	    <xsl:with-param name="path" select="$fieldpath"/>
+	    <xsl:with-param name="structvar" select="$structvar"/>
+	  </xsl:call-template>
+    endif
+  </xsl:when>
+
   <!-- float 6D vector data -->
   <xsl:when test="@data_type='FLT_6D'">
     ! Put <xsl:value-of select="@name"/>
@@ -2036,6 +2087,33 @@ end module
       <xsl:with-param name="rank" select="6"/>
     </xsl:call-template>
        call put_vect6d_double(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
+          trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
+	  size(<xsl:value-of select="$fieldvar"/>,1),&amp;
+	  size(<xsl:value-of select="$fieldvar"/>,2),&amp;
+	  size(<xsl:value-of select="$fieldvar"/>,3),&amp;
+	  size(<xsl:value-of select="$fieldvar"/>,4),&amp;
+	  size(<xsl:value-of select="$fieldvar"/>,5),&amp;
+	  lastdimsize, status)
+	  <xsl:call-template name="checkErrorCtx">
+            <xsl:with-param name="method" select="'put'"/>
+	    <xsl:with-param name="ctx" select="$contextvar"/>
+	    <xsl:with-param name="path" select="$fieldpath"/>
+	    <xsl:with-param name="structvar" select="$structvar"/>
+	  </xsl:call-template>
+    endif
+  </xsl:when>
+
+  <!-- complex 6D vector data -->
+  <xsl:when test="@data_type='CPX_6D'">
+    ! Put <xsl:value-of select="@name"/>
+    if (<xsl:if test="@type='dynamic'">(timemode.NE.IDS_TIME_MODE_INDEPENDENT) .AND. </xsl:if>associated(<xsl:value-of select="$fieldvar"/>)) then
+    <xsl:call-template name="set_timepath_and_lastdimsize">
+      <xsl:with-param name="slice" select="$slice"/>
+      <xsl:with-param name="fieldpath" select="$fieldpath"/>
+      <xsl:with-param name="fieldvar" select="$fieldvar"/>
+      <xsl:with-param name="rank" select="6"/>
+    </xsl:call-template>
+       call put_vect6d_complex(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
           trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
 	  size(<xsl:value-of select="$fieldvar"/>,1),&amp;
 	  size(<xsl:value-of select="$fieldvar"/>,2),&amp;
@@ -2449,6 +2527,26 @@ end module
     </xsl:call-template>
   </xsl:when>
 
+  <!-- complex 4D vector data -->
+  <xsl:when test="@data_type='CPX_4D'">
+    ! Get <xsl:value-of select="@name"/>
+    <xsl:call-template name="set_timepath">
+      <xsl:with-param name="fieldpath" select="$fieldpath"/>
+      <xsl:with-param name="fieldvar" select="$fieldvar"/>
+      <xsl:with-param name="root" select="$root"/>
+    </xsl:call-template>
+    call get_vect4d_complex(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
+          trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
+	  size1, size2, size3, size4, status)
+    <xsl:call-template name="checkErrorCtx">
+      <xsl:with-param name="method" select="'get'"/>
+      <xsl:with-param name="ctx" select="$contextvar"/>
+      <xsl:with-param name="path" select="$fieldpath"/>
+      <xsl:with-param name="structvar" select="$structvar"/>
+      <xsl:with-param name="withtimepath" select="'yes'"/>
+    </xsl:call-template>
+  </xsl:when>
+
   <!-- float 5D vector data -->
   <xsl:when test="@data_type='FLT_5D'">
     ! Get <xsl:value-of select="@name"/>
@@ -2469,6 +2567,26 @@ end module
     </xsl:call-template>
   </xsl:when>
 
+  <!-- complex 5D vector data -->
+  <xsl:when test="@data_type='CPX_5D'">
+    ! Get <xsl:value-of select="@name"/>
+    <xsl:call-template name="set_timepath">
+      <xsl:with-param name="fieldpath" select="$fieldpath"/>
+      <xsl:with-param name="fieldvar" select="$fieldvar"/>
+      <xsl:with-param name="root" select="$root"/>
+    </xsl:call-template>
+    call get_vect5d_complex(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
+          trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
+	  size1, size2, size3, size4, size5, status)
+    <xsl:call-template name="checkErrorCtx">
+      <xsl:with-param name="method" select="'get'"/>
+      <xsl:with-param name="ctx" select="$contextvar"/>
+      <xsl:with-param name="path" select="$fieldpath"/>
+      <xsl:with-param name="structvar" select="$structvar"/>
+      <xsl:with-param name="withtimepath" select="'yes'"/>
+    </xsl:call-template>
+  </xsl:when>
+
   <!-- float 6D vector data -->
   <xsl:when test="@data_type='FLT_6D'">
     ! Get <xsl:value-of select="@name"/>
@@ -2478,6 +2596,26 @@ end module
       <xsl:with-param name="root" select="$root"/>
     </xsl:call-template>
     call get_vect6d_double(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
+          trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
+	  size1, size2, size3, size4, size5, size6, status)
+    <xsl:call-template name="checkErrorCtx">
+      <xsl:with-param name="method" select="'get'"/>
+      <xsl:with-param name="ctx" select="$contextvar"/>
+      <xsl:with-param name="path" select="$fieldpath"/>
+      <xsl:with-param name="structvar" select="$structvar"/>
+      <xsl:with-param name="withtimepath" select="'yes'"/>
+    </xsl:call-template>
+  </xsl:when>
+
+  <!-- complex 6D vector data -->
+  <xsl:when test="@data_type='CPX_6D'">
+    ! Get <xsl:value-of select="@name"/>
+    <xsl:call-template name="set_timepath">
+      <xsl:with-param name="fieldpath" select="$fieldpath"/>
+      <xsl:with-param name="fieldvar" select="$fieldvar"/>
+      <xsl:with-param name="root" select="$root"/>
+    </xsl:call-template>
+    call get_vect6d_complex(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
           trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
 	  size1, size2, size3, size4, size5, size6, status)
     <xsl:call-template name="checkErrorCtx">
