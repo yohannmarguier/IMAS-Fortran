@@ -6,3 +6,4 @@ fortran_*
 imasdb-fortran_test/
 testput_fortran.results
 testget_fortran.results
+test_defs.f90

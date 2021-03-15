@@ -16,6 +16,16 @@ BUILD_DIR:=./build
 TEST_SRC_DIR=./src
 TMP_DIR=./tmp
 TESTS = initpulse_test all_tests
+TEST_ARRAY_ALL_BACKENDS = MEMORY_BACKEND , ASCII_BACKEND
+ifeq ("yes","$(strip $(IMAS_MDSPLUS))")
+TEST_ARRAY_ALL_BACKENDS += , MDSPLUS_BACKEND
+endif
+ifeq ("yes","$(strip $(IMAS_HDF5))")
+TEST_ARRAY_ALL_BACKENDS += , HDF5_BACKEND
+endif
+ifeq ("yes","$(strip $(IMAS_UDA))")
+TEST_ARRAY_ALL_BACKENDS += , UDA_BACKEND
+endif
 
 # Get a list of IDS from IDSDEF file
 IDSNAMES := $(shell sed '/<IDS name=/!d;s/.*name="\([^"]*\)".*/\1/' $(IDSDEF))
@@ -35,10 +45,11 @@ endif
 
 all: $(TARGETS)
 check test: $(TESTS)
-sources: $(IDS_SOURCES)
+sources: $(IDS_SOURCES) test_defs.f90
 
-# sometimes GNU Make thinks, *.mod is modula file...
-%.o : %.f90
+# sometimes GNU Make, *.mod is modula-2 file...
+%.o: %.mod # cancel implicit rule
+
 
 # Create src and bin dirs as needed
 $(TEST_SRC_DIR) $(BIN_DIR) $(BUILD_DIR) $(TMP_DIR):
@@ -55,7 +66,7 @@ clean:
 	$(RM) -r *.log
 
 clean-src: clean
-	$(RM) -r $(TEST_SRC_DIR)
+	$(RM) -r $(TEST_SRC_DIR) test_defs.f90
 
 
 #################################################
@@ -73,6 +84,14 @@ endif
 # Need a single target to prevent parallel building:
 sources_: IDSDef2TestSuite.xsl $(IDSDEF) | saxonicajar $(TEST_SRC_DIR)
 	$(SAXON) newLowLevel=$(NEW_LOW_LEVEL) -t -s:$(IDSDEF) -xsl:IDSDef2TestSuite.xsl
+
+# Always generate
+.PHONY: test_defs.f90
+comma := ,
+test_defs.f90: %:%.in
+	sed -e "s;__TEST_ARRAY_ALL_BACKENDS__;$(TEST_ARRAY_ALL_BACKENDS);g" \
+		-e "s;__TEST_ARRAY_ALL_BACKENDS_LENGTH__;$(words $(subst $(comma),,$(TEST_ARRAY_ALL_BACKENDS)));g" \
+	    $< > $@
 
 #################################################
 #			  BUILD
