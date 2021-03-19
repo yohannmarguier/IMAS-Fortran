@@ -310,13 +310,22 @@ end module
     <xsl:when test="@data_type='FLT_4D'">
       real(ids_real), pointer :: <xsl:value-of select="@name"/>(:,:,:,:) => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
     </xsl:when>
+    <xsl:when test="@data_type='CPX_4D'">
+      complex(ids_real), pointer :: <xsl:value-of select="@name"/>(:,:,:,:) => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
+    </xsl:when>
 
     <xsl:when test="@data_type='FLT_5D'">
       real(ids_real), pointer :: <xsl:value-of select="@name"/>(:,:,:,:,:) => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
     </xsl:when>
+    <xsl:when test="@data_type='CPX_5D'">
+      complex(ids_real), pointer :: <xsl:value-of select="@name"/>(:,:,:,:,:) => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
+    </xsl:when>
 
     <xsl:when test="@data_type='FLT_6D'">
       real(ids_real), pointer :: <xsl:value-of select="@name"/>(:,:,:,:,:,:) => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
+    </xsl:when>
+    <xsl:when test="@data_type='CPX_6D'">
+      complex(ids_real), pointer :: <xsl:value-of select="@name"/>(:,:,:,:,:,:) => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
     </xsl:when>
     <xsl:otherwise>
       ERROR
