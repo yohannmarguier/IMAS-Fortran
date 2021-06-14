@@ -1400,7 +1400,8 @@ end module
 
     <!-- Error case: could throw error or generate code that can't compile? -->
     <xsl:otherwise>
-  ! Deallocate <xsl:value-of select="$currentidxpath"/> : PROBLEM: UNIDENTIFIED TYPE !!!
+      ! Deallocate <xsl:value-of select="$currentidxpath"/> : PROBLEM: UNIDENTIFIED TYPE !!!
+      <xsl:message select="concat('PROBLEM : UNIDENTIFIED TYPE detected in DEALLOCATE routine for ',@path)" terminate="yes"/>
     </xsl:otherwise>
   </xsl:choose>
 
@@ -1504,7 +1505,7 @@ end module
     </xsl:when>
 
     <!-- 4D vector data -->
-    <xsl:when test="@data_type='INT_4D' or @data_type='FLT_4D'">
+    <xsl:when test="@data_type='INT_4D' or @data_type='FLT_4D' or @data_type='CPX_4D'">
   ! Copy <xsl:value-of select="$currentidxpath"/>
   if (associated(struct_in<xsl:value-of select="$currentidxpath"/>)) then
     allocate(struct_out<xsl:value-of select="$currentidxpath"/>&amp;
@@ -1518,7 +1519,7 @@ end module
     </xsl:when>
 
     <!-- 5D vector data -->
-    <xsl:when test="@data_type='INT_5D' or @data_type='FLT_5D'">
+    <xsl:when test="@data_type='INT_5D' or @data_type='FLT_5D' or @data_type='CPX_5D'">
   ! Copy <xsl:value-of select="$currentidxpath"/>
   if (associated(struct_in<xsl:value-of select="$currentidxpath"/>)) then
     allocate(struct_out<xsl:value-of select="$currentidxpath"/>&amp;
@@ -1533,7 +1534,7 @@ end module
     </xsl:when>
 
     <!-- 6D vector data -->
-    <xsl:when test="@data_type='INT_6D' or @data_type='FLT_6D'">
+    <xsl:when test="@data_type='INT_6D' or @data_type='FLT_6D' or @data_type='CPX_6D'">
   ! Copy <xsl:value-of select="$currentidxpath"/>
   if (associated(struct_in<xsl:value-of select="$currentidxpath"/>)) then
     allocate(struct_out<xsl:value-of select="$currentidxpath"/>&amp;
@@ -1550,7 +1551,8 @@ end module
 
     <!-- Error case: could throw error or generate code that can't compile? -->
     <xsl:otherwise>
-  ! Copy <xsl:value-of select="$currentidxpath"/> : PROBLEM: UNIDENTIFIED TYPE !!! 
+      ! Copy <xsl:value-of select="$currentidxpath"/> : PROBLEM: UNIDENTIFIED TYPE !!!
+      <xsl:message select="concat('PROBLEM : UNIDENTIFIED TYPE detected in COPY routine for ',@path)" terminate="yes"/>
     </xsl:otherwise>
   </xsl:choose>
 
