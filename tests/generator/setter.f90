@@ -80,12 +80,8 @@ SUBROUTINE initField_INT1DArray(idsField, isSliceMode)
     ELSE
         lastDim = config%timeSize
     END IF
-
-    IF(.NOT. associated(idsField)) then
-        allocate(idsField(lastDim)) 
-    END IF
   
-    idsField = getInteger1DArray(lastDim)     
+    idsField => getInteger1DArray(lastDim)     
 
 END SUBROUTINE initField_INT1DArray
 
@@ -103,13 +99,8 @@ SUBROUTINE initField_INT2DArray(idsField, isSliceMode)
     ELSE
         lastDim = config%timeSize
     END IF
-        
-        
-    IF(.NOT. associated(idsField)) then
-        allocate(idsField(dim1, lastDim)) 
-    END IF
     
-    idsField = getInteger2DArray(dim1, lastDim)
+    idsField => getInteger2DArray(dim1, lastDim)
 
 END SUBROUTINE initField_INT2DArray
 
@@ -126,13 +117,8 @@ SUBROUTINE initField_INT3DArray(idsField, isSliceMode)
     ELSE
         lastDim = config%timeSize
     END IF
-        
-        
-    IF(.NOT. associated(idsField)) then
-        allocate(idsField(dim1, dim2, lastDim)) 
-    END IF
     
-    idsField = getInteger3DArray(dim1, dim2, lastDim)
+    idsField => getInteger3DArray(dim1, dim2, lastDim)
 
 END SUBROUTINE initField_INT3DArray
 
@@ -150,13 +136,8 @@ SUBROUTINE initField_INT4DArray(idsField, isSliceMode)
     ELSE
         lastDim = config%timeSize
     END IF
-        
-        
-    IF(.NOT. associated(idsField)) then
-        allocate(idsField(dim1, dim2, dim3, lastDim)) 
-    END IF
     
-    idsField = getInteger4DArray(dim1, dim2, dim3, lastDim)
+    idsField => getInteger4DArray(dim1, dim2, dim3, lastDim)
 
 
 END SUBROUTINE initField_INT4DArray
@@ -174,14 +155,9 @@ SUBROUTINE initField_INT5DArray(idsField, isSliceMode)
         lastDim = 1
     ELSE
         lastDim = config%timeSize
-    END IF
-        
-        
-    IF(.NOT. associated(idsField)) then
-        allocate(idsField(dim1, dim2, dim3, dim4, lastDim)) 
-    END IF
-    
-    idsField = getInteger5DArray(dim1, dim2, dim3, dim4, lastDim)
+    END IF       
+
+    idsField => getInteger5DArray(dim1, dim2, dim3, dim4, lastDim)
 
 END SUBROUTINE initField_INT5DArray
 
@@ -199,13 +175,8 @@ SUBROUTINE initField_INT6DArray(idsField, isSliceMode)
     ELSE
         lastDim = config%timeSize
     END IF
-        
-        
-    IF(.NOT. associated(idsField)) then
-        allocate(idsField(dim1, dim2, dim3, dim4, dim5, lastDim)) 
-    END IF
     
-    idsField = getInteger6DArray(dim1, dim2, dim3, dim4, dim5, lastDim)
+    idsField => getInteger6DArray(dim1, dim2, dim3, dim4, dim5, lastDim)
 
 END SUBROUTINE initField_INT6DArray
 
@@ -240,12 +211,8 @@ SUBROUTINE initField_FLT1DArray(idsField, isSliceMode)
     ELSE
         lastDim = config%timeSize
     END IF
-        
-    IF(.NOT. associated(idsField)) then
-        allocate(idsField(lastDim)) 
-    END IF
-    
-    idsField = getDouble1DArray(lastDim)
+
+    idsField => getDouble1DArray(lastDim)
     
 END SUBROUTINE initField_FLT1DArray
 
@@ -263,12 +230,8 @@ END SUBROUTINE initField_FLT1DArray
     ELSE
         lastDim = config%timeSize
     END IF
-            
-    IF(.NOT. associated(idsField)) then
-        allocate(idsField(dim1, lastDim)) 
-    END IF
-    
-    idsField = getDouble2DArray(dim1, lastDim)
+
+    idsField => getDouble2DArray(dim1, lastDim)
 
 END SUBROUTINE initField_FLT2DArray
 
@@ -287,11 +250,7 @@ SUBROUTINE initField_FLT3DArray(idsField, isSliceMode)
         lastDim = config%timeSize
     END IF
                 
-    IF(.NOT. associated(idsField)) then
-        allocate(idsField(dim1, dim2,  lastDim)) 
-    END IF
-    
-    idsField = getDouble3DArray(dim1, dim2,  lastDim)
+    idsField => getDouble3DArray(dim1, dim2,  lastDim)
     
 END SUBROUTINE initField_FLT3DArray
 
@@ -309,12 +268,8 @@ SUBROUTINE initField_FLT4DArray(idsField, isSliceMode)
     ELSE
         lastDim = config%timeSize
     END IF
-            
-    IF(.NOT. associated(idsField)) then
-        allocate(idsField(dim1, dim2, dim3, lastDim)) 
-    END IF
     
-    idsField = getDouble4DArray(dim1, dim2, dim3, lastDim)
+    idsField => getDouble4DArray(dim1, dim2, dim3, lastDim)
 
 END SUBROUTINE initField_FLT4DArray
 
@@ -332,12 +287,8 @@ SUBROUTINE initField_FLT5DArray(idsField, isSliceMode)
     ELSE
         lastDim = config%timeSize
     END IF
-               
-    IF(.NOT. associated(idsField)) then
-        allocate(idsField(dim1, dim2, dim3, dim4, lastDim)) 
-    END IF
     
-    idsField = getDouble5DArray(dim1, dim2, dim3, dim4, lastDim)
+    idsField => getDouble5DArray(dim1, dim2, dim3, dim4, lastDim)
 
 END SUBROUTINE initField_FLT5DArray
 
@@ -355,12 +306,8 @@ SUBROUTINE initField_FLT6DArray(idsField, isSliceMode)
     ELSE
         lastDim = config%timeSize
     END IF       
-        
-    IF(.NOT. associated(idsField)) then
-        allocate(idsField(dim1, dim2, dim3, dim4, dim5, lastDim)) 
-    END IF
     
-    idsField = getDouble6DArray(dim1, dim2, dim3, dim4, dim5, lastDim)
+    idsField => getDouble6DArray(dim1, dim2, dim3, dim4, dim5, lastDim)
 
 END SUBROUTINE initField_FLT6DArray
 
@@ -396,11 +343,8 @@ SUBROUTINE initField_CPX1DArray(idsField, isSliceMode)
         lastDim = config%timeSize
     END IF
         
-    IF(.NOT. associated(idsField)) then
-        allocate(idsField(lastDim)) 
-    END IF
     
-    idsField = getComplex1DArray(lastDim)
+    idsField => getComplex1DArray(lastDim)
 
 END SUBROUTINE initField_CPX1DArray
 
@@ -419,11 +363,8 @@ SUBROUTINE initField_CPX2DArray(idsField, isSliceMode)
         lastDim = config%timeSize
     END IF
             
-    IF(.NOT. associated(idsField)) then
-        allocate(idsField(dim1, lastDim)) 
-    END IF
     
-    idsField = getComplex2DArray(dim1, lastDim)
+    idsField => getComplex2DArray(dim1, lastDim)
 
 END SUBROUTINE initField_CPX2DArray
 
@@ -442,11 +383,8 @@ SUBROUTINE initField_CPX3DArray(idsField, isSliceMode)
         lastDim = config%timeSize
     END IF
                 
-    IF(.NOT. associated(idsField)) then
-        allocate(idsField(dim1, dim2,  lastDim)) 
-    END IF
     
-    idsField = getComplex3DArray(dim1, dim2,  lastDim)
+    idsField => getComplex3DArray(dim1, dim2,  lastDim)
 
 END SUBROUTINE initField_CPX3DArray
 
@@ -487,9 +425,8 @@ SUBROUTINE initField_STR(idsField, isSliceMode)
     IMPLICIT NONE
     CHARACTER(LEN=132), DIMENSION(:), POINTER      :: idsField
     LOGICAL, INTENT (IN)  :: isSliceMode
-    
-    allocate(idsField(1)) 
-    idsField = getString()   
+ 
+    idsField => getString()   
 
 END SUBROUTINE initField_STR
 

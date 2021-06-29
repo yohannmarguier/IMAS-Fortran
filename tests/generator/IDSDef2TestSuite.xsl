@@ -418,7 +418,7 @@
 	<xsl:text>&#9;&#9;call ids_put(pulseCtx, idspath, ids);&#10;</xsl:text>
 
 
-	<!-- <xsl:text>&#9;call ids_deallocate(ids)&#10;</xsl:text> -->
+	<xsl:text>&#9;&#9;call ids_deallocate(ids)&#10;</xsl:text>
 	<xsl:text>&#9;end do &#10;</xsl:text>
         <xsl:text>&#10;</xsl:text>
         <xsl:text>END SUBROUTINE </xsl:text> <xsl:value-of select="@name"/><xsl:text>_put &#10;</xsl:text>
@@ -516,9 +516,8 @@
 	<xsl:text>&#9;&#9;call ids_get(pulseCtx, idspath, ids);&#10;</xsl:text>
 	<xsl:text>&#9;&#9;call test_ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>(ids, .TRUE., setDynamicFields, idsTimeMode, .FALSE., -1)&#10;</xsl:text> 
 		
-		
-		 <!-- <xsl:text>&#9;call ids_deallocate(ids)&#10;</xsl:text> -->
-	  <xsl:text>&#9;end do &#10;</xsl:text>
+	<xsl:text>&#9;&#9;call ids_deallocate(ids)&#10;</xsl:text>
+	<xsl:text>&#9;end do &#10;</xsl:text>
         <xsl:text>&#9;&#10;</xsl:text>
         <xsl:text>END SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_get&#10;</xsl:text>
 	<xsl:text>&#10;</xsl:text>
@@ -562,14 +561,15 @@
 
 	<xsl:text>&#9;&#9;&#9;if (sliceIdx == 1) then &#10;</xsl:text>
 	<xsl:text>&#10;</xsl:text>
-    <xsl:text>&#9;&#9;&#9;&#9;call test_ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>(ids, .TRUE., .TRUE., idsTimeMode, .TRUE., sliceIdx)&#10;</xsl:text>
+	<xsl:text>&#9;&#9;&#9;&#9;call test_ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>(ids, .TRUE., .TRUE., idsTimeMode, .TRUE., sliceIdx)&#10;</xsl:text>
 	<xsl:text>&#9;&#9;&#9;else&#10;</xsl:text>
-    <xsl:text>&#9;&#9;&#9;&#9;call test_ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>(ids, .FALSE., .TRUE., idsTimeMode, .TRUE., sliceIdx)&#10;</xsl:text>
-    <xsl:text>&#9;&#9;&#9;end if &#10;</xsl:text>
+	<xsl:text>&#9;&#9;&#9;&#9;call test_ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>(ids, .FALSE., .TRUE., idsTimeMode, .TRUE., sliceIdx)&#10;</xsl:text>
+	<xsl:text>&#9;&#9;&#9;end if &#10;</xsl:text>
+	<xsl:text>&#9;&#9;&#9;call ids_deallocate(ids)&#10;</xsl:text>
   	<xsl:text>&#9;&#9;end do &#10;</xsl:text>
-    <xsl:text>&#9;end do &#10;</xsl:text>
-    <xsl:text>&#10;</xsl:text>
-    <xsl:text>END SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_getSlice&#10;</xsl:text>
+    	<xsl:text>&#9;end do &#10;</xsl:text>
+    	<xsl:text>&#10;</xsl:text>
+    	<xsl:text>END SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_getSlice&#10;</xsl:text>
 	<xsl:text>&#10;</xsl:text>
     </xsl:template>
 

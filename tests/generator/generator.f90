@@ -187,6 +187,8 @@ FUNCTION getInteger1DArray(dim1) RESULT (outArray)
 
     outArray =  RESHAPE(flatArray(:dim1), (/dim1/))
 
+    deallocate(flatArray)
+
     RETURN
 END FUNCTION getInteger1DArray
 
@@ -207,6 +209,8 @@ FUNCTION getInteger2DArray(dim1, dim2) RESULT (outArray)
     ALLOCATE(outArray(dim1, dim2))
 
     outArray =  RESHAPE(flatArray(:dim1 * dim2), (/dim1, dim2/))
+
+    deallocate(flatArray)
 
 RETURN
 
@@ -229,6 +233,8 @@ FUNCTION getInteger3DArray(dim1, dim2, dim3) RESULT (outArray)
 
     outArray =  RESHAPE(flatArray(:dim1 * dim2 * dim3), (/dim1, dim2, dim3/))
 
+    deallocate(flatArray)
+
 RETURN
 
 END FUNCTION getInteger3DArray
@@ -247,6 +253,9 @@ FUNCTION getInteger4DArray(dim1, dim2, dim3, dim4) RESULT (outArray)
     ALLOCATE(outArray(dim1, dim2, dim3, dim4))
 
     outArray =  RESHAPE(flatArray(:dim1 * dim2 * dim3 * dim4), (/dim1, dim2, dim3,dim4/))
+
+
+    deallocate(flatArray)
 
 RETURN
 
@@ -267,6 +276,8 @@ FUNCTION getInteger5DArray(dim1, dim2, dim3, dim4, dim5) RESULT (outArray)
 
     outArray =  RESHAPE(flatArray(:dim1 * dim2 * dim3 * dim4 * dim5), (/dim1, dim2, dim3, dim4, dim5/))
 
+    deallocate(flatArray)
+
 RETURN
 
 END FUNCTION getInteger5DArray
@@ -285,6 +296,10 @@ FUNCTION getInteger6DArray(dim1, dim2, dim3, dim4, dim5, dim6) RESULT (outArray)
     ALLOCATE(outArray(dim1, dim2, dim3, dim4, dim5, dim6))
 
     outArray =  RESHAPE(flatArray(:dim1 * dim2 * dim3 * dim4 * dim5 * dim6), (/dim1, dim2, dim3, dim4, dim5, dim6/))
+
+
+    deallocate(flatArray)
+
 
 RETURN
 
@@ -309,6 +324,9 @@ FUNCTION getDouble1DArray(dim1) RESULT (outArray)
 
     outArray =  RESHAPE(flatArray(:dim1), (/dim1/))
 
+    deallocate(flatArray)
+
+
     RETURN
 END FUNCTION getDouble1DArray
 
@@ -328,6 +346,10 @@ FUNCTION getDouble2DArray(dim1, dim2) RESULT (outArray)
     ALLOCATE(outArray(dim1, dim2))
 
     outArray =  RESHAPE(flatArray(:dim1 * dim2),(/dim1, dim2/))
+
+
+    deallocate(flatArray)
+
 
     RETURN
 END FUNCTION getDouble2DArray
@@ -351,6 +373,10 @@ FUNCTION getDouble3DArray(dim1, dim2, dim3) RESULT (outArray)
 
     outArray =  RESHAPE(flatArray(:dim1 * dim2 * dim3), (/dim1, dim2, dim3/))
 
+
+    deallocate(flatArray)
+
+
     RETURN
 END FUNCTION getDouble3DArray
 
@@ -370,6 +396,9 @@ FUNCTION getDouble4DArray(dim1, dim2, dim3, dim4) RESULT (outArray)
 
     outArray =  RESHAPE(flatArray(:dim1 * dim2 * dim3 * dim4), (/dim1, dim2, dim3, dim4/))
 
+
+    deallocate(flatArray)
+
     RETURN
 END FUNCTION getDouble4DArray
 
@@ -387,6 +416,8 @@ FUNCTION getDouble5DArray(dim1, dim2, dim3, dim4, dim5) RESULT (outArray)
     ALLOCATE(outArray(dim1, dim2, dim3, dim4, dim5))
 
     outArray =  RESHAPE(flatArray(:dim1 * dim2 * dim3 * dim4 * dim5), (/dim1, dim2, dim3, dim4, dim5/))
+
+    deallocate(flatArray)
 
     RETURN
 END FUNCTION getDouble5DArray
@@ -407,6 +438,8 @@ FUNCTION getDouble6DArray(dim1, dim2, dim3, dim4, dim5, dim6) RESULT (outArray)
     ALLOCATE(outArray(dim1, dim2, dim3, dim4, dim5, dim6))
 
     outArray =  RESHAPE(flatArray(:dim1 * dim2 * dim3 * dim4 * dim5 * dim6), (/dim1, dim2, dim3, dim4, dim5, dim6/))
+
+    deallocate(flatArray)
 
     RETURN
 END FUNCTION getDouble6DArray
@@ -429,6 +462,8 @@ FUNCTION getComplex1DArray(dim1) RESULT (outArray)
 
     outArray =  RESHAPE(flatArray(:dim1), (/dim1/))
 
+    deallocate(flatArray)
+
     RETURN
   END FUNCTION getComplex1DArray
 
@@ -449,6 +484,8 @@ FUNCTION getComplex1DArray(dim1) RESULT (outArray)
 
     outArray =  RESHAPE(flatArray(:dim1 * dim2),(/dim1, dim2/))
 
+    deallocate(flatArray)
+
     RETURN
   END FUNCTION getComplex2DArray
 
@@ -468,6 +505,10 @@ FUNCTION getComplex3DArray(dim1, dim2, dim3) RESULT (outArray)
     ALLOCATE(outArray(dim1, dim2, dim3))
 
     outArray =  RESHAPE(flatArray(:dim1 * dim2 * dim3), (/dim1, dim2, dim3/))
+
+
+    deallocate(flatArray)
+
 
     RETURN
   END FUNCTION getComplex3DArray

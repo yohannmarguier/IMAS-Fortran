@@ -181,12 +181,14 @@ FUNCTION assertField_INT1DArray(observed, isSliceMode, fieldName) RESULT (outVal
 	IF(.NOT. ALL(shape(observed).EQ.shape( expected))) then
 		write(*,*) fieldName, " : ERROR: Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
 		outValue = .FALSE.
+		deallocate(expected)
 		return
 	end if
 
         IF(size(observed) .NE. size(expected)) then
 		write(*,*) fieldName, " : ERROR: Array size differs!"
 		outValue = .FALSE.
+		deallocate(expected)
 		return
 	end if
 
@@ -195,8 +197,11 @@ FUNCTION assertField_INT1DArray(observed, isSliceMode, fieldName) RESULT (outVal
 	else
 		write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
 		outValue = .FALSE.
+		deallocate(expected)
 		return
 	end if
+
+	deallocate(expected)
 
 END FUNCTION assertField_INT1DArray
 
@@ -229,12 +234,14 @@ FUNCTION assertField_INT2DArray(observed, isSliceMode, fieldName) RESULT (outVal
 	IF(.NOT. ALL(shape(observed).EQ.shape( expected))) then
 		write(*,*) fieldName, " : ERROR: Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
 		outValue = .FALSE.
+		deallocate(expected)
 		return
 	end if
 
         IF(size(observed) .NE. size(expected)) then
 		write(*,*) fieldName, " : ERROR: Array size differs!"
 		outValue = .FALSE.
+		deallocate(expected)
 		return
 	end if
 
@@ -244,9 +251,11 @@ FUNCTION assertField_INT2DArray(observed, isSliceMode, fieldName) RESULT (outVal
 	else
 		write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
 		outValue = .FALSE.
+		deallocate(expected)
 		return
 	end if
 
+	deallocate(expected)
 END FUNCTION assertField_INT2DArray
 
 ! =================================================================
@@ -280,12 +289,14 @@ FUNCTION assertField_INT3DArray(observed, isSliceMode, fieldName) RESULT (outVal
 	IF(.NOT. ALL(shape(observed).EQ.shape( expected))) then
 		write(*,*) fieldName, " : ERROR: Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
 		outValue = .FALSE.
+		deallocate(expected)
 		return
 	end if
 
         IF(size(observed) .NE. size(expected)) then
 		write(*,*) fieldName, " : ERROR: Array size differs!"
 		outValue = .FALSE.
+		deallocate(expected)
 		return
 	end if
 
@@ -294,8 +305,11 @@ FUNCTION assertField_INT3DArray(observed, isSliceMode, fieldName) RESULT (outVal
 	else
 		write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
 		outValue = .FALSE.
+		deallocate(expected)
 		return
 	end if
+
+	deallocate(expected)
 
 END FUNCTION assertField_INT3DArray
        ! =================================================================
@@ -329,12 +343,14 @@ FUNCTION assertField_INT4DArray(observed, isSliceMode, fieldName) RESULT (outVal
 	IF(.NOT. ALL(shape(observed).EQ.shape( expected))) then
 		write(*,*) fieldName, " : ERROR: Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
 		outValue = .FALSE.
+		deallocate(expected)
 		return
 	end if
 
         IF(size(observed) .NE. size(expected)) then
 		write(*,*) fieldName, " : ERROR: Array size differs!"
 		outValue = .FALSE.
+		deallocate(expected)
 		return
 	end if
 
@@ -343,8 +359,11 @@ FUNCTION assertField_INT4DArray(observed, isSliceMode, fieldName) RESULT (outVal
 	else
 		write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
 		outValue = .FALSE.
+		deallocate(expected)
 		return
 	end if
+
+	deallocate(expected)
 
 END FUNCTION assertField_INT4DArray
        ! =================================================================
@@ -379,12 +398,14 @@ END FUNCTION assertField_INT4DArray
 	IF(.NOT. ALL(shape(observed).EQ.shape( expected))) then
 		write(*,*) fieldName, " : ERROR: Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
 		outValue = .FALSE.
+		deallocate(expected)
 		return
 	end if
 
         IF(size(observed) .NE. size(expected)) then
 		write(*,*) fieldName, " : ERROR: Array size differs!"
 		outValue = .FALSE.
+		deallocate(expected)
 		return
 	end if
 
@@ -393,8 +414,11 @@ END FUNCTION assertField_INT4DArray
 	else
 		write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
 		outValue = .FALSE.
+		deallocate(expected)
 		return
 	end if
+
+	deallocate(expected)
 
 END FUNCTION assertField_INT5DArray
        ! =================================================================
@@ -427,12 +451,14 @@ FUNCTION assertField_INT6DArray(observed, isSliceMode, fieldName) RESULT (outVal
 	IF(.NOT. ALL(shape(observed).EQ.shape( expected))) then
 		write(*,*) fieldName, " : ERROR: Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
 		outValue = .FALSE.
+		deallocate(expected)
 		return
 	end if
 
         IF(size(observed) .NE. size(expected)) then
 		write(*,*) fieldName, " : ERROR: Array size differs!"
 		outValue = .FALSE.
+		deallocate(expected)
 		return
 	end if
 
@@ -441,8 +467,10 @@ FUNCTION assertField_INT6DArray(observed, isSliceMode, fieldName) RESULT (outVal
 	else
 		write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
 		outValue = .FALSE.
+		deallocate(expected)
 		return
 	end if
+	deallocate(expected)
 
 END FUNCTION assertField_INT6DArray
 
@@ -508,12 +536,14 @@ FUNCTION assertField_FLT1DArray(observed, isSliceMode, fieldName) RESULT (outVal
 	IF(.NOT. ALL(shape(observed).EQ.shape( expected))) then
 		write(*,*) fieldName, " : ERROR: Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
 		outValue = .FALSE.
+		deallocate(expected)
 		return
 	end if
 
         IF(size(observed) .NE. size(expected)) then
 		write(*,*) fieldName, " : ERROR: Array size differs!"
 		outValue = .FALSE.
+		deallocate(expected)
 		return
 	end if
 
@@ -522,8 +552,11 @@ FUNCTION assertField_FLT1DArray(observed, isSliceMode, fieldName) RESULT (outVal
 	else
 		write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
 		outValue = .FALSE.
+		deallocate(expected)
 		return
 	end if
+
+	deallocate(expected)
 
 END FUNCTION assertField_FLT1DArray
 
@@ -558,12 +591,14 @@ END FUNCTION assertField_FLT1DArray
 	IF(.NOT. ALL(shape(observed).EQ.shape( expected))) then
 		write(*,*) fieldName, " : ERROR: Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
 		outValue = .FALSE.
+		deallocate(expected)
 		return
 	end if
 
         IF(size(observed) .NE. size(expected)) then
 		write(*,*) fieldName, " : ERROR: Array size differs!"
 		outValue = .FALSE.
+		deallocate(expected)
 		return
 	end if
 
@@ -572,8 +607,10 @@ END FUNCTION assertField_FLT1DArray
 	else
 		write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
 		outValue = .FALSE.
+		deallocate(expected)
 		return
 	end if
+	deallocate(expected)
 
 END FUNCTION assertField_FLT2DArray
 
@@ -610,12 +647,14 @@ END FUNCTION assertField_FLT2DArray
 	IF(.NOT. ALL(shape(observed).EQ.shape( expected))) then
 		write(*,*) fieldName, " : ERROR: Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
 		outValue = .FALSE.
+		deallocate(expected)
 		return
 	end if
 
         IF(size(observed) .NE. size(expected)) then
 		write(*,*) fieldName, " : ERROR: Array size differs!"
 		outValue = .FALSE.
+		deallocate(expected)
 		return
 	end if
 
@@ -624,8 +663,10 @@ END FUNCTION assertField_FLT2DArray
 	else
 		write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
 		outValue = .FALSE.
+		deallocate(expected)
 		return
 	end if
+	deallocate(expected)
 
 END FUNCTION assertField_FLT3DArray
 
@@ -660,12 +701,14 @@ END FUNCTION assertField_FLT3DArray
 	IF(.NOT. ALL(shape(observed).EQ.shape( expected))) then
 		write(*,*) fieldName, " : ERROR: Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
 		outValue = .FALSE.
+		deallocate(expected)
 		return
 	end if
 
         IF(size(observed) .NE. size(expected)) then
 		write(*,*) fieldName, " : ERROR: Array size differs!"
 		outValue = .FALSE.
+		deallocate(expected)
 		return
 	end if
 
@@ -674,8 +717,10 @@ END FUNCTION assertField_FLT3DArray
 	else
 		write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
 		outValue = .FALSE.
+		deallocate(expected)
 		return
 	end if
+	deallocate(expected)
 
 END FUNCTION assertField_FLT4DArray
 
@@ -708,12 +753,14 @@ FUNCTION assertField_FLT5DArray(observed, isSliceMode, fieldName) RESULT (outVal
 	IF(.NOT. ALL(shape(observed).EQ.shape( expected))) then
 		write(*,*) fieldName, " : ERROR: Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
 		outValue = .FALSE.
+		deallocate(expected)
 		return
 	end if
 
         IF(size(observed) .NE. size(expected)) then
 		write(*,*) fieldName, " : ERROR: Array size differs!"
 		outValue = .FALSE.
+		deallocate(expected)
 		return
 	end if
 
@@ -722,12 +769,14 @@ FUNCTION assertField_FLT5DArray(observed, isSliceMode, fieldName) RESULT (outVal
 	else
 		write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
 		outValue = .FALSE.
+		deallocate(expected)
 		return
 	end if
 
-	 ! =================================================================
+	deallocate(expected)
 END FUNCTION assertField_FLT5DArray
 
+	 ! =================================================================
   FUNCTION assertField_FLT6DArray(observed, isSliceMode, fieldName) RESULT (outValue)
        IMPLICIT NONE
               REAL(ids_real), DIMENSION(:,:,:, :,:,:), POINTER      :: observed, expected
@@ -756,12 +805,14 @@ END FUNCTION assertField_FLT5DArray
 	IF(.NOT. ALL(shape(observed).EQ.shape( expected))) then
 		write(*,*) fieldName, " : ERROR: Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
 		outValue = .FALSE.
+		deallocate(expected)
 		return
 	end if
 
         IF(size(observed) .NE. size(expected)) then
 		write(*,*) fieldName, " : ERROR: Array size differs!"
 		outValue = .FALSE.
+		deallocate(expected)
 		return
 	end if
 
@@ -770,9 +821,11 @@ END FUNCTION assertField_FLT5DArray
 	else
 		write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
 		outValue = .FALSE.
+		deallocate(expected)
 		return
 	end if
 
+	deallocate(expected)
 END FUNCTION assertField_FLT6DArray
 
 
@@ -834,12 +887,14 @@ FUNCTION assertField_CPX1DArray(observed, isSliceMode, fieldName) RESULT (outVal
   IF(.NOT. ALL(shape(observed).EQ.shape( expected))) then
      write(*,*) fieldName, " : ERROR: Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
      outValue = .FALSE.
+	deallocate(expected)
      return
   end if
 
   IF(size(observed) .NE. size(expected)) then
      write(*,*) fieldName, " : ERROR: Array size differs!"
      outValue = .FALSE.
+	deallocate(expected)
      return
   end if
 
@@ -848,7 +903,9 @@ FUNCTION assertField_CPX1DArray(observed, isSliceMode, fieldName) RESULT (outVal
   else
      write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
      outValue = .FALSE.
+	deallocate(expected)
      return
+	deallocate(expected)
   end if
 END FUNCTION assertField_CPX1DArray
 
@@ -880,12 +937,14 @@ FUNCTION assertField_CPX2DArray(observed, isSliceMode, fieldName) RESULT (outVal
   IF(.NOT. ALL(shape(observed).EQ.shape( expected))) then
      write(*,*) fieldName, " : ERROR: Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
      outValue = .FALSE.
+	deallocate(expected)
      return
   end if
 
   IF(size(observed) .NE. size(expected)) then
      write(*,*) fieldName, " : ERROR: Array size differs!"
      outValue = .FALSE.
+	deallocate(expected)
      return
   end if
 
@@ -894,8 +953,11 @@ FUNCTION assertField_CPX2DArray(observed, isSliceMode, fieldName) RESULT (outVal
   else
      write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
      outValue = .FALSE.
+	deallocate(expected)
      return
   end if
+
+	deallocate(expected)
 END FUNCTION assertField_CPX2DArray
 
 ! =================================================================
@@ -927,12 +989,14 @@ FUNCTION assertField_CPX3DArray(observed, isSliceMode, fieldName) RESULT (outVal
   IF(.NOT. ALL(shape(observed).EQ.shape( expected))) then
      write(*,*) fieldName, " : ERROR: Incorrect array shape:, observed=/", shape(observed),  "/, expected=/", shape(expected), "/"
      outValue = .FALSE.
+	deallocate(expected)
      return
   end if
 
   IF(size(observed) .NE. size(expected)) then
      write(*,*) fieldName, " : ERROR: Array size differs!"
      outValue = .FALSE.
+	deallocate(expected)
      return
   end if
   
@@ -941,8 +1005,12 @@ FUNCTION assertField_CPX3DArray(observed, isSliceMode, fieldName) RESULT (outVal
   else
      write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
      outValue = .FALSE.
+	deallocate(expected)
      return
   end if
+
+	deallocate(expected)
+
 END FUNCTION assertField_CPX3DArray
 
 
@@ -974,9 +1042,11 @@ FUNCTION assertField_STR(observed, isSliceMode, fieldName) RESULT (outValue)
 	else
 		write(*,*) fieldName, " : ERROR: observed=", observed,  ", expected=", expected
                 outValue = .FALSE.
+		deallocate(expected)
                 return
 	end if
 
+	deallocate(expected)
 END FUNCTION assertField_STR
 
 
