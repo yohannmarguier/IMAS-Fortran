@@ -54,15 +54,24 @@ module ual_low_level_wrap
        integer(C_INT), intent(out) :: beid
      end function c_ual_get_backendID
 
-     function c_ual_begin_pulse_action(beid, shot, run, usr, tok, ver, pctx) &
-          bind(C,name="ual_begin_pulse_action")
+     function c_ual_build_uri_from_legacy_parameters(beid, shot, run, usr, tok, ver, uri) &
+          bind(C,name="ual_build_uri_from_legacy_parameters")
        use, intrinsic :: ISO_C_BINDING
        import c_al_status_t
-       type(c_al_status_t) :: c_ual_begin_pulse_action
+       type(c_al_status_t) :: c_ual_build_uri_from_legacy_parameters
        integer(C_INT), value, intent(in) :: beid, shot, run
        character(C_CHAR), dimension(*), intent(in) :: usr, tok, ver
+       type(C_PTR), intent(out) :: uri
+     end function c_ual_build_uri_from_legacy_parameters
+
+     function c_ual_begin_uri_action(uri, pctx) &
+          bind(C,name="ual_begin_uri_action")
+       use, intrinsic :: ISO_C_BINDING
+       import c_al_status_t
+       type(c_al_status_t) :: c_ual_begin_uri_action
+       character(C_CHAR), dimension(*), intent(in) :: uri
        integer(C_INT), intent(out) :: pctx
-     end function c_ual_begin_pulse_action
+     end function c_ual_begin_uri_action
 
      function c_ual_open_pulse(pctx, mode, opt) &
           bind(C,name="ual_open_pulse")
@@ -264,17 +273,42 @@ contains
     if (present(retstatus)) retstatus = status%code
   end subroutine ual_get_backendID
 
-  subroutine ual_begin_pulse_action(beid, shot, run, usr, tok, ver, pctx, retstatus)
+  subroutine ual_build_uri_from_legacy_parameters(beid, shot, run, usr, tok, ver, uri, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: beid, shot, run
     character(*), intent(in) :: usr, tok, ver
+    character(STRMAXLEN), intent(out) :: uri
+    integer, optional, intent(out) :: retstatus
+    character, dimension(:), pointer :: chars
+    integer :: s,i
+    type(al_status) :: status
+    type(C_PTR) :: cptr
+
+    status = fstatus(c_ual_build_uri_from_legacy_parameters(beid, shot, run, trim(usr)//C_NULL_CHAR, &
+         trim(tok)//C_NULL_CHAR, trim(ver)//C_NULL_CHAR, cptr))
+
+    if (C_ASSOCIATED(cptr)) then
+          s = c_strlen(cptr)
+          call C_F_POINTER(cptr, chars, (/ s /))
+          uri = ' '
+          do i=1,s
+             uri(i:i) = chars(i)
+          end do
+          call c_free(cptr)
+     end if
+    if (present(retstatus)) retstatus = status%code
+  end subroutine ual_build_uri_from_legacy_parameters
+
+  subroutine ual_begin_uri_action(uri, pctx, retstatus)
+    use, intrinsic :: ISO_C_BINDING
+    implicit none
+    character(*), intent(in) :: uri
     integer, intent(out) :: pctx
     integer, optional, intent(out) :: retstatus
     integer(C_INT) :: cid
     type(al_status) :: status
-    status = fstatus(c_ual_begin_pulse_action(beid, shot, run, trim(usr)//C_NULL_CHAR, &
-         trim(tok)//C_NULL_CHAR, trim(ver)//C_NULL_CHAR, cid))
+    status = fstatus(c_ual_begin_uri_action(trim(uri)//C_NULL_CHAR, cid))
     if (status%code.ne.0) then
        write(*,*) TRIM(status%message)
        pctx = 0
@@ -282,7 +316,7 @@ contains
        pctx = cid
     end if
     if (present(retstatus)) retstatus = status%code
-  end subroutine ual_begin_pulse_action
+  end subroutine ual_begin_uri_action
 
   subroutine ual_open_pulse(pctx, mode, opt, retstatus)
     use, intrinsic :: ISO_C_BINDING
@@ -423,7 +457,9 @@ contains
     integer, intent(out) :: pulseCtx
     integer, intent(out), optional :: retstatus
     integer :: status
-    call ual_begin_pulse_action(MDSPLUS_BACKEND, shot, run, user, tokamak, version, pulseCtx, status)
+    character (STRMAXLEN) :: uri
+    call ual_build_uri_from_legacy_parameters(MDSPLUS_BACKEND, shot, run, user, tokamak, version, uri, status)
+    call ual_begin_uri_action(uri, pulseCtx, status)
     if (status.eq.0) then 
        call ual_open_pulse(pulseCtx, FORCE_CREATE_PULSE, "", status)
     end if
@@ -438,7 +474,9 @@ contains
     integer, intent(out) :: pulseCtx
     integer, optional, intent(out) :: retstatus
     integer :: status
-    call ual_begin_pulse_action(MDSPLUS_BACKEND, shot, run, user, tokamak, version, pulseCtx, status)
+    character (STRMAXLEN) :: uri
+    call ual_build_uri_from_legacy_parameters(MDSPLUS_BACKEND, shot, run, user, tokamak, version, uri, status)
+    call ual_begin_uri_action(uri, pulseCtx, status)
     if (status.eq.0) then 
        call ual_open_pulse(pulseCtx, OPEN_PULSE, "", status)
     end if
