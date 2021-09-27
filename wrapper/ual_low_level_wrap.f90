@@ -64,23 +64,15 @@ module ual_low_level_wrap
        type(C_PTR), intent(out) :: uri
      end function c_ual_build_uri_from_legacy_parameters
 
-     function c_ual_begin_uri_action(uri, pctx) &
-          bind(C,name="ual_begin_uri_action")
+     function c_ual_begin_dataentry_action(uri, mode, pctx) &
+          bind(C,name="ual_begin_dataentry_action")
        use, intrinsic :: ISO_C_BINDING
        import c_al_status_t
-       type(c_al_status_t) :: c_ual_begin_uri_action
+       type(c_al_status_t) :: c_ual_begin_dataentry_action
        character(C_CHAR), dimension(*), intent(in) :: uri
+       integer(C_INT), value, intent(in) :: mode
        integer(C_INT), intent(out) :: pctx
-     end function c_ual_begin_uri_action
-
-     function c_ual_open_pulse(pctx, mode, opt) &
-          bind(C,name="ual_open_pulse")
-       use, intrinsic :: ISO_C_BINDING
-       import c_al_status_t
-       type(c_al_status_t) :: c_ual_open_pulse
-       integer(C_INT), value, intent(in) :: pctx, mode
-       character(C_CHAR), dimension(*), intent(in) :: opt
-     end function c_ual_open_pulse
+     end function c_ual_begin_dataentry_action
 
      function c_ual_close_pulse(pctx, mode, opt) &
           bind(C,name="ual_close_pulse")
@@ -300,39 +292,25 @@ contains
     if (present(retstatus)) retstatus = status%code
   end subroutine ual_build_uri_from_legacy_parameters
 
-  subroutine ual_begin_uri_action(uri, pctx, retstatus)
+  subroutine ual_begin_dataentry_action(uri, mode, pctx, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     character(*), intent(in) :: uri
+    integer, intent(in) :: mode
     integer, intent(out) :: pctx
     integer, optional, intent(out) :: retstatus
     integer(C_INT) :: cid
     type(al_status) :: status
-    status = fstatus(c_ual_begin_uri_action(trim(uri)//C_NULL_CHAR, cid))
+    status = fstatus(c_ual_begin_dataentry_action(trim(uri)//C_NULL_CHAR, mode, cid))
     if (status%code.ne.0) then
        write(*,*) TRIM(status%message)
        pctx = 0
     else
        pctx = cid
-    end if
-    if (present(retstatus)) retstatus = status%code
-  end subroutine ual_begin_uri_action
-
-  subroutine ual_open_pulse(pctx, mode, opt, retstatus)
-    use, intrinsic :: ISO_C_BINDING
-    implicit none
-    integer, intent(in) :: pctx, mode
-    character(*), intent(in) :: opt
-    integer, optional, intent(out) :: retstatus
-    type(al_status) :: status
-    status = fstatus(c_ual_open_pulse(pctx, mode, trim(opt)//C_NULL_CHAR))
-    if (status%code.ne.0) then
-       write(*,*) TRIM(status%message)
-    else
        retstatus = status%code
     end if
     if (present(retstatus)) retstatus = status%code
-  end subroutine ual_open_pulse
+  end subroutine ual_begin_dataentry_action
 
   subroutine ual_close_pulse(pctx, mode, opt, retstatus)
     use, intrinsic :: ISO_C_BINDING
@@ -459,10 +437,7 @@ contains
     integer :: status
     character (STRMAXLEN) :: uri
     call ual_build_uri_from_legacy_parameters(MDSPLUS_BACKEND, shot, run, user, tokamak, version, uri, status)
-    call ual_begin_uri_action(uri, pulseCtx, status)
-    if (status.eq.0) then 
-       call ual_open_pulse(pulseCtx, FORCE_CREATE_PULSE, "", status)
-    end if
+    call ual_begin_dataentry_action(uri, FORCE_CREATE_PULSE, pulseCtx, status)
     if (present(retstatus)) retstatus = status
   end subroutine imas_create_env
 
@@ -476,10 +451,7 @@ contains
     integer :: status
     character (STRMAXLEN) :: uri
     call ual_build_uri_from_legacy_parameters(MDSPLUS_BACKEND, shot, run, user, tokamak, version, uri, status)
-    call ual_begin_uri_action(uri, pulseCtx, status)
-    if (status.eq.0) then 
-       call ual_open_pulse(pulseCtx, OPEN_PULSE, "", status)
-    end if
+    call ual_begin_dataentry_action(uri, OPEN_PULSE, pulseCtx, status)
     if (present(retstatus)) retstatus = status
   end subroutine imas_open_env
 

@@ -329,11 +329,11 @@ SUBROUTINE create_db(backendID, shot, run, idx)
 
   !CALL imas_create_env('ids',TESTSHOT,TESTRUN, TESTSHOT,TESTRUN,idx, userName, 'test', dataVersion)
   CALL ual_build_uri_from_legacy_parameters(backendID, shot, run, userName, 'test', dataVersion, uri, status)
-  CALL ual_begin_uri_action(uri, idx, status)
+
   mode = FORCE_CREATE_PULSE
 
   if (idx .ge. 0) then
-     CALL ual_open_pulse(idx, mode, '', status)
+     CALL ual_begin_dataentry_action(uri, mode, idx, status)
      if (status .eq. 0) then
         print *, "IDX:", idx
         return
@@ -353,9 +353,9 @@ SUBROUTINE open_db(backendID, shot, run, idx)
 
   !CALL imas_open_env('ids',TESTSHOT,TESTRUN, idx, userName, 'test', dataVersion)
   CALL ual_build_uri_from_legacy_parameters(backendID, shot, run, userName, 'test', dataVersion, uri, status)
-  CALL ual_begin_uri_action(uri, idx, status)
+
   if (idx .ge. 0) then
-     CALL ual_open_pulse(idx, OPEN_PULSE, '', status)
+     CALL ual_begin_dataentry_action(uri, OPEN_PULSE, idx, status)
      if (status .eq. 0) then
         print *, "IDX:", idx
         return
