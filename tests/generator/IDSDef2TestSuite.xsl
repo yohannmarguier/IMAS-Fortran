@@ -770,7 +770,7 @@
             </xsl:when>
 
             <xsl:otherwise>
-                <xsl:message terminate='no'> ERROR! Unknown type: <xsl:value-of select="@data_type"/>  (<xsl:value-of select="ancestor::IDS/@name"/>:  <xsl:value-of select="@path" />)</xsl:message>
+                <xsl:message terminate="yes"> ERROR! Unknown type: <xsl:value-of select="@data_type"/>  (<xsl:value-of select="ancestor::IDS/@name"/>:  <xsl:value-of select="@path" />)</xsl:message>
             </xsl:otherwise>
         </xsl:choose>
 <xsl:text>&#9;&#10;</xsl:text>
@@ -834,7 +834,7 @@
             </xsl:when>
 
             <xsl:otherwise>
-                <xsl:message terminate='no'> ERROR! Unknown type: <xsl:value-of select="@data_type"/>  (<xsl:value-of select="ancestor::IDS/@name"/>:  <xsl:value-of select="@path" />)</xsl:message>
+                <xsl:message terminate="yes"> ERROR! Unknown type: <xsl:value-of select="@data_type"/>  (<xsl:value-of select="ancestor::IDS/@name"/>:  <xsl:value-of select="@path" />)</xsl:message>
             </xsl:otherwise>
         </xsl:choose>
 
