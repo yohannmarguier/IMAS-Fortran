@@ -394,6 +394,16 @@ SUBROUTINE initField_CPX4DArray(idsField, isSliceMode)
     IMPLICIT NONE
     COMPLEX(ids_real), DIMENSION(:,:,:,:), POINTER  :: idsField
     LOGICAL, INTENT (IN)  :: isSliceMode
+    INTEGER :: lastDim
+ 
+    IF( isSliceMode ) then
+        lastDim = 1
+    ELSE
+        lastDim = config%timeSize
+    END IF
+                
+    
+    idsField => getComplex4DArray(dim1, dim2, dim3, lastDim)
 
 END SUBROUTINE initField_CPX4DArray
 
@@ -401,8 +411,18 @@ END SUBROUTINE initField_CPX4DArray
 
 SUBROUTINE initField_CPX5DArray(idsField, isSliceMode)
     IMPLICIT NONE
-    COMPLEX(ids_real), DIMENSION(:,:,:, :,:), POINTER    :: idsField
+    COMPLEX(ids_real), DIMENSION(:,:,:,:,:), POINTER    :: idsField
     LOGICAL, INTENT (IN)  :: isSliceMode
+    INTEGER :: lastDim
+ 
+    IF( isSliceMode ) then
+        lastDim = 1
+    ELSE
+        lastDim = config%timeSize
+    END IF
+                
+    
+    idsField => getComplex5DArray(dim1, dim2, dim3, dim4, lastDim)
 
 END SUBROUTINE initField_CPX5DArray
 
@@ -410,8 +430,18 @@ END SUBROUTINE initField_CPX5DArray
 
 SUBROUTINE initField_CPX6DArray(idsField, isSliceMode)
     IMPLICIT NONE
-    COMPLEX(ids_real), DIMENSION(:,:,:, :,:,:), POINTER    :: idsField
+    COMPLEX(ids_real), DIMENSION(:,:,:,:,:,:), POINTER    :: idsField
     LOGICAL, INTENT (IN)  :: isSliceMode
+    INTEGER :: lastDim
+ 
+    IF( isSliceMode ) then
+        lastDim = 1
+    ELSE
+        lastDim = config%timeSize
+    END IF
+                
+    
+    idsField => getComplex6DArray(dim1, dim2, dim3, dim4, dim5, lastDim)
 
 END SUBROUTINE initField_CPX6DArray
 

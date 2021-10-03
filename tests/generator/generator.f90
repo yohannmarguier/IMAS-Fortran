@@ -513,6 +513,78 @@ FUNCTION getComplex3DArray(dim1, dim2, dim3) RESULT (outArray)
     RETURN
   END FUNCTION getComplex3DArray
 
+  ! =================================================================
+
+FUNCTION getComplex4DArray(dim1, dim2, dim3, dim4) RESULT (outArray)
+    INTEGER, INTENT(in) :: dim1, dim2, dim3, dim4
+
+    INTEGER ::sizeOfArray
+    COMPLEX(ids_real),DIMENSION(:), POINTER :: flatArray
+    COMPLEX(ids_real),DIMENSION(:,:,:,:), POINTER :: outArray
+    INTEGER :: I
+
+    sizeOfArray = dim1 * dim2 * dim3 * dim4
+    
+    flatArray => getComplexArray(sizeOfArray)
+    ALLOCATE(outArray(dim1, dim2, dim3, dim4))
+
+    outArray =  RESHAPE(flatArray(:dim1 * dim2 * dim3 * dim4), (/dim1, dim2, dim3, dim4/))
+
+
+    deallocate(flatArray)
+
+
+    RETURN
+  END FUNCTION getComplex4DArray
+
+  ! =================================================================
+
+FUNCTION getComplex5DArray(dim1, dim2, dim3, dim4, dim5) RESULT (outArray)
+    INTEGER, INTENT(in) :: dim1, dim2, dim3, dim4, dim5
+
+    INTEGER ::sizeOfArray
+    COMPLEX(ids_real),DIMENSION(:), POINTER :: flatArray
+    COMPLEX(ids_real),DIMENSION(:,:,:,:,:), POINTER :: outArray
+    INTEGER :: I
+
+    sizeOfArray = dim1 * dim2 * dim3 * dim4 * dim5
+    
+    flatArray => getComplexArray(sizeOfArray)
+    ALLOCATE(outArray(dim1, dim2, dim3, dim4, dim5))
+
+    outArray =  RESHAPE(flatArray(:dim1 * dim2 * dim3 * dim4 * dim5), (/dim1, dim2, dim3, dim4, dim5/))
+
+
+    deallocate(flatArray)
+
+
+    RETURN
+  END FUNCTION getComplex5DArray
+
+  ! =================================================================
+
+FUNCTION getComplex6DArray(dim1, dim2, dim3, dim4, dim5, dim6) RESULT (outArray)
+    INTEGER, INTENT(in) :: dim1, dim2, dim3, dim4, dim5, dim6
+
+    INTEGER ::sizeOfArray
+    COMPLEX(ids_real),DIMENSION(:), POINTER :: flatArray
+    COMPLEX(ids_real),DIMENSION(:,:,:,:,:,:), POINTER :: outArray
+    INTEGER :: I
+
+    sizeOfArray = dim1 * dim2 * dim3 * dim4 * dim5 * dim6
+    
+    flatArray => getComplexArray(sizeOfArray)
+    ALLOCATE(outArray(dim1, dim2, dim3, dim4, dim5, dim6))
+
+    outArray =  RESHAPE(flatArray(:dim1 * dim2 * dim3 * dim4 * dim5 * dim6), (/dim1, dim2, dim3, dim4, dim5, dim6/))
+
+
+    deallocate(flatArray)
+
+
+    RETURN
+  END FUNCTION getComplex6DArray
+
 
 END MODULE generator
 

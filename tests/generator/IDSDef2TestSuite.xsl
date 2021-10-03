@@ -761,8 +761,8 @@
 			    @data_type='cpx_1d_type' or @data_type='CPX_1D'or
                             @data_type='flt_2d_type' or @data_type='FLT_2D' or
                             @data_type='cpx_2d_type' or @data_type='CPX_2D' or
-                            @data_type='FLT_3D' or  @data_type='FLT_4D'or  @data_type='FLT_5D' or @data_type='FLT_6D' or
-			    @data_type='CPX_3D' or
+                            @data_type='FLT_3D' or @data_type='FLT_4D' or  @data_type='FLT_5D' or @data_type='FLT_6D' or
+			    @data_type='CPX_3D' or @data_type='CPX_4D' or @data_type='CPX_5D' or @data_type='CPX_6D' or
                             @data_type='int_type' or @data_type='INT_0D' or 
                             @data_type='int_1d_type' or @data_type='INT_1D' or 
                             @data_type='INT_2D' or @data_type='INT_3D' or @data_type='INT_4D'">
@@ -770,7 +770,7 @@
             </xsl:when>
 
             <xsl:otherwise>
-                <xsl:message terminate='no'> ERROR! Unknown type: <xsl:value-of select="@data_type"/>  (<xsl:value-of select="ancestor::IDS/@name"/>:  <xsl:value-of select="@path" />)</xsl:message>
+                <xsl:message terminate="yes"> ERROR! Unknown type: <xsl:value-of select="@data_type"/>  (<xsl:value-of select="ancestor::IDS/@name"/>:  <xsl:value-of select="@path" />)</xsl:message>
             </xsl:otherwise>
         </xsl:choose>
 <xsl:text>&#9;&#10;</xsl:text>
@@ -819,11 +819,11 @@
                             @data_type='flt_type' or @data_type='FLT_0D' or
                             @data_type='flt_1d_type' or @data_type='FLT_1D'or
                             @data_type='flt_2d_type' or @data_type='FLT_2D' or
-                            @data_type='FLT_3D'or  @data_type='FLT_4D'or  @data_type='FLT_5D' or @data_type='FLT_6D' or
+                            @data_type='FLT_3D' or @data_type='FLT_4D'or  @data_type='FLT_5D' or @data_type='FLT_6D' or
 			    @data_type='cpx_type' or @data_type='CPX_0D' or
 			    @data_type='cpx_1d_type' or @data_type='CPX_1D' or
 			    @data_type='cpx_2d_type' or @data_type='CPX_2D' or
-			    @data_type='CPX_3D' or
+			    @data_type='CPX_3D' or @data_type='CPX_4D'or  @data_type='CPX_5D' or @data_type='CPX_6D' or
                             @data_type='int_type' or @data_type='INT_0D' or 
                             @data_type='int_1d_type' or @data_type='INT_1D' or 
                             @data_type='INT_2D' or @data_type='INT_3D' or @data_type='INT_4D'">
@@ -834,7 +834,7 @@
             </xsl:when>
 
             <xsl:otherwise>
-                <xsl:message terminate='no'> ERROR! Unknown type: <xsl:value-of select="@data_type"/>  (<xsl:value-of select="ancestor::IDS/@name"/>:  <xsl:value-of select="@path" />)</xsl:message>
+                <xsl:message terminate="yes"> ERROR! Unknown type: <xsl:value-of select="@data_type"/>  (<xsl:value-of select="ancestor::IDS/@name"/>:  <xsl:value-of select="@path" />)</xsl:message>
             </xsl:otherwise>
         </xsl:choose>
 
