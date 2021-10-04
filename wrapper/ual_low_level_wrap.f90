@@ -427,7 +427,7 @@ contains
 
 !!! old API !!!
 
-  subroutine imas_open(uri, mode, retstatus)
+  subroutine imas_open(uri, mode, pulseCtx, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     character(*), intent(in) :: uri
@@ -435,7 +435,6 @@ contains
     integer, intent(out) :: pulseCtx
     integer, optional, intent(out) :: retstatus
     integer :: status
-    character (STRMAXLEN) :: uri
     call ual_begin_dataentry_action(uri, mode, pulseCtx, status)
     if (present(retstatus)) retstatus = status
   end subroutine imas_open
