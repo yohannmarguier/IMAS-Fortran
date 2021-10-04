@@ -54,13 +54,13 @@ module ual_low_level_wrap
        integer(C_INT), intent(out) :: beid
      end function c_ual_get_backendID
 
-     function c_ual_build_uri_from_legacy_parameters(beid, shot, run, usr, tok, ver, uri) &
+     function c_ual_build_uri_from_legacy_parameters(beid, shot, run, usr, tok, ver, opt, uri) &
           bind(C,name="ual_build_uri_from_legacy_parameters")
        use, intrinsic :: ISO_C_BINDING
        import c_al_status_t
        type(c_al_status_t) :: c_ual_build_uri_from_legacy_parameters
        integer(C_INT), value, intent(in) :: beid, shot, run
-       character(C_CHAR), dimension(*), intent(in) :: usr, tok, ver
+       character(C_CHAR), dimension(*), intent(in) :: usr, tok, ver, opt
        type(C_PTR), intent(out) :: uri
      end function c_ual_build_uri_from_legacy_parameters
 
@@ -265,11 +265,11 @@ contains
     if (present(retstatus)) retstatus = status%code
   end subroutine ual_get_backendID
 
-  subroutine ual_build_uri_from_legacy_parameters(beid, shot, run, usr, tok, ver, uri, retstatus)
+  subroutine ual_build_uri_from_legacy_parameters(beid, shot, run, usr, tok, ver, opt, uri, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: beid, shot, run
-    character(*), intent(in) :: usr, tok, ver
+    character(*), intent(in) :: usr, tok, ver, opt
     character(STRMAXLEN), intent(out) :: uri
     integer, optional, intent(out) :: retstatus
     character, dimension(:), pointer :: chars
@@ -278,7 +278,7 @@ contains
     type(C_PTR) :: cptr
 
     status = fstatus(c_ual_build_uri_from_legacy_parameters(beid, shot, run, trim(usr)//C_NULL_CHAR, &
-         trim(tok)//C_NULL_CHAR, trim(ver)//C_NULL_CHAR, cptr))
+         trim(tok)//C_NULL_CHAR, trim(ver)//C_NULL_CHAR, trim(opt)//C_NULL_CHAR, cptr))
 
     if (C_ASSOCIATED(cptr)) then
           s = c_strlen(cptr)
@@ -449,7 +449,7 @@ contains
     integer, intent(out), optional :: retstatus
     integer :: status
     character (STRMAXLEN) :: uri
-    call ual_build_uri_from_legacy_parameters(MDSPLUS_BACKEND, shot, run, user, tokamak, version, uri, status)
+    call ual_build_uri_from_legacy_parameters(MDSPLUS_BACKEND, shot, run, user, tokamak, version, "", uri, status)
     call ual_begin_dataentry_action(uri, FORCE_CREATE_PULSE, pulseCtx, status)
     if (present(retstatus)) retstatus = status
   end subroutine imas_create_env
@@ -463,7 +463,7 @@ contains
     integer, optional, intent(out) :: retstatus
     integer :: status
     character (STRMAXLEN) :: uri
-    call ual_build_uri_from_legacy_parameters(MDSPLUS_BACKEND, shot, run, user, tokamak, version, uri, status)
+    call ual_build_uri_from_legacy_parameters(MDSPLUS_BACKEND, shot, run, user, tokamak, version, "", uri, status)
     call ual_begin_dataentry_action(uri, OPEN_PULSE, pulseCtx, status)
     if (present(retstatus)) retstatus = status
   end subroutine imas_open_env
