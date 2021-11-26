@@ -418,7 +418,7 @@
 	<xsl:text>&#9;&#9;call ids_put(pulseCtx, idspath, ids);&#10;</xsl:text>
 
 
-	<!-- <xsl:text>&#9;call ids_deallocate(ids)&#10;</xsl:text> -->
+	<xsl:text>&#9;&#9;call ids_deallocate(ids)&#10;</xsl:text>
 	<xsl:text>&#9;end do &#10;</xsl:text>
         <xsl:text>&#10;</xsl:text>
         <xsl:text>END SUBROUTINE </xsl:text> <xsl:value-of select="@name"/><xsl:text>_put &#10;</xsl:text>
@@ -516,9 +516,8 @@
 	<xsl:text>&#9;&#9;call ids_get(pulseCtx, idspath, ids);&#10;</xsl:text>
 	<xsl:text>&#9;&#9;call test_ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>(ids, .TRUE., setDynamicFields, idsTimeMode, .FALSE., -1)&#10;</xsl:text> 
 		
-		
-		 <!-- <xsl:text>&#9;call ids_deallocate(ids)&#10;</xsl:text> -->
-	  <xsl:text>&#9;end do &#10;</xsl:text>
+	<xsl:text>&#9;&#9;call ids_deallocate(ids)&#10;</xsl:text>
+	<xsl:text>&#9;end do &#10;</xsl:text>
         <xsl:text>&#9;&#10;</xsl:text>
         <xsl:text>END SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_get&#10;</xsl:text>
 	<xsl:text>&#10;</xsl:text>
@@ -562,14 +561,15 @@
 
 	<xsl:text>&#9;&#9;&#9;if (sliceIdx == 1) then &#10;</xsl:text>
 	<xsl:text>&#10;</xsl:text>
-    <xsl:text>&#9;&#9;&#9;&#9;call test_ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>(ids, .TRUE., .TRUE., idsTimeMode, .TRUE., sliceIdx)&#10;</xsl:text>
+	<xsl:text>&#9;&#9;&#9;&#9;call test_ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>(ids, .TRUE., .TRUE., idsTimeMode, .TRUE., sliceIdx)&#10;</xsl:text>
 	<xsl:text>&#9;&#9;&#9;else&#10;</xsl:text>
-    <xsl:text>&#9;&#9;&#9;&#9;call test_ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>(ids, .FALSE., .TRUE., idsTimeMode, .TRUE., sliceIdx)&#10;</xsl:text>
-    <xsl:text>&#9;&#9;&#9;end if &#10;</xsl:text>
+	<xsl:text>&#9;&#9;&#9;&#9;call test_ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>(ids, .FALSE., .TRUE., idsTimeMode, .TRUE., sliceIdx)&#10;</xsl:text>
+	<xsl:text>&#9;&#9;&#9;end if &#10;</xsl:text>
+	<xsl:text>&#9;&#9;&#9;call ids_deallocate(ids)&#10;</xsl:text>
   	<xsl:text>&#9;&#9;end do &#10;</xsl:text>
-    <xsl:text>&#9;end do &#10;</xsl:text>
-    <xsl:text>&#10;</xsl:text>
-    <xsl:text>END SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_getSlice&#10;</xsl:text>
+    	<xsl:text>&#9;end do &#10;</xsl:text>
+    	<xsl:text>&#10;</xsl:text>
+    	<xsl:text>END SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_getSlice&#10;</xsl:text>
 	<xsl:text>&#10;</xsl:text>
     </xsl:template>
 
@@ -761,8 +761,8 @@
 			    @data_type='cpx_1d_type' or @data_type='CPX_1D'or
                             @data_type='flt_2d_type' or @data_type='FLT_2D' or
                             @data_type='cpx_2d_type' or @data_type='CPX_2D' or
-                            @data_type='FLT_3D' or  @data_type='FLT_4D'or  @data_type='FLT_5D' or @data_type='FLT_6D' or
-			    @data_type='CPX_3D' or
+                            @data_type='FLT_3D' or @data_type='FLT_4D' or  @data_type='FLT_5D' or @data_type='FLT_6D' or
+			    @data_type='CPX_3D' or @data_type='CPX_4D' or @data_type='CPX_5D' or @data_type='CPX_6D' or
                             @data_type='int_type' or @data_type='INT_0D' or 
                             @data_type='int_1d_type' or @data_type='INT_1D' or 
                             @data_type='INT_2D' or @data_type='INT_3D' or @data_type='INT_4D'">
@@ -770,7 +770,7 @@
             </xsl:when>
 
             <xsl:otherwise>
-                <xsl:message terminate='no'> ERROR! Unknown type: <xsl:value-of select="@data_type"/>  (<xsl:value-of select="ancestor::IDS/@name"/>:  <xsl:value-of select="@path" />)</xsl:message>
+                <xsl:message terminate="yes"> ERROR! Unknown type: <xsl:value-of select="@data_type"/>  (<xsl:value-of select="ancestor::IDS/@name"/>:  <xsl:value-of select="@path" />)</xsl:message>
             </xsl:otherwise>
         </xsl:choose>
 <xsl:text>&#9;&#10;</xsl:text>
@@ -819,11 +819,11 @@
                             @data_type='flt_type' or @data_type='FLT_0D' or
                             @data_type='flt_1d_type' or @data_type='FLT_1D'or
                             @data_type='flt_2d_type' or @data_type='FLT_2D' or
-                            @data_type='FLT_3D'or  @data_type='FLT_4D'or  @data_type='FLT_5D' or @data_type='FLT_6D' or
+                            @data_type='FLT_3D' or @data_type='FLT_4D'or  @data_type='FLT_5D' or @data_type='FLT_6D' or
 			    @data_type='cpx_type' or @data_type='CPX_0D' or
 			    @data_type='cpx_1d_type' or @data_type='CPX_1D' or
 			    @data_type='cpx_2d_type' or @data_type='CPX_2D' or
-			    @data_type='CPX_3D' or
+			    @data_type='CPX_3D' or @data_type='CPX_4D'or  @data_type='CPX_5D' or @data_type='CPX_6D' or
                             @data_type='int_type' or @data_type='INT_0D' or 
                             @data_type='int_1d_type' or @data_type='INT_1D' or 
                             @data_type='INT_2D' or @data_type='INT_3D' or @data_type='INT_4D'">
@@ -834,7 +834,7 @@
             </xsl:when>
 
             <xsl:otherwise>
-                <xsl:message terminate='no'> ERROR! Unknown type: <xsl:value-of select="@data_type"/>  (<xsl:value-of select="ancestor::IDS/@name"/>:  <xsl:value-of select="@path" />)</xsl:message>
+                <xsl:message terminate="yes"> ERROR! Unknown type: <xsl:value-of select="@data_type"/>  (<xsl:value-of select="ancestor::IDS/@name"/>:  <xsl:value-of select="@path" />)</xsl:message>
             </xsl:otherwise>
         </xsl:choose>
 

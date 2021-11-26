@@ -109,6 +109,10 @@ interface is_c_data
 <xsl:apply-templates select="IDS" mode="declare_is_c_data"/>
 end interface
 
+interface get_max_occurrences
+<xsl:apply-templates select="IDS" mode="declare_get_max_occurrences"/>
+end interface
+
 <!-- declare each IDS and their structures -->
 ! declare each IDS and their substructures
 <xsl:apply-templates select="IDS" mode="declare"/>  
@@ -117,6 +121,7 @@ end interface
 contains 
 
 <xsl:apply-templates select="IDS" mode="sbrt_c_data"/>
+<xsl:apply-templates select="IDS" mode="sbrt_max_occurrences"/>
 
 end module
 
@@ -136,6 +141,10 @@ end module
   module procedure is_c_data_<xsl:value-of select="@name"/>  
 </xsl:template>
 
+<xsl:template match="IDS" mode="declare_get_max_occurrences">
+  module procedure get_max_occurrences_<xsl:value-of select="@name"/>
+</xsl:template>
+
 <xsl:template match="IDS" mode="sbrt_c_data">
   subroutine set_c_data_<xsl:value-of select="@name"/>(ids, bool)
     type(ids_<xsl:value-of select="@name"/>), intent(inout) :: ids
@@ -147,6 +156,14 @@ end module
     logical, intent(out) :: bool
     bool = ids%c_data
   end subroutine
+</xsl:template>
+
+<xsl:template match="IDS" mode="sbrt_max_occurrences">
+  function get_max_occurrences_<xsl:value-of select="@name"/>(ids)
+    type(ids_<xsl:value-of select="@name"/>), intent(in) :: ids
+    integer :: get_max_occurrences_<xsl:value-of select="@name"/>
+    get_max_occurrences_<xsl:value-of select="@name"/> = ids%max_occurrence
+  end function
 </xsl:template>
 
 <xsl:template match="utilities" mode="module">
@@ -194,6 +211,7 @@ end module
   ! ***********  <xsl:value-of select="@name"/> IDS 
   type ids_<xsl:value-of select="@name"/> !<xsl:value-of select="local:commentstring(@documentation)"/>
     logical, private :: c_data = .FALSE. ! Fortran specific metadata telling whether the IDS has been populated from C allocated data (LL) or not
+    integer, private :: max_occurrence = <xsl:value-of select="@maxoccur"/>! Maximum occurrence allowed as defined in the DD
     <xsl:apply-templates select="./field" mode="declare_field"/>
   end type
 </xsl:template>
