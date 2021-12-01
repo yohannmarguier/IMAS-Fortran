@@ -482,14 +482,14 @@ end interface
   </xsl:variable>
   <xsl:if test="not (preceding::field[@structure_reference=$this-type or @name=$this-type])">
 
-subroutine put_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>(ctx, path, struct, timemode, timedparent, retstatus)
+subroutine put_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>(ctx, name, path, struct, timemode, timedparent, retstatus)
   use ids_types
   use ids_utilities, only: ids_<xsl:value-of select="$this-type"/>
   use ual_low_level_wrap
   implicit none
 
   integer(ids_int), intent(in) :: ctx
-  character*(*), intent(in) :: path
+  character*(*), intent(in) :: name, path
   type(ids_<xsl:value-of select="$this-type"/>), intent(in) :: struct
   logical, intent(in) :: timedparent
   integer, intent(in) :: timemode
@@ -647,13 +647,13 @@ end subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
   </xsl:variable>
   <xsl:variable name="this-ids" select="ancestor::IDS/@name"/>
   <xsl:if test="not (preceding::field[@structure_reference=$this-type and ancestor::IDS/@name=$this-ids] or /IDSs/utilities/field/@name=$this-type)">
-subroutine put_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>(ctx, path, struct, timemode, timedparent, retstatus)
+subroutine put_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>(ctx, name, path, struct, timemode, timedparent, retstatus)
   use ids_schemas
   use ual_low_level_wrap
   implicit none
 
   integer(ids_int), intent(in) :: ctx
-  character*(*), intent(in) :: path
+  character*(*), intent(in) :: name, path
   type(ids_<xsl:value-of select="$this-type"/>), intent(in) :: struct      
   logical, intent(in) :: timedparent
   integer, intent(in) :: timemode 
@@ -722,14 +722,14 @@ end interface
   </xsl:variable>
   <xsl:if test="not (preceding::field[@structure_reference=$this-type or @name=$this-type])">
 
-subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>(ctx, path, struct, timemode, timedparent, retstatus)
+subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>(ctx, name, path, struct, timemode, timedparent, retstatus)
   use ids_types
   use ids_utilities, only: ids_<xsl:value-of select="$this-type"/>
   use ual_low_level_wrap
   implicit none
 
   integer(ids_int), intent(in) :: ctx
-  character*(*), intent(in) :: path
+  character*(*), intent(in) :: name, path
   type(ids_<xsl:value-of select="$this-type"/>), intent(in) :: struct
   logical, intent(in) :: timedparent
   integer, intent(in) :: timemode
@@ -919,13 +919,13 @@ end subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@nam
   </xsl:variable>
   <xsl:variable name="this-ids" select="ancestor::IDS/@name"/>
   <xsl:if test="not (preceding::field[@structure_reference=$this-type and ancestor::IDS/@name=$this-ids] or /IDSs/utilities/field/@name=$this-type)">
-subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>(ctx, path, struct, timemode, timedparent, retstatus)
+subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>(ctx, name, path, struct, timemode, timedparent, retstatus)
   use ids_schemas
   use ual_low_level_wrap
   implicit none
 
   integer(ids_int), intent(in) :: ctx
-  character*(*), intent(in) :: path
+  character*(*), intent(in) :: name, path
   type(ids_<xsl:value-of select="$this-type"/>), intent(in) :: struct      
   logical, intent(in) :: timedparent
   integer, intent(in) :: timemode
@@ -1648,7 +1648,7 @@ end module
       </xsl:choose>
     </xsl:variable>
     ! Put <xsl:value-of select="@name"/>
-    call put_<xsl:if test="$slice='yes'">slice_</xsl:if>struct_ids_<xsl:value-of select="$this-type"/>(<xsl:value-of select="$contextvar"/>, &amp;
+    call put_<xsl:if test="$slice='yes'">slice_</xsl:if>struct_ids_<xsl:value-of select="$this-type"/>(<xsl:value-of select="$contextvar"/>, name, &amp;
     <xsl:choose>
       <xsl:when test="$contextvar='aosctx'">'', </xsl:when>
       <xsl:otherwise><xsl:value-of select="concat(substring($fieldpath,1,string-length($fieldpath)-1),'/&quot;')"/>, </xsl:otherwise>
@@ -1681,8 +1681,8 @@ end module
 	  <xsl:otherwise>
 	  </xsl:otherwise>
 	</xsl:choose>
-       call put_string(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
-          '', TRIM(longstring), status)
+          call put_string(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
+          '', TRIM(longstring), '<xsl:value-of select="@lifecycle_status"/>', status)
        <xsl:call-template name="checkErrorCtx">
          <xsl:with-param name="method" select="'put'"/>
 	 <xsl:with-param name="ctx" select="$contextvar"/>
@@ -1693,8 +1693,8 @@ end module
       <xsl:otherwise>
     if (associated(<xsl:value-of select="$fieldvar"/>)) then
        call pack_string(<xsl:value-of select="$fieldvar"/>, longstring, lenstring)
-       call put_string(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
-          '', longstring(1:lenstring), status)
+       call put_string(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
+         '', longstring(1:lenstring), '<xsl:value-of select="@lifecycle_status"/>',  status)
        <xsl:call-template name="checkErrorCtx">
          <xsl:with-param name="method" select="'put'"/>
 	 <xsl:with-param name="ctx" select="$contextvar"/>
@@ -1716,8 +1716,8 @@ end module
       <xsl:with-param name="fieldvar" select="$fieldvar"/>
       <xsl:with-param name="rank" select="1"/>
     </xsl:call-template>
-    call put_vect1d_string(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
-       trim(timepath), <xsl:value-of select="$fieldvar"/>, lastdimsize, status)
+         call put_vect1d_string(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
+         trim(timepath), <xsl:value-of select="$fieldvar"/>, lastdimsize, '<xsl:value-of select="@lifecycle_status"/>', status)
        <xsl:call-template name="checkErrorCtx">
          <xsl:with-param name="method" select="'put'"/>
 	 <xsl:with-param name="ctx" select="$contextvar"/>
@@ -1731,8 +1731,8 @@ end module
   <xsl:when test="@data_type='int_type' or @data_type='INT_0D'">
     ! Put <xsl:value-of select="@name"/>
     if (<xsl:value-of select="$fieldvar"/>.NE.ids_int_invalid) then
-       call put_int(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
-          '', <xsl:value-of select="$fieldvar"/>, status)
+        call put_int(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
+        '', <xsl:value-of select="$fieldvar"/>, '<xsl:value-of select="@lifecycle_status"/>', status)
 	  <xsl:call-template name="checkErrorCtx">
 	    <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
@@ -1746,8 +1746,8 @@ end module
   <xsl:when test="@data_type='flt_type' or @data_type='FLT_0D'">
     ! Put <xsl:value-of select="@name"/>
     if (<xsl:value-of select="$fieldvar"/>.NE.ids_real_invalid) then
-       call put_double(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
-          '', <xsl:value-of select="$fieldvar"/>, status)
+       call put_double(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
+       '', <xsl:value-of select="$fieldvar"/>, '<xsl:value-of select="@lifecycle_status"/>', status)
 	  <xsl:call-template name="checkErrorCtx">
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
@@ -1761,8 +1761,8 @@ end module
   <xsl:when test="@data_type='cpx_type' or @data_type='CPX_0D'">
     ! Put <xsl:value-of select="@name"/>
     if (<xsl:value-of select="$fieldvar"/>.NE.ids_complex_invalid) then
-       call put_complex(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
-          '', <xsl:value-of select="$fieldvar"/>, status)
+        call put_complex(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
+          '', <xsl:value-of select="$fieldvar"/>, '<xsl:value-of select="@lifecycle_status"/>', status)
 	  <xsl:call-template name="checkErrorCtx">
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
@@ -1782,8 +1782,8 @@ end module
       <xsl:with-param name="fieldvar" select="$fieldvar"/>
       <xsl:with-param name="rank" select="1"/>
     </xsl:call-template>
-       call put_vect1d_double(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
-          trim(timepath), <xsl:value-of select="$fieldvar"/>, lastdimsize, status)
+       call put_vect1d_double(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
+       trim(timepath), <xsl:value-of select="$fieldvar"/>, lastdimsize, '<xsl:value-of select="@lifecycle_status"/>', status)
 	  <xsl:call-template name="checkErrorCtx">
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
@@ -1803,8 +1803,8 @@ end module
       <xsl:with-param name="fieldvar" select="$fieldvar"/>
       <xsl:with-param name="rank" select="1"/>
     </xsl:call-template>
-       call put_vect1d_complex(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
-          trim(timepath), <xsl:value-of select="$fieldvar"/>, lastdimsize, status)
+       call put_vect1d_complex(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
+       trim(timepath), <xsl:value-of select="$fieldvar"/>, lastdimsize, '<xsl:value-of select="@lifecycle_status"/>', status)
 	  <xsl:call-template name="checkErrorCtx">
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
@@ -1824,8 +1824,8 @@ end module
       <xsl:with-param name="fieldvar" select="$fieldvar"/>
       <xsl:with-param name="rank" select="1"/>
     </xsl:call-template>
-       call put_vect1d_int(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
-          trim(timepath), <xsl:value-of select="$fieldvar"/>, lastdimsize, status)
+       call put_vect1d_int(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
+       trim(timepath), <xsl:value-of select="$fieldvar"/>, lastdimsize, '<xsl:value-of select="@lifecycle_status"/>', status)
 	  <xsl:call-template name="checkErrorCtx">
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
@@ -1845,10 +1845,10 @@ end module
       <xsl:with-param name="fieldvar" select="$fieldvar"/>
       <xsl:with-param name="rank" select="2"/>
     </xsl:call-template>
-       call put_vect2d_double(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
-          trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
+        call put_vect2d_double(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
+        trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
 	  size(<xsl:value-of select="$fieldvar"/>,1),&amp;
-	  lastdimsize, status)
+      lastdimsize, '<xsl:value-of select="@lifecycle_status"/>', status)
 	  <xsl:call-template name="checkErrorCtx">
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
@@ -1868,10 +1868,10 @@ end module
       <xsl:with-param name="fieldvar" select="$fieldvar"/>
       <xsl:with-param name="rank" select="2"/>
     </xsl:call-template>
-       call put_vect2d_complex(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
-          trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
+        call put_vect2d_complex(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
+        trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
 	  size(<xsl:value-of select="$fieldvar"/>,1),&amp;
-	  lastdimsize, status)
+      lastdimsize, '<xsl:value-of select="@lifecycle_status"/>', status)
 	  <xsl:call-template name="checkErrorCtx">
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
@@ -1891,10 +1891,10 @@ end module
       <xsl:with-param name="fieldvar" select="$fieldvar"/>
       <xsl:with-param name="rank" select="2"/>
     </xsl:call-template>
-       call put_vect2d_int(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
+          call put_vect2d_int(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
           trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
           size(<xsl:value-of select="$fieldvar"/>,1),&amp;
-          lastdimsize, status)
+          lastdimsize, '<xsl:value-of select="@lifecycle_status"/>', status)
 	  <xsl:call-template name="checkErrorCtx">
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
@@ -1914,11 +1914,11 @@ end module
       <xsl:with-param name="fieldvar" select="$fieldvar"/>
       <xsl:with-param name="rank" select="3"/>
     </xsl:call-template>
-       call put_vect3d_double(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
+          call put_vect3d_double(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
           trim(timepath), <xsl:value-of select="$fieldvar"/>, &amp;
           size(<xsl:value-of select="$fieldvar"/>,1),&amp;
           size(<xsl:value-of select="$fieldvar"/>,2),&amp;
-          lastdimsize, status)
+          lastdimsize, '<xsl:value-of select="@lifecycle_status"/>', status)
 	  <xsl:call-template name="checkErrorCtx">
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
@@ -1938,11 +1938,11 @@ end module
       <xsl:with-param name="fieldvar" select="$fieldvar"/>
       <xsl:with-param name="rank" select="3"/>
     </xsl:call-template>
-       call put_vect3d_complex(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
+          call put_vect3d_complex(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
           trim(timepath), <xsl:value-of select="$fieldvar"/>, &amp;
           size(<xsl:value-of select="$fieldvar"/>,1),&amp;
           size(<xsl:value-of select="$fieldvar"/>,2),&amp;
-          lastdimsize, status)
+          lastdimsize, '<xsl:value-of select="@lifecycle_status"/>', status)
 	  <xsl:call-template name="checkErrorCtx">
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
@@ -1962,11 +1962,11 @@ end module
       <xsl:with-param name="fieldvar" select="$fieldvar"/>
       <xsl:with-param name="rank" select="3"/>
     </xsl:call-template>
-       call put_vect3d_int(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
+          call put_vect3d_int(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
           trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
           size(<xsl:value-of select="$fieldvar"/>,1),&amp;
-	  size(<xsl:value-of select="$fieldvar"/>,2),&amp;
-	  lastdimsize, status)
+	      size(<xsl:value-of select="$fieldvar"/>,2),&amp;
+          lastdimsize, '<xsl:value-of select="@lifecycle_status"/>', status)
 	  <xsl:call-template name="checkErrorCtx">
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
@@ -1986,12 +1986,12 @@ end module
       <xsl:with-param name="fieldvar" select="$fieldvar"/>
       <xsl:with-param name="rank" select="4"/>
     </xsl:call-template>
-       call put_vect4d_double(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
+          call put_vect4d_double(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
           trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
-	  size(<xsl:value-of select="$fieldvar"/>,1),&amp;
-	  size(<xsl:value-of select="$fieldvar"/>,2),&amp;
-	  size(<xsl:value-of select="$fieldvar"/>,3),&amp;
-	  lastdimsize, status)
+	      size(<xsl:value-of select="$fieldvar"/>,1),&amp;
+	      size(<xsl:value-of select="$fieldvar"/>,2),&amp;
+	      size(<xsl:value-of select="$fieldvar"/>,3),&amp;
+          lastdimsize, '<xsl:value-of select="@lifecycle_status"/>', status)
 	  <xsl:call-template name="checkErrorCtx">
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
@@ -2011,12 +2011,12 @@ end module
       <xsl:with-param name="fieldvar" select="$fieldvar"/>
       <xsl:with-param name="rank" select="4"/>
     </xsl:call-template>
-       call put_vect4d_complex(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
+          call put_vect4d_complex(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
           trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
 	  size(<xsl:value-of select="$fieldvar"/>,1),&amp;
 	  size(<xsl:value-of select="$fieldvar"/>,2),&amp;
 	  size(<xsl:value-of select="$fieldvar"/>,3),&amp;
-	  lastdimsize, status)
+      lastdimsize, '<xsl:value-of select="@lifecycle_status"/>', status)
 	  <xsl:call-template name="checkErrorCtx">
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
@@ -2036,13 +2036,13 @@ end module
       <xsl:with-param name="fieldvar" select="$fieldvar"/>
       <xsl:with-param name="rank" select="5"/>
     </xsl:call-template>
-       call put_vect5d_double(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
-          trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
+        call put_vect5d_double(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
+        trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
 	  size(<xsl:value-of select="$fieldvar"/>,1),&amp;
 	  size(<xsl:value-of select="$fieldvar"/>,2),&amp;
 	  size(<xsl:value-of select="$fieldvar"/>,3),&amp;
 	  size(<xsl:value-of select="$fieldvar"/>,4),&amp;
-	  lastdimsize, status)
+      lastdimsize, '<xsl:value-of select="@lifecycle_status"/>', status)
 	  <xsl:call-template name="checkErrorCtx">
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
@@ -2062,13 +2062,13 @@ end module
       <xsl:with-param name="fieldvar" select="$fieldvar"/>
       <xsl:with-param name="rank" select="5"/>
     </xsl:call-template>
-       call put_vect5d_complex(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
-          trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
+       call put_vect5d_complex(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
+       trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
 	  size(<xsl:value-of select="$fieldvar"/>,1),&amp;
 	  size(<xsl:value-of select="$fieldvar"/>,2),&amp;
 	  size(<xsl:value-of select="$fieldvar"/>,3),&amp;
 	  size(<xsl:value-of select="$fieldvar"/>,4),&amp;
-	  lastdimsize, status)
+      lastdimsize, '<xsl:value-of select="@lifecycle_status"/>', status)
 	  <xsl:call-template name="checkErrorCtx">
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
@@ -2088,14 +2088,14 @@ end module
       <xsl:with-param name="fieldvar" select="$fieldvar"/>
       <xsl:with-param name="rank" select="6"/>
     </xsl:call-template>
-       call put_vect6d_double(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
-          trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
+      call put_vect6d_double(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
+      trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
 	  size(<xsl:value-of select="$fieldvar"/>,1),&amp;
 	  size(<xsl:value-of select="$fieldvar"/>,2),&amp;
 	  size(<xsl:value-of select="$fieldvar"/>,3),&amp;
 	  size(<xsl:value-of select="$fieldvar"/>,4),&amp;
 	  size(<xsl:value-of select="$fieldvar"/>,5),&amp;
-	  lastdimsize, status)
+      lastdimsize, '<xsl:value-of select="@lifecycle_status"/>', status)
 	  <xsl:call-template name="checkErrorCtx">
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
@@ -2115,14 +2115,14 @@ end module
       <xsl:with-param name="fieldvar" select="$fieldvar"/>
       <xsl:with-param name="rank" select="6"/>
     </xsl:call-template>
-       call put_vect6d_complex(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>,&amp;
-          trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
+      call put_vect6d_complex(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
+      trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
 	  size(<xsl:value-of select="$fieldvar"/>,1),&amp;
 	  size(<xsl:value-of select="$fieldvar"/>,2),&amp;
 	  size(<xsl:value-of select="$fieldvar"/>,3),&amp;
 	  size(<xsl:value-of select="$fieldvar"/>,4),&amp;
 	  size(<xsl:value-of select="$fieldvar"/>,5),&amp;
-	  lastdimsize, status)
+      lastdimsize, '<xsl:value-of select="@lifecycle_status"/>', status)
 	  <xsl:call-template name="checkErrorCtx">
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
