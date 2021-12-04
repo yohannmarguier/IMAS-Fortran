@@ -15,7 +15,7 @@ ifeq ("nagfor","$(strip $(FC))")
 libal-fortran-$(DD_GIT_DESCRIBE).so.$(SO_NUM): $(LIBFILES_fortran)
 	$(FC) $(FCFLAGS) -o $@ -Wl,-shared -Wl,-Wl,,$(SONAME_OPT),,$@ $^ $(LIBS)
 else
-#--------------------- g95 / gfortran / pgi / ifort --------------
+#--------------------- g95 / gfortran / nvfortran / ifort --------------
 libal-fortran-$(DD_GIT_DESCRIBE).so.$(SO_NUM): $(LIBFILES_fortran)
 	$(FC) $(FCFLAGS) -o $@ -shared -Wl,$(SONAME_OPT),$@ $^ $(LIBS)
 

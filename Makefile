@@ -26,8 +26,8 @@ FCFLAGS ?= -g -O3 -D__USE_XOPEN2K8 -fdefault-real-8 -fdefault-double-8 -fPIC -fn
 else ifeq ("yes","$(strip $(IMAS_IFORT))")
 FC      ?= ifort
 FCFLAGS ?= -g -O3 -r8 -assume no2underscore -fPIC -module $(MODDIR) -g -shared-intel
-else ifeq ("yes","$(strip $(IMAS_PGI))")
-FC      ?= pgf90
+else ifeq ("yes","$(strip $(IMAS_NVFORTRAN))")
+FC      ?= nvfortran
 FCFLAGS ?= -g -O3 -D__USE_XOPEN2K8 -r8 -Mnosecond_underscore -fPIC -module=./$(MODDIR)
 else ifeq ("yes","$(strip $(IMAS_NAGFOR))")
 FC      ?= nagfor

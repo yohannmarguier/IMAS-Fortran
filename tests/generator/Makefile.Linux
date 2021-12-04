@@ -5,8 +5,8 @@ FCFLAGS ?= -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-n
 else ifeq ("yes","$(strip $(IMAS_IFORT))")
 FC ?= ifort
 FCFLAGS ?= -g -r8 -assume no2underscore  -fPIC -I$(UAL_BUILD)/fortraninterface/include -shared-intel -module $(BUILD_DIR)
-else ifeq ("yes","$(strip $(IMAS_PGI))")
-FC ?= pgf90
+else ifeq ("yes","$(strip $(IMAS_NVFORTRAN))")
+FC ?= nvfortran
 FCFLAGS ?= -g -r8 -Mnosecond_underscore -fPIC -module=$(UAL_BUILD)/fortraninterface/include
 else ifeq ("yes","$(strip $(IMAS_NAGFOR))")
 FC ?= nagfor
