@@ -25,7 +25,7 @@
   <exsl:document href="{$prefix}{$name}.f90" method="text">
     <xsl:apply-templates select="header" mode="Fortran"/>
 
-      <xsl:text>&#xA;&#xA;module imas_</xsl:text><xsl:value-of select="$name"/><xsl:text>&#xA;</xsl:text>
+      <xsl:text>&#xA;&#xA;module al_</xsl:text><xsl:value-of select="$name"/><xsl:text>&#xA;</xsl:text>
 
     <xsl:apply-templates select="include[@name='Fortran']"/><xsl:text>&#xA;&#xA;</xsl:text>
     <xsl:text>  implicit none&#xA;</xsl:text>
@@ -54,7 +54,7 @@
 	<xsl:call-template name="translations_Fortran"/>
       </xsl:if>
 
-	<xsl:text>&#xA;end module imas_</xsl:text><xsl:value-of select="$name"/><xsl:text>&#xA;</xsl:text>
+	<xsl:text>&#xA;end module al_</xsl:text><xsl:value-of select="$name"/><xsl:text>&#xA;</xsl:text>
 
   </exsl:document>
 
