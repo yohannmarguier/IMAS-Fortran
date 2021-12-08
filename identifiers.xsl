@@ -25,12 +25,7 @@
   <exsl:document href="{$prefix}{$name}.f90" method="text">
     <xsl:apply-templates select="header" mode="Fortran"/>
 
-    <xsl:if test="@f90_module_name">
-      <xsl:text>&#xA;&#xA;module </xsl:text><xsl:value-of select="@f90_module_name"/><xsl:text>&#xA;</xsl:text>
-    </xsl:if>
-    <xsl:if test="not(@f90_module_name)">
       <xsl:text>&#xA;&#xA;module imas_</xsl:text><xsl:value-of select="$name"/><xsl:text>&#xA;</xsl:text>
-    </xsl:if>
 
     <xsl:apply-templates select="include[@name='Fortran']"/><xsl:text>&#xA;&#xA;</xsl:text>
     <xsl:text>  implicit none&#xA;</xsl:text>
@@ -50,12 +45,7 @@
       </xsl:if>
       <xsl:text>  end type type_</xsl:text><xsl:value-of select="$name"/><xsl:text>&#xA;</xsl:text>
 
-      <xsl:if test="@f90_module_name">
-	<xsl:text>&#xA;  type(type_</xsl:text><xsl:value-of select="$name"/><xsl:text>), public,parameter :: </xsl:text><xsl:value-of select="@name"/><xsl:text> = type_</xsl:text><xsl:value-of select="$name"/><xsl:text>( &amp;&#xA;</xsl:text>
-      </xsl:if>
-      <xsl:if test="not(@f90_module_name)">
 	<xsl:text>&#xA;  type(type_</xsl:text><xsl:value-of select="$name"/><xsl:text>), public,parameter :: </xsl:text><xsl:value-of select="$name"/><xsl:text> = type_</xsl:text><xsl:value-of select="$name"/><xsl:text>( &amp;&#xA;</xsl:text>
-      </xsl:if>
 
       <xsl:call-template name="assignFortran"/>
 
@@ -64,12 +54,7 @@
 	<xsl:call-template name="translations_Fortran"/>
       </xsl:if>
 
-      <xsl:if test="@f90_module_name">
-	<xsl:text>&#xA;end module </xsl:text><xsl:value-of select="@f90_module_name"/><xsl:text>&#xA;</xsl:text>
-      </xsl:if>
-      <xsl:if test="not(@f90_module_name)">
 	<xsl:text>&#xA;end module imas_</xsl:text><xsl:value-of select="$name"/><xsl:text>&#xA;</xsl:text>
-      </xsl:if>
 
   </exsl:document>
 
