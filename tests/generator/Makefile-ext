@@ -19,7 +19,7 @@ FC      ?= nvfortran
 FCFLAGS ?= -r8  -Mnosecond_underscore -fPIC `pkg-config al-fortran --cflags`
 else ifeq ("yes","$(strip $(IMAS_NAGFOR))")
 FC      ?= nagfor
-FCFLAGS ?= -r8 -PIC `pkg-config al-fortran --cflags`
+FCFLAGS ?= -r8 -PIC `pkg-config al-fortran --cflags | sed 's/-Wl,/-Wl,-Wl,,/g'`
 else ifeq ("yes","$(strip $(IMAS_G95))")
 FC      ?= g95
 FCFLAGS ?= -r8 -ftrace=full -fPIC -fno-second-underscore -ffree-line-length-huge `pkg-config al-fortran --cflags`
