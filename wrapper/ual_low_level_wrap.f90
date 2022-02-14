@@ -423,7 +423,15 @@ contains
     integer, intent(out) :: pulseCtx
     integer, intent(out), optional :: retstatus
     integer :: status
-    call ual_begin_pulse_action(MDSPLUS_BACKEND, shot, run, user, tokamak, version, pulseCtx, status)
+    integer :: backend, l
+    character (len=255) :: backend_value
+    call get_environment_variable("IMAS_AL_BACKEND", backend_value, l)
+    if (len_trim(backend_value).ne.0) then
+      read(backend_value,"(I2)") backend
+    else
+      backend = MDSPLUS_BACKEND
+    end if
+    call ual_begin_pulse_action(backend, shot, run, user, tokamak, version, pulseCtx, status)
     if (status.eq.0) then 
        call ual_open_pulse(pulseCtx, FORCE_CREATE_PULSE, "", status)
     end if
@@ -438,9 +446,32 @@ contains
     integer, intent(out) :: pulseCtx
     integer, optional, intent(out) :: retstatus
     integer :: status
-    call ual_begin_pulse_action(MDSPLUS_BACKEND, shot, run, user, tokamak, version, pulseCtx, status)
+    integer :: backend, l
+    character (len=255) :: backend_value, backend_search_var
+    call get_environment_variable("IMAS_AL_BACKEND", backend_value, l)
+    if (len_trim(backend_value).ne.0) then
+      read(backend_value,"(I2)") backend
+    else
+      backend = MDSPLUS_BACKEND
+    end if
+    
+    call ual_begin_pulse_action(backend, shot, run, user, tokamak, version, pulseCtx, status)
     if (status.eq.0) then 
        call ual_open_pulse(pulseCtx, OPEN_PULSE, "", status)
+    else
+       if ( (backend.eq.MDSPLUS_BACKEND) .or. (backend.eq.HDF5_BACKEND) ) then
+		   call get_environment_variable("IMAS_AL_BACKEND_SEARCH", backend_search_var, l)
+		   if (len_trim(backend_search_var).ne.0 .and. (backend_search_var.eq."1")) then
+			   if (backend.eq.MDSPLUS_BACKEND) then
+				  backend = HDF5_BACKEND
+			   end if
+			      backend = MDSPLUS_BACKEND
+			   write(*,*) "WARNING: Backend search enabled, searching a pulse file with backend "//trim(backend_search_var)
+			   call ual_begin_pulse_action(backend, shot, run, user, tokamak, version, pulseCtx, status)
+			   if (status.eq.0) then 
+                  call ual_open_pulse(pulseCtx, OPEN_PULSE, "", status)
+		   end if
+       end if
     end if
     if (present(retstatus)) retstatus = status
   end subroutine imas_open_env
