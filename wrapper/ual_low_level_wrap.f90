@@ -470,6 +470,7 @@ contains
 			   call ual_begin_pulse_action(backend, shot, run, user, tokamak, version, pulseCtx, status)
 			   if (status.eq.0) then 
                   call ual_open_pulse(pulseCtx, OPEN_PULSE, "", status)
+               end if
 		   end if
        end if
     end if
