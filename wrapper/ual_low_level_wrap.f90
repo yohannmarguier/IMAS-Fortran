@@ -494,6 +494,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     CHARACTER(len=255) :: buffer
+    character(*), intent(in) :: idsName, fieldPath, lifeCycleStatus
     integer :: imas_obsolescent_nodes_warning
     CALL get_environment_variable("IMAS_OBSOLESCENT_NODES_WARNING", buffer)
     if (len_trim(buffer).ne.0) then
@@ -504,7 +505,6 @@ contains
     if (imas_obsolescent_nodes_warning.eq.0) then
        return
     end if
-    character(*), intent(in) :: idsName, fieldPath, lifeCycleStatus
     if (lifeCycleStatus.eq.'obsolescent') then
      write(*,*) "Warning : while putting IDS "//trim(idsName)//", the written IDS has non-empty obsolescent node "//trim(fieldPath)//". Please consider updating the code to avoid using obsolescent nodes."
     endif
