@@ -4,6 +4,7 @@
 module ual_low_level_wrap
   use ual_defs
   use iso_c_binding
+  use ids_schemas
 
   type, bind(C) :: c_al_status_t
      integer(C_INT) :: code
@@ -757,6 +758,9 @@ contains
     integer, intent(out) :: retstatus
     type(C_PTR) :: pdata
     type(al_status) :: status
+    if (data.NE.ids_int_invalid) then
+       call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+    end if
 	pdata = C_LOC(data)
 	call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
 	status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, pdata, INTEGER_DATA, 0, C_NULL_PTR))
@@ -773,8 +777,10 @@ contains
     integer, intent(out) :: retstatus
     type(C_PTR) :: pdata
     type(al_status) :: status
+    if (data.NE.ids_real_invalid) then
+       call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+    end if
 	pdata = C_LOC(data)
-	call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
 	status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, pdata, DOUBLE_DATA, 0, C_NULL_PTR))
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
@@ -789,8 +795,10 @@ contains
     integer, intent(out) :: retstatus
     type(C_PTR) :: pdata
     type(al_status) :: status
+    if (data.NE.ids_complex_invalid) then
+       call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+    end if
 	pdata = C_LOC(data)
-	call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
 	status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, pdata, COMPLEX_DATA, 0, C_NULL_PTR))
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
