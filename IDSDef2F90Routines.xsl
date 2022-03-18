@@ -1738,7 +1738,8 @@ end module
   <xsl:when test="@data_type='int_type' or @data_type='INT_0D'">
     ! Put <xsl:value-of select="@name"/>
         call put_int(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
-        '', <xsl:value-of select="$fieldvar"/>, '<xsl:value-of select="@lifecycle_status"/>', status)
+        '', <xsl:value-of select="$fieldvar"/>, <xsl:value-of select="$fieldvar"/>.NE.ids_int_invalid,&amp;
+         '<xsl:value-of select="@lifecycle_status"/>', status)
 	  <xsl:call-template name="checkErrorCtx">
 	    <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
@@ -1751,7 +1752,8 @@ end module
   <xsl:when test="@data_type='flt_type' or @data_type='FLT_0D'">
     ! Put <xsl:value-of select="@name"/>
        call put_double(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
-       '', <xsl:value-of select="$fieldvar"/>, '<xsl:value-of select="@lifecycle_status"/>', status)
+       '', <xsl:value-of select="$fieldvar"/>, <xsl:value-of select="$fieldvar"/>.NE.ids_real_invalid,&amp;
+       '<xsl:value-of select="@lifecycle_status"/>', status)
 	  <xsl:call-template name="checkErrorCtx">
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
@@ -1764,7 +1766,8 @@ end module
   <xsl:when test="@data_type='cpx_type' or @data_type='CPX_0D'">
     ! Put <xsl:value-of select="@name"/>
         call put_complex(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
-          '', <xsl:value-of select="$fieldvar"/>, '<xsl:value-of select="@lifecycle_status"/>', status)
+          '', <xsl:value-of select="$fieldvar"/>, <xsl:value-of select="$fieldvar"/>.NE.ids_complex_invalid,&amp;
+          '<xsl:value-of select="@lifecycle_status"/>', status)
 	  <xsl:call-template name="checkErrorCtx">
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>

@@ -4,7 +4,6 @@
 module ual_low_level_wrap
   use ual_defs
   use iso_c_binding
-  use ids_schemas
 
   type, bind(C) :: c_al_status_t
      integer(C_INT) :: code
@@ -749,16 +748,17 @@ contains
     retstatus = status%code
   end subroutine put_char
 
-  subroutine put_int(opCtx, idsName, fieldPath, timebasePath, data, lifeCycleStatus, retstatus)
+  subroutine put_int(opCtx, idsName, fieldPath, timebasePath, data, valid_data, lifeCycleStatus, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     integer, intent(in), target :: data
+    logical, intent(in) :: valid_data
     integer, intent(out) :: retstatus
     type(C_PTR) :: pdata
     type(al_status) :: status
-    if (data.NE.ids_int_invalid) then
+    if (valid_data) then
        call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
     end if
 	pdata = C_LOC(data)
@@ -768,16 +768,17 @@ contains
     retstatus = status%code
   end subroutine put_int
 
-  subroutine put_double(opCtx, idsName, fieldPath, timebasePath, data, lifeCycleStatus, retstatus)
+  subroutine put_double(opCtx, idsName, fieldPath, timebasePath, data, valid_data, lifeCycleStatus, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     real(8), intent(in), target :: data
+    logical, intent(in) :: valid_data
     integer, intent(out) :: retstatus
     type(C_PTR) :: pdata
     type(al_status) :: status
-    if (data.NE.ids_real_invalid) then
+    if (valid_data) then
        call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
     end if
 	pdata = C_LOC(data)
@@ -786,16 +787,17 @@ contains
     retstatus = status%code
   end subroutine put_double
 
-  subroutine put_complex(opCtx, idsName, fieldPath, timebasePath, data, lifeCycleStatus, retstatus)
+  subroutine put_complex(opCtx, idsName, fieldPath, timebasePath, data, valid_data, lifeCycleStatus, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     complex(8), intent(in), target :: data
+    logical, intent(in) :: valid_data
     integer, intent(out) :: retstatus
     type(C_PTR) :: pdata
     type(al_status) :: status
-    if (data.NE.ids_complex_invalid) then
+    if (valid_data) then
        call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
     end if
 	pdata = C_LOC(data)
