@@ -495,14 +495,14 @@ contains
     implicit none
     CHARACTER(len=255) :: buffer
     character(*), intent(in) :: idsName, fieldPath, lifeCycleStatus
-    integer :: imas_obsolescent_nodes_warning
-    CALL get_environment_variable("IMAS_OBSOLESCENT_NODES_WARNING", buffer)
+    integer :: imas_disable_obsolescent_warnings
+    CALL get_environment_variable("IMAS_DISABLE_OBSOLESCENT_WARNINGS", buffer)
     if (len_trim(buffer).ne.0) then
-      read(buffer,"(I1)") imas_obsolescent_nodes_warning
+      read(buffer,"(I1)") imas_disable_obsolescent_warnings
     else
-      imas_obsolescent_nodes_warning = 1
+      imas_disable_obsolescent_warnings = 1
     end if
-    if (imas_obsolescent_nodes_warning.eq.0) then
+    if (imas_disable_obsolescent_warnings.eq.0) then
        return
     end if
     if (lifeCycleStatus.eq.'obsolescent') then
