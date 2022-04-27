@@ -861,13 +861,10 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   endif
 
   if (storedtimemode.eq.IDS_TIME_MODE_UNKNOWN) then
-     write(*,*) 'Warning: Slice is being added to an empty IDS <xsl:value-of select="@name"/>. PUT is called to save time independent data.'
      call put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS, status)
      if (present(retstatus)) retstatus = status
      return
-  endif
-
-  if (storedtimemode.ne.timemode) then
+  else if (storedtimemode.ne.timemode) then
      write(*,'(a,i0,a,i0)') 'ERROR: IDS <xsl:value-of select="@name"/> homogeneous_time mode = ',timemode,&amp;
      ', differs from value already stored in database = ',storedtimemode
      if (present(retstatus)) then 
