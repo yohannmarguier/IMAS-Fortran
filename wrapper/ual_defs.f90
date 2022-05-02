@@ -58,6 +58,32 @@ module ual_defs
 
   integer, parameter :: MAX_ERR_MSG_LEN    = 256
 
+contains
+
+  function default_backend() 
+    integer :: default_backend
+    character (len=255) :: backend_value
+    integer :: l
+    call get_environment_variable("IMAS_AL_DEFAULT_BACKEND", backend_value, l)
+    if (l.gt.0) then
+       read(backend_value,"(I2)") default_backend
+    else
+       default_backend = MDSPLUS_BACKEND
+    end if
+  end function default_backend
+
+  function fallback_backend()
+    integer :: fallback_backend
+    character (len=255) :: backend_value
+    integer :: l
+    call get_environment_variable("IMAS_AL_FALLBACK_BACKEND", backend_value, l)
+    if (l.gt.0) then
+       read(backend_value,"(I2)") fallback_backend
+    else
+       fallback_backend = NO_BACKEND
+    end if
+  end function fallback_backend
+  
 end module ual_defs
 
 
