@@ -447,13 +447,14 @@ contains
     call ual_begin_pulse_action(backend, shot, run, user, tokamak, version, pulseCtx, status)
     if (status.eq.0) then 
        call ual_open_pulse(pulseCtx, OPEN_PULSE, "", status)
-    else
-       fallback = fallback_backend()
-       if (fallback.ne.NO_BACKEND) then
-          write(*,*) "WARNING: the pulse file is not available with the backend ",backend,", now attempting to access it with the fallback backend ",fallback
-          call ual_begin_pulse_action(fallback, shot, run, user, tokamak, version, pulseCtx, status)
-          if (status.eq.0) then 
-             call ual_open_pulse(pulseCtx, OPEN_PULSE, "", status)
+       if (status.ne.0) then 
+          fallback = fallback_backend()
+          if (fallback.ne.NO_BACKEND) then
+             write(*,*) "WARNING: the pulse file is not available with the backend ",backend,", now attempting to access it with the fallback backend ",fallback
+             call ual_begin_pulse_action(fallback, shot, run, user, tokamak, version, pulseCtx, status)
+             if (status.eq.0) then 
+                call ual_open_pulse(pulseCtx, OPEN_PULSE, "", status)
+             end if
           end if
        end if
     end if
