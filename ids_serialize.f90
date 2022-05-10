@@ -3,10 +3,70 @@ module ids_serialize
 
 contains
 
+!> Turn an IDS into a bunch of bytes
+function serialize(ids_in, protocol) result(buffer) ! TODO: return a (pointer to a) buffer
+  use, intrinsic :: ISO_C_BINDING
+
+  class(ids), intent(in) :: ids_in
+  integer, intent(in) :: protocol
+  character(len=:), allocatable :: buffer
+
+  character(len=:), allocatable :: fname
+  integer :: pulsectx
+  integer :: status
+  integer :: unit
+  integer :: file_size
+
+  if (protocol .eq. ASCII_SERIALIZER_PROTOCOL) then
+    fname = generate_tmp_file()
+    if (len_trim(fname) .eq. 0) then
+      write(*,*) 'SERIALIZE: ERROR generating temporary file name'
+      return
+    end if
+
+    ids_put_struct()
+    
+    call ual_begin_pulse_action(ASCII_BACKEND, 0, 0, 'serialize', 'serialize', '3', pulsectx)
+    call ual_open_pulse(pulsectx, FORCE_CREATE_PULSE, '-fullpath ' // fname, status)
+    if (status .neq. 0) then
+      write(*,*) "SERIALIZE: ERROR opening ASCII backend - ual_open_pulse"
+      buffer = ''
+      return
+    end if
+
+    call ids_put(ids_in, 'serialize', 'serialize')
+
+    call ual_close_pulse(pulsectx, FORCE_CREATE_PULSE, '', status)
+    if (status .neq. 0) then
+      write(*,*) "SERIALIZE: ERROR closing ASCII backend - ual_close_pulse"
+      buffer = ''
+      call ual_end_action(pulsectx)
+      return
+    end if
+
+
+    ! Read from fname
+    unit = get_file_unit()
+    open(unit=unit, action='read', status='old', form='unformatted', access='stream')
+    inquire(unit=unit, size=file_size)
+    allocate(character(file_size) :: buffer)
+    read(unit) buffer
+    close(unit, status='delete')
+
+    ! DEBUG
+    write(*,*) buffer
+
+  else
+    write(*,*) 'SERIALIZE: ERROR, unrecognized serialization protocol'
+  end if
+end
+
+end subroutine serialize
+
 function generate_tmp_file() result(fname)
   character(len=:), allocatable :: fname
   ! Follow same approach as the Python standard library in generating a random temporary file
-  character(len=*), parameter :: fs_safe_characters = "abcdefghijklmnopqrstuvwxyz0123456789_"
+  character(len=*), parameter :: fs_safe_characters = 'abcdefghijklmnopqrstuvwxyz0123456789_'
   integer, parameter :: n = 8 ! number of random characters in the file
   integer, parameter :: MAX_TMP_FILES = 1000
 
@@ -16,9 +76,9 @@ function generate_tmp_file() result(fname)
   ! [1] https://en.wikipedia.org/wiki/Shared_memory
   ! [2] https://www.kernel.org/doc/Documentation/filesystems/tmpfs.txt
 #if defined(_WIN32)
-#  define SERIALIZE_TEMPORARY_DIRECTORY ""
+#  define SERIALIZE_TEMPORARY_DIRECTORY ''
 #else
-#  define SERIALIZE_TEMPORARY_DIRECTORY "/dev/shm/"
+#  define SERIALIZE_TEMPORARY_DIRECTORY '/dev/shm/'
 #endif
 
   real, dimension(n) :: rd
@@ -28,9 +88,9 @@ function generate_tmp_file() result(fname)
   integer :: iostat
 
   ! Setup the base of the filename
-  string_base_length = len(SERIALIZE_TEMPORARY_DIRECTORY) + len("al_serialize_")
+  string_base_length = len(SERIALIZE_TEMPORARY_DIRECTORY) + len('al_serialize_')
   !allocate(fname(string_base_length + n))
-  fname = SERIALIZE_TEMPORARY_DIRECTORY // "al_serialize_" // repeat(" ", n) ! implicitly allocates to the right size
+  fname = SERIALIZE_TEMPORARY_DIRECTORY // 'al_serialize_' // repeat(' ', n) ! implicitly allocates to the right size
 
   ! get a free unit number
   unit = get_file_unit()
@@ -42,13 +102,14 @@ function generate_tmp_file() result(fname)
       fname(string_base_length + j:string_base_length + j) = fs_safe_characters(k:k)
     end do
 
-    open(unit=unit, action='write', file=fname, status='NEW', iostat=iostat)
+    open(unit=unit, action='write', file=fname, status='new', iostat=iostat)
     if (iostat .gt. 0) cycle
 
     ! if we get here the file was opened successfully. Delete it, and return the filename found
-    close(unit=unit, status='DELETE')
+    close(unit=unit, status='delete')
     return ! implies fname
   end do
+  fname = ''
 end function generate_tmp_file
 
 function get_file_unit() result(unit)
@@ -63,4 +124,4 @@ function get_file_unit() result(unit)
   end do
 end function get_file_unit
 
-end module
+end module ids_serialize

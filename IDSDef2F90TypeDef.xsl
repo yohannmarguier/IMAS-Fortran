@@ -113,6 +113,10 @@ interface get_max_occurrences
 <xsl:apply-templates select="IDS" mode="declare_get_max_occurrences"/>
 end interface
 
+<!-- Base IDS type -->
+type, abstract :: IDS_base
+end type
+
 <!-- declare each IDS and their structures -->
 ! declare each IDS and their substructures
 <xsl:apply-templates select="IDS" mode="declare"/>  
@@ -262,7 +266,7 @@ end module
   <xsl:param name="this-type"/>
   <xsl:param name="this-ids"/>
   <xsl:param name="this-name"/>
-  type ids_<xsl:value-of select="$this-type"/> 
+  type, extends(IDS_base) :: ids_<xsl:value-of select="$this-type"/>
   <xsl:for-each select="./field">
     <xsl:apply-templates select="." mode="declare_field"/>
   </xsl:for-each>
