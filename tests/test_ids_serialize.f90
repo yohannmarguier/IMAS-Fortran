@@ -2,7 +2,7 @@ program test_ids_serialize
 
 use ids_routines
 
-type(ids_workflow) :: workflow
+type(ids_workflow) :: workflow, workflow2
 character(len=1), dimension(:), allocatable :: output
 
 write(*,*) 'before'
@@ -23,5 +23,13 @@ write(*,*) output
 
 write(*,*) 'deserializing'
 
+call ids_deserialize(workflow2, DEFAULT_SERIALIZER_PROTOCOL, output)
+
+write(*,*) workflow2%ids_properties%comment(1)
+if (workflow2%ids_properties%comment(1) .eq. 'hello world') then
+    write(*,*) "SUCCESS"
+else
+    write(*,*) "FAIL"
+end if
 
 end program

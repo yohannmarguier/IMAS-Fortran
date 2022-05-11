@@ -66,9 +66,7 @@ call ual_end_action(opctx, status)
 end subroutine
 
 ! Turn an IDS into a bunch of bytes
-subroutine ids_serialize(ids_in, protocol, buffer) ! TODO: return a (pointer to a) buffer
-  use, intrinsic :: ISO_C_BINDING
-
+subroutine ids_serialize(ids_in, protocol, buffer)
   class(IDS_base) :: ids_in ! no intent(in) because ids_put also does not have that
   integer(ids_int), intent(in), optional :: protocol
   character(len=1), dimension(:), allocatable :: buffer
@@ -136,6 +134,70 @@ subroutine ids_serialize(ids_in, protocol, buffer) ! TODO: return a (pointer to 
     write(*,*) 'SERIALIZE: ERROR, unrecognized serialization protocol'
   end if
 end subroutine ids_serialize
+
+! Turn a bunch of bytes into an IDS
+subroutine ids_deserialize(ids_out, protocol, buffer)
+  class(IDS_base) :: ids_out ! it is up to you to pass the correct buffer and ids type
+  integer(ids_int), intent(in) :: protocol
+  character(len=1), dimension(:), allocatable, intent(in) :: buffer
+
+  character(len=:), allocatable :: fname
+  integer(ids_int) :: pulsectx
+  integer(ids_int) :: status
+  integer(ids_int) :: unit
+  integer(ids_int) :: file_size
+
+  if (protocol .eq. ASCII_SERIALIZER_PROTOCOL) then
+    fname = generate_tmp_file()
+    if (len_trim(fname) .eq. 0) then
+      write(*,*) 'SERIALIZE: ERROR generating temporary file name'
+      return
+    end if
+
+    ! Write to file
+    unit = get_file_unit()
+    open(unit=unit, file=fname, action='write', status='new', form='unformatted', access='stream')
+    write(unit) buffer
+    ! keep the file open, so we can delete it later in one go
+    flush(unit)
+
+
+    call ual_begin_pulse_action(ASCII_BACKEND, 0, 0, 'serialize', 'serialize', '3', pulsectx)
+    call ual_open_pulse(pulsectx, FORCE_OPEN_PULSE, '-fullpath ' // fname, status)
+    if (status .ne. 0) then
+      write(*,*) "SERIALIZE: ERROR opening ASCII backend - ual_open_pulse"
+      return
+    end if
+
+    ! I think if we implement an object-oriented ids_in->put the select type here becomes unnecessary
+    select type (ids_out)
+    <xsl:for-each select="IDS">
+    class is (ids_<xsl:value-of select="@name"/>)
+      call ids_get(pulsectx, '<xsl:value-of select="@name"/>', ids_out)
+    </xsl:for-each>
+    class default
+      write(*,*) "SERIALIZE: ERROR selecting IDS type"
+    end select
+    
+
+    call ual_close_pulse(pulsectx, FORCE_OPEN_PULSE, '', status)
+    if (status .ne. 0) then
+      write(*,*) "SERIALIZE: ERROR closing ASCII backend - ual_close_pulse"
+      call ual_end_action(pulsectx, status)
+      return
+    end if
+    call ual_end_action(pulsectx, status)
+    if (status .ne. 0) then
+      write(*,*) "SERIALIZE: ERROR closing ASCII backend - ual_end_action"
+      return
+    end if
+
+    ! delete file
+    close(unit, status='delete')
+  else
+    write(*,*) 'SERIALIZE: ERROR, unrecognized serialization protocol'
+  end if
+end subroutine ids_deserialize
 
 function generate_tmp_file() result(fname)
   character(len=:), allocatable :: fname
