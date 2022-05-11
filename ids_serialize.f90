@@ -1,5 +1,5 @@
 module ids_serialize
-!use ids_schemas
+use ids_schemas
 
 contains
 
@@ -24,8 +24,7 @@ function serialize(ids_in, protocol) result(buffer) ! TODO: return a (pointer to
       return
     end if
 
-    ids_put_struct()
-    
+    ! Write to file
     call ual_begin_pulse_action(ASCII_BACKEND, 0, 0, 'serialize', 'serialize', '3', pulsectx)
     call ual_open_pulse(pulsectx, FORCE_CREATE_PULSE, '-fullpath ' // fname, status)
     if (status .neq. 0) then
@@ -45,7 +44,7 @@ function serialize(ids_in, protocol) result(buffer) ! TODO: return a (pointer to
     end if
 
 
-    ! Read from fname
+    ! Read from file
     unit = get_file_unit()
     open(unit=unit, action='read', status='old', form='unformatted', access='stream')
     inquire(unit=unit, size=file_size)
@@ -70,15 +69,15 @@ function generate_tmp_file() result(fname)
   integer, parameter :: n = 8 ! number of random characters in the file
   integer, parameter :: MAX_TMP_FILES = 1000
 
-  ! On Windows, use the current working directory as temporary directory (since /dev/shm does not exist).
+  ! On Windows and Mac OSX, use the current working directory as temporary directory (since /dev/shm does not exist).
   ! On any recent Linux (2.6 or later according to Wikipedia [1]) the /dev/shm folder exists for shared memory.
   ! Since glibc assumes this to exist anyway [2], we will as well.
   ! [1] https://en.wikipedia.org/wiki/Shared_memory
   ! [2] https://www.kernel.org/doc/Documentation/filesystems/tmpfs.txt
-#if defined(_WIN32)
-#  define SERIALIZE_TEMPORARY_DIRECTORY ''
-#else
+#if defined(_Linux)
 #  define SERIALIZE_TEMPORARY_DIRECTORY '/dev/shm/'
+#else
+#  define SERIALIZE_TEMPORARY_DIRECTORY ''
 #endif
 
   real, dimension(n) :: rd
