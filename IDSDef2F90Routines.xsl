@@ -127,15 +127,11 @@ subroutine ids_serialize(ids_in, protocol, buffer) ! TODO: return a (pointer to 
 
     ! Read from file
     unit = get_file_unit()
-    open(unit=unit, action='read', status='old', form='unformatted', access='stream')
+    open(unit=unit, file=fname, action='read', status='old', form='unformatted', access='stream')
     inquire(unit=unit, size=file_size)
     allocate(character(1) :: buffer(file_size))
     read(unit) buffer
     close(unit, status='delete')
-
-    ! DEBUG
-    write(*,*) buffer
-
   else
     write(*,*) 'SERIALIZE: ERROR, unrecognized serialization protocol'
   end if

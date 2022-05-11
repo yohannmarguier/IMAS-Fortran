@@ -10,7 +10,7 @@ allocate(workflow%ids_properties%comment(1))
 workflow%ids_properties%comment(1) = 'hello world'
 workflow%ids_properties%homogeneous_time = IDS_TIME_MODE_HOMOGENEOUS
 allocate(workflow%time(1))
-workflow%time(1) = 3.14
+workflow%time(1) = 3.14d0
 
 write(*,*) 'serializing'
 call ids_serialize(workflow, DEFAULT_SERIALIZER_PROTOCOL, output)
