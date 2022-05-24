@@ -17,7 +17,7 @@ else
 
 # SYSTEM is the current architecture: Windows, Linux or MacOS
 # Note that this approach is not useful when attempting to cross-compile
-FCFLAGS_BASE  ?= -D_$(SYSTEM) -Og -cpp
+FCFLAGS_BASE  ?= -D_$(SYSTEM) -O3 -cpp
 
 FC_g95         = g95
 MODDIR_g95      = g95
