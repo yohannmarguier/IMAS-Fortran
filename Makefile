@@ -297,13 +297,8 @@ $(filter %_deallocate_struct_ifort.o,$(IDSOBJECTS)): %_ifort.o:%.f90 ids_schemas
 #----------------------- xslt ---------------------
 # Test if all idsroutines are found to exist as files.
 $(SOURCES): idsroutines
-# When building the source files, build in a temporary directory
-# and only copy the files which have changed, to save recompilation time
 idsroutines: IDSDef2F90Routines.xsl | saxonicajar
-	mkdir -p .compile
-	$(if $(call allnewerthan,$(IDSROUTINES),$^),,cd .compile && $(SAXON) -t -s:../$(IDSDEF) -xsl:../IDSDef2F90Routines.xsl DD_GIT_DESCRIBE=$(DD_GIT_DESCRIBE) UAL_GIT_DESCRIBE=$(UAL_GIT_DESCRIBE))
-	rsync --archive --checksum --inplace --times --verbose .compile/ .
-	rm -r .compile
+	$(if $(call allnewerthan,$(IDSROUTINES),$^),, $(SAXON) -t -s:$(IDSDEF) -xsl:IDSDef2F90Routines.xsl DD_GIT_DESCRIBE=$(DD_GIT_DESCRIBE) UAL_GIT_DESCRIBE=$(UAL_GIT_DESCRIBE))
 
 ids_schemas.f90: IDSDef2F90TypeDef.xsl | saxonicajar
 	$(SAXON) -t -s:$(IDSDEF) -xsl:IDSDef2F90TypeDef.xsl
