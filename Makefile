@@ -15,33 +15,31 @@ all sources sources_install install uninstall clean clean-src check test:
 	$(warning "Ignoring fortraninterface (IMAS_FORTRAN=no).")
 else
 
-# SYSTEM is the current architecture: Windows, Linux or MacOS
-# Note that this approach is not useful when attempting to cross-compile
-FCFLAGS_BASE  ?= -D_$(SYSTEM) -O3 -cpp
+# $(SYSTEM) is the current architecture: Windows, Linux or MacOS
 
 FC_g95         = g95
 MODDIR_g95      = g95
-FCFLAGS_g95       = $(FCFLAGS_BASE) -g -D__USE_XOPEN2K8 -r8 -ftrace=full -fPIC -fno-second-underscore -ffree-line-length-huge -fmod=$(MODDIR_g95)
+FCFLAGS_g95       = -g -O3 -cpp -D_$(SYSTEM) -D__USE_XOPEN2K8 -r8 -ftrace=full -fPIC -fno-second-underscore -ffree-line-length-huge -fmod=$(MODDIR_g95)
 INCDIR_g95      = -I$(MODDIR_g95)
 
 FC_gfortran    = gfortran
 MODDIR_gfortran = gfortran
-FCFLAGS_gfortran  = $(FCFLAGS_BASE) -g -D__USE_XOPEN2K8 -fdefault-real-8 -fdefault-double-8 -fPIC -fno-second-underscore -ffree-line-length-none -J$(MODDIR_gfortran)
+FCFLAGS_gfortran  = -g -O3 -cpp -D_$(SYSTEM) -D__USE_XOPEN2K8 -fdefault-real-8 -fdefault-double-8 -fPIC -fno-second-underscore -ffree-line-length-none -J$(MODDIR_gfortran)
 INCDIR_gfortran = -I$(MODDIR_gfortran)
 
 FC_nagfor      = nagfor
 MODDIR_nagfor   = nagfor
-FCFLAGS_nagfor    = $(FCFLAGS_BASE) -g -D__USE_XOPEN2K8 -free -maxcontin=4000 -w=unused -w=x95 -kind=byte -r8 -PIC -mdir ./$(MODDIR_nagfor) 
+FCFLAGS_nagfor    = -g -O3 -fpp -D_$(SYSTEM) -D__USE_XOPEN2K8 -free -maxcontin=4000 -w=unused -w=x95 -kind=byte -r8 -PIC -mdir ./$(MODDIR_nagfor) 
 INCDIR_nagfor   = -I$(MODDIR_nagfor)
 
 FC_pgi         = pgf90
 MODDIR_pgi      = pgi
-FCFLAGS_pgi       = $(FCFLAGS_BASE) -D__USE_XOPEN2K8 -r8 -Mnosecond_underscore -fPIC -module=./$(MODDIR_pgi) 
+FCFLAGS_pgi       = -O3 -Mpreprocess -D_$(SYSTEM) -D__USE_XOPEN2K8 -r8 -Mnosecond_underscore -fPIC -module=./$(MODDIR_pgi) 
 INCDIR_pgi      = -I$(MODDIR_pgi)
 
 FC_ifort       = ifort
 MODDIR_ifort    = ifort
-FCFLAGS_ifort     = $(FCFLAGS_BASE) -g -r8 -assume no2underscore -fPIC -module $(MODDIR_ifort) -g -shared-intel
+FCFLAGS_ifort     = -g -O3 -fpp -D_$(SYSTEM) -r8 -assume no2underscore -fPIC -module $(MODDIR_ifort) -g -shared-intel
 INCDIR_ifort    = -I$(MODDIR_ifort)
 
 # Get a list of IDS from IDSDEF file, allow override by DD in environment
