@@ -423,7 +423,10 @@ contains
     integer, intent(out) :: pulseCtx
     integer, intent(out), optional :: retstatus
     integer :: status
-    call ual_begin_pulse_action(MDSPLUS_BACKEND, shot, run, user, tokamak, version, pulseCtx, status)
+    integer :: backend
+
+    backend = default_backend()
+    call ual_begin_pulse_action(backend, shot, run, user, tokamak, version, pulseCtx, status)
     if (status.eq.0) then 
        call ual_open_pulse(pulseCtx, FORCE_CREATE_PULSE, "", status)
     end if
@@ -438,9 +441,22 @@ contains
     integer, intent(out) :: pulseCtx
     integer, optional, intent(out) :: retstatus
     integer :: status
-    call ual_begin_pulse_action(MDSPLUS_BACKEND, shot, run, user, tokamak, version, pulseCtx, status)
+    integer :: backend, fallback
+
+    backend = default_backend()
+    call ual_begin_pulse_action(backend, shot, run, user, tokamak, version, pulseCtx, status)
     if (status.eq.0) then 
        call ual_open_pulse(pulseCtx, OPEN_PULSE, "", status)
+       if (status.ne.0) then 
+          fallback = fallback_backend()
+          if (fallback.ne.NO_BACKEND) then
+             write(*,*) "WARNING: the pulse file is not available with the backend ",backend,", now attempting to access it with the fallback backend ",fallback
+             call ual_begin_pulse_action(fallback, shot, run, user, tokamak, version, pulseCtx, status)
+             if (status.eq.0) then 
+                call ual_open_pulse(pulseCtx, OPEN_PULSE, "", status)
+             end if
+          end if
+       end if
     end if
     if (present(retstatus)) retstatus = status
   end subroutine imas_open_env
@@ -461,7 +477,17 @@ contains
   subroutine warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
+    CHARACTER(len=1) :: buffer
     character(*), intent(in) :: idsName, fieldPath, lifeCycleStatus
+    integer :: disable_obsolescent_warning
+    disable_obsolescent_warning = 0
+    CALL get_environment_variable("IMAS_AL_DISABLE_OBSOLESCENT_WARNING", buffer)
+    if (len_trim(buffer).ne.0) then
+      read(buffer,"(I1)") disable_obsolescent_warning
+    end if
+    if (disable_obsolescent_warning.eq.1) then
+       return
+    end if
     if (lifeCycleStatus.eq.'obsolescent') then
      write(*,*) "Warning : while putting IDS "//trim(idsName)//", the written IDS has non-empty obsolescent node "//trim(fieldPath)//". Please consider updating the code to avoid using obsolescent nodes."
     endif
