@@ -10,35 +10,35 @@ include ../Makefile.common
 SO_NUM=6
 
 
-ifeq ("no","$(strip $(IMAS_FORTRAN))")
+ifneq ("yes","$(strip $(IMAS_FORTRAN))")
 all sources sources_install install uninstall clean clean-src check test:
 	$(warning "Ignoring fortraninterface (IMAS_FORTRAN=no).")
 else
 
-FC_g95         = g95
-MODDIR_g95      = g95
-FCFLAGS_g95       = -g -O3 -D__USE_XOPEN2K8 -r8 -ftrace=full -fPIC -fno-second-underscore -ffree-line-length-huge -fmod=$(MODDIR_g95)
-INCDIR_g95      = -I$(MODDIR_g95)
+MODDIR = include
+MODINC = -I$(MODDIR)
 
-FC_gfortran    = gfortran
-MODDIR_gfortran = gfortran
-FCFLAGS_gfortran  = -g -O3 -D__USE_XOPEN2K8 -fdefault-real-8 -fdefault-double-8 -fPIC -fno-second-underscore -ffree-line-length-none -J$(MODDIR_gfortran)
-INCDIR_gfortran = -I$(MODDIR_gfortran)
+# The builder should specify FC, this is a fail safe if it wasn't.
+# The builder should specify FCFLAGS, these are some suggestions that are known to work.
+ifeq ("yes","$(strip $(IMAS_GFORTRAN))")
+FC      ?= gfortran
+FCFLAGS ?= -g -O3 -D__USE_XOPEN2K8 -fdefault-real-8 -fdefault-double-8 -fPIC -fno-second-underscore -ffree-line-length-none -J$(MODDIR)
+else ifeq ("yes","$(strip $(IMAS_IFORT))")
+FC      ?= ifort
+FCFLAGS ?= -g -O3 -r8 -assume no2underscore -fPIC -module $(MODDIR) -g -shared-intel
+else ifeq ("yes","$(strip $(IMAS_NVFORTRAN))")
+FC      ?= nvfortran
+FCFLAGS ?= -g -O3 -D__USE_XOPEN2K8 -r8 -Mnosecond_underscore -fPIC -module=./$(MODDIR)
+else ifeq ("yes","$(strip $(IMAS_NAGFOR))")
+FC      ?= nagfor
+FCFLAGS ?= -g -O3 -D__USE_XOPEN2K8 -free -maxcontin=4000 -w=unused -w=x95 -kind=byte -r8 -PIC -mdir ./$(MODDIR)
+else ifeq ("yes","$(strip $(IMAS_G95))")
+FC      ?= g95
+FCFLAGS ?= -g -O3 -D__USE_XOPEN2K8 -r8 -ftrace=full -fPIC -fno-second-underscore -ffree-line-length-huge -fmod=$(MODDIR)
+else 
+SOURCES_ONLY=yes
+endif
 
-FC_nagfor      = nagfor
-MODDIR_nagfor   = nagfor
-FCFLAGS_nagfor    = -g -O3 -D__USE_XOPEN2K8 -free -maxcontin=4000 -w=unused -w=x95 -kind=byte -r8 -PIC -mdir ./$(MODDIR_nagfor) 
-INCDIR_nagfor   = -I$(MODDIR_nagfor)
-
-FC_pgi         = pgf90
-MODDIR_pgi      = pgi
-FCFLAGS_pgi       = -O3 -D__USE_XOPEN2K8 -r8 -Mnosecond_underscore -fPIC -module=./$(MODDIR_pgi) 
-INCDIR_pgi      = -I$(MODDIR_pgi)
-
-FC_ifort       = ifort
-MODDIR_ifort    = ifort
-FCFLAGS_ifort     = -g -O3 -r8 -assume no2underscore -fPIC -module $(MODDIR_ifort) -g -shared-intel
-INCDIR_ifort    = -I$(MODDIR_ifort)
 
 # Get a list of IDS from IDSDEF file, allow override by DD in environment
 IDSDEF   ?= ../xml/IDSDef.xml
@@ -57,12 +57,12 @@ IDSROUTINES=$(addsuffix .f90,$(IDSNAMES_FUNC))
 SOURCES=ids_routines.f90 utilities_copy_struct.f90 utilities_deallocate_struct.f90 utilities_put_struct.f90 utilities_put_slice_struct.f90 utilities_get_struct.f90 $(IDSROUTINES)
 
 # pkg-config files
-PC_FILES=
-PC_FILES_VAR=
-PC_FILES_ALT=
+PC_FILES=al-fortran.pc
+PC_FILES_VAR=al-fortran-$(DD_GIT_DESCRIBE).pc
+PC_FILES_ALT=$(ID_fortran_PC_FILES_2)
 
 # Concatenated list
-IDSOBJECTS=$(IDSOBJECTS_g95) $(IDSOBJECTS_gfortran) $(IDSOBJECTS_nagfor) $(IDSOBJECTS_pgi) $(IDSOBJECTS_ifort)
+IDSOBJECTS=$(addsuffix .o,$(IDSNAMES_FUNC))
 
 # Include OS-specific Makefile, if exists.
 ifneq (,$(wildcard Makefile.$(SYSTEM)))
@@ -71,20 +71,25 @@ else
 $(error No Makefile.$(SYSTEM) found for this system: $(UNAME_S))
 endif
 
-all: sources $(TARGETS) pkgconfig
+
+BUILD_TARGETS = sources
+ifneq ("yes","$(strip $(SOURCES_ONLY))")
+	BUILD_TARGETS += $(TARGETS) pkgconfig
+endif
+
+all: $(BUILD_TARGETS) 
 
 install: all $(INSTALL_TARGETS) pkgconfig_install
 
 uninstall: $(INSTALL_TARGETS:%_install=%_uninstall) pkgconfig_uninstall
 
-$(libdir) $(addprefix $(includedir)/,nagfor pgi g95 gfortran ifort) $(datadir)/src/fortraninterface \
-$(MODDIR_nagfor) $(MODDIR_pgi) $(MODDIR_g95) $(MODDIR_gfortran) $(MODDIR_ifort):
+$(libdir) $(includedir)/fortran $(datadir)/src/fortraninterface $(MODDIR):
 	$(mkdir_p) $@
 
 sources: $(SOURCES) ids_schemas.f90 id_f90_sources
 
-clean: pkgconfig_clean id_g95_clean id_gfortran_clean id_ifort_clean id_nagfor_clean id_pgi_clean check-clean
-	$(RM) -r *.o *.mod *.so* *~ g95/ gfortran/ nagfor/ pgi/ ifort/ *.a *.lib *.dll
+clean: pkgconfig_clean id_fortran_clean check-clean
+	$(RM) -r *.o *.mod *.so* *~ $(MODDIR) *.a *.lib *.dll
 
 clean-src: clean id_f90_clean-src check-clean-src
 	$(RM) $(SOURCES)
@@ -100,195 +105,43 @@ check-clean-src test-clean-src:
 	$(MAKE) -C tests/generator clean-src
 
 
-#--------------------- g95 --------------
-LIBFILES_g95 = ids_schemas_g95.o ual_defs_g95.o ual_low_level_wrap_g95.o utilities_copy_struct_g95.o utilities_deallocate_struct_g95.o utilities_put_struct_g95.o utilities_put_slice_struct_g95.o utilities_get_struct_g95.o $(IDSOBJECTS_g95) ids_routines_g95.o $(DEP_g95)
+LIBFILES_fortran = ids_schemas.o ual_defs.o ual_low_level_wrap.o utilities_copy_struct.o utilities_deallocate_struct.o utilities_put_struct.o utilities_put_slice_struct.o utilities_get_struct.o $(IDSOBJECTS) ids_routines.o $(DEP)
 
-ids_routines_g95.o: ids_routines.f90 ual_defs_g95.o ual_low_level_wrap_g95.o utilities_copy_struct_g95.o utilities_deallocate_struct_g95.o utilities_put_struct_g95.o utilities_put_slice_struct_g95.o utilities_get_struct_g95.o $(IDSOBJECTS_g95)
-	$(FC_g95) -c $(FCFLAGS_g95) $(INCDIR_g95) ids_routines.f90 -o $@
+ids_routines.o: ids_routines.f90 ual_defs.o ual_low_level_wrap.o utilities_copy_struct.o utilities_deallocate_struct.o utilities_put_struct.o utilities_put_slice_struct.o utilities_get_struct.o $(IDSOBJECTS)
+	$(FC) -c $(FCFLAGS) $(MODINC) ids_routines.f90 -o $@
 
-ual_defs_g95.o: %_g95.o:wrapper/%.f90 | $(MODDIR_g95)
-	$(FC_g95) -c $(FCFLAGS_g95) $(INCDIR_g95) $< -o $@
-ual_low_level_wrap_g95.o: %_g95.o:wrapper/%.f90 ual_defs_g95.o
-	$(FC_g95) -c $(FCFLAGS_g95) $(INCDIR_g95) $< -o $@
-ids_schemas_g95.o: %_g95.o:%.f90 ual_defs_g95.o
-	$(FC_g95) -c $(FCFLAGS_g95) $(INCDIR_g95) $< -o $@
-utilities_copy_struct_g95.o: utilities_copy_struct.f90 ids_schemas_g95.o
-	$(FC_g95) -c $(FCFLAGS_g95) $(INCDIR_g95) $< -o $@
-utilities_deallocate_struct_g95.o: utilities_deallocate_struct.f90 ids_schemas_g95.o
-	$(FC_g95) -c $(FCFLAGS_g95) $(INCDIR_g95) $< -o $@
-utilities_put_struct_g95.o : utilities_put_struct.f90 ids_schemas_g95.o
-	$(FC_g95) -c $(FCFLAGS_g95) $(INCDIR_g95) $< -o $@
-utilities_put_slice_struct_g95.o : utilities_put_slice_struct.f90 ids_schemas_g95.o 
-	$(FC_g95) -c $(FCFLAGS_g95) $(INCDIR_g95) $< -o $@
-utilities_get_struct_g95.o : utilities_get_struct.f90 ids_schemas_g95.o
-	$(FC_g95) -c $(FCFLAGS_g95) $(INCDIR_g95) $< -o $@
+ual_defs.o: %.o:wrapper/%.f90 | $(MODDIR)
+	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
+ual_low_level_wrap.o: %.o:wrapper/%.f90 ual_defs.o
+	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
+ids_schemas.o: %.o:%.f90 ual_defs.o
+	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
+utilities_copy_struct.o: utilities_copy_struct.f90 ids_schemas.o ual_defs.o ual_low_level_wrap.o
+	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
+utilities_deallocate_struct.o: utilities_deallocate_struct.f90 ids_schemas.o ual_defs.o ual_low_level_wrap.o
+	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
+utilities_put_struct.o: utilities_put_struct.f90 ids_schemas.o ual_defs.o ual_low_level_wrap.o
+	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
+utilities_put_slice_struct.o: utilities_put_slice_struct.f90 ids_schemas.o ual_defs.o ual_low_level_wrap.o
+	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
+utilities_get_struct.o: utilities_get_struct.f90 ids_schemas.o ual_defs.o ual_low_level_wrap.o
+	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
 
-$(filter %_put_g95.o,$(IDSOBJECTS)): %_put_g95.o : %_put.f90 %_delete_g95.o ids_schemas_g95.o utilities_put_struct_g95.o ual_defs_g95.o ual_low_level_wrap_g95.o
-	$(FC_g95) -c $(FCFLAGS_g95) $(INCDIR_g95) $< -o $@
-$(filter %_put_slice_g95.o,$(IDSOBJECTS)): %_put_slice_g95.o : %_put_slice.f90 ids_schemas_g95.o %_put_g95.o utilities_put_slice_struct_g95.o ual_defs_g95.o ual_low_level_wrap_g95.o
-	$(FC_g95) -c $(FCFLAGS_g95) $(INCDIR_g95) $< -o $@
-$(filter %_get_g95.o,$(IDSOBJECTS)): %_get_g95.o:%_get.f90 ids_schemas_g95.o utilities_get_struct_g95.o ual_defs_g95.o ual_low_level_wrap_g95.o
-	$(FC_g95) -c $(FCFLAGS_g95) $(INCDIR_g95) $< -o $@
-$(filter %_get_slice_g95.o,$(IDSOBJECTS)): %_get_slice_g95.o:%_get_slice.f90 ids_schemas_g95.o utilities_get_struct_g95.o %_get_g95.o ual_defs_g95.o ual_low_level_wrap_g95.o
-	$(FC_g95) -c $(FCFLAGS_g95) $(INCDIR_g95) $< -o $@
-$(filter %_delete_g95.o,$(IDSOBJECTS)): %_g95.o:%.f90 ids_schemas_g95.o ual_defs_g95.o ual_low_level_wrap_g95.o
-	$(FC_g95) -c $(FCFLAGS_g95) $(INCDIR_g95) $< -o $@
-$(filter %_copy_struct_g95.o,$(IDSOBJECTS)): %_g95.o:%.f90 ids_schemas_g95.o utilities_copy_struct_g95.o ual_defs_g95.o ual_low_level_wrap_g95.o
-	$(FC_g95) -c $(FCFLAGS_g95) $(INCDIR_g95) $< -o $@
-$(filter %_deallocate_struct_g95.o,$(IDSOBJECTS)): %_g95.o:%.f90 ids_schemas_g95.o utilities_deallocate_struct_g95.o ual_defs_g95.o ual_low_level_wrap_g95.o
-	$(FC_g95) -c $(FCFLAGS_g95) $(INCDIR_g95) $< -o $@
+$(filter %_put.o,$(IDSOBJECTS)): %_put.o : %_put.f90 %_delete.o ids_schemas.o utilities_put_struct.o ual_defs.o ual_low_level_wrap.o
+	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
+$(filter %_put_slice.o,$(IDSOBJECTS)): %_put_slice.o : %_put_slice.f90 ids_schemas.o %_put.o utilities_put_slice_struct.o ual_defs.o ual_low_level_wrap.o
+	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
+$(filter %_get.o,$(IDSOBJECTS)): %_get.o:%_get.f90 ids_schemas.o utilities_get_struct.o ual_defs.o ual_low_level_wrap.o
+	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
+$(filter %_get_slice.o,$(IDSOBJECTS)): %_get_slice.o:%_get_slice.f90 ids_schemas.o utilities_get_struct.o %_get.o ual_defs.o ual_low_level_wrap.o
+	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
+$(filter %_delete.o,$(IDSOBJECTS)): %.o:%.f90 ids_schemas.o ual_defs.o ual_low_level_wrap.o
+	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
+$(filter %_copy_struct.o,$(IDSOBJECTS)): %.o:%.f90 ids_schemas.o utilities_copy_struct.o ual_defs.o ual_low_level_wrap.o
+	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
+$(filter %_deallocate_struct.o,$(IDSOBJECTS)): %.o:%.f90 ids_schemas.o utilities_deallocate_struct.o ual_defs.o ual_low_level_wrap.o
+	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
 
-#--------------------- gfortran --------------
-LIBFILES_gfortran = ids_schemas_gfortran.o ual_defs_gfortran.o ual_low_level_wrap_gfortran.o utilities_copy_struct_gfortran.o utilities_deallocate_struct_gfortran.o utilities_put_struct_gfortran.o utilities_put_slice_struct_gfortran.o utilities_get_struct_gfortran.o $(IDSOBJECTS_gfortran) ids_routines_gfortran.o $(DEP_gfortran)
-
-ids_routines_gfortran.o: ids_routines.f90 ual_defs_gfortran.o ual_low_level_wrap_gfortran.o utilities_copy_struct_gfortran.o utilities_deallocate_struct_gfortran.o utilities_put_struct_gfortran.o utilities_put_slice_struct_gfortran.o utilities_get_struct_gfortran.o $(IDSOBJECTS_gfortran)
-	$(FC_gfortran) -c $(FCFLAGS_gfortran) $(INCDIR_gfortran) ids_routines.f90 -o $@
-
-ual_defs_gfortran.o: %_gfortran.o:wrapper/%.f90 | $(MODDIR_gfortran)
-	$(FC_gfortran) -c $(FCFLAGS_gfortran) $(INCDIR_gfortran) $< -o $@
-ual_low_level_wrap_gfortran.o: %_gfortran.o:wrapper/%.f90 ual_defs_gfortran.o
-	$(FC_gfortran) -c $(FCFLAGS_gfortran) $(INCDIR_gfortran) $< -o $@
-ids_schemas_gfortran.o: %_gfortran.o:%.f90 ual_defs_gfortran.o 
-	$(FC_gfortran) -c $(FCFLAGS_gfortran) $(INCDIR_gfortran) $< -o $@
-utilities_copy_struct_gfortran.o: utilities_copy_struct.f90 ids_schemas_gfortran.o ual_defs_gfortran.o ual_low_level_wrap_gfortran.o
-	$(FC_gfortran) -c $(FCFLAGS_gfortran) $(INCDIR_gfortran) $< -o $@
-utilities_deallocate_struct_gfortran.o: utilities_deallocate_struct.f90 ids_schemas_gfortran.o ual_defs_gfortran.o ual_low_level_wrap_gfortran.o
-	$(FC_gfortran) -c $(FCFLAGS_gfortran) $(INCDIR_gfortran) $< -o $@
-utilities_put_struct_gfortran.o: utilities_put_struct.f90 ids_schemas_gfortran.o ual_defs_gfortran.o ual_low_level_wrap_gfortran.o
-	$(FC_gfortran) -c $(FCFLAGS_gfortran) $(INCDIR_gfortran) $< -o $@
-utilities_put_slice_struct_gfortran.o: utilities_put_slice_struct.f90 ids_schemas_gfortran.o ual_defs_gfortran.o ual_low_level_wrap_gfortran.o
-	$(FC_gfortran) -c $(FCFLAGS_gfortran) $(INCDIR_gfortran) $< -o $@
-utilities_get_struct_gfortran.o: utilities_get_struct.f90 ids_schemas_gfortran.o ual_defs_gfortran.o ual_low_level_wrap_gfortran.o
-	$(FC_gfortran) -c $(FCFLAGS_gfortran) $(INCDIR_gfortran) $< -o $@
-
-$(filter %_put_gfortran.o,$(IDSOBJECTS)): %_put_gfortran.o : %_put.f90 %_delete_gfortran.o ids_schemas_gfortran.o utilities_put_struct_gfortran.o ual_defs_gfortran.o ual_low_level_wrap_gfortran.o
-	$(FC_gfortran) -c $(FCFLAGS_gfortran) $(INCDIR_gfortran) $< -o $@
-$(filter %_put_slice_gfortran.o,$(IDSOBJECTS)): %_put_slice_gfortran.o : %_put_slice.f90 ids_schemas_gfortran.o %_put_gfortran.o utilities_put_slice_struct_gfortran.o ual_defs_gfortran.o ual_low_level_wrap_gfortran.o
-	$(FC_gfortran) -c $(FCFLAGS_gfortran) $(INCDIR_gfortran) $< -o $@
-$(filter %_get_gfortran.o,$(IDSOBJECTS)): %_get_gfortran.o:%_get.f90 ids_schemas_gfortran.o utilities_get_struct_gfortran.o ual_defs_gfortran.o ual_low_level_wrap_gfortran.o
-	$(FC_gfortran) -c $(FCFLAGS_gfortran) $(INCDIR_gfortran) $< -o $@
-$(filter %_get_slice_gfortran.o,$(IDSOBJECTS)): %_get_slice_gfortran.o:%_get_slice.f90 ids_schemas_gfortran.o utilities_get_struct_gfortran.o %_get_gfortran.o ual_defs_gfortran.o ual_low_level_wrap_gfortran.o
-	$(FC_gfortran) -c $(FCFLAGS_gfortran) $(INCDIR_gfortran) $< -o $@
-$(filter %_delete_gfortran.o,$(IDSOBJECTS)): %_gfortran.o:%.f90 ids_schemas_gfortran.o ual_defs_gfortran.o ual_low_level_wrap_gfortran.o
-	$(FC_gfortran) -c $(FCFLAGS_gfortran) $(INCDIR_gfortran) $< -o $@
-$(filter %_copy_struct_gfortran.o,$(IDSOBJECTS)): %_gfortran.o:%.f90 ids_schemas_gfortran.o utilities_copy_struct_gfortran.o ual_defs_gfortran.o ual_low_level_wrap_gfortran.o
-	$(FC_gfortran) -c $(FCFLAGS_gfortran) $(INCDIR_gfortran) $< -o $@
-$(filter %_deallocate_struct_gfortran.o,$(IDSOBJECTS)): %_gfortran.o:%.f90 ids_schemas_gfortran.o utilities_deallocate_struct_gfortran.o ual_defs_gfortran.o ual_low_level_wrap_gfortran.o
-	$(FC_gfortran) -c $(FCFLAGS_gfortran) $(INCDIR_gfortran) $< -o $@
-
-#--------------------- nagfor --------------
-LIBFILES_nagfor = ids_schemas_nagfor.o ual_defs_nagfor.o ual_low_level_wrap_nagfor.o utilities_copy_struct_nagfor.o utilities_deallocate_struct_nagfor.o utilities_put_struct_nagfor.o utilities_put_slice_struct_nagfor.o utilities_get_struct_nagfor.o $(IDSOBJECTS_nagfor) ids_routines_nagfor.o $(DEP_nagfor)
-
-ids_routines_nagfor.o: ids_routines.f90 ual_defs_nagfor.o ual_low_level_wrap_nagfor.o utilities_copy_struct_nagfor.o utilities_deallocate_struct_nagfor.o utilities_put_struct_nagfor.o utilities_put_slice_struct_nagfor.o utilities_get_struct_nagfor.o $(IDSOBJECTS_nagfor)
-	$(FC_nagfor) -c $(FCFLAGS_nagfor) $(INCDIR_nagfor) ids_routines.f90 -o $@
-
-ual_defs_nagfor.o: %_nagfor.o:wrapper/%.f90 | $(MODDIR_nagfor)
-	$(FC_nagfor) -c $(FCFLAGS_nagfor) $(INCDIR_nagfor) $< -o $@
-ual_low_level_wrap_nagfor.o: %_nagfor.o:wrapper/%.f90 ual_defs_nagfor.o
-	$(FC_nagfor) -c $(FCFLAGS_nagfor) $(INCDIR_nagfor) $< -o $@
-ids_schemas_nagfor.o: %_nagfor.o:%.f90 ual_defs_nagfor.o
-	$(FC_nagfor) -c $(FCFLAGS_nagfor) $(INCDIR_nagfor) $< -o $@
-utilities_copy_struct_nagfor.o: utilities_copy_struct.f90 ids_schemas_nagfor.o ual_defs_nagfor.o ual_low_level_wrap_nagfor.o
-	$(FC_nagfor) -c $(FCFLAGS_nagfor) $(INCDIR_nagfor) $< -o $@
-utilities_deallocate_struct_nagfor.o: utilities_deallocate_struct.f90 ids_schemas_nagfor.o ual_defs_nagfor.o ual_low_level_wrap_nagfor.o
-	$(FC_nagfor) -c $(FCFLAGS_nagfor) $(INCDIR_nagfor) $< -o $@
-utilities_put_struct_nagfor.o: utilities_put_struct.f90 ids_schemas_nagfor.o ual_defs_nagfor.o ual_low_level_wrap_nagfor.o
-	$(FC_nagfor) -c $(FCFLAGS_nagfor) $(INCDIR_nagfor) $< -o $@
-utilities_put_slice_struct_nagfor.o: utilities_put_slice_struct.f90 ids_schemas_nagfor.o ual_defs_nagfor.o ual_low_level_wrap_nagfor.o
-	$(FC_nagfor) -c $(FCFLAGS_nagfor) $(INCDIR_nagfor) $< -o $@
-utilities_get_struct_nagfor.o: utilities_get_struct.f90 ids_schemas_nagfor.o ual_defs_nagfor.o ual_low_level_wrap_nagfor.o
-	$(FC_nagfor) -c $(FCFLAGS_nagfor) $(INCDIR_nagfor) $< -o $@
-
-$(filter %_put_nagfor.o,$(IDSOBJECTS)): %_put_nagfor.o : %_put.f90 %_delete_nagfor.o ids_schemas_nagfor.o utilities_put_struct_nagfor.o ual_defs_nagfor.o ual_low_level_wrap_nagfor.o
-	$(FC_nagfor) -c $(FCFLAGS_nagfor) $(INCDIR_nagfor) $< -o $@
-$(filter %_put_slice_nagfor.o,$(IDSOBJECTS)): %_put_slice_nagfor.o : %_put_slice.f90 ids_schemas_nagfor.o %_put_nagfor.o utilities_put_slice_struct_nagfor.o ual_defs_nagfor.o ual_low_level_wrap_nagfor.o
-	$(FC_nagfor) -c $(FCFLAGS_nagfor) $(INCDIR_nagfor) $< -o $@
-$(filter %_get_nagfor.o,$(IDSOBJECTS)): %_get_nagfor.o:%_get.f90 ids_schemas_nagfor.o utilities_get_struct_nagfor.o ual_defs_nagfor.o ual_low_level_wrap_nagfor.o
-	$(FC_nagfor) -c $(FCFLAGS_nagfor) $(INCDIR_nagfor) $< -o $@
-$(filter %_get_slice_nagfor.o,$(IDSOBJECTS)): %_get_slice_nagfor.o:%_get_slice.f90 ids_schemas_nagfor.o utilities_get_struct_nagfor.o %_get_nagfor.o ual_defs_nagfor.o ual_low_level_wrap_nagfor.o
-	$(FC_nagfor) -c $(FCFLAGS_nagfor) $(INCDIR_nagfor) $< -o $@
-$(filter %_delete_nagfor.o,$(IDSOBJECTS)): %_nagfor.o:%.f90 ids_schemas_nagfor.o ual_defs_nagfor.o ual_low_level_wrap_nagfor.o
-	$(FC_nagfor) -c $(FCFLAGS_nagfor) $(INCDIR_nagfor) $< -o $@
-$(filter %_copy_struct_nagfor.o,$(IDSOBJECTS)): %_nagfor.o:%.f90 ids_schemas_nagfor.o utilities_copy_struct_nagfor.o ual_defs_nagfor.o ual_low_level_wrap_nagfor.o
-	$(FC_nagfor) -c $(FCFLAGS_nagfor) $(INCDIR_nagfor) $< -o $@
-$(filter %_deallocate_struct_nagfor.o,$(IDSOBJECTS)): %_nagfor.o:%.f90 ids_schemas_nagfor.o utilities_deallocate_struct_nagfor.o ual_defs_nagfor.o ual_low_level_wrap_nagfor.o
-	$(FC_nagfor) -c $(FCFLAGS_nagfor) $(INCDIR_nagfor) $< -o $@
-
-#--------------------- pgi --------------
-LIBFILES_pgi = ids_schemas_pgi.o ual_defs_pgi.o ual_low_level_wrap_pgi.o utilities_copy_struct_pgi.o utilities_deallocate_struct_pgi.o utilities_put_struct_pgi.o utilities_put_slice_struct_pgi.o utilities_get_struct_pgi.o $(IDSOBJECTS_pgi) ids_routines_pgi.o $(DEP_pgi)
-
-ids_routines_pgi.o: ids_routines.f90 ual_defs_pgi.o ual_low_level_wrap_pgi.o utilities_copy_struct_pgi.o utilities_deallocate_struct_pgi.o utilities_put_struct_pgi.o utilities_put_slice_struct_pgi.o utilities_get_struct_pgi.o $(IDSOBJECTS_pgi)
-	$(FC_pgi) -c $(FCFLAGS_pgi) $(INCDIR_pgi) ids_routines.f90 -o $@
-
-ual_defs_pgi.o: %_pgi.o:wrapper/%.f90 | $(MODDIR_pgi)
-	$(FC_pgi) -c $(FCFLAGS_pgi) $(INCDIR_pgi) $< -o $@
-ual_low_level_wrap_pgi.o: %_pgi.o:wrapper/%.f90 ual_defs_pgi.o
-	$(FC_pgi) -c $(FCFLAGS_pgi) $(INCDIR_pgi) $< -o $@
-ids_schemas_pgi.o: %_pgi.o:%.f90 ual_defs_pgi.o
-	$(FC_pgi) -c $(FCFLAGS_pgi) $(INCDIR_pgi) $< -o $@
-utilities_copy_struct_pgi.o: utilities_copy_struct.f90 ids_schemas_pgi.o ual_defs_pgi.o ual_low_level_wrap_pgi.o
-	$(FC_pgi) -c $(FCFLAGS_pgi) $(INCDIR_pgi) $< -o $@
-utilities_deallocate_struct_pgi.o: utilities_deallocate_struct.f90 ids_schemas_pgi.o ual_defs_pgi.o ual_low_level_wrap_pgi.o
-	$(FC_pgi) -c $(FCFLAGS_pgi) $(INCDIR_pgi) $< -o $@
-utilities_put_struct_pgi.o: utilities_put_struct.f90 ids_schemas_pgi.o ual_defs_pgi.o ual_low_level_wrap_pgi.o
-	$(FC_pgi) -c $(FCFLAGS_pgi) $(INCDIR_pgi) $< -o $@
-utilities_put_slice_struct_pgi.o: utilities_put_slice_struct.f90 ids_schemas_pgi.o ual_defs_pgi.o ual_low_level_wrap_pgi.o
-	$(FC_pgi) -c $(FCFLAGS_pgi) $(INCDIR_pgi) $< -o $@
-utilities_get_struct_pgi.o: utilities_get_struct.f90 ids_schemas_pgi.o ual_defs_pgi.o ual_low_level_wrap_pgi.o
-	$(FC_pgi) -c $(FCFLAGS_pgi) $(INCDIR_pgi) $< -o $@
-
-$(filter %_put_pgi.o,$(IDSOBJECTS)): %_put_pgi.o : %_put.f90 %_delete_pgi.o ids_schemas_pgi.o utilities_put_struct_pgi.o ual_defs_pgi.o ual_low_level_wrap_pgi.o
-	$(FC_pgi) -c $(FCFLAGS_pgi) $(INCDIR_pgi) $< -o $@
-$(filter %_put_slice_pgi.o,$(IDSOBJECTS)): %_put_slice_pgi.o : %_put_slice.f90 ids_schemas_pgi.o %_put_pgi.o utilities_put_slice_struct_pgi.o ual_defs_pgi.o ual_low_level_wrap_pgi.o
-	$(FC_pgi) -c $(FCFLAGS_pgi) $(INCDIR_pgi) $< -o $@
-$(filter %_get_pgi.o,$(IDSOBJECTS)): %_get_pgi.o:%_get.f90 ids_schemas_pgi.o utilities_get_struct_pgi.o ual_defs_pgi.o ual_low_level_wrap_pgi.o
-	$(FC_pgi) -c $(FCFLAGS_pgi) $(INCDIR_pgi) $< -o $@
-$(filter %_get_slice_pgi.o,$(IDSOBJECTS)): %_get_slice_pgi.o:%_get_slice.f90 ids_schemas_pgi.o utilities_get_struct_pgi.o %_get_pgi.o ual_defs_pgi.o ual_low_level_wrap_pgi.o
-	$(FC_pgi) -c $(FCFLAGS_pgi) $(INCDIR_pgi) $< -o $@
-$(filter %_delete_pgi.o,$(IDSOBJECTS)): %_pgi.o:%.f90 ids_schemas_pgi.o ual_defs_pgi.o ual_low_level_wrap_pgi.o
-	$(FC_pgi) -c $(FCFLAGS_pgi) $(INCDIR_pgi) $< -o $@
-$(filter %_copy_struct_pgi.o,$(IDSOBJECTS)): %_pgi.o:%.f90 ids_schemas_pgi.o utilities_copy_struct_pgi.o ual_defs_pgi.o ual_low_level_wrap_pgi.o
-	$(FC_pgi) -c $(FCFLAGS_pgi) $(INCDIR_pgi) $< -o $@
-$(filter %_deallocate_struct_pgi.o,$(IDSOBJECTS)): %_pgi.o:%.f90 ids_schemas_pgi.o utilities_deallocate_struct_pgi.o ual_defs_pgi.o ual_low_level_wrap_pgi.o
-	$(FC_pgi) -c $(FCFLAGS_pgi) $(INCDIR_pgi) $< -o $@
-
-#--------------------- ifort --------------
-LIBFILES_ifort = ids_schemas_ifort.o ual_defs_ifort.o ual_low_level_wrap_ifort.o utilities_copy_struct_ifort.o utilities_deallocate_struct_ifort.o utilities_put_struct_ifort.o utilities_put_slice_struct_ifort.o utilities_get_struct_ifort.o $(IDSOBJECTS_ifort) ids_routines_ifort.o $(DEP_ifort)
-
-ids_routines_ifort.o: ids_routines.f90 ual_defs_ifort.o ual_low_level_wrap_ifort.o utilities_copy_struct_ifort.o utilities_deallocate_struct_ifort.o utilities_put_struct_ifort.o utilities_put_slice_struct_ifort.o utilities_get_struct_ifort.o $(IDSOBJECTS_ifort)
-	$(FC_ifort) -c $(FCFLAGS_ifort) $(INCDIR_ifort) ids_routines.f90 -o $@
-
-ual_defs_ifort.o: %_ifort.o:wrapper/%.f90 | $(MODDIR_ifort)
-	$(FC_ifort) -c $(FCFLAGS_ifort) $(INCDIR_ifort) $< -o $@
-ual_low_level_wrap_ifort.o: %_ifort.o:wrapper/%.f90 ual_defs_ifort.o
-	$(FC_ifort) -c $(FCFLAGS_ifort) $(INCDIR_ifort) $< -o $@
-ids_schemas_ifort.o: %_ifort.o:%.f90 ual_defs_ifort.o
-	$(FC_ifort) -c $(FCFLAGS_ifort) $(INCDIR_ifort) $< -o $@
-utilities_copy_struct_ifort.o: utilities_copy_struct.f90 ids_schemas_ifort.o ual_defs_ifort.o ual_low_level_wrap_ifort.o
-	$(FC_ifort) -c $(FCFLAGS_ifort) $(INCDIR_ifort) $< -o $@
-utilities_deallocate_struct_ifort.o: utilities_deallocate_struct.f90 ids_schemas_ifort.o ual_defs_ifort.o ual_low_level_wrap_ifort.o
-	$(FC_ifort) -c $(FCFLAGS_ifort) $(INCDIR_ifort) $< -o $@
-utilities_put_struct_ifort.o: utilities_put_struct.f90 ids_schemas_ifort.o ual_defs_ifort.o ual_low_level_wrap_ifort.o
-	$(FC_ifort) -c $(FCFLAGS_ifort) $(INCDIR_ifort) $< -o $@
-utilities_put_slice_struct_ifort.o: utilities_put_slice_struct.f90 ids_schemas_ifort.o ual_defs_ifort.o ual_low_level_wrap_ifort.o
-	$(FC_ifort) -c $(FCFLAGS_ifort) $(INCDIR_ifort) $< -o $@
-utilities_get_struct_ifort.o: utilities_get_struct.f90 ids_schemas_ifort.o ual_defs_ifort.o ual_low_level_wrap_ifort.o
-	$(FC_ifort) -c $(FCFLAGS_ifort) $(INCDIR_ifort) $< -o $@
-
-$(filter %_put_ifort.o,$(IDSOBJECTS)): %_put_ifort.o : %_put.f90 %_delete_ifort.o ids_schemas_ifort.o utilities_put_struct_ifort.o ual_defs_ifort.o ual_low_level_wrap_ifort.o
-	$(FC_ifort) -c $(FCFLAGS_ifort) $(INCDIR_ifort) $< -o $@
-$(filter %_put_slice_ifort.o,$(IDSOBJECTS)): %_put_slice_ifort.o : %_put_slice.f90 ids_schemas_ifort.o %_put_ifort.o utilities_put_slice_struct_ifort.o ual_defs_ifort.o ual_low_level_wrap_ifort.o
-	$(FC_ifort) -c $(FCFLAGS_ifort) $(INCDIR_ifort) $< -o $@
-$(filter %_get_ifort.o,$(IDSOBJECTS)): %_get_ifort.o:%_get.f90 ids_schemas_ifort.o utilities_get_struct_ifort.o ual_defs_ifort.o ual_low_level_wrap_ifort.o
-	$(FC_ifort) -c $(FCFLAGS_ifort) $(INCDIR_ifort) $< -o $@
-$(filter %_get_slice_ifort.o,$(IDSOBJECTS)): %_get_slice_ifort.o:%_get_slice.f90 ids_schemas_ifort.o utilities_get_struct_ifort.o %_get_ifort.o ual_defs_ifort.o ual_low_level_wrap_ifort.o
-	$(FC_ifort) -c $(FCFLAGS_ifort) $(INCDIR_ifort) $< -o $@
-$(filter %_delete_ifort.o,$(IDSOBJECTS)): %_ifort.o:%.f90 ids_schemas_ifort.o ual_defs_ifort.o ual_low_level_wrap_ifort.o
-	$(FC_ifort) -c $(FCFLAGS_ifort) $(INCDIR_ifort) $< -o $@
-$(filter %_copy_struct_ifort.o,$(IDSOBJECTS)): %_ifort.o:%.f90 ids_schemas_ifort.o utilities_copy_struct_ifort.o ual_defs_ifort.o ual_low_level_wrap_ifort.o
-	$(FC_ifort) -c $(FCFLAGS_ifort) $(INCDIR_ifort) $< -o $@
-$(filter %_deallocate_struct_ifort.o,$(IDSOBJECTS)): %_ifort.o:%.f90 ids_schemas_ifort.o utilities_deallocate_struct_ifort.o ual_defs_ifort.o ual_low_level_wrap_ifort.o
-	$(FC_ifort) -c $(FCFLAGS_ifort) $(INCDIR_ifort) $< -o $@
 
 #----------------------- xslt ---------------------
 # Test if all idsroutines are found to exist as files.

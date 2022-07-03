@@ -1,8 +1,5 @@
 *.mod
 /*.f90
-g95
-gfortran
-ifort
-pgi
+fortran/
 makefile-gen
 idsroutines

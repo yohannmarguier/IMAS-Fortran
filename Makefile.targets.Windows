@@ -2,21 +2,21 @@
 sources_install: $(SOURCES) ids_schemas.f90 id_f90_sources_install
 sources_uninstall: id_f90_sources_uninstall
 
-gfortran_install: $(IDSOBJECTS_gfortran) libimas-gfortran.dll libimas-gfortran.lib
+fortran_install: $(IDSOBJECTS) libal-fortran.dll libal-fortran.lib
 	$(mkdir_p) $(packagedir)/fortraninterface/include
-	$(CP) gfortran/*.mod $(packagedir)/fortraninterface/include
+	$(CP) fortran/*.mod $(packagedir)/fortraninterface/include
 	$(mkdir_p) $(packagedir)/fortraninterface/lib
 	for OBJECT in `find . -type f \( -name "*.lib" -or -name "*.dll" \)`; do \
 		$(CP) $$OBJECT $(packagedir)/fortraninterface/lib; \
 	done
-gfortran_uninstall:
+fortran_uninstall:
 
-#--------------------- gfortran --------------
+#--------------------- fortran --------------
 # Windows libraries
-libimas-gfortran.dll: $(LIBFILES_gfortran)
-	$(FC_gfortran) $(COPTS_gfortran) -o $@ -shared -Wl,$(SONAME_OPT),$@.$(SO_NUM) -Wl,--out-implib,$@.lib $^ $(LIBS)
+libal-fortran.dll: $(LIBFILES_fortran)
+	$(FC) $(COPTS_fortran) -o $@ -shared -Wl,$(SONAME_OPT),$@.$(SO_NUM) -Wl,--out-implib,$@.lib $^ $(LIBS)
 
-libimas-gfortran.lib: $(LIBFILES_gfortran)
+libal-fortran.lib: $(LIBFILES_fortran)
 	$(AR) rcvsu $@ $^
 	ranlib $@
 

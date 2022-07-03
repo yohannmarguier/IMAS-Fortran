@@ -83,8 +83,7 @@ SUBROUTINE getUser(userName)
 	CALL get_environment_variable("USER", buffer)
 	userNameSize = LEN_TRIM(buffer)
 	if(userNameSize < 1) then
-		write(*,*) "PANIC: $USER not found! Exiting..."
-		CALL exit(1)
+		ERROR STOP "PANIC: $USER not found! Exiting..."
 	endif
 
 	allocate(character(userNameSize):: userName)
@@ -104,8 +103,7 @@ SUBROUTINE getDataVersion(dataVersion)
 	dataVersionSize = LEN_TRIM(buffer)
 	
 	if(dataVersionSize < 1) then
-		write(*,*) "PANIC: $IMAS_VERSION not found! Exiting..."
-		CALL exit(1)
+		ERROR STOP "PANIC: $IMAS_VERSION not found! Exiting..."
 	endif
 	
 	allocate(character(dataVersionSize):: dataVersion)
@@ -162,8 +160,8 @@ SUBROUTINE setCmdlOptions()
 
                     case default
                         print *, 'Error! IDS Time Mode: Unrecognised value [ ', trim(argValue), ' ]'
-                       call print_help()
-                        call exit(1)
+                        call print_help()
+                        STOP
                     
                 end select
 
@@ -207,7 +205,7 @@ SUBROUTINE setCmdlOptions()
                     case default
                         print *, 'Error! Backend: Unrecognised value [ ', trim(argValue), ' ]'
                         call print_help()
-                        call exit(1)
+                        STOP
                 end select
             
              !!! TEST MODE
@@ -231,7 +229,7 @@ SUBROUTINE setCmdlOptions()
                     case default
                         print *, 'Error! Test Mode: Unrecognised value [ ', trim(argValue), ' ]'
                        call print_help()
-                       call exit(1)
+                       STOP
                     
             end select
 
@@ -256,11 +254,11 @@ SUBROUTINE setCmdlOptions()
 
             case ('-h', '--help')
                 call print_help()
-                call exit(1)
+                STOP
             case default
                 print '(2a, /)', 'Unrecognised command-line option: ',arg
                 call print_help()
-                call exit(1)
+                STOP
         end select
                 i = i + 1
     end do
