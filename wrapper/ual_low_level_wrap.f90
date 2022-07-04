@@ -475,6 +475,7 @@ contains
           call ual_build_uri_from_legacy_parameters(fallback, shot, run, user, tokamak, version, "", uri, status)
           call ual_begin_dataentry_action(uri, OPEN_PULSE, pulseCtx, status)
        end if
+    end if
     if (present(retstatus)) retstatus = status
   end subroutine imas_open_env
 
