@@ -4,7 +4,7 @@ sources_uninstall: id_f90_sources_uninstall
 
 fortran_install: $(IDSOBJECTS) libal-fortran.dll libal-fortran.lib
 	$(mkdir_p) $(packagedir)/fortraninterface/include
-	$(CP) fortran/*.mod $(packagedir)/fortraninterface/include
+	$(CP) include/*.mod $(packagedir)/fortraninterface/include
 	$(mkdir_p) $(packagedir)/fortraninterface/lib
 	for OBJECT in `find . -type f \( -name "*.lib" -or -name "*.dll" \)`; do \
 		$(CP) $$OBJECT $(packagedir)/fortraninterface/lib; \

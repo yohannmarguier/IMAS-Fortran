@@ -1,12 +1,8 @@
 #------------------------- gfortran ----------------------------
 ifeq ("gfortran","$(strip $(FC))")
-FCFLAGS ?= -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none -I$(UAL_BUILD)/fortraninterface/fortran
+FCFLAGS ?= -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none -I$(UAL_BUILD)/fortraninterface/include
 endif
 
-#------------------------- ifort ----------------------------
-# FIXME: no ifort tests for Windows?
-
-#------------------------- fortran ----------------------------
 LIBS = -L$(UAL_BUILD)/lowlevel -L$(UAL_BUILD)/fortraninterface $(UAL_BUILD)/fortraninterface/libal-fortran.lib $(UAL_BUILD)/lowlevel/libal.lib -lm -lstdc++
 
 
