@@ -66,7 +66,7 @@ call ual_end_action(opctx, status)
 end subroutine
 
 ! Turn an IDS into a bunch of bytes
-subroutine ids_serialize(ids_in, protocol, buffer)
+subroutine ids_serialize(ids_in, buffer, protocol)
   class(IDS_base) :: ids_in ! no intent(in) because ids_put also does not have that
   integer(ids_int), intent(in), optional :: protocol
   character(len=1), dimension(:), allocatable :: buffer
@@ -137,7 +137,7 @@ subroutine ids_serialize(ids_in, protocol, buffer)
 end subroutine ids_serialize
 
 ! Turn a bunch of bytes into an IDS
-subroutine ids_deserialize(ids_out, buffer)
+subroutine ids_deserialize(buffer, ids_out)
   class(IDS_base) :: ids_out ! it is up to you to pass the correct buffer and ids type
   character(len=1), dimension(:), allocatable, intent(in) :: buffer
 
