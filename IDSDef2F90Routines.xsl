@@ -127,8 +127,9 @@ subroutine ids_serialize(ids_in, protocol, buffer)
     unit = get_file_unit()
     open(unit=unit, file=fname, action='read', status='old', form='unformatted', access='stream')
     inquire(unit=unit, size=file_size)
-    allocate(character(1) :: buffer(file_size))
-    read(unit) buffer
+    allocate(character(1) :: buffer(file_size + 1))
+    buffer(1) = char(ASCII_SERIALIZER_PROTOCOL)
+    read(unit) buffer(2:)
     close(unit, status='delete')
   else
     write(*,*) 'SERIALIZE: ERROR, unrecognized serialization protocol'
@@ -136,16 +137,18 @@ subroutine ids_serialize(ids_in, protocol, buffer)
 end subroutine ids_serialize
 
 ! Turn a bunch of bytes into an IDS
-subroutine ids_deserialize(ids_out, protocol, buffer)
+subroutine ids_deserialize(ids_out, buffer)
   class(IDS_base) :: ids_out ! it is up to you to pass the correct buffer and ids type
-  integer(ids_int), intent(in) :: protocol
   character(len=1), dimension(:), allocatable, intent(in) :: buffer
 
+  integer(ids_int) :: protocol
   character(len=:), allocatable :: fname
   integer(ids_int) :: pulsectx
   integer(ids_int) :: status
   integer(ids_int) :: unit
   integer(ids_int) :: file_size
+
+  protocol = ichar(buffer(1))
 
   if (protocol .eq. ASCII_SERIALIZER_PROTOCOL) then
     fname = generate_tmp_file()
@@ -157,7 +160,7 @@ subroutine ids_deserialize(ids_out, protocol, buffer)
     ! Write to file
     unit = get_file_unit()
     open(unit=unit, file=fname, action='write', status='new', form='unformatted', access='stream')
-    write(unit) buffer
+    write(unit) buffer(2:)
     ! keep the file open, so we can delete it later in one go
     flush(unit)
 

@@ -23,7 +23,7 @@ write(*,*) output
 
 write(*,*) 'deserializing'
 
-call ids_deserialize(workflow2, DEFAULT_SERIALIZER_PROTOCOL, output)
+call ids_deserialize(workflow2, output)
 
 write(*,*) workflow2%ids_properties%comment(1)
 if (workflow2%ids_properties%comment(1) .eq. 'hello world') then
