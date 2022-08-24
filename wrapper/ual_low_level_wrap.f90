@@ -477,16 +477,15 @@ contains
   subroutine warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
-    CHARACTER(len=255) :: buffer
+    CHARACTER(len=1) :: buffer
     character(*), intent(in) :: idsName, fieldPath, lifeCycleStatus
-    integer :: imas_disable_obsolescent_warnings
-    CALL get_environment_variable("IMAS_DISABLE_OBSOLESCENT_WARNINGS", buffer)
+    integer :: disable_obsolescent_warning
+    disable_obsolescent_warning = 0
+    CALL get_environment_variable("IMAS_AL_DISABLE_OBSOLESCENT_WARNING", buffer)
     if (len_trim(buffer).ne.0) then
-      read(buffer,"(I1)") imas_disable_obsolescent_warnings
-    else
-      imas_disable_obsolescent_warnings = 1
+      read(buffer,"(I1)") disable_obsolescent_warning
     end if
-    if (imas_disable_obsolescent_warnings.eq.0) then
+    if (disable_obsolescent_warning.eq.1) then
        return
     end if
     if (lifeCycleStatus.eq.'obsolescent') then
