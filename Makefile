@@ -20,21 +20,22 @@ MODINC = -I$(MODDIR)
 
 # The builder should specify FC, this is a fail safe if it wasn't.
 # The builder should specify FCFLAGS, these are some suggestions that are known to work.
+# $(SYSTEM) is the current architecture: Windows, Linux or MacOS (allowing serialization implementations to use /dev/shm on Linux systems)
 ifeq ("yes","$(strip $(IMAS_GFORTRAN))")
 FC      ?= gfortran
-FCFLAGS ?= -g -O3 -D__USE_XOPEN2K8 -fdefault-real-8 -fdefault-double-8 -fPIC -fno-second-underscore -ffree-line-length-none -J$(MODDIR)
+FCFLAGS ?= -g -O3 -cpp -D_$(SYSTEM) -D__USE_XOPEN2K8 -fdefault-real-8 -fdefault-double-8 -fPIC -fno-second-underscore -ffree-line-length-none -J$(MODDIR)
 else ifeq ("yes","$(strip $(IMAS_IFORT))")
 FC      ?= ifort
-FCFLAGS ?= -g -O3 -r8 -assume no2underscore -fPIC -module $(MODDIR) -g -shared-intel
+FCFLAGS ?= -g -O3 -fpp -D_$(SYSTEM) -r8 -assume no2underscore -fPIC -module $(MODDIR) -g -shared-intel
 else ifeq ("yes","$(strip $(IMAS_NVFORTRAN))")
 FC      ?= nvfortran
-FCFLAGS ?= -g -O3 -D__USE_XOPEN2K8 -r8 -Mnosecond_underscore -fPIC -module=./$(MODDIR)
+FCFLAGS ?= -g -O3 -Mpreprocess -D_$(SYSTEM) -D__USE_XOPEN2K8 -r8 -Mnosecond_underscore -fPIC -module=./$(MODDIR)
 else ifeq ("yes","$(strip $(IMAS_NAGFOR))")
 FC      ?= nagfor
-FCFLAGS ?= -g -O3 -D__USE_XOPEN2K8 -free -maxcontin=4000 -w=unused -w=x95 -kind=byte -r8 -PIC -mdir ./$(MODDIR)
+FCFLAGS ?= -g -O3 -fpp -D_$(SYSTEM) -D__USE_XOPEN2K8 -free -maxcontin=4000 -w=unused -w=x95 -kind=byte -r8 -PIC -mdir ./$(MODDIR)
 else ifeq ("yes","$(strip $(IMAS_G95))")
 FC      ?= g95
-FCFLAGS ?= -g -O3 -D__USE_XOPEN2K8 -r8 -ftrace=full -fPIC -fno-second-underscore -ffree-line-length-huge -fmod=$(MODDIR)
+FCFLAGS ?= -g -O3 -cpp -D_$(SYSTEM) -D__USE_XOPEN2K8 -r8 -ftrace=full -fPIC -fno-second-underscore -ffree-line-length-huge -fmod=$(MODDIR)
 else 
 SOURCES_ONLY=yes
 endif
