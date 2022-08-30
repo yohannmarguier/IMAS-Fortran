@@ -77,7 +77,8 @@ subroutine ids_serialize(ids_in, buffer, protocol)
   integer(ids_int) :: status
   integer(ids_int) :: unit
   integer(ids_int) :: file_size
-
+  character(STRMAXLEN):: uri
+  
   my_protocol = DEFAULT_SERIALIZER_PROTOCOL
   if (present(protocol)) my_protocol = protocol
 
@@ -89,8 +90,8 @@ subroutine ids_serialize(ids_in, buffer, protocol)
     end if
 
     ! Write to file
-    call ual_begin_pulse_action(ASCII_BACKEND, 0, 0, 'serialize', 'serialize', '3', pulsectx)
-    call ual_open_pulse(pulsectx, FORCE_CREATE_PULSE, '-fullpath ' // fname, status)
+    call ual_build_uri_from_legacy_parameters(ASCII_BACKEND, 0, 0, 'serialize', 'serialize', '3','-fullpath '//fname, uri, status)
+    call ual_begin_dataentry_action(uri, FORCE_CREATE_PULSE, pulsectx, status)
     if (status .ne. 0) then
       write(*,*) "SERIALIZE: ERROR opening ASCII backend - ual_open_pulse"
       buffer = ''
@@ -108,7 +109,7 @@ subroutine ids_serialize(ids_in, buffer, protocol)
     end select
     
 
-    call ual_close_pulse(pulsectx, FORCE_CREATE_PULSE, '', status)
+    call ual_close_pulse(pulsectx, CLOSE_PULSE, '', status)
     if (status .ne. 0) then
       write(*,*) "SERIALIZE: ERROR closing ASCII backend - ual_close_pulse"
       buffer = ''
@@ -147,6 +148,7 @@ subroutine ids_deserialize(buffer, ids_out)
   integer(ids_int) :: status
   integer(ids_int) :: unit
   integer(ids_int) :: file_size
+  character(STRMAXLEN):: uri
 
   protocol = ichar(buffer(1))
 
@@ -164,9 +166,8 @@ subroutine ids_deserialize(buffer, ids_out)
     ! keep the file open, so we can delete it later in one go
     flush(unit)
 
-
-    call ual_begin_pulse_action(ASCII_BACKEND, 0, 0, 'serialize', 'serialize', '3', pulsectx)
-    call ual_open_pulse(pulsectx, FORCE_OPEN_PULSE, '-fullpath ' // fname, status)
+    call ual_build_uri_from_legacy_parameters(ASCII_BACKEND, 0, 0, 'serialize', 'serialize', '3','-fullpath '//fname, uri, status)
+    call ual_begin_dataentry_action(uri, FORCE_CREATE_PULSE, pulsectx, status)
     if (status .ne. 0) then
       write(*,*) "SERIALIZE: ERROR opening ASCII backend - ual_open_pulse"
       return
@@ -183,7 +184,7 @@ subroutine ids_deserialize(buffer, ids_out)
     end select
     
 
-    call ual_close_pulse(pulsectx, FORCE_OPEN_PULSE, '', status)
+    call ual_close_pulse(pulsectx, CLOSE_PULSE, '', status)
     if (status .ne. 0) then
       write(*,*) "SERIALIZE: ERROR closing ASCII backend - ual_close_pulse"
       call ual_end_action(pulsectx, status)
