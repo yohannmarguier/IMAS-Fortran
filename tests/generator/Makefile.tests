@@ -86,7 +86,7 @@ sources_: IDSDef2TestSuite.xsl $(IDSDEF) | saxonicajar $(TEST_SRC_DIR)
 	$(SAXON) newLowLevel=$(NEW_LOW_LEVEL) -t -s:$(IDSDEF) -xsl:IDSDef2TestSuite.xsl
 
 # Always generate
-.PHONY: test_defs.f90
+# .PHONY: test_defs.f90
 comma := ,
 test_defs.f90: %:%.in
 	sed -e "s;__TEST_ARRAY_ALL_BACKENDS__;$(TEST_ARRAY_ALL_BACKENDS);g" \
