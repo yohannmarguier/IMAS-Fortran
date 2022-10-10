@@ -83,56 +83,34 @@ module ual_low_level_wrap
        character(C_CHAR), dimension(*), intent(in) :: opt
      end function c_ual_close_pulse
 
-     function c_ual_begin_global_action(pctx, dataobjectname, rwmode, opctx) &
-          bind(C,name="ual_begin_global_action")
+     function c_hli_begin_global_action(pctx, dataobjectname, rwmode, opctx) &
+          bind(C,name="hli_begin_global_action")
        use, intrinsic :: ISO_C_BINDING
        import c_al_status_t
-       type(c_al_status_t) :: c_ual_begin_global_action
+       type(c_al_status_t) :: c_hli_begin_global_action
        integer(C_INT), value, intent(in) :: pctx, rwmode
        character(C_CHAR), dimension(*), intent(in) :: dataobjectname
        integer(C_INT), intent(out) :: opctx
-     end function c_ual_begin_global_action
+     end function c_hli_begin_global_action
 
-     function c_ual_begin_slice_action(pctx, dataobjectname, rwmode, time, interpmode, opctx) &
-          bind(C,name="ual_begin_slice_action")
+     function c_hli_begin_slice_action(pctx, dataobjectname, rwmode, time, interpmode, opctx) &
+          bind(C,name="hli_begin_slice_action")
        use, intrinsic :: ISO_C_BINDING
        import c_al_status_t
-       type(c_al_status_t) :: c_ual_begin_slice_action
+       type(c_al_status_t) :: c_hli_begin_slice_action
        integer(C_INT), value, intent(in) :: pctx, rwmode, interpmode
        real(C_DOUBLE), value, intent(in) :: time
        character(C_CHAR), dimension(*), intent(in) :: dataobjectname
        integer(C_INT), intent(out) :: opctx
-     end function c_ual_begin_slice_action
+     end function c_hli_begin_slice_action
 
-     function c_ual_end_action(ctx) &
-          bind(C,name="ual_end_action")
+     function c_hli_end_action(ctx) &
+          bind(C,name="hli_end_action")
        use, intrinsic :: ISO_C_BINDING
        import c_al_status_t
-       type(c_al_status_t) :: c_ual_end_action
+       type(c_al_status_t) :: c_hli_end_action
        integer(C_INT), value, intent(in) :: ctx
-     end function c_ual_end_action
-
-     function c_ual_write_data(ctx, fieldname, timebasename, data, datatype, dim, size) &
-          bind(C,name="ual_write_data")
-       use, intrinsic :: ISO_C_BINDING
-       import c_al_status_t
-       type(c_al_status_t) :: c_ual_write_data
-       integer(C_INT), value, intent(in) :: ctx, datatype, dim
-       character(C_CHAR), dimension(*), intent(in) :: fieldname, timebasename
-       type(C_PTR), value, intent(in) :: data
-       type(C_PTR), value, intent(in) :: size
-     end function c_ual_write_data
-
-     function c_ual_read_data(ctx, fieldname, timebase, data, datatype, dim, size) &
-          bind(C,name="ual_read_data")
-       use, intrinsic :: ISO_C_BINDING
-       import c_al_status_t
-       type(c_al_status_t) :: c_ual_read_data
-       integer(C_INT), value, intent(in) :: ctx, datatype, dim
-       character(C_CHAR), dimension(*), intent(in) :: fieldname, timebase
-       type(C_PTR), intent(out) :: data
-       type(C_PTR), value, intent(in) :: size
-     end function c_ual_read_data
+     end function c_hli_end_action
 
      function c_ual_delete_data(ctx, path) &
           bind(C,name="ual_delete_data")
@@ -142,17 +120,6 @@ module ual_low_level_wrap
        integer(C_INT), value, intent(in) :: ctx
        character(C_CHAR), dimension(*), intent(in) :: path
      end function c_ual_delete_data
-
-     function c_ual_begin_arraystruct_action(ctx, path, timebase, size, aosctx) &
-          bind(C,name="ual_begin_arraystruct_action")
-       use, intrinsic :: ISO_C_BINDING
-       import c_al_status_t
-       type(c_al_status_t) :: c_ual_begin_arraystruct_action
-       integer(C_INT), value, intent(in) :: ctx
-       integer(C_INT), intent(inout) :: size
-       character(C_CHAR), dimension(*), intent(in) :: path, timebase
-       integer(C_INT), intent(out) :: aosctx
-     end function c_ual_begin_arraystruct_action
 
      function c_ual_iterate_over_arraystruct(aosctx, step) &
           bind(C,name="ual_iterate_over_arraystruct")
@@ -183,27 +150,6 @@ module ual_low_level_wrap
        type(C_PTR), value, intent(in) :: data
        type(C_PTR), value, intent(in) :: size
      end function c_hli_write_data
-     
-     function c_hli_begin_global_action(pctx, dataobjectname, rwmode, opctx) &
-          bind(C,name="hli_begin_global_action")
-       use, intrinsic :: ISO_C_BINDING
-       import c_al_status_t
-       type(c_al_status_t) :: c_hli_begin_global_action
-       integer(C_INT), value, intent(in) :: pctx, rwmode
-       character(C_CHAR), dimension(*), intent(in) :: dataobjectname
-       integer(C_INT), intent(out) :: opctx
-     end function c_hli_begin_global_action
-     
-     function c_hli_begin_slice_action(pctx, dataobjectname, rwmode, time, interpmode, opctx) &
-          bind(C,name="hli_begin_slice_action")
-       use, intrinsic :: ISO_C_BINDING
-       import c_al_status_t
-       type(c_al_status_t) :: c_hli_begin_slice_action
-       integer(C_INT), value, intent(in) :: pctx, rwmode, interpmode
-       real(C_DOUBLE), value, intent(in) :: time
-       character(C_CHAR), dimension(*), intent(in) :: dataobjectname
-       integer(C_INT), intent(out) :: opctx
-     end function c_hli_begin_slice_action
      
      function c_hli_begin_arraystruct_action(ctx, path, timebase, size, aosctx) &
           bind(C,name="hli_begin_arraystruct_action")
@@ -441,102 +387,6 @@ contains
     if (present(retstatus)) retstatus = status%code
   end subroutine ual_close_pulse
 
-  subroutine ual_begin_global_action(pctx, cponame, rwmode, octx, retstatus)
-    use, intrinsic :: ISO_C_BINDING
-    implicit none
-    integer, intent(in) :: pctx, rwmode
-    character(*), intent(in) :: cponame
-    integer, intent(out) :: octx
-    integer, intent(out) :: retstatus
-    integer(C_INT) :: cctx
-    type(al_status) :: status
-    status = fstatus(c_ual_begin_global_action(pctx, trim(cponame)//C_NULL_CHAR, rwmode, cctx))
-    if (status%code.ne.0) then
-       write(*,*) TRIM(status%message)
-    else
-       octx = cctx
-    end if
-    retstatus = status%code
-  end subroutine ual_begin_global_action
-
-  subroutine ual_begin_slice_action(pctx, cponame, rwmode, time, interpmode, octx, retstatus)
-    use, intrinsic :: ISO_C_BINDING
-    implicit none
-    integer, intent(in) :: pctx, rwmode, interpmode
-    real(8), intent(in) :: time
-    character(*), intent(in) :: cponame
-    integer, intent(out) :: octx
-    integer, intent(out) :: retstatus
-    integer(C_INT) :: cctx
-    type(al_status) :: status
-    status = fstatus(c_ual_begin_slice_action(pctx, trim(cponame)//C_NULL_CHAR, rwmode, time, interpmode, cctx))
-    if (status%code.ne.0) then
-       write(*,*) TRIM(status%message)
-    else
-       octx = cctx
-    end if
-    retstatus = status%code
-  end subroutine ual_begin_slice_action
-
-  subroutine ual_end_action(ctx, retstatus)
-    use, intrinsic :: ISO_C_BINDING
-    implicit none
-    integer, intent(in) :: ctx
-    integer, intent(out) :: retstatus
-    type(al_status) :: status
-    status = fstatus(c_ual_end_action(ctx))
-    if (status%code.ne.0) then
-       write(*,*) TRIM(status%message)
-    end if
-    retstatus = status%code
-  end subroutine ual_end_action
-
-  subroutine ual_delete_data(ctx, path, retstatus) 
-    use, intrinsic :: ISO_C_BINDING
-    implicit none
-    integer, intent(in) :: ctx
-    character(*), intent(in) :: path
-    integer, intent(out) :: retstatus
-    type(al_status) :: status
-    status = fstatus(c_ual_delete_data(ctx, trim(path)//C_NULL_CHAR))
-    if (status%code.ne.0) then
-       write(*,*) TRIM(status%message)
-    end if
-    retstatus = status%code
-  end subroutine ual_delete_data
-
-  subroutine ual_begin_arraystruct_action(ctx, path, timebase, size, aosctx, retstatus)
-    use, intrinsic :: ISO_C_BINDING
-    implicit none
-    integer, intent(in) :: ctx
-    integer(C_INT) :: csize
-    integer, intent(inout) :: size
-    character(*), intent(in) :: path, timebase
-    integer, intent(out) :: aosctx, retstatus
-    type(al_status) :: status
-    csize = size
-    status = fstatus(c_ual_begin_arraystruct_action(ctx, trim(path)//C_NULL_CHAR, trim(timebase)//C_NULL_CHAR, csize, aosctx))
-    if (status%code.ne.0) then
-       write(*,*) TRIM(status%message)
-    else
-       size = csize
-    end if
-    retstatus = status%code
-  end subroutine ual_begin_arraystruct_action
-
-  subroutine ual_iterate_over_arraystruct(aosctx, step, retstatus)
-    use, intrinsic :: ISO_C_BINDING
-    implicit none
-    integer, intent(in) :: aosctx, step
-    integer, intent(out) :: retstatus
-    type(al_status) :: status
-    status = fstatus(c_ual_iterate_over_arraystruct(aosctx, step))
-    if (status%code.ne.0) then
-       write(*,*) TRIM(status%message)
-    end if
-    retstatus = status%code
-  end subroutine ual_iterate_over_arraystruct
-  
   subroutine hli_begin_global_action(pctx, cponame, rwmode, octx, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
@@ -554,7 +404,7 @@ contains
     end if
     retstatus = status%code
   end subroutine hli_begin_global_action
-  
+
   subroutine hli_begin_slice_action(pctx, cponame, rwmode, time, interpmode, octx, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
@@ -573,7 +423,34 @@ contains
     end if
     retstatus = status%code
   end subroutine hli_begin_slice_action
-  
+
+  subroutine hli_end_action(ctx, retstatus)
+    use, intrinsic :: ISO_C_BINDING
+    implicit none
+    integer, intent(in) :: ctx
+    integer, intent(out) :: retstatus
+    type(al_status) :: status
+    status = fstatus(c_hli_end_action(ctx))
+    if (status%code.ne.0) then
+       write(*,*) TRIM(status%message)
+    end if
+    retstatus = status%code
+  end subroutine hli_end_action
+
+  subroutine ual_delete_data(ctx, path, retstatus) 
+    use, intrinsic :: ISO_C_BINDING
+    implicit none
+    integer, intent(in) :: ctx
+    character(*), intent(in) :: path
+    integer, intent(out) :: retstatus
+    type(al_status) :: status
+    status = fstatus(c_ual_delete_data(ctx, trim(path)//C_NULL_CHAR))
+    if (status%code.ne.0) then
+       write(*,*) TRIM(status%message)
+    end if
+    retstatus = status%code
+  end subroutine ual_delete_data
+
   subroutine hli_begin_arraystruct_action(ctx, path, timebase, size, aosctx, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
@@ -592,6 +469,19 @@ contains
     end if
     retstatus = status%code
   end subroutine hli_begin_arraystruct_action
+
+  subroutine ual_iterate_over_arraystruct(aosctx, step, retstatus)
+    use, intrinsic :: ISO_C_BINDING
+    implicit none
+    integer, intent(in) :: aosctx, step
+    integer, intent(out) :: retstatus
+    type(al_status) :: status
+    status = fstatus(c_ual_iterate_over_arraystruct(aosctx, step))
+    if (status%code.ne.0) then
+       write(*,*) TRIM(status%message)
+    end if
+    retstatus = status%code
+  end subroutine ual_iterate_over_arraystruct
   
   subroutine hli_register_plugin(plugin_name, retstatus)
     use, intrinsic :: ISO_C_BINDING
@@ -752,7 +642,7 @@ contains
     integer :: status
     call ual_close_pulse(pulseCtx, CLOSE_PULSE, "", status)
     if (status.eq.0) then
-       call ual_end_action(pulseCtx, status)
+       call hli_end_action(pulseCtx, status)
     endif
     if (present(retstatus)) retstatus = status
   end subroutine imas_close

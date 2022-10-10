@@ -61,7 +61,7 @@ end if
 
 call get_vect1d_double(opctx, "time", "time", time, dim1, status)
 
-call ual_end_action(opctx, status)
+call hli_end_action(opctx, status)
 
 end subroutine
 
@@ -113,12 +113,12 @@ subroutine ids_serialize(ids_in, buffer, protocol)
     if (status .ne. 0) then
       write(*,*) "SERIALIZE: ERROR closing ASCII backend - ual_close_pulse"
       buffer = ''
-      call ual_end_action(pulsectx, status)
+      call hli_end_action(pulsectx, status)
       return
     end if
-    call ual_end_action(pulsectx, status)
+    call hli_end_action(pulsectx, status)
     if (status .ne. 0) then
-      write(*,*) "SERIALIZE: ERROR closing ASCII backend - ual_end_action"
+      write(*,*) "SERIALIZE: ERROR closing ASCII backend - hli_end_action"
       buffer = ''
       return
     end if
@@ -187,12 +187,12 @@ subroutine ids_deserialize(buffer, ids_out)
     call ual_close_pulse(pulsectx, CLOSE_PULSE, '', status)
     if (status .ne. 0) then
       write(*,*) "SERIALIZE: ERROR closing ASCII backend - ual_close_pulse"
-      call ual_end_action(pulsectx, status)
+      call hli_end_action(pulsectx, status)
       return
     end if
-    call ual_end_action(pulsectx, status)
+    call hli_end_action(pulsectx, status)
     if (status .ne. 0) then
-      write(*,*) "SERIALIZE: ERROR closing ASCII backend - ual_end_action"
+      write(*,*) "SERIALIZE: ERROR closing ASCII backend - hli_end_action"
       return
     end if
 
@@ -321,7 +321,7 @@ subroutine ids_delete_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx
 
   <xsl:apply-templates select="field" mode="DELETE"/>
 
-  call ual_end_action(opctx,status)
+  call hli_end_action(opctx,status)
 
 end subroutine ids_delete_<xsl:value-of select="local:unique_name(@name)"/>
 
@@ -830,7 +830,7 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
     <xsl:with-param name="timedparentexpr" select="''"/>
   </xsl:apply-templates>
 
-  call ual_end_action(opctx, status)
+  call hli_end_action(opctx, status)
   if (present(retstatus)) retstatus = status
 end subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
 
@@ -1057,7 +1057,7 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
            STOP
         endif
      endif
-     call ual_end_action(opctx, status)
+     call hli_end_action(opctx, status)
   endif
 
   if (storedtimemode.eq.IDS_TIME_MODE_UNKNOWN) then
@@ -1099,7 +1099,7 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
     <xsl:with-param name="slice" select="'yes'"/>
   </xsl:apply-templates>
 
-  call ual_end_action(opctx, status)
+  call hli_end_action(opctx, status)
   if (present(retstatus)) retstatus = status
 end subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
 
@@ -1305,7 +1305,7 @@ subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
     <xsl:with-param name="root" select="'yes'"/>
   </xsl:apply-templates>
 
-  call ual_end_action(opctx, status)
+  call hli_end_action(opctx, status)
 
   if (present(retstatus)) retstatus = status
   return
@@ -1418,7 +1418,7 @@ subroutine get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
     <xsl:with-param name="root" select="'yes'"/>
   </xsl:apply-templates>
 
-  call ual_end_action(opctx, status)
+  call hli_end_action(opctx, status)
 
   if (present(retstatus)) retstatus = status
   return
@@ -1823,10 +1823,10 @@ end module
 	  </xsl:apply-templates> 
              call ual_iterate_over_arraystruct(aosctx, 1, status)
           enddo
-          call ual_end_action(aosctx, status)
+          call hli_end_action(aosctx, status)
        else
           write(*,*) "ERROR! with field "//<xsl:value-of select="$fieldpath"/>
-          call ual_end_action(<xsl:value-of select="$contextvar"/>, status)
+          call hli_end_action(<xsl:value-of select="$contextvar"/>, status)
           return
        endif
     endif
@@ -2361,11 +2361,11 @@ end module
        </xsl:apply-templates> 
                 call ual_iterate_over_arraystruct(aosctx, 1, status)
              enddo
-             call ual_end_action(aosctx, status)
+             call hli_end_action(aosctx, status)
           else
              write(*,*) "ERROR! with field "//<xsl:value-of select="$fieldpath"/><xsl:text>&#xa;</xsl:text>
 	     <xsl:if test="$structvar='IDS'">if (present(retstatus)) </xsl:if>retstatus = aosctx
-             call ual_end_action(<xsl:value-of select="$contextvar"/>, status)
+             call hli_end_action(<xsl:value-of select="$contextvar"/>, status)
              return
           endif
     <xsl:if test="@type='dynamic'">endif</xsl:if>
@@ -2810,14 +2810,14 @@ end module
     <xsl:when test="$method='put'">
   if(isErrorCritical(status, <xsl:value-of select="$ctx"/>, <xsl:value-of select="$path"/>)) then
      <xsl:if test="$structvar='IDS'">if (present(retstatus)) </xsl:if>retstatus = status
-     <xsl:if test="$closectx='yes'">call ual_end_action(<xsl:value-of select="$ctx"/>, status)</xsl:if>
+     <xsl:if test="$closectx='yes'">call hli_end_action(<xsl:value-of select="$ctx"/>, status)</xsl:if>
      return
   endif
     </xsl:when>
     <xsl:otherwise>
   if(isErrorCritical(status, <xsl:value-of select="$ctx"/>, <xsl:value-of select="$path"/>)) then
      <xsl:if test="$structvar='IDS'">if (present(retstatus)) </xsl:if>retstatus = status
-     <xsl:if test="$closectx='yes'">call ual_end_action(<xsl:value-of select="$ctx"/>, status)</xsl:if>
+     <xsl:if test="$closectx='yes'">call hli_end_action(<xsl:value-of select="$ctx"/>, status)</xsl:if>
      return
   endif
   <xsl:if test="@type='dynamic'"><xsl:if test="$withtimepath='yes'">endif</xsl:if></xsl:if> <!-- closes the timemode.NE.IDS_TIME_MODE_INDEPENDENT test -->
