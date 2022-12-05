@@ -83,56 +83,34 @@ module ual_low_level_wrap
        character(C_CHAR), dimension(*), intent(in) :: opt
      end function c_ual_close_pulse
 
-     function c_ual_begin_global_action(pctx, dataobjectname, rwmode, opctx) &
-          bind(C,name="ual_begin_global_action")
+     function c_hli_begin_global_action(pctx, dataobjectname, rwmode, opctx) &
+          bind(C,name="hli_begin_global_action")
        use, intrinsic :: ISO_C_BINDING
        import c_al_status_t
-       type(c_al_status_t) :: c_ual_begin_global_action
+       type(c_al_status_t) :: c_hli_begin_global_action
        integer(C_INT), value, intent(in) :: pctx, rwmode
        character(C_CHAR), dimension(*), intent(in) :: dataobjectname
        integer(C_INT), intent(out) :: opctx
-     end function c_ual_begin_global_action
+     end function c_hli_begin_global_action
 
-     function c_ual_begin_slice_action(pctx, dataobjectname, rwmode, time, interpmode, opctx) &
-          bind(C,name="ual_begin_slice_action")
+     function c_hli_begin_slice_action(pctx, dataobjectname, rwmode, time, interpmode, opctx) &
+          bind(C,name="hli_begin_slice_action")
        use, intrinsic :: ISO_C_BINDING
        import c_al_status_t
-       type(c_al_status_t) :: c_ual_begin_slice_action
+       type(c_al_status_t) :: c_hli_begin_slice_action
        integer(C_INT), value, intent(in) :: pctx, rwmode, interpmode
        real(C_DOUBLE), value, intent(in) :: time
        character(C_CHAR), dimension(*), intent(in) :: dataobjectname
        integer(C_INT), intent(out) :: opctx
-     end function c_ual_begin_slice_action
+     end function c_hli_begin_slice_action
 
-     function c_ual_end_action(ctx) &
-          bind(C,name="ual_end_action")
+     function c_hli_end_action(ctx) &
+          bind(C,name="hli_end_action")
        use, intrinsic :: ISO_C_BINDING
        import c_al_status_t
-       type(c_al_status_t) :: c_ual_end_action
+       type(c_al_status_t) :: c_hli_end_action
        integer(C_INT), value, intent(in) :: ctx
-     end function c_ual_end_action
-
-     function c_ual_write_data(ctx, fieldname, timebasename, data, datatype, dim, size) &
-          bind(C,name="ual_write_data")
-       use, intrinsic :: ISO_C_BINDING
-       import c_al_status_t
-       type(c_al_status_t) :: c_ual_write_data
-       integer(C_INT), value, intent(in) :: ctx, datatype, dim
-       character(C_CHAR), dimension(*), intent(in) :: fieldname, timebasename
-       type(C_PTR), value, intent(in) :: data
-       type(C_PTR), value, intent(in) :: size
-     end function c_ual_write_data
-
-     function c_ual_read_data(ctx, fieldname, timebase, data, datatype, dim, size) &
-          bind(C,name="ual_read_data")
-       use, intrinsic :: ISO_C_BINDING
-       import c_al_status_t
-       type(c_al_status_t) :: c_ual_read_data
-       integer(C_INT), value, intent(in) :: ctx, datatype, dim
-       character(C_CHAR), dimension(*), intent(in) :: fieldname, timebase
-       type(C_PTR), intent(out) :: data
-       type(C_PTR), value, intent(in) :: size
-     end function c_ual_read_data
+     end function c_hli_end_action
 
      function c_ual_delete_data(ctx, path) &
           bind(C,name="ual_delete_data")
@@ -143,17 +121,6 @@ module ual_low_level_wrap
        character(C_CHAR), dimension(*), intent(in) :: path
      end function c_ual_delete_data
 
-     function c_ual_begin_arraystruct_action(ctx, path, timebase, size, aosctx) &
-          bind(C,name="ual_begin_arraystruct_action")
-       use, intrinsic :: ISO_C_BINDING
-       import c_al_status_t
-       type(c_al_status_t) :: c_ual_begin_arraystruct_action
-       integer(C_INT), value, intent(in) :: ctx
-       integer(C_INT), intent(inout) :: size
-       character(C_CHAR), dimension(*), intent(in) :: path, timebase
-       integer(C_INT), intent(out) :: aosctx
-     end function c_ual_begin_arraystruct_action
-
      function c_ual_iterate_over_arraystruct(aosctx, step) &
           bind(C,name="ual_iterate_over_arraystruct")
        use, intrinsic :: ISO_C_BINDING
@@ -161,10 +128,102 @@ module ual_low_level_wrap
        type(c_al_status_t) :: c_ual_iterate_over_arraystruct
        integer(C_INT), value, intent(in) :: aosctx, step
      end function c_ual_iterate_over_arraystruct
+     
+     function c_hli_read_data(ctx, fieldname, timebase, data, datatype, dim, size) &
+          bind(C,name="hli_read_data")
+       use, intrinsic :: ISO_C_BINDING
+       import c_al_status_t
+       type(c_al_status_t) :: c_hli_read_data
+       integer(C_INT), value, intent(in) :: ctx, datatype, dim
+       character(C_CHAR), dimension(*), intent(in) :: fieldname, timebase
+       type(C_PTR), intent(out) :: data
+       type(C_PTR), value, intent(in) :: size
+     end function c_hli_read_data
+     
+     function c_hli_write_data(ctx, fieldname, timebasename, data, datatype, dim, size) &
+          bind(C,name="hli_write_data")
+       use, intrinsic :: ISO_C_BINDING
+       import c_al_status_t
+       type(c_al_status_t) :: c_hli_write_data
+       integer(C_INT), value, intent(in) :: ctx, datatype, dim
+       character(C_CHAR), dimension(*), intent(in) :: fieldname, timebasename
+       type(C_PTR), value, intent(in) :: data
+       type(C_PTR), value, intent(in) :: size
+     end function c_hli_write_data
+     
+     function c_hli_begin_arraystruct_action(ctx, path, timebase, size, aosctx) &
+          bind(C,name="hli_begin_arraystruct_action")
+       use, intrinsic :: ISO_C_BINDING
+       import c_al_status_t
+       type(c_al_status_t) :: c_hli_begin_arraystruct_action
+       integer(C_INT), value, intent(in) :: ctx
+       integer(C_INT), intent(inout) :: size
+       character(C_CHAR), dimension(*), intent(in) :: path, timebase
+       integer(C_INT), intent(out) :: aosctx
+     end function c_hli_begin_arraystruct_action
+     
+     function c_hli_register_plugin(plugin_name) &
+          bind(C,name="hli_register_plugin")
+       use, intrinsic :: ISO_C_BINDING
+       import c_al_status_t
+       type(c_al_status_t) :: c_hli_register_plugin
+       character(C_CHAR), dimension(*), intent(in) :: plugin_name
+     end function c_hli_register_plugin
+     
+     function c_hli_unregister_plugin(plugin_name) &
+          bind(C,name="hli_unregister_plugin")
+       use, intrinsic :: ISO_C_BINDING
+       import c_al_status_t
+       type(c_al_status_t) :: c_hli_unregister_plugin
+       character(C_CHAR), dimension(*), intent(in) :: plugin_name
+     end function c_hli_unregister_plugin
+     
+     function c_hli_bind_plugin(path, plugin_name) &
+          bind(C,name="hli_bind_plugin")
+       use, intrinsic :: ISO_C_BINDING
+       import c_al_status_t
+       type(c_al_status_t) :: c_hli_bind_plugin
+       character(C_CHAR), dimension(*), intent(in) :: path, plugin_name
+     end function c_hli_bind_plugin
+     
+     function c_hli_unbind_plugin(path, plugin_name) &
+          bind(C,name="hli_unbind_plugin")
+       use, intrinsic :: ISO_C_BINDING
+       import c_al_status_t
+       type(c_al_status_t) :: c_hli_unbind_plugin
+       character(C_CHAR), dimension(*), intent(in) :: path, plugin_name
+     end function c_hli_unbind_plugin
+
+    function c_hli_setvalue_int_scalar_parameter_plugin(parameter_name, parameter_value, plugin_name) &
+          bind(C,name="hli_setvalue_int_scalar_parameter_plugin")
+       use, intrinsic :: ISO_C_BINDING
+       import c_al_status_t
+       type(c_al_status_t) :: c_hli_setvalue_int_scalar_parameter_plugin
+       integer(C_INT), value, intent(in) :: parameter_value
+       character(C_CHAR), dimension(*), intent(in) :: parameter_name, plugin_name
+     end function c_hli_setvalue_int_scalar_parameter_plugin
+     
+     function c_hli_setvalue_double_scalar_parameter_plugin(parameter_name, parameter_value, plugin_name) &
+          bind(C,name="hli_setvalue_double_scalar_parameter_plugin")
+       use, intrinsic :: ISO_C_BINDING
+       import c_al_status_t
+       type(c_al_status_t) :: c_hli_setvalue_double_scalar_parameter_plugin
+       real(C_DOUBLE), value, intent(in) :: parameter_value
+       character(C_CHAR), dimension(*), intent(in) :: parameter_name, plugin_name
+     end function c_hli_setvalue_double_scalar_parameter_plugin
+     
+     function c_hli_setvalue_parameter_plugin(parameter_name, datatype, dim, size, parameter_data, plugin_name) &
+          bind(C,name="hli_setvalue_parameter_plugin")
+       use, intrinsic :: ISO_C_BINDING
+       import c_al_status_t
+       type(c_al_status_t) :: c_hli_setvalue_parameter_plugin
+       character(C_CHAR), dimension(*), intent(in) :: parameter_name, plugin_name
+       integer(C_INT), value, intent(in) :: datatype, dim
+       type(C_PTR), value, intent(in) :: size
+       type(C_PTR), intent(in) :: parameter_data
+     end function c_hli_setvalue_parameter_plugin
 
   end interface
-
-
 
 contains 
 
@@ -328,7 +387,7 @@ contains
     if (present(retstatus)) retstatus = status%code
   end subroutine ual_close_pulse
 
-  subroutine ual_begin_global_action(pctx, cponame, rwmode, octx, retstatus)
+  subroutine hli_begin_global_action(pctx, cponame, rwmode, octx, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: pctx, rwmode
@@ -337,16 +396,16 @@ contains
     integer, intent(out) :: retstatus
     integer(C_INT) :: cctx
     type(al_status) :: status
-    status = fstatus(c_ual_begin_global_action(pctx, trim(cponame)//C_NULL_CHAR, rwmode, cctx))
+    status = fstatus(c_hli_begin_global_action(pctx, trim(cponame)//C_NULL_CHAR, rwmode, cctx))
     if (status%code.ne.0) then
        write(*,*) TRIM(status%message)
     else
        octx = cctx
     end if
     retstatus = status%code
-  end subroutine ual_begin_global_action
+  end subroutine hli_begin_global_action
 
-  subroutine ual_begin_slice_action(pctx, cponame, rwmode, time, interpmode, octx, retstatus)
+  subroutine hli_begin_slice_action(pctx, cponame, rwmode, time, interpmode, octx, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: pctx, rwmode, interpmode
@@ -356,27 +415,27 @@ contains
     integer, intent(out) :: retstatus
     integer(C_INT) :: cctx
     type(al_status) :: status
-    status = fstatus(c_ual_begin_slice_action(pctx, trim(cponame)//C_NULL_CHAR, rwmode, time, interpmode, cctx))
+    status = fstatus(c_hli_begin_slice_action(pctx, trim(cponame)//C_NULL_CHAR, rwmode, time, interpmode, cctx))
     if (status%code.ne.0) then
        write(*,*) TRIM(status%message)
     else
        octx = cctx
     end if
     retstatus = status%code
-  end subroutine ual_begin_slice_action
+  end subroutine hli_begin_slice_action
 
-  subroutine ual_end_action(ctx, retstatus)
+  subroutine hli_end_action(ctx, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: ctx
     integer, intent(out) :: retstatus
     type(al_status) :: status
-    status = fstatus(c_ual_end_action(ctx))
+    status = fstatus(c_hli_end_action(ctx))
     if (status%code.ne.0) then
        write(*,*) TRIM(status%message)
     end if
     retstatus = status%code
-  end subroutine ual_end_action
+  end subroutine hli_end_action
 
   subroutine ual_delete_data(ctx, path, retstatus) 
     use, intrinsic :: ISO_C_BINDING
@@ -392,7 +451,7 @@ contains
     retstatus = status%code
   end subroutine ual_delete_data
 
-  subroutine ual_begin_arraystruct_action(ctx, path, timebase, size, aosctx, retstatus)
+  subroutine hli_begin_arraystruct_action(ctx, path, timebase, size, aosctx, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: ctx
@@ -402,14 +461,14 @@ contains
     integer, intent(out) :: aosctx, retstatus
     type(al_status) :: status
     csize = size
-    status = fstatus(c_ual_begin_arraystruct_action(ctx, trim(path)//C_NULL_CHAR, trim(timebase)//C_NULL_CHAR, csize, aosctx))
+    status = fstatus(c_hli_begin_arraystruct_action(ctx, trim(path)//C_NULL_CHAR, trim(timebase)//C_NULL_CHAR, csize, aosctx))
     if (status%code.ne.0) then
        write(*,*) TRIM(status%message)
     else
        size = csize
     end if
     retstatus = status%code
-  end subroutine ual_begin_arraystruct_action
+  end subroutine hli_begin_arraystruct_action
 
   subroutine ual_iterate_over_arraystruct(aosctx, step, retstatus)
     use, intrinsic :: ISO_C_BINDING
@@ -423,6 +482,102 @@ contains
     end if
     retstatus = status%code
   end subroutine ual_iterate_over_arraystruct
+  
+  subroutine hli_register_plugin(plugin_name, retstatus)
+    use, intrinsic :: ISO_C_BINDING
+    implicit none
+    integer, intent(out) :: retstatus
+    character(*), intent(in) :: plugin_name
+    type(al_status) :: status
+    status = fstatus(c_hli_register_plugin(trim(plugin_name)//C_NULL_CHAR))
+    if (status%code.ne.0) then
+       write(*,*) TRIM(status%message)
+    end if
+    retstatus = status%code
+  end subroutine hli_register_plugin
+  
+  subroutine hli_unregister_plugin(plugin_name, retstatus)
+    use, intrinsic :: ISO_C_BINDING
+    implicit none
+    integer, intent(out) :: retstatus
+    character(*), intent(in) :: plugin_name
+    type(al_status) :: status
+    status = fstatus(c_hli_unregister_plugin(trim(plugin_name)//C_NULL_CHAR))
+    if (status%code.ne.0) then
+       write(*,*) TRIM(status%message)
+    end if
+    retstatus = status%code
+  end subroutine hli_unregister_plugin
+  
+   subroutine hli_bind_plugin(path, plugin_name, retstatus)
+    use, intrinsic :: ISO_C_BINDING
+    implicit none
+    integer, intent(out) :: retstatus
+    character(*), intent(in) :: path, plugin_name
+    type(al_status) :: status
+    status = fstatus(c_hli_bind_plugin(trim(path)//C_NULL_CHAR, trim(plugin_name)//C_NULL_CHAR))
+    if (status%code.ne.0) then
+       write(*,*) TRIM(status%message)
+    end if
+    retstatus = status%code
+  end subroutine hli_bind_plugin
+  
+  subroutine hli_unbind_plugin(path, plugin_name, retstatus)
+    use, intrinsic :: ISO_C_BINDING
+    implicit none
+    integer, intent(out) :: retstatus
+    character(*), intent(in) :: path, plugin_name
+    type(al_status) :: status
+    status = fstatus(c_hli_unbind_plugin(trim(path)//C_NULL_CHAR, trim(plugin_name)//C_NULL_CHAR))
+    if (status%code.ne.0) then
+       write(*,*) TRIM(status%message)
+    end if
+    retstatus = status%code
+  end subroutine hli_unbind_plugin
+  
+  subroutine hli_setvalue_int_scalar_parameter_plugin(parameter_name, parameter_value, plugin_name, retstatus)
+    use, intrinsic :: ISO_C_BINDING
+    implicit none
+    integer, intent(out) :: retstatus
+    character(*), intent(in) :: parameter_name, plugin_name
+    integer(C_INT), value, intent(in) :: parameter_value
+    type(al_status) :: status
+    status = fstatus(c_hli_setvalue_int_scalar_parameter_plugin(trim(parameter_name)//C_NULL_CHAR, parameter_value, trim(plugin_name)//C_NULL_CHAR))
+    if (status%code.ne.0) then
+       write(*,*) TRIM(status%message)
+    end if
+    retstatus = status%code
+  end subroutine hli_setvalue_int_scalar_parameter_plugin
+  
+  subroutine hli_setvalue_double_scalar_parameter_plugin(parameter_name, parameter_value, plugin_name, retstatus)
+    use, intrinsic :: ISO_C_BINDING
+    implicit none
+    integer, intent(out) :: retstatus
+    character(*), intent(in) :: parameter_name, plugin_name
+    real(C_DOUBLE), value, intent(in) :: parameter_value
+    type(al_status) :: status
+    status = fstatus(c_hli_setvalue_double_scalar_parameter_plugin(trim(parameter_name)//C_NULL_CHAR, parameter_value, trim(plugin_name)//C_NULL_CHAR))
+    if (status%code.ne.0) then
+       write(*,*) TRIM(status%message)
+    end if
+    retstatus = status%code
+  end subroutine hli_setvalue_double_scalar_parameter_plugin
+  
+  subroutine hli_setvalue_parameter_plugin(parameter_name, datatype, dim, size, parameter_data, plugin_name, retstatus)
+    use, intrinsic :: ISO_C_BINDING
+    implicit none
+    integer, intent(out) :: retstatus
+    character(*), intent(in) :: parameter_name, plugin_name
+    integer(C_INT), value, intent(in) :: datatype, dim
+    type(C_PTR), value, intent(in) :: size
+    type(C_PTR), intent(in) :: parameter_data
+    type(al_status) :: status
+    status = fstatus(c_hli_setvalue_parameter_plugin(trim(parameter_name)//C_NULL_CHAR, datatype, dim, size, parameter_data, trim(plugin_name)//C_NULL_CHAR))
+    if (status%code.ne.0) then
+       write(*,*) TRIM(status%message)
+    end if
+    retstatus = status%code
+  end subroutine hli_setvalue_parameter_plugin
 
 
 !!! old API !!!
@@ -487,7 +642,7 @@ contains
     integer :: status
     call ual_close_pulse(pulseCtx, CLOSE_PULSE, "", status)
     if (status.eq.0) then
-       call ual_end_action(pulseCtx, status)
+       call hli_end_action(pulseCtx, status)
     endif
     if (present(retstatus)) retstatus = status
   end subroutine imas_close
@@ -520,57 +675,67 @@ contains
     integer, intent(out) :: retstatus
     type(C_PTR) :: pdata
     type(al_status) :: status
-    pdata = C_LOC(data)
-    call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-    status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, pdata, CHAR_DATA, 0, C_NULL_PTR))
+	pdata = C_LOC(data)
+	call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+	status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, pdata, CHAR_DATA, 0, C_NULL_PTR))
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
   end subroutine put_char
 
-  subroutine put_int(opCtx, idsName, fieldPath, timebasePath, data, lifeCycleStatus, retstatus)
+  subroutine put_int(opCtx, idsName, fieldPath, timebasePath, data, valid_data, lifeCycleStatus, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     integer, intent(in), target :: data
+    logical, intent(in) :: valid_data
     integer, intent(out) :: retstatus
     type(C_PTR) :: pdata
     type(al_status) :: status
-    pdata = C_LOC(data)
-    call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-    status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, pdata, INTEGER_DATA, 0, C_NULL_PTR))
+    if (valid_data) then
+       call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+    end if
+	pdata = C_LOC(data)
+	call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+	status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, pdata, INTEGER_DATA, 0, C_NULL_PTR))
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
   end subroutine put_int
 
-  subroutine put_double(opCtx, idsName, fieldPath, timebasePath, data, lifeCycleStatus, retstatus)
+  subroutine put_double(opCtx, idsName, fieldPath, timebasePath, data, valid_data, lifeCycleStatus, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     real(8), intent(in), target :: data
+    logical, intent(in) :: valid_data
     integer, intent(out) :: retstatus
     type(C_PTR) :: pdata
     type(al_status) :: status
-    pdata = C_LOC(data)
-    call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-    status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, pdata, DOUBLE_DATA, 0, C_NULL_PTR))
+    if (valid_data) then
+       call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+    end if
+	pdata = C_LOC(data)
+	status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, pdata, DOUBLE_DATA, 0, C_NULL_PTR))
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
   end subroutine put_double
 
-  subroutine put_complex(opCtx, idsName, fieldPath, timebasePath, data, lifeCycleStatus, retstatus)
+  subroutine put_complex(opCtx, idsName, fieldPath, timebasePath, data, valid_data, lifeCycleStatus, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     complex(8), intent(in), target :: data
+    logical, intent(in) :: valid_data
     integer, intent(out) :: retstatus
     type(C_PTR) :: pdata
     type(al_status) :: status
-    pdata = C_LOC(data)
-    call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-    status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, pdata, COMPLEX_DATA, 0, C_NULL_PTR))
+    if (valid_data) then
+       call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+    end if
+	pdata = C_LOC(data)
+	status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, pdata, COMPLEX_DATA, 0, C_NULL_PTR))
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
   end subroutine put_complex
@@ -594,438 +759,645 @@ contains
     cptr = C_LOC(cdata(1))
     csize = C_LOC(dsize(1))
     call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-    status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, CHAR_DATA, 1, csize))
+    status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, CHAR_DATA, 1, csize))
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
     deallocate(cdata)
   end subroutine put_string
-
-  subroutine put_vect1d_int(opCtx, idsName, fieldPath, timebasePath, data, dim1, lifeCycleStatus, retstatus)
+  
+  subroutine put_empty_string(opCtx, idsName, fieldPath, timebasePath, lifeCycleStatus, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
-    integer, intent(in) :: opCtx, dim1
+    integer, intent(in) :: opCtx
+    character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
+    integer, intent(out) :: retstatus
+    type(al_status) :: status
+    status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, CHAR_DATA, 1, C_NULL_PTR))
+    if (status%code.ne.0) write(*,*) TRIM(status%message)
+    retstatus = status%code
+  end subroutine put_empty_string
+
+  subroutine put_vect1d_int(opCtx, idsName, fieldPath, timebasePath, data, rank, lifeCycleStatus, retstatus)
+    use, intrinsic :: ISO_C_BINDING
+    implicit none
+    integer, intent(in) :: opCtx, rank
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     integer, dimension(:), pointer :: data
     integer, intent(out) :: retstatus
     type(C_PTR) :: cptr, csize
     integer(C_INT), target :: dsize(1)
+    integer :: dim1
     type(al_status) :: status
-    dsize = (/ dim1 /)
-    cptr = C_LOC(data(1))    
-    csize = C_LOC(dsize)
-    call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-    status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, 1, csize))
+    if (associated(data) .eqv. .false.) then
+        status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, INTEGER_DATA, rank, C_NULL_PTR))
+    else 
+        dim1 = size(data, 1)   
+		dsize = (/ dim1 /)
+		cptr = C_LOC(data(1))    
+		csize = C_LOC(dsize)
+		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+		status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, rank, csize))
+    end if
     if (status%code.ne.0) write(*,*) TRIM(status%message)
-    retstatus = status%code
+		retstatus = status%code
   end subroutine put_vect1d_int
 
-  subroutine put_vect1d_double(opCtx, idsName, fieldPath, timebasePath, data, dim1, lifeCycleStatus, retstatus)
+  subroutine put_vect1d_double(opCtx, idsName, fieldPath, timebasePath, data, rank, lifeCycleStatus, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
-    integer, intent(in) :: opCtx, dim1
+    integer, intent(in) :: opCtx, rank
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     real(8), dimension(:), pointer :: data
     integer, intent(out) :: retstatus
+    integer :: dim1
     type(C_PTR) :: cptr, csize
     integer(C_INT), target :: dsize(1)
     type(al_status) :: status
-    dsize = (/ dim1 /)
-    cptr = C_LOC(data(1))
-    csize = C_LOC(dsize(1))
-    call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-    status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, 1, csize))
+    if (associated(data) .eqv. .false.) then
+		status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, DOUBLE_DATA, rank, C_NULL_PTR))
+    else
+        dim1 = size(data, 1)
+		dsize = (/ dim1 /)
+		cptr = C_LOC(data(1))
+		csize = C_LOC(dsize(1))
+		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+		status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, rank, csize))
+	end if
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
   end subroutine put_vect1d_double
 
-  subroutine put_vect1d_complex(opCtx, idsName, fieldPath, timebasePath, data, dim1, lifeCycleStatus, retstatus)
+  subroutine put_vect1d_complex(opCtx, idsName, fieldPath, timebasePath, data, rank, lifeCycleStatus, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
-    integer, intent(in) :: opCtx, dim1
+    integer, intent(in) :: opCtx, rank
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     complex(8), dimension(:), pointer :: data
     integer, intent(out) :: retstatus
+    integer :: dim1
     type(C_PTR) :: cptr, csize
     integer(C_INT), target :: dsize(1)
     type(al_status) :: status
-    dsize = (/ dim1 /)
-    cptr = C_LOC(data(1))
-    csize = C_LOC(dsize(1))
-    call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-    status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, 1, csize))
+    if (associated(data) .eqv. .false.) then
+        status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, COMPLEX_DATA, rank, C_NULL_PTR))
+    else
+        dim1 = size(data, 1)
+		dsize = (/ dim1 /)
+		cptr = C_LOC(data(1))
+		csize = C_LOC(dsize(1))
+		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+		status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, rank, csize))
+	end if
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
   end subroutine put_vect1d_complex
 
-  subroutine put_vect1d_string(opCtx, idsName, fieldPath, timebasePath, data, dim1, lifeCycleStatus, retstatus)
+  subroutine put_vect1d_string(opCtx, idsName, fieldPath, timebasePath, data, rank, lifeCycleStatus, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none 
-    integer, intent(in) :: opCtx, dim1
+    integer, intent(in) :: opCtx, rank
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     character(132), dimension(:), pointer :: data
     integer, intent(out) :: retstatus
+    integer :: dim1
     type(C_PTR) :: cptr, csize
     character(C_CHAR), dimension(:,:), pointer :: cdata
     integer(C_INT) :: csize1, csize2
     integer :: i,j
     integer(C_INT), target :: dsize(2)
     type(al_status) :: status
-    csize1 = dim1
-    csize2 = MAXVAL(len_trim(data(1:dim1)))
-    dsize = (/ csize1, csize2 /)
-    allocate(cdata(csize1, csize2))
-    do i=1,csize1
-       do j=1,csize2
-          cdata(i,j) = data(i)(j:j)
-       end do
-    end do
-    cptr = C_LOC(cdata(1,1))
-    csize = C_LOC(dsize(1))
-    call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-    status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, CHAR_DATA, 2, csize))
-    if (status%code.ne.0) write(*,*) TRIM(status%message)
-    retstatus = status%code
-    deallocate(cdata)
+    if (associated(data) .eqv. .false.) then
+        status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, CHAR_DATA, rank + 1, C_NULL_PTR))
+    else
+        dim1 = size(data, 1)
+		csize1 = dim1
+		csize2 = MAXVAL(len_trim(data(1:dim1)))
+		dsize = (/ csize1, csize2 /)
+		allocate(cdata(csize1, csize2))
+		do i=1,csize1
+		   do j=1,csize2
+			  cdata(i,j) = data(i)(j:j)
+		   end do
+		end do
+		cptr = C_LOC(cdata(1,1))
+		csize = C_LOC(dsize(1))
+		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+		status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, CHAR_DATA, rank + 1, csize))
+		deallocate(cdata)
+   end if
+   if (status%code.ne.0) write(*,*) TRIM(status%message)
+		retstatus = status%code
   end subroutine put_vect1d_string
 
-  subroutine put_vect2d_int(opCtx, idsName, fieldPath, timebasePath, data, dim1, dim2, lifeCycleStatus, retstatus)
+  subroutine put_vect2d_int(opCtx, idsName, fieldPath, timebasePath, data, rank, lifeCycleStatus, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
-    integer, intent(in) :: opCtx, dim1, dim2
+    integer, intent(in) :: opCtx, rank
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     integer, dimension(:,:), pointer :: data
     integer, intent(out) :: retstatus
+    integer :: dim1, dim2
     type(C_PTR) :: cptr, csize
     integer(C_INT), target :: dsize(2)
     type(al_status) :: status
-    dsize = (/ dim1, dim2 /)
-    cptr = C_LOC(data(1,1))
-    csize = C_LOC(dsize(1))
-    call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-    status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, 2, csize))
+    if (associated(data) .eqv. .false.) then
+        status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, INTEGER_DATA, rank, C_NULL_PTR))
+    else
+		dim1 = size(data, 1)
+		dim2 = size(data, 2)
+		dsize = (/ dim1, dim2 /)
+		cptr = C_LOC(data(1,1))
+		csize = C_LOC(dsize(1))
+		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+		status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, rank, csize))
+	end if
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
   end subroutine put_vect2d_int
 
-  subroutine put_vect2d_double(opCtx, idsName, fieldPath, timebasePath, data, dim1, dim2, lifeCycleStatus, retstatus)
+  subroutine put_vect2d_double(opCtx, idsName, fieldPath, timebasePath, data, rank, lifeCycleStatus, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
-    integer, intent(in) :: opCtx, dim1, dim2
+    integer, intent(in) :: opCtx, rank
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     real(8), dimension(:,:), pointer :: data
     integer, intent(out) :: retstatus
+    integer :: dim1, dim2
     type(C_PTR) :: cptr, csize
     integer(C_INT), target :: dsize(2)
     type(al_status) :: status
-    dsize = (/ dim1, dim2 /)
-    cptr = C_LOC(data(1,1))
-    csize = C_LOC(dsize(1))
-    call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-    status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, 2, csize))
+    if (associated(data) .eqv. .false.) then
+        status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, DOUBLE_DATA, rank, C_NULL_PTR))
+    else
+		dim1 = size(data, 1)
+		dim2 = size(data, 2)
+		dsize = (/ dim1, dim2 /)
+		cptr = C_LOC(data(1,1))
+		csize = C_LOC(dsize(1))
+		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+		status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, rank, csize))
+	end if
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
   end subroutine put_vect2d_double
 
-  subroutine put_vect2d_complex(opCtx, idsName, fieldPath, timebasePath, data, dim1, dim2, lifeCycleStatus, retstatus)
+  subroutine put_vect2d_complex(opCtx, idsName, fieldPath, timebasePath, data, rank, lifeCycleStatus, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
-    integer, intent(in) :: opCtx, dim1, dim2
+    integer, intent(in) :: opCtx, rank
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     complex(8), dimension(:,:), pointer :: data
     integer, intent(out) :: retstatus
+    integer :: dim1, dim2
     type(C_PTR) :: cptr, csize
     integer(C_INT), target :: dsize(2)
     type(al_status) :: status
-    dsize = (/ dim1, dim2 /)
-    cptr = C_LOC(data(1,1))
-    csize = C_LOC(dsize(1))
-    call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-    status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, 2, csize))
+    if (associated(data) .eqv. .false.) then
+        status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, COMPLEX_DATA, rank, C_NULL_PTR))
+    else
+		dim1 = size(data, 1)
+		dim2 = size(data, 2)
+		dsize = (/ dim1, dim2 /)
+		cptr = C_LOC(data(1,1))
+		csize = C_LOC(dsize(1))
+		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+		status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, rank, csize))
+    end if
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
   end subroutine put_vect2d_complex
 
-  subroutine put_vect3d_int(opCtx, idsName, fieldPath, timebasePath, data, dim1, dim2, dim3, lifeCycleStatus, retstatus)
+  subroutine put_vect3d_int(opCtx, idsName, fieldPath, timebasePath, data, rank, lifeCycleStatus, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
-    integer, intent(in) :: opCtx, dim1, dim2, dim3
+    integer, intent(in) :: opCtx, rank
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     integer, dimension(:,:,:), pointer :: data
     integer, intent(out) :: retstatus
+    integer :: dim1, dim2, dim3
     type(C_PTR) :: cptr, csize
     integer(C_INT), target :: dsize(3)
     type(al_status) :: status
-    dsize = (/ dim1, dim2, dim3 /)
-    cptr = C_LOC(data(1,1,1))
-    csize = C_LOC(dsize(1))
-    call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-    status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, 3, csize))
+    if (associated(data) .eqv. .false.) then
+		status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, INTEGER_DATA, rank, C_NULL_PTR))
+    else
+		dim1 = size(data, 1)
+		dim2 = size(data, 2)
+		dim3 = size(data, 3)
+		dsize = (/ dim1, dim2, dim3 /)
+		cptr = C_LOC(data(1,1,1))
+		csize = C_LOC(dsize(1))
+		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+		status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, rank, csize))
+    end if
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
   end subroutine put_vect3d_int
 
-  subroutine put_vect3d_double(opCtx, idsName, fieldPath, timebasePath, data, dim1, dim2, dim3, lifeCycleStatus, retstatus)
+  subroutine put_vect3d_double(opCtx, idsName, fieldPath, timebasePath, data, rank, lifeCycleStatus, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
-    integer, intent(in) :: opCtx, dim1, dim2, dim3
+    integer, intent(in) :: opCtx, rank
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     real(8), dimension(:,:,:), pointer :: data
     integer, intent(out) :: retstatus
+    integer :: dim1, dim2, dim3
     type(C_PTR) :: cptr, csize
     integer(C_INT), target :: dsize(3)
     type(al_status) :: status
-    dsize = (/ dim1, dim2, dim3 /)
-    cptr = C_LOC(data(1,1,1))
-    csize = C_LOC(dsize(1))
-    call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-    status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, 3, csize))
+    if (associated(data) .eqv. .false.) then
+        status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, DOUBLE_DATA, rank, C_NULL_PTR))
+    else
+		dim1 = size(data, 1)
+		dim2 = size(data, 2)
+		dim3 = size(data, 3)
+		dsize = (/ dim1, dim2, dim3 /)
+		cptr = C_LOC(data(1,1,1))
+		csize = C_LOC(dsize(1))
+		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+		status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, rank, csize))
+	end if
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
   end subroutine put_vect3d_double
 
-  subroutine put_vect3d_complex(opCtx, idsName, fieldPath, timebasePath, data, dim1, dim2, dim3, lifeCycleStatus, retstatus)
+  subroutine put_vect3d_complex(opCtx, idsName, fieldPath, timebasePath, data, rank, lifeCycleStatus, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
-    integer, intent(in) :: opCtx, dim1, dim2, dim3
+    integer, intent(in) :: opCtx, rank
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     complex(8), dimension(:,:,:), pointer :: data
     integer, intent(out) :: retstatus
+    integer :: dim1, dim2, dim3
     type(C_PTR) :: cptr, csize
     integer(C_INT), target :: dsize(3)
     type(al_status) :: status
-    dsize = (/ dim1, dim2, dim3 /)
-    cptr = C_LOC(data(1,1,1))
-    csize = C_LOC(dsize(1))
-    call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-    status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, 3, csize))
+    if (associated(data) .eqv. .false.) then
+        status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, COMPLEX_DATA, rank, C_NULL_PTR))
+    else
+		dim1 = size(data, 1)
+		dim2 = size(data, 2)
+		dim3 = size(data, 3)
+		dsize = (/ dim1, dim2, dim3 /)
+		cptr = C_LOC(data(1,1,1))
+		csize = C_LOC(dsize(1))
+		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+		status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, rank, csize))
+	end if
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
   end subroutine put_vect3d_complex
 
-  subroutine put_vect4d_int(opCtx, idsName, fieldPath, timebasePath, data, dim1, dim2, dim3, dim4, lifeCycleStatus, retstatus)
+  subroutine put_vect4d_int(opCtx, idsName, fieldPath, timebasePath, data, rank, lifeCycleStatus, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
-    integer, intent(in) :: opCtx, dim1, dim2, dim3, dim4
+    integer, intent(in) :: opCtx, rank
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     integer, dimension(:,:,:,:), pointer :: data
     integer, intent(out) :: retstatus
+    integer :: dim1, dim2, dim3, dim4
     type(C_PTR) :: cptr, csize
     integer(C_INT), target :: dsize(4)
     type(al_status) :: status
-    dsize = (/ dim1, dim2, dim3, dim4 /)
-    cptr = C_LOC(data(1,1,1,1))
-    csize = C_LOC(dsize(1))
-    call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-    status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, 4, csize))
+    if (associated(data) .eqv. .false.) then
+        status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, INTEGER_DATA, rank, C_NULL_PTR))
+    else
+		dim1 = size(data, 1)
+		dim2 = size(data, 2)
+		dim3 = size(data, 3)
+		dim4 = size(data, 4)
+		dsize = (/ dim1, dim2, dim3, dim4 /)
+		cptr = C_LOC(data(1,1,1,1))
+		csize = C_LOC(dsize(1))
+		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+		status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, rank, csize))
+	end if
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
   end subroutine put_vect4d_int
 
-  subroutine put_vect4d_double(opCtx, idsName, fieldPath, timebasePath, data, dim1, dim2, dim3, dim4, lifeCycleStatus, retstatus)
+  subroutine put_vect4d_double(opCtx, idsName, fieldPath, timebasePath, data, rank, lifeCycleStatus, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
-    integer, intent(in) :: opCtx, dim1, dim2, dim3, dim4
+    integer, intent(in) :: opCtx, rank
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     real(8), dimension(:,:,:,:), pointer :: data
     integer, intent(out) :: retstatus
+    integer :: dim1, dim2, dim3, dim4
     type(C_PTR) :: cptr, csize
     integer(C_INT), target :: dsize(4)
     type(al_status) :: status
-    dsize = (/ dim1, dim2, dim3, dim4 /)
-    cptr = C_LOC(data(1,1,1,1))
-    csize = C_LOC(dsize(1))
-    call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-    status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, 4, csize))
+    if (associated(data) .eqv. .false.) then
+		status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, DOUBLE_DATA, rank, C_NULL_PTR))
+    else
+		dim1 = size(data, 1)
+		dim2 = size(data, 2)
+		dim3 = size(data, 3)
+		dim4 = size(data, 4)
+		dsize = (/ dim1, dim2, dim3, dim4 /)
+		cptr = C_LOC(data(1,1,1,1))
+		csize = C_LOC(dsize(1))
+		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+		status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, rank, csize))
+    end if
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
   end subroutine put_vect4d_double
 
-  subroutine put_vect4d_complex(opCtx, idsName, fieldPath, timebasePath, data, dim1, dim2, dim3, dim4, lifeCycleStatus, retstatus)
+  subroutine put_vect4d_complex(opCtx, idsName, fieldPath, timebasePath, data, rank, lifeCycleStatus, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
-    integer, intent(in) :: opCtx, dim1, dim2, dim3, dim4
+    integer, intent(in) :: opCtx, rank
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     complex(8), dimension(:,:,:,:), pointer :: data
     integer, intent(out) :: retstatus
+    integer :: dim1, dim2, dim3, dim4
     type(C_PTR) :: cptr, csize
     integer(C_INT), target :: dsize(4)
     type(al_status) :: status
-    dsize = (/ dim1, dim2, dim3, dim4 /)
-    cptr = C_LOC(data(1,1,1,1))
-    csize = C_LOC(dsize(1))
-    call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-    status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, 4, csize))
+    if (associated(data) .eqv. .false.) then
+		status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, COMPLEX_DATA, rank, C_NULL_PTR))
+    else
+		dim1 = size(data, 1)
+		dim2 = size(data, 2)
+		dim3 = size(data, 3)
+		dim4 = size(data, 4)
+		dsize = (/ dim1, dim2, dim3, dim4 /)
+		cptr = C_LOC(data(1,1,1,1))
+		csize = C_LOC(dsize(1))
+		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+		status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, rank, csize))
+	end if
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
   end subroutine put_vect4d_complex
 
-  subroutine put_vect5d_int(opCtx, idsName, fieldPath, timebasePath, data, dim1, dim2, dim3, dim4, dim5, lifeCycleStatus, retstatus)
+  subroutine put_vect5d_int(opCtx, idsName, fieldPath, timebasePath, data, rank, lifeCycleStatus, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
-    integer, intent(in) :: opCtx, dim1, dim2, dim3, dim4, dim5
+    integer, intent(in) :: opCtx, rank
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     integer, dimension(:,:,:,:,:), pointer :: data
     integer, intent(out) :: retstatus
+    integer :: dim1, dim2, dim3, dim4, dim5
     type(C_PTR) :: cptr, csize
     integer(C_INT), target :: dsize(5)
     type(al_status) :: status
-    dsize = (/ dim1, dim2, dim3, dim4, dim5 /)
-    cptr = C_LOC(data(1,1,1,1,1))
-    csize = C_LOC(dsize(1))
-    call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-    status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, 5, csize))
+    if (associated(data) .eqv. .false.) then
+		status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, INTEGER_DATA, rank, C_NULL_PTR))
+    else
+		dim1 = size(data, 1)
+		dim2 = size(data, 2)
+		dim3 = size(data, 3)
+		dim4 = size(data, 4)
+		dim5 = size(data, 5)
+		dsize = (/ dim1, dim2, dim3, dim4, dim5 /)
+		cptr = C_LOC(data(1,1,1,1,1))
+		csize = C_LOC(dsize(1))
+		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+		status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, rank, csize))
+	end if
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
   end subroutine put_vect5d_int
 
-  subroutine put_vect5d_double(opCtx, idsName, fieldPath, timebasePath, data, dim1, dim2, dim3, dim4, dim5, lifeCycleStatus, retstatus)
+  subroutine put_vect5d_double(opCtx, idsName, fieldPath, timebasePath, data, rank, lifeCycleStatus, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
-    integer, intent(in) :: opCtx, dim1, dim2, dim3, dim4, dim5
+    integer, intent(in) :: opCtx, rank
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     real(8), dimension(:,:,:,:,:), pointer :: data
     integer, intent(out) :: retstatus
+    integer :: dim1, dim2, dim3, dim4, dim5
     type(C_PTR) :: cptr, csize
     integer(C_INT), target :: dsize(5)
     type(al_status) :: status
-    dsize = (/ dim1, dim2, dim3, dim4, dim5 /)
-    cptr = C_LOC(data(1,1,1,1,1))
-    csize = C_LOC(dsize(1))
-    call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-    status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, 5, csize))
+    if (associated(data) .eqv. .false.) then
+		status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, DOUBLE_DATA, rank, C_NULL_PTR))
+    else
+		dim1 = size(data, 1)
+		dim2 = size(data, 2)
+		dim3 = size(data, 3)
+		dim4 = size(data, 4)
+		dim5 = size(data, 5)
+		dsize = (/ dim1, dim2, dim3, dim4, dim5 /)
+		cptr = C_LOC(data(1,1,1,1,1))
+		csize = C_LOC(dsize(1))
+		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+		status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, rank, csize))
+	end if
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
   end subroutine put_vect5d_double
 
-  subroutine put_vect5d_complex(opCtx, idsName, fieldPath, timebasePath, data, dim1, dim2, dim3, dim4, dim5, lifeCycleStatus, retstatus)
+  subroutine put_vect5d_complex(opCtx, idsName, fieldPath, timebasePath, data, rank, lifeCycleStatus, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
-    integer, intent(in) :: opCtx, dim1, dim2, dim3, dim4, dim5
+    integer, intent(in) :: opCtx, rank
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     complex(8), dimension(:,:,:,:,:), pointer :: data
     integer, intent(out) :: retstatus
+    integer :: dim1, dim2, dim3, dim4, dim5
     type(C_PTR) :: cptr, csize
     integer(C_INT), target :: dsize(5)
     type(al_status) :: status
-    dsize = (/ dim1, dim2, dim3, dim4, dim5 /)
-    cptr = C_LOC(data(1,1,1,1,1))
-    csize = C_LOC(dsize(1))
-    call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-    status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, 5, csize))
+    if (associated(data) .eqv. .false.) then
+		status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, COMPLEX_DATA, rank, C_NULL_PTR))
+    else
+		dim1 = size(data, 1)
+		dim2 = size(data, 2)
+		dim3 = size(data, 3)
+		dim4 = size(data, 4)
+		dim5 = size(data, 5)
+		dsize = (/ dim1, dim2, dim3, dim4, dim5 /)
+		cptr = C_LOC(data(1,1,1,1,1))
+		csize = C_LOC(dsize(1))
+		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+		status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, rank, csize))
+    end if
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
   end subroutine put_vect5d_complex
 
-  subroutine put_vect6d_int(opCtx, idsName, fieldPath, timebasePath, data, dim1, dim2, dim3, dim4, dim5, dim6, lifeCycleStatus, retstatus)
+  subroutine put_vect6d_int(opCtx, idsName, fieldPath, timebasePath, data, rank, lifeCycleStatus, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
-    integer, intent(in) :: opCtx, dim1, dim2, dim3, dim4, dim5, dim6
+    integer, intent(in) :: opCtx, rank
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     integer, dimension(:,:,:,:,:,:), pointer :: data
     integer, intent(out) :: retstatus
+    integer :: dim1, dim2, dim3, dim4, dim5, dim6
     type(C_PTR) :: cptr, csize
     integer(C_INT), target :: dsize(6)
     type(al_status) :: status
-    dsize = (/ dim1, dim2, dim3, dim4, dim5, dim6 /)
-    cptr = C_LOC(data(1,1,1,1,1,1))
-    csize = C_LOC(dsize(1))
-    call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-    status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, 6, csize))
+    if (associated(data) .eqv. .false.) then
+		status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, INTEGER_DATA, rank, C_NULL_PTR))
+    else
+		dim1 = size(data, 1)
+		dim2 = size(data, 2)
+		dim3 = size(data, 3)
+		dim4 = size(data, 4)
+		dim5 = size(data, 5)
+		dim6 = size(data, 6)
+		dsize = (/ dim1, dim2, dim3, dim4, dim5, dim6 /)
+		cptr = C_LOC(data(1,1,1,1,1,1))
+		csize = C_LOC(dsize(1))
+		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+		status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, rank, csize))
+	end if
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
   end subroutine put_vect6d_int
 
-  subroutine put_vect6d_double(opCtx, idsName, fieldPath, timebasePath, data, dim1, dim2, dim3, dim4, dim5, dim6, lifeCycleStatus, retstatus)
+  subroutine put_vect6d_double(opCtx, idsName, fieldPath, timebasePath, data, rank, lifeCycleStatus, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
-    integer, intent(in) :: opCtx, dim1, dim2, dim3, dim4, dim5, dim6
+    integer, intent(in) :: opCtx, rank
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     real(8), dimension(:,:,:,:,:,:), pointer :: data
     integer, intent(out) :: retstatus
+    integer :: dim1, dim2, dim3, dim4, dim5, dim6
     type(C_PTR) :: cptr, csize
     integer(C_INT), target :: dsize(6)
     type(al_status) :: status
-    dsize = (/ dim1, dim2, dim3, dim4, dim5, dim6 /)
-    cptr = C_LOC(data(1,1,1,1,1,1))
-    csize = C_LOC(dsize(1))
-    call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-    status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, 6, csize))
+    if (associated(data) .eqv. .false.) then
+        status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, DOUBLE_DATA, rank, C_NULL_PTR))
+    else
+		dim1 = size(data, 1)
+		dim2 = size(data, 2)
+		dim3 = size(data, 3)
+		dim4 = size(data, 4)
+		dim5 = size(data, 5)
+		dim6 = size(data, 6)
+		dsize = (/ dim1, dim2, dim3, dim4, dim5, dim6 /)
+		cptr = C_LOC(data(1,1,1,1,1,1))
+		csize = C_LOC(dsize(1))
+		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+		status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, rank, csize))
+	end if
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
   end subroutine put_vect6d_double
 
-  subroutine put_vect6d_complex(opCtx, idsName, fieldPath, timebasePath, data, dim1, dim2, dim3, dim4, dim5, dim6, lifeCycleStatus, retstatus)
+  subroutine put_vect6d_complex(opCtx, idsName, fieldPath, timebasePath, data, rank, lifeCycleStatus, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
-    integer, intent(in) :: opCtx, dim1, dim2, dim3, dim4, dim5, dim6
+    integer, intent(in) :: opCtx, rank
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     complex(8), dimension(:,:,:,:,:,:), pointer :: data
     integer, intent(out) :: retstatus
+    integer :: dim1, dim2, dim3, dim4, dim5, dim6
     type(C_PTR) :: cptr, csize
     integer(C_INT), target :: dsize(6)
     type(al_status) :: status
-    dsize = (/ dim1, dim2, dim3, dim4, dim5, dim6 /)
-    cptr = C_LOC(data(1,1,1,1,1,1))
-    csize = C_LOC(dsize(1))
-    call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-    status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, 6, csize))
+    if (associated(data) .eqv. .false.) then
+		status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, rank, csize))
+    else
+		dim1 = size(data, 1)
+		dim2 = size(data, 2)
+		dim3 = size(data, 3)
+		dim4 = size(data, 4)
+		dim5 = size(data, 5)
+		dim6 = size(data, 6)
+		dsize = (/ dim1, dim2, dim3, dim4, dim5, dim6 /)
+		cptr = C_LOC(data(1,1,1,1,1,1))
+		csize = C_LOC(dsize(1))
+		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+		status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, COMPLEX_DATA, rank, C_NULL_PTR))
+	end if
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
   end subroutine put_vect6d_complex
 
-  subroutine put_vect7d_int(opCtx, idsName, fieldPath, timebasePath, data, dim1, dim2, dim3, dim4, dim5, dim6, dim7, lifeCycleStatus, retstatus)
+  subroutine put_vect7d_int(opCtx, idsName, fieldPath, timebasePath, data, rank, lifeCycleStatus, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
-    integer, intent(in) :: opCtx, dim1, dim2, dim3, dim4, dim5, dim6, dim7
+    integer, intent(in) :: opCtx, rank
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     integer, dimension(:,:,:,:,:,:,:), pointer :: data
     integer, intent(out) :: retstatus
+    integer :: dim1, dim2, dim3, dim4, dim5, dim6, dim7
     type(C_PTR) :: cptr, csize
     integer(C_INT), target :: dsize(7)
     type(al_status) :: status
-    dsize = (/ dim1, dim2, dim3, dim4, dim5, dim6, dim7 /)
-    cptr = C_LOC(data(1,1,1,1,1,1,1))
-    csize = C_LOC(dsize(1))
-    call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-    status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, 7, csize))
+    if (associated(data) .eqv. .false.) then
+		status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, INTEGER_DATA, rank, C_NULL_PTR))
+    else
+		dim1 = size(data, 1)
+		dim2 = size(data, 2)
+		dim3 = size(data, 3)
+		dim4 = size(data, 4)
+		dim5 = size(data, 5)
+		dim6 = size(data, 6)
+		dim7 = size(data, 7)
+		dsize = (/ dim1, dim2, dim3, dim4, dim5, dim6, dim7 /)
+		cptr = C_LOC(data(1,1,1,1,1,1,1))
+		csize = C_LOC(dsize(1))
+		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+		status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, rank, csize))
+	end if
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
   end subroutine put_vect7d_int
 
-  subroutine put_vect7d_double(opCtx, idsName, fieldPath, timebasePath, data, dim1, dim2, dim3, dim4, dim5, dim6, dim7, lifeCycleStatus, retstatus)
+  subroutine put_vect7d_double(opCtx, idsName, fieldPath, timebasePath, data, rank, lifeCycleStatus, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
-    integer, intent(in) :: opCtx, dim1, dim2, dim3, dim4, dim5, dim6, dim7
+    integer, intent(in) :: opCtx, rank
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     real(8), dimension(:,:,:,:,:,:,:), pointer :: data
     integer, intent(out) :: retstatus
+    integer :: dim1, dim2, dim3, dim4, dim5, dim6, dim7
     type(C_PTR) :: cptr, csize
     integer(C_INT), target :: dsize(7)
     type(al_status) :: status
-    dsize = (/ dim1, dim2, dim3, dim4, dim5, dim6, dim7 /)
-    cptr = C_LOC(data(1,1,1,1,1,1,1))
-    csize = C_LOC(dsize(1))
-    call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-    status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, 7, csize))
+    if (associated(data) .eqv. .false.) then
+		status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, DOUBLE_DATA, rank, C_NULL_PTR))
+    else
+		dim1 = size(data, 1)
+		dim2 = size(data, 2)
+		dim3 = size(data, 3)
+		dim4 = size(data, 4)
+		dim5 = size(data, 5)
+		dim6 = size(data, 6)
+		dim7 = size(data, 7)
+		dsize = (/ dim1, dim2, dim3, dim4, dim5, dim6, dim7 /)
+		cptr = C_LOC(data(1,1,1,1,1,1,1))
+		csize = C_LOC(dsize(1))
+		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+		status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, rank, csize))
+	end if
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
   end subroutine put_vect7d_double
 
-  subroutine put_vect7d_complex(opCtx, idsName, fieldPath, timebasePath, data, dim1, dim2, dim3, dim4, dim5, dim6, dim7, lifeCycleStatus, retstatus)
+  subroutine put_vect7d_complex(opCtx, idsName, fieldPath, timebasePath, data, rank, lifeCycleStatus, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
-    integer, intent(in) :: opCtx, dim1, dim2, dim3, dim4, dim5, dim6, dim7
+    integer, intent(in) :: opCtx, rank
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     complex(8), dimension(:,:,:,:,:,:,:), pointer :: data
     integer, intent(out) :: retstatus
+    integer :: dim1, dim2, dim3, dim4, dim5, dim6, dim7
     type(C_PTR) :: cptr, csize
     integer(C_INT), target :: dsize(7)
     type(al_status) :: status
-    dsize = (/ dim1, dim2, dim3, dim4, dim5, dim6, dim7 /)
-    cptr = C_LOC(data(1,1,1,1,1,1,1))
-    csize = C_LOC(dsize(1))
-    call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-    status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, 7, csize))
+    if (associated(data) .eqv. .false.) then
+		status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, COMPLEX_DATA, rank, C_NULL_PTR))
+    else
+		dim1 = size(data, 1)
+		dim2 = size(data, 2)
+		dim3 = size(data, 3)
+		dim4 = size(data, 4)
+		dim5 = size(data, 5)
+		dim6 = size(data, 6)
+		dim7 = size(data, 7)
+		dsize = (/ dim1, dim2, dim3, dim4, dim5, dim6, dim7 /)
+		cptr = C_LOC(data(1,1,1,1,1,1,1))
+		csize = C_LOC(dsize(1))
+		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+		status = fstatus(c_hli_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, rank, csize))
+	end if
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
   end subroutine put_vect7d_complex
@@ -1044,7 +1416,7 @@ contains
     type(al_status) :: status
     csize = C_LOC(dsize)
     cptr = C_LOC(cdata)
-    status = fstatus(c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+    status = fstatus(c_hli_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, CHAR_DATA, 0, csize))
     if (status%code.eq.0) then 
        data = cdata
@@ -1067,7 +1439,7 @@ contains
     type(al_status) :: status
     csize = C_LOC(dsize)
     cptr = C_LOC(cdata)
-    status = fstatus(c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+    status = fstatus(c_hli_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, 0, csize))
     if (status%code.eq.0) then 
        data = cdata
@@ -1090,7 +1462,7 @@ contains
     type(al_status) :: status
     csize = C_LOC(dsize)
     cptr = C_LOC(cdata)
-    status = fstatus(c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+    status = fstatus(c_hli_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, 0, csize))
     if (status%code.eq.0) then 
        data = cdata
@@ -1113,7 +1485,7 @@ contains
     type(al_status) :: status
     csize = C_LOC(dsize)
     cptr = C_LOC(cdata)
-    status = fstatus(c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+    status = fstatus(c_hli_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, 0, csize))
     if (status%code.eq.0) then 
        data = cdata
@@ -1135,7 +1507,7 @@ contains
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = fstatus(c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+    status = fstatus(c_hli_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, CHAR_DATA, 1, csize))
     if (status%code.eq.0) then
        if (C_ASSOCIATED(cptr)) then
@@ -1184,7 +1556,7 @@ contains
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = fstatus(c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+    status = fstatus(c_hli_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, 1, csize))
     if (status%code.eq.0) then
        if (C_ASSOCIATED(cptr)) then
@@ -1209,7 +1581,7 @@ contains
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = fstatus(c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+    status = fstatus(c_hli_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, 1, csize))
     if (status%code.eq.0) then
        if (C_ASSOCIATED(cptr)) then
@@ -1234,7 +1606,7 @@ contains
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = fstatus(c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+    status = fstatus(c_hli_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, 1, csize))
     if (status%code.eq.0) then
        if (C_ASSOCIATED(cptr)) then
@@ -1260,7 +1632,7 @@ contains
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = fstatus(c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+    status = fstatus(c_hli_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, CHAR_DATA, 2, csize))
     if (status%code.eq.0) then
        if (C_ASSOCIATED(cptr)) then
@@ -1316,7 +1688,7 @@ contains
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = fstatus(c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+    status = fstatus(c_hli_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, 2, csize))
     if (status%code.eq.0) then
        if (C_ASSOCIATED(cptr)) then
@@ -1343,7 +1715,7 @@ contains
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = fstatus(c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+    status = fstatus(c_hli_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, 2, csize))
     if (status%code.eq.0) then
        if (C_ASSOCIATED(cptr)) then
@@ -1370,7 +1742,7 @@ contains
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = fstatus(c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+    status = fstatus(c_hli_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, 2, csize))
     if (status%code.eq.0) then
        if (C_ASSOCIATED(cptr)) then
@@ -1397,7 +1769,7 @@ contains
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = fstatus(c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+    status = fstatus(c_hli_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, 3, csize))
     if (status%code.eq.0) then
        if (C_ASSOCIATED(cptr)) then
@@ -1425,7 +1797,7 @@ contains
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = fstatus(c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+    status = fstatus(c_hli_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, 3, csize))
     if (status%code.eq.0) then
        if (C_ASSOCIATED(cptr)) then
@@ -1453,7 +1825,7 @@ contains
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = fstatus(c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+    status = fstatus(c_hli_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, 3, csize))
     if (status%code.eq.0) then
        if (C_ASSOCIATED(cptr)) then
@@ -1481,7 +1853,7 @@ contains
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = fstatus(c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+    status = fstatus(c_hli_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, 4, csize))
     if (status%code.eq.0) then
        if (C_ASSOCIATED(cptr)) then
@@ -1510,7 +1882,7 @@ contains
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = fstatus(c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+    status = fstatus(c_hli_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, 4, csize))
     if (status%code.eq.0) then
        if (C_ASSOCIATED(cptr)) then
@@ -1539,7 +1911,7 @@ contains
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = fstatus(c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+    status = fstatus(c_hli_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, 4, csize))
     if (status%code.eq.0) then
        if (C_ASSOCIATED(cptr)) then
@@ -1568,7 +1940,7 @@ contains
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = fstatus(c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+    status = fstatus(c_hli_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, 5, csize))
     if (status%code.eq.0) then
        if (C_ASSOCIATED(cptr)) then
@@ -1598,7 +1970,7 @@ contains
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = fstatus(c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+    status = fstatus(c_hli_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, 5, csize))
     if (status%code.eq.0) then
        if (C_ASSOCIATED(cptr)) then
@@ -1628,7 +2000,7 @@ contains
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = fstatus(c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+    status = fstatus(c_hli_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, 5, csize))
     if (status%code.eq.0) then
        if (C_ASSOCIATED(cptr)) then
@@ -1658,7 +2030,7 @@ contains
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = fstatus(c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+    status = fstatus(c_hli_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, 6, csize))
     if (status%code.eq.0) then
        if (C_ASSOCIATED(cptr)) then
@@ -1689,7 +2061,7 @@ contains
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = fstatus(c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+    status = fstatus(c_hli_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, 6, csize))
     if (status%code.eq.0) then
        if (C_ASSOCIATED(cptr)) then
@@ -1720,7 +2092,7 @@ contains
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = fstatus(c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+    status = fstatus(c_hli_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, 6, csize))
     if (status%code.eq.0) then
        if (C_ASSOCIATED(cptr)) then
@@ -1751,7 +2123,7 @@ contains
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = fstatus(c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+    status = fstatus(c_hli_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, 7, csize))
     if (status%code.eq.0) then
        if (C_ASSOCIATED(cptr)) then
@@ -1783,7 +2155,7 @@ contains
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = fstatus(c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+    status = fstatus(c_hli_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, 7, csize))
     if (status%code.eq.0) then
        if (C_ASSOCIATED(cptr)) then 
@@ -1815,7 +2187,7 @@ contains
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
-    status = fstatus(c_ual_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
+    status = fstatus(c_hli_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, 7, csize))
     if (status%code.eq.0) then
        if (C_ASSOCIATED(cptr)) then 
