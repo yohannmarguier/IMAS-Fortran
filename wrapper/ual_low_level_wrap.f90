@@ -292,22 +292,26 @@ contains
     if (present(retstatus)) retstatus = status%code
   end subroutine ual_build_uri_from_legacy_parameters
 
-  subroutine ual_begin_dataentry_action(uri, mode, pctx, retstatus)
+  subroutine ual_begin_dataentry_action(uri, mode, pctx, retstatus, retmesg)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     character(*), intent(in) :: uri
     integer, intent(in) :: mode
     integer, intent(out) :: pctx
     integer, optional, intent(out) :: retstatus
+    character(:), optional, allocatable, intent(out) :: retmesg
     integer(C_INT) :: cid
     type(al_status) :: status
     status = fstatus(c_ual_begin_dataentry_action(trim(uri)//C_NULL_CHAR, mode, cid))
     if (status%code.ne.0) then
-       write(*,*) TRIM(status%message)
+       if (present(retmesg)) then
+          retmesg = status%message
+       else
+          write(*,*) TRIM(status%message)
+       end if
        pctx = 0
     else
        pctx = cid
-       retstatus = status%code
     end if
     if (present(retstatus)) retstatus = status%code
   end subroutine ual_begin_dataentry_action
