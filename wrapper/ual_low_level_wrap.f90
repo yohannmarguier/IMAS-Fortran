@@ -280,19 +280,24 @@ contains
     endif
   end subroutine pack_string
 
-  subroutine ual_context_info(ctx, info, retstatus)
+  subroutine ual_context_info(ctx, info, retstatus, retmesg)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: ctx
     character(STRMAXLEN), intent(out) :: info
     integer, optional, intent(out) :: retstatus
+    character(:), optional, allocatable, intent(out) :: retmesg
     type(al_status) :: status
     type(C_PTR) :: cptr
     character, dimension(:), pointer :: chars
     integer :: s,i
     status = fstatus(c_ual_context_info(ctx, cptr))
     if (status%code.ne.0) then
-       write(*,*) TRIM(status%message)
+       if (present(retmesg)) then
+          retmesg = status%message
+       else
+          write(*,*) TRIM(status%message)
+       end if
     else
        if (C_ASSOCIATED(cptr)) then
           s = c_strlen(cptr)
@@ -307,39 +312,50 @@ contains
     if (present(retstatus)) retstatus = status%code
   end subroutine ual_context_info
 
-  subroutine ual_get_backendID(ctx, beID, retstatus)
+  subroutine ual_get_backendID(ctx, beID, retstatus, retmesg)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: ctx
     integer, intent(out) :: beID
     integer, optional, intent(out) :: retstatus
+    character(:), optional, allocatable, intent(out) :: retmesg
     integer(C_INT) :: cdata
     type(al_status) :: status
     status = fstatus(c_ual_get_backendID(ctx,cdata))
     if (status%code.ne.0) then
-       write(*,*) TRIM(status%message)
+       if (present(retmesg)) then
+          retmesg = status%message
+       else
+          write(*,*) TRIM(status%message)
+       end if
     else
        beID = cdata
     end if
     if (present(retstatus)) retstatus = status%code
   end subroutine ual_get_backendID
 
-  subroutine ual_build_uri_from_legacy_parameters(beid, shot, run, usr, tok, ver, opt, uri, retstatus)
+  subroutine ual_build_uri_from_legacy_parameters(beid, shot, run, usr, tok, ver, opt, uri, retstatus, retmesg)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: beid, shot, run
     character(*), intent(in) :: usr, tok, ver, opt
     character(STRMAXLEN), intent(out) :: uri
     integer, optional, intent(out) :: retstatus
+    character(:), optional, allocatable, intent(out) :: retmesg
     character, dimension(:), pointer :: chars
     integer :: s,i
     type(al_status) :: status
     type(C_PTR) :: cptr
-
     status = fstatus(c_ual_build_uri_from_legacy_parameters(beid, shot, run, trim(usr)//C_NULL_CHAR, &
          trim(tok)//C_NULL_CHAR, trim(ver)//C_NULL_CHAR, trim(opt)//C_NULL_CHAR, cptr))
-
-    if (C_ASSOCIATED(cptr)) then
+    if (status%code.ne.0) then
+       if (present(retmesg)) then
+          retmesg = status%message
+       else
+          write(*,*) TRIM(status%message)
+       end if
+    else       
+       if (C_ASSOCIATED(cptr)) then
           s = c_strlen(cptr)
           call C_F_POINTER(cptr, chars, (/ s /))
           uri = ' '
@@ -347,65 +363,78 @@ contains
              uri(i:i) = chars(i)
           end do
           call c_free(cptr)
-     end if
+       end if
+    endif
     if (present(retstatus)) retstatus = status%code
   end subroutine ual_build_uri_from_legacy_parameters
 
-  subroutine ual_begin_dataentry_action(uri, mode, pctx, retstatus)
+  subroutine ual_begin_dataentry_action(uri, mode, pctx, retstatus, retmesg)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     character(*), intent(in) :: uri
     integer, intent(in) :: mode
     integer, intent(out) :: pctx
     integer, optional, intent(out) :: retstatus
+    character(:), optional, allocatable, intent(out) :: retmesg
     integer(C_INT) :: cid
     type(al_status) :: status
     status = fstatus(c_ual_begin_dataentry_action(trim(uri)//C_NULL_CHAR, mode, cid))
     if (status%code.ne.0) then
-       write(*,*) TRIM(status%message)
+       if (present(retmesg)) then
+          retmesg = status%message
+       else
+          write(*,*) TRIM(status%message)
+       end if
        pctx = 0
     else
        pctx = cid
-       retstatus = status%code
     end if
     if (present(retstatus)) retstatus = status%code
   end subroutine ual_begin_dataentry_action
 
-  subroutine ual_close_pulse(pctx, mode, opt, retstatus)
+  subroutine ual_close_pulse(pctx, mode, opt, retstatus, retmesg)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: pctx, mode
     character(*), intent(in) :: opt
     integer, optional, intent(out) :: retstatus
+    character(:), optional, allocatable, intent(out) :: retmesg
     type(al_status) :: status
     status = fstatus(c_ual_close_pulse(pctx, mode, trim(opt)//C_NULL_CHAR))
     if (status%code.ne.0) then
-       write(*,*) TRIM(status%message)
-    else
-       retstatus = status%code
+       if (present(retmesg)) then
+          retmesg = status%message
+       else
+          write(*,*) TRIM(status%message)
+       endif
     end if
     if (present(retstatus)) retstatus = status%code
   end subroutine ual_close_pulse
 
-  subroutine hli_begin_global_action(pctx, cponame, rwmode, octx, retstatus)
+  subroutine hli_begin_global_action(pctx, cponame, rwmode, octx, retstatus, retmesg)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: pctx, rwmode
     character(*), intent(in) :: cponame
     integer, intent(out) :: octx
     integer, intent(out) :: retstatus
+    character(:), optional, allocatable, intent(out) :: retmesg
     integer(C_INT) :: cctx
     type(al_status) :: status
     status = fstatus(c_hli_begin_global_action(pctx, trim(cponame)//C_NULL_CHAR, rwmode, cctx))
     if (status%code.ne.0) then
-       write(*,*) TRIM(status%message)
+       if (present(retmesg)) then
+          retmesg = status%message
+       else
+          write(*,*) TRIM(status%message)
+       end if
     else
        octx = cctx
     end if
     retstatus = status%code
   end subroutine hli_begin_global_action
 
-  subroutine hli_begin_slice_action(pctx, cponame, rwmode, time, interpmode, octx, retstatus)
+  subroutine hli_begin_slice_action(pctx, cponame, rwmode, time, interpmode, octx, retstatus, retmesg)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: pctx, rwmode, interpmode
@@ -413,45 +442,60 @@ contains
     character(*), intent(in) :: cponame
     integer, intent(out) :: octx
     integer, intent(out) :: retstatus
+    character(:), optional, allocatable, intent(out) :: retmesg
     integer(C_INT) :: cctx
     type(al_status) :: status
     status = fstatus(c_hli_begin_slice_action(pctx, trim(cponame)//C_NULL_CHAR, rwmode, time, interpmode, cctx))
     if (status%code.ne.0) then
-       write(*,*) TRIM(status%message)
+       if (present(retmesg)) then
+          retmesg = status%message
+       else
+          write(*,*) TRIM(status%message)
+       end if
     else
        octx = cctx
     end if
     retstatus = status%code
   end subroutine hli_begin_slice_action
 
-  subroutine hli_end_action(ctx, retstatus)
+  subroutine hli_end_action(ctx, retstatus, retmesg)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: ctx
     integer, intent(out) :: retstatus
+    character(:), optional, allocatable, intent(out) :: retmesg
     type(al_status) :: status
     status = fstatus(c_hli_end_action(ctx))
     if (status%code.ne.0) then
-       write(*,*) TRIM(status%message)
+       if (present(retmesg)) then
+          retmesg = status%message
+       else
+          write(*,*) TRIM(status%message)
+       endif
     end if
     retstatus = status%code
   end subroutine hli_end_action
 
-  subroutine ual_delete_data(ctx, path, retstatus) 
+  subroutine ual_delete_data(ctx, path, retstatus, retmesg) 
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: ctx
     character(*), intent(in) :: path
     integer, intent(out) :: retstatus
+    character(:), optional, allocatable, intent(out) :: retmesg
     type(al_status) :: status
     status = fstatus(c_ual_delete_data(ctx, trim(path)//C_NULL_CHAR))
     if (status%code.ne.0) then
-       write(*,*) TRIM(status%message)
+       if (present(retmesg)) then
+          retmesg = status%message
+       else
+          write(*,*) TRIM(status%message)
+       endif
     end if
     retstatus = status%code
   end subroutine ual_delete_data
 
-  subroutine hli_begin_arraystruct_action(ctx, path, timebase, size, aosctx, retstatus)
+  subroutine hli_begin_arraystruct_action(ctx, path, timebase, size, aosctx, retstatus, retmesg)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: ctx
@@ -459,26 +503,36 @@ contains
     integer, intent(inout) :: size
     character(*), intent(in) :: path, timebase
     integer, intent(out) :: aosctx, retstatus
+    character(:), optional, allocatable, intent(out) :: retmesg
     type(al_status) :: status
     csize = size
     status = fstatus(c_hli_begin_arraystruct_action(ctx, trim(path)//C_NULL_CHAR, trim(timebase)//C_NULL_CHAR, csize, aosctx))
     if (status%code.ne.0) then
-       write(*,*) TRIM(status%message)
+       if (present(retmesg)) then
+          retmesg = status%message
+       else
+          write(*,*) TRIM(status%message)
+       end if
     else
        size = csize
     end if
     retstatus = status%code
   end subroutine hli_begin_arraystruct_action
 
-  subroutine ual_iterate_over_arraystruct(aosctx, step, retstatus)
+  subroutine ual_iterate_over_arraystruct(aosctx, step, retstatus, retmesg)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: aosctx, step
     integer, intent(out) :: retstatus
+    character(:), optional, allocatable, intent(out) :: retmesg
     type(al_status) :: status
     status = fstatus(c_ual_iterate_over_arraystruct(aosctx, step))
     if (status%code.ne.0) then
-       write(*,*) TRIM(status%message)
+       if (present(retmesg)) then
+          retmesg = status%message
+       else
+          write(*,*) TRIM(status%message)
+       end if
     end if
     retstatus = status%code
   end subroutine ual_iterate_over_arraystruct
@@ -582,16 +636,19 @@ contains
 
 !!! old API !!!
 
-  subroutine imas_open(uri, mode, pulseCtx, retstatus)
+  subroutine imas_open(uri, mode, pulseCtx, retstatus, retmesg)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     character(*), intent(in) :: uri
     integer, intent(in) :: mode
     integer, intent(out) :: pulseCtx
     integer, optional, intent(out) :: retstatus
+    character(:), allocatable :: mesg
+    character(:), optional, allocatable, intent(out) :: retmesg
     integer :: status
-    call ual_begin_dataentry_action(uri, mode, pulseCtx, status)
+    call ual_begin_dataentry_action(uri, mode, pulseCtx, status, mesg)
     if (present(retstatus)) retstatus = status
+    if (present(retmesg)) retmesg = mesg
   end subroutine imas_open
 
   subroutine imas_create_env(name, shot, run, refShot, refRun, pulseCtx, user, tokamak, version, retstatus)
