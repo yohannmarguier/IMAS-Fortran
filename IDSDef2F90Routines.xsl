@@ -225,11 +225,19 @@ function generate_tmp_file() result(fname)
   integer :: i, j, k
   integer :: unit ! Unit number to open file with
   integer :: iostat
+  integer :: ipid
+  character(10) :: cpid
+
+#if defined(__INTEL_COMPILER)
+  USE IFPORT  ! required for getpid() in ifort
+#endif
+
+  ipid = getpid()
+  write(cpid, '(I0)') ipid
 
   ! Setup the base of the filename
-  string_base_length = len(SERIALIZE_TEMPORARY_DIRECTORY) + len('al_serialize_')
-  !allocate(fname(string_base_length + n))
-  fname = SERIALIZE_TEMPORARY_DIRECTORY // 'al_serialize_' // repeat(' ', n) ! implicitly allocates to the right size
+  string_base_length = len(SERIALIZE_TEMPORARY_DIRECTORY) + len('al_serialize_') + len(trim(cpid)) + 1
+  fname = SERIALIZE_TEMPORARY_DIRECTORY // 'al_serialize_' // trim(cpid) // "_"  // repeat(' ', n) ! implicitly allocates to the right size
 
   ! get a free unit number
   unit = get_file_unit()
