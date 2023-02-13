@@ -42,6 +42,13 @@ use <xsl:value-of select="@name"/>_copy_struct
 use <xsl:value-of select="@name"/>_deallocate_struct
 </xsl:for-each>
 
+#if defined(__INTEL_COMPILER)
+USE IFPORT  ! required for getpid() in ifort
+#endif
+#if defined(NAGFOR)
+USE F90_UNIX  ! required for getpid() in nagfor
+#endif
+
 contains
 
 subroutine ids_get_times(pulseCtx,path,time)
@@ -227,10 +234,6 @@ function generate_tmp_file() result(fname)
   integer :: iostat
   integer :: ipid
   character(10) :: cpid
-
-#if defined(__INTEL_COMPILER)
-  USE IFPORT  ! required for getpid() in ifort
-#endif
 
   ipid = getpid()
   ! Convert to characters, using I0 to left-justify without leading 0s
