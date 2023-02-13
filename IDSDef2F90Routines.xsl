@@ -43,10 +43,10 @@ use <xsl:value-of select="@name"/>_deallocate_struct
 </xsl:for-each>
 
 #if defined(__INTEL_COMPILER)
-USE IFPORT  ! required for getpid() in ifort
+use ifport, only : getpid  ! required for getpid() in ifort
 #endif
 #if defined(NAGFOR)
-USE F90_UNIX  ! required for getpid() in nagfor
+use f90_unix, only : getpid  ! required for getpid() in nagfor
 #endif
 
 contains
