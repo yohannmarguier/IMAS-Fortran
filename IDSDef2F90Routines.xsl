@@ -233,10 +233,11 @@ function generate_tmp_file() result(fname)
 #endif
 
   ipid = getpid()
+  ! Convert to characters, using I0 to left-justify without leading 0s
   write(cpid, '(I0)') ipid
 
   ! Setup the base of the filename
-  string_base_length = len(SERIALIZE_TEMPORARY_DIRECTORY) + len('al_serialize_') + len(trim(cpid)) + 1
+  string_base_length = len(SERIALIZE_TEMPORARY_DIRECTORY) + len('al_serialize_') + len_trim(cpid) + 1
   fname = SERIALIZE_TEMPORARY_DIRECTORY // 'al_serialize_' // trim(cpid) // "_"  // repeat(' ', n) ! implicitly allocates to the right size
 
   ! get a free unit number
