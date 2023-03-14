@@ -831,7 +831,16 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
     <xsl:with-param name="contextvar" select="'opctx'"/>
     <xsl:with-param name="timedparentexpr" select="''"/>
   </xsl:apply-templates>
-
+  
+  call hli_write_plugins_metadata(opctx, status)
+  if (status.ne.0) then
+     write(*,*) 'Error in hli_write_plugins_metadata (from ids_put for IDS <xsl:value-of select="@name"/>)'
+     if (present(retstatus)) then
+        retstatus = opctx
+     else
+        STOP 
+     end if
+  end if
   call hli_end_action(opctx, status)
   if (present(retstatus)) retstatus = status
 end subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
@@ -1100,6 +1109,16 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
     <xsl:with-param name="timedparentexpr" select="''"/>
     <xsl:with-param name="slice" select="'yes'"/>
   </xsl:apply-templates>
+  
+  call hli_write_plugins_metadata(opctx, status)
+  if (status.ne.0) then
+     write(*,*) 'Error in hli_write_plugins_metadata (from ids_put_slice for IDS <xsl:value-of select="@name"/>)'
+     if (present(retstatus)) then
+        retstatus = opctx
+     else
+        STOP 
+     end if
+  end if
 
   call hli_end_action(opctx, status)
   if (present(retstatus)) retstatus = status
@@ -1296,6 +1315,16 @@ subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
         STOP 
      end if
   end if
+  
+  call hli_bind_readback_plugins(opctx, status)
+  if (status.ne.0) then
+     write(*,*) 'Error in hli_bind_readback_plugins (from ids_get for IDS <xsl:value-of select="@name"/>)'
+     if (present(retstatus)) then
+        retstatus = opctx
+     else
+        STOP 
+     end if
+  end if
 
   timedparent=.false.
   call set_c_data(IDS,.true.)
@@ -1306,6 +1335,16 @@ subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
     <xsl:with-param name="timedparentexpr" select="''"/>
     <xsl:with-param name="root" select="'yes'"/>
   </xsl:apply-templates>
+
+  call hli_unbind_readback_plugins(opctx, status)
+  if (status.ne.0) then
+     write(*,*) 'Error in hli_unbind_readback_plugins (from ids_get for IDS <xsl:value-of select="@name"/>)'
+     if (present(retstatus)) then
+        retstatus = opctx
+     else
+        STOP 
+     end if
+  end if
 
   call hli_end_action(opctx, status)
 
@@ -1409,6 +1448,16 @@ subroutine get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
         STOP 
      end if
   end if
+  
+  call hli_bind_readback_plugins(opctx, status)
+  if (status.ne.0) then
+     write(*,*) 'Error in hli_bind_readback_plugins (from ids_get_slice for IDS <xsl:value-of select="@name"/>)'
+     if (present(retstatus)) then
+        retstatus = opctx
+     else
+        STOP 
+     end if
+  end if
 
   timedparent=.false.
   call set_c_data(IDS,.true.)
@@ -1419,6 +1468,16 @@ subroutine get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
     <xsl:with-param name="timedparentexpr" select="''"/>
     <xsl:with-param name="root" select="'yes'"/>
   </xsl:apply-templates>
+
+  call hli_unbind_readback_plugins(opctx, status)
+  if (status.ne.0) then
+     write(*,*) 'Error in hli_unbind_readback_plugins (from ids_get_slice for IDS <xsl:value-of select="@name"/>)'
+     if (present(retstatus)) then
+        retstatus = opctx
+     else
+        STOP 
+     end if
+  end if
 
   call hli_end_action(opctx, status)
 

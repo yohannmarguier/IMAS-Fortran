@@ -193,6 +193,30 @@ module ual_low_level_wrap
        type(c_al_status_t) :: c_hli_unbind_plugin
        character(C_CHAR), dimension(*), intent(in) :: path, plugin_name
      end function c_hli_unbind_plugin
+     
+     function c_hli_bind_readback_plugins(ctx) &
+          bind(C,name="hli_bind_readback_plugins")
+       use, intrinsic :: ISO_C_BINDING
+       import c_al_status_t
+       type(c_al_status_t) :: c_hli_bind_readback_plugins
+       integer(C_INT), value, intent(in):: ctx
+     end function c_hli_bind_readback_plugins
+
+    function c_hli_unbind_readback_plugins(ctx) &
+          bind(C,name="hli_unbind_readback_plugins")
+       use, intrinsic :: ISO_C_BINDING
+       import c_al_status_t
+       type(c_al_status_t) :: c_hli_unbind_readback_plugins
+       integer(C_INT), value, intent(in):: ctx
+     end function c_hli_unbind_readback_plugins
+     
+     function c_hli_write_plugins_metadata(ctx) &
+          bind(C,name="hli_write_plugins_metadata")
+       use, intrinsic :: ISO_C_BINDING
+       import c_al_status_t
+       type(c_al_status_t) :: c_hli_write_plugins_metadata
+       integer(C_INT), value, intent(in):: ctx
+     end function c_hli_write_plugins_metadata
 
     function c_hli_setvalue_int_scalar_parameter_plugin(parameter_name, parameter_value, plugin_name) &
           bind(C,name="hli_setvalue_int_scalar_parameter_plugin")
@@ -588,6 +612,45 @@ contains
     end if
     retstatus = status%code
   end subroutine hli_unbind_plugin
+  
+  subroutine hli_bind_readback_plugins(ctx, retstatus)
+    use, intrinsic :: ISO_C_BINDING
+    implicit none
+    integer, intent(out) :: retstatus
+    integer, intent(in) :: ctx
+    type(al_status) :: status
+    status = fstatus(c_hli_bind_readback_plugins(ctx)
+    if (status%code.ne.0) then
+       write(*,*) TRIM(status%message)
+    end if
+    retstatus = status%code
+  end subroutine hli_bind_readback_plugins
+
+  subroutine hli_unbind_readback_plugins(ctx, retstatus)
+    use, intrinsic :: ISO_C_BINDING
+    implicit none
+    integer, intent(out) :: retstatus
+    integer, intent(in) :: ctx
+    type(al_status) :: status
+    status = fstatus(c_hli_unbind_readback_plugins(ctx)
+    if (status%code.ne.0) then
+       write(*,*) TRIM(status%message)
+    end if
+    retstatus = status%code
+  end subroutine hli_unbind_readback_plugins
+  
+  subroutine hli_write_plugins_metadata(ctx, retstatus)
+    use, intrinsic :: ISO_C_BINDING
+    implicit none
+    integer, intent(out) :: retstatus
+    integer, intent(in) :: ctx
+    type(al_status) :: status
+    status = fstatus(c_hli_write_plugins_metadata(ctx)
+    if (status%code.ne.0) then
+       write(*,*) TRIM(status%message)
+    end if
+    retstatus = status%code
+  end subroutine hli_write_plugins_metadata
   
   subroutine hli_setvalue_int_scalar_parameter_plugin(parameter_name, parameter_value, plugin_name, retstatus)
     use, intrinsic :: ISO_C_BINDING
