@@ -619,7 +619,7 @@ contains
     integer, intent(out) :: retstatus
     integer, intent(in) :: ctx
     type(al_status) :: status
-    status = fstatus(c_hli_bind_readback_plugins(ctx)
+    status = fstatus(c_hli_bind_readback_plugins(ctx))
     if (status%code.ne.0) then
        write(*,*) TRIM(status%message)
     end if
@@ -632,7 +632,7 @@ contains
     integer, intent(out) :: retstatus
     integer, intent(in) :: ctx
     type(al_status) :: status
-    status = fstatus(c_hli_unbind_readback_plugins(ctx)
+    status = fstatus(c_hli_unbind_readback_plugins(ctx))
     if (status%code.ne.0) then
        write(*,*) TRIM(status%message)
     end if
@@ -645,7 +645,7 @@ contains
     integer, intent(out) :: retstatus
     integer, intent(in) :: ctx
     type(al_status) :: status
-    status = fstatus(c_hli_write_plugins_metadata(ctx)
+    status = fstatus(c_hli_write_plugins_metadata(ctx))
     if (status%code.ne.0) then
        write(*,*) TRIM(status%message)
     end if
