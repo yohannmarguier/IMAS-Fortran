@@ -42,6 +42,13 @@ use <xsl:value-of select="@name"/>_copy_struct
 use <xsl:value-of select="@name"/>_deallocate_struct
 </xsl:for-each>
 
+#if defined(__INTEL_COMPILER)
+use ifport, only : getpid  ! required for getpid() in ifort
+#endif
+#if defined(NAGFOR)
+use f90_unix, only : getpid  ! required for getpid() in nagfor
+#endif
+
 contains
 
 subroutine ids_get_times(pulseCtx,path,time)
@@ -228,11 +235,16 @@ function generate_tmp_file() result(fname)
   integer :: i, j, k
   integer :: unit ! Unit number to open file with
   integer :: iostat
+  integer :: ipid
+  character(10) :: cpid
+
+  ipid = getpid()
+  ! Convert to characters, using I0 to left-justify without leading 0s
+  write(cpid, '(I0)') ipid
 
   ! Setup the base of the filename
-  string_base_length = len(SERIALIZE_TEMPORARY_DIRECTORY) + len('al_serialize_')
-  !allocate(fname(string_base_length + n))
-  fname = SERIALIZE_TEMPORARY_DIRECTORY // 'al_serialize_' // repeat(' ', n) ! implicitly allocates to the right size
+  string_base_length = len(SERIALIZE_TEMPORARY_DIRECTORY) + len('al_serialize_') + len_trim(cpid) + 1
+  fname = SERIALIZE_TEMPORARY_DIRECTORY // 'al_serialize_' // trim(cpid) // "_"  // repeat(' ', n) ! implicitly allocates to the right size
 
   ! get a free unit number
   unit = get_file_unit()
