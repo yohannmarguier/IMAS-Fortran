@@ -54,14 +54,14 @@ character*(*) :: path
 real(ids_real), pointer :: time(:)
 integer(ids_int) :: dim1
 
-call ual_begin_global_action(pulsectx, path, READ_OP, opctx, status) 
+call hli_begin_global_action(pulsectx, path, READ_OP, opctx, status) 
 if (status.ne.0) then
-   STOP 'Error in ual_begin_global_action from ids_get_times'
+   STOP 'Error in hli_begin_global_action from ids_get_times'
 end if
 
 call get_vect1d_double(opctx, "time", "time", time, dim1, status)
 
-call ual_end_action(opctx, status)
+call hli_end_action(opctx, status)
 
 end subroutine
 
@@ -114,12 +114,12 @@ subroutine ids_serialize(ids_in, buffer, protocol)
     if (status .ne. 0) then
       write(*,*) "SERIALIZE: ERROR closing ASCII backend - ual_close_pulse"
       buffer = ''
-      call ual_end_action(pulsectx, status)
+      call hli_end_action(pulsectx, status)
       return
     end if
-    call ual_end_action(pulsectx, status)
+    call hli_end_action(pulsectx, status)
     if (status .ne. 0) then
-      write(*,*) "SERIALIZE: ERROR closing ASCII backend - ual_end_action"
+      write(*,*) "SERIALIZE: ERROR closing ASCII backend - hli_end_action"
       buffer = ''
       return
     end if
@@ -189,12 +189,12 @@ subroutine ids_deserialize(buffer, ids_out)
     call ual_close_pulse(pulsectx, CLOSE_PULSE, '', status)
     if (status .ne. 0) then
       write(*,*) "SERIALIZE: ERROR closing ASCII backend - ual_close_pulse"
-      call ual_end_action(pulsectx, status)
+      call hli_end_action(pulsectx, status)
       return
     end if
-    call ual_end_action(pulsectx, status)
+    call hli_end_action(pulsectx, status)
     if (status .ne. 0) then
-      write(*,*) "SERIALIZE: ERROR closing ASCII backend - ual_end_action"
+      write(*,*) "SERIALIZE: ERROR closing ASCII backend - hli_end_action"
       return
     end if
 
@@ -316,14 +316,14 @@ subroutine ids_delete_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx
   integer(ids_int) :: pulsectx, opctx, status
   type(ids_<xsl:value-of select="@name"/>) :: IDS
 
-  call ual_begin_global_action(pulsectx, IDSpath, WRITE_OP, opctx, status)
+  call hli_begin_global_action(pulsectx, IDSpath, WRITE_OP, opctx, status)
   if (status.ne.0) then
-     STOP 'Error in ual_begin_global_action (from ids_delete for IDS <xsl:value-of select="@name"/>)'
+     STOP 'Error in hli_begin_global_action (from ids_delete for IDS <xsl:value-of select="@name"/>)'
   end if
 
   <xsl:apply-templates select="field" mode="DELETE"/>
 
-  call ual_end_action(opctx,status)
+  call hli_end_action(opctx,status)
 
 end subroutine ids_delete_<xsl:value-of select="local:unique_name(@name)"/>
 
@@ -815,9 +815,9 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   endif
   </xsl:if>-->
   
-  call ual_begin_global_action(pulsectx, name, WRITE_OP, opctx, status) 
+  call hli_begin_global_action(pulsectx, name, WRITE_OP, opctx, status) 
   if (status.ne.0) then
-     write(*,*) 'Error in ual_begin_global_action (from ids_put for IDS <xsl:value-of select="@name"/>)'
+     write(*,*) 'Error in hli_begin_global_action (from ids_put for IDS <xsl:value-of select="@name"/>)'
      if (present(retstatus)) then 
         retstatus = opctx
      else
@@ -831,8 +831,17 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
     <xsl:with-param name="contextvar" select="'opctx'"/>
     <xsl:with-param name="timedparentexpr" select="''"/>
   </xsl:apply-templates>
-
-  call ual_end_action(opctx, status)
+  
+  call hli_write_plugins_metadata(opctx, status)
+  if (status.ne.0) then
+     write(*,*) 'Error in hli_write_plugins_metadata (from ids_put for IDS <xsl:value-of select="@name"/>)'
+     if (present(retstatus)) then
+        retstatus = opctx
+     else
+        STOP 
+     end if
+  end if
+  call hli_end_action(opctx, status)
   if (present(retstatus)) retstatus = status
 end subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
 
@@ -1038,10 +1047,10 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   endif
 
   storedtimemode = IDS_TIME_MODE_UNKNOWN
-  call ual_begin_global_action(pulsectx, name, READ_OP, opctx, status) 
+  call hli_begin_global_action(pulsectx, name, READ_OP, opctx, status) 
   if (status.ne.0) then
      !! error when trying to get new ctx => stop!
-     write(*,*) 'Error in ual_begin_slice_action (from ids_put_slice for IDS <xsl:value-of select="@name"/>)'     
+     write(*,*) 'Error in hli_begin_slice_action (from ids_put_slice for IDS <xsl:value-of select="@name"/>)'     
      if (present(retstatus)) then
         retstatus = status
      else
@@ -1059,7 +1068,7 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
            STOP
         endif
      endif
-     call ual_end_action(opctx, status)
+     call hli_end_action(opctx, status)
   endif
 
   if (storedtimemode.eq.IDS_TIME_MODE_UNKNOWN) then
@@ -1077,10 +1086,10 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
      endif
   endif
 
-  call ual_begin_slice_action(pulsectx, name, WRITE_OP, UNDEFINED_TIME, UNDEFINED_INTERP, opctx, status)
+  call hli_begin_slice_action(pulsectx, name, WRITE_OP, UNDEFINED_TIME, UNDEFINED_INTERP, opctx, status)
   if (status.ne.0) then
      !! error when trying to get new ctx => stop!
-     write(*,*) 'Error in ual_begin_slice_action (from ids_put_slice for IDS <xsl:value-of select="@name"/>)'     
+     write(*,*) 'Error in hli_begin_slice_action (from ids_put_slice for IDS <xsl:value-of select="@name"/>)'     
      if (present(retstatus)) then
         retstatus = opctx
      else
@@ -1100,8 +1109,18 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
     <xsl:with-param name="timedparentexpr" select="''"/>
     <xsl:with-param name="slice" select="'yes'"/>
   </xsl:apply-templates>
+  
+  call hli_write_plugins_metadata(opctx, status)
+  if (status.ne.0) then
+     write(*,*) 'Error in hli_write_plugins_metadata (from ids_put_slice for IDS <xsl:value-of select="@name"/>)'
+     if (present(retstatus)) then
+        retstatus = opctx
+     else
+        STOP 
+     end if
+  end if
 
-  call ual_end_action(opctx, status)
+  call hli_end_action(opctx, status)
   if (present(retstatus)) retstatus = status
 end subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
 
@@ -1286,10 +1305,20 @@ subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   character(len=300) :: timepath
   character(*), parameter :: path = ''
 
-  call ual_begin_global_action(pulsectx, name, READ_OP, opctx, status) 
+  call hli_begin_global_action(pulsectx, name, READ_OP, opctx, status) 
   if (status.ne.0) then
      !! error when trying to get new ctx => stop!
-     write(*,*) 'Error in ual_begin_global_action (from ids_get for IDS <xsl:value-of select="@name"/>)'
+     write(*,*) 'Error in hli_begin_global_action (from ids_get for IDS <xsl:value-of select="@name"/>)'
+     if (present(retstatus)) then
+        retstatus = opctx
+     else
+        STOP 
+     end if
+  end if
+  
+  call hli_bind_readback_plugins(opctx, status)
+  if (status.ne.0) then
+     write(*,*) 'Error in hli_bind_readback_plugins (from ids_get for IDS <xsl:value-of select="@name"/>)'
      if (present(retstatus)) then
         retstatus = opctx
      else
@@ -1307,7 +1336,17 @@ subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
     <xsl:with-param name="root" select="'yes'"/>
   </xsl:apply-templates>
 
-  call ual_end_action(opctx, status)
+  call hli_unbind_readback_plugins(opctx, status)
+  if (status.ne.0) then
+     write(*,*) 'Error in hli_unbind_readback_plugins (from ids_get for IDS <xsl:value-of select="@name"/>)'
+     if (present(retstatus)) then
+        retstatus = opctx
+     else
+        STOP 
+     end if
+  end if
+
+  call hli_end_action(opctx, status)
 
   if (present(retstatus)) retstatus = status
   return
@@ -1399,11 +1438,21 @@ subroutine get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   character(len=300) :: timepath
   character(*), parameter :: path = ''
 
-  call ual_begin_slice_action(pulsectx, name, READ_OP, twant, interpol, opctx, status) 
+  call hli_begin_slice_action(pulsectx, name, READ_OP, twant, interpol, opctx, status) 
   if (status.ne.0) then
      !! error when trying to get new ctx => stop!
-     write(*,*) 'Error in ual_begin_slice_action (from ids_get_slice for IDS <xsl:value-of select="@name"/>)'    
+     write(*,*) 'Error in hli_begin_slice_action (from ids_get_slice for IDS <xsl:value-of select="@name"/>)'    
      if (present(retstatus)) then 
+        retstatus = opctx
+     else
+        STOP 
+     end if
+  end if
+  
+  call hli_bind_readback_plugins(opctx, status)
+  if (status.ne.0) then
+     write(*,*) 'Error in hli_bind_readback_plugins (from ids_get_slice for IDS <xsl:value-of select="@name"/>)'
+     if (present(retstatus)) then
         retstatus = opctx
      else
         STOP 
@@ -1420,7 +1469,17 @@ subroutine get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
     <xsl:with-param name="root" select="'yes'"/>
   </xsl:apply-templates>
 
-  call ual_end_action(opctx, status)
+  call hli_unbind_readback_plugins(opctx, status)
+  if (status.ne.0) then
+     write(*,*) 'Error in hli_unbind_readback_plugins (from ids_get_slice for IDS <xsl:value-of select="@name"/>)'
+     if (present(retstatus)) then
+        retstatus = opctx
+     else
+        STOP 
+     end if
+  end if
+
+  call hli_end_action(opctx, status)
 
   if (present(retstatus)) retstatus = status
   return
@@ -1814,7 +1873,7 @@ end module
        timepath = ""
 	 </xsl:otherwise>
        </xsl:choose>
-       call ual_begin_arraystruct_action(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>, timepath, aoslen, aosctx, status)
+       call hli_begin_arraystruct_action(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>, timepath, aoslen, aosctx, status)
        if (status.eq.0) then
           do i = 1,aoslen
 	  <xsl:apply-templates select="." mode="PUT_FIELD">
@@ -1825,10 +1884,10 @@ end module
 	  </xsl:apply-templates> 
              call ual_iterate_over_arraystruct(aosctx, 1, status)
           enddo
-          call ual_end_action(aosctx, status)
+          call hli_end_action(aosctx, status)
        else
           write(*,*) "ERROR! with field "//<xsl:value-of select="$fieldpath"/>
-          call ual_end_action(<xsl:value-of select="$contextvar"/>, status)
+          call hli_end_action(<xsl:value-of select="$contextvar"/>, status)
           return
        endif
     endif
@@ -1900,6 +1959,16 @@ end module
 	 <xsl:with-param name="path" select="$fieldpath"/>
 	 <xsl:with-param name="structvar" select="$structvar"/>
        </xsl:call-template>
+    else
+       call put_empty_string(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
+         '', '<xsl:value-of select="@lifecycle_status"/>',  status)
+       <xsl:call-template name="checkErrorCtx">
+         <xsl:with-param name="method" select="'put'"/>
+	 <xsl:with-param name="ctx" select="$contextvar"/>
+	 <xsl:with-param name="path" select="$fieldpath"/>
+	 <xsl:with-param name="structvar" select="$structvar"/>
+       </xsl:call-template>
+         
     endif
       </xsl:otherwise>
     </xsl:choose>
@@ -1908,81 +1977,74 @@ end module
   <!-- 1D array of string data -->
   <xsl:when test="@data_type='str_1d_type' or @data_type='STR_1D'">
     ! Put <xsl:value-of select="@name"/>
-    if (associated(<xsl:value-of select="$fieldvar"/>)) then
-    <xsl:call-template name="set_timepath_and_lastdimsize">
+    <xsl:call-template name="set_timepath2">
       <xsl:with-param name="slice" select="$slice"/>
       <xsl:with-param name="fieldpath" select="$fieldpath"/>
       <xsl:with-param name="fieldvar" select="$fieldvar"/>
-      <xsl:with-param name="rank" select="1"/>
     </xsl:call-template>
          call put_vect1d_string(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
-         trim(timepath), <xsl:value-of select="$fieldvar"/>, lastdimsize, '<xsl:value-of select="@lifecycle_status"/>', status)
+         trim(timepath), <xsl:value-of select="$fieldvar"/>, 1, '<xsl:value-of select="@lifecycle_status"/>', status)
        <xsl:call-template name="checkErrorCtx">
          <xsl:with-param name="method" select="'put'"/>
 	 <xsl:with-param name="ctx" select="$contextvar"/>
 	 <xsl:with-param name="path" select="$fieldpath"/>
 	 <xsl:with-param name="structvar" select="$structvar"/>
        </xsl:call-template>
-    endif
   </xsl:when>
 
   <!-- integer scalar data -->
   <xsl:when test="@data_type='int_type' or @data_type='INT_0D'">
     ! Put <xsl:value-of select="@name"/>
-    if (<xsl:value-of select="$fieldvar"/>.NE.ids_int_invalid) then
         call put_int(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
-        '', <xsl:value-of select="$fieldvar"/>, '<xsl:value-of select="@lifecycle_status"/>', status)
+        '', <xsl:value-of select="$fieldvar"/>, <xsl:value-of select="$fieldvar"/>.NE.ids_int_invalid,&amp;
+         '<xsl:value-of select="@lifecycle_status"/>', status)
 	  <xsl:call-template name="checkErrorCtx">
 	    <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
 	    <xsl:with-param name="path" select="$fieldpath"/>
 	    <xsl:with-param name="structvar" select="$structvar"/>
 	  </xsl:call-template>
-    endif
   </xsl:when>
 
   <!-- float scalar data -->
   <xsl:when test="@data_type='flt_type' or @data_type='FLT_0D'">
     ! Put <xsl:value-of select="@name"/>
-    if (<xsl:value-of select="$fieldvar"/>.NE.ids_real_invalid) then
        call put_double(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
-       '', <xsl:value-of select="$fieldvar"/>, '<xsl:value-of select="@lifecycle_status"/>', status)
+       '', <xsl:value-of select="$fieldvar"/>, <xsl:value-of select="$fieldvar"/>.NE.ids_real_invalid,&amp;
+       '<xsl:value-of select="@lifecycle_status"/>', status)
 	  <xsl:call-template name="checkErrorCtx">
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
 	    <xsl:with-param name="path" select="$fieldpath"/>
 	    <xsl:with-param name="structvar" select="$structvar"/>
 	  </xsl:call-template>
-    endif
   </xsl:when>
 
   <!-- complex scalar data -->
   <xsl:when test="@data_type='cpx_type' or @data_type='CPX_0D'">
     ! Put <xsl:value-of select="@name"/>
-    if (<xsl:value-of select="$fieldvar"/>.NE.ids_complex_invalid) then
         call put_complex(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
-          '', <xsl:value-of select="$fieldvar"/>, '<xsl:value-of select="@lifecycle_status"/>', status)
+          '', <xsl:value-of select="$fieldvar"/>, <xsl:value-of select="$fieldvar"/>.NE.ids_complex_invalid,&amp;
+          '<xsl:value-of select="@lifecycle_status"/>', status)
 	  <xsl:call-template name="checkErrorCtx">
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
 	    <xsl:with-param name="path" select="$fieldpath"/>
 	    <xsl:with-param name="structvar" select="$structvar"/>
 	  </xsl:call-template>
-    endif
   </xsl:when>
 
   <!-- float 1D vector data -->
   <xsl:when test="@data_type='flt_1d_type' or @data_type='FLT_1D'">
     ! Put <xsl:value-of select="@name"/>
-    if (<xsl:if test="@type='dynamic'">(timemode.NE.IDS_TIME_MODE_INDEPENDENT) .AND. </xsl:if>associated(<xsl:value-of select="$fieldvar"/>)) then
-    <xsl:call-template name="set_timepath_and_lastdimsize">
+    if (<xsl:if test="@type='dynamic'">(timemode.NE.IDS_TIME_MODE_INDEPENDENT) .AND. </xsl:if> .true. ) then
+    <xsl:call-template name="set_timepath2">
       <xsl:with-param name="slice" select="$slice"/>
       <xsl:with-param name="fieldpath" select="$fieldpath"/>
       <xsl:with-param name="fieldvar" select="$fieldvar"/>
-      <xsl:with-param name="rank" select="1"/>
     </xsl:call-template>
        call put_vect1d_double(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
-       trim(timepath), <xsl:value-of select="$fieldvar"/>, lastdimsize, '<xsl:value-of select="@lifecycle_status"/>', status)
+       trim(timepath), <xsl:value-of select="$fieldvar"/>, 1, '<xsl:value-of select="@lifecycle_status"/>', status)
 	  <xsl:call-template name="checkErrorCtx">
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
@@ -1995,15 +2057,14 @@ end module
   <!-- complex 1D vector data -->
   <xsl:when test="@data_type='cpx_1d_type' or @data_type='CPX_1D'">
     ! Put <xsl:value-of select="@name"/>
-    if (<xsl:if test="@type='dynamic'">(timemode.NE.IDS_TIME_MODE_INDEPENDENT) .AND. </xsl:if>associated(<xsl:value-of select="$fieldvar"/>)) then
-    <xsl:call-template name="set_timepath_and_lastdimsize">
+    if (<xsl:if test="@type='dynamic'">(timemode.NE.IDS_TIME_MODE_INDEPENDENT) .AND. </xsl:if> .true. ) then
+    <xsl:call-template name="set_timepath2">
       <xsl:with-param name="slice" select="$slice"/>
       <xsl:with-param name="fieldpath" select="$fieldpath"/>
       <xsl:with-param name="fieldvar" select="$fieldvar"/>
-      <xsl:with-param name="rank" select="1"/>
     </xsl:call-template>
        call put_vect1d_complex(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
-       trim(timepath), <xsl:value-of select="$fieldvar"/>, lastdimsize, '<xsl:value-of select="@lifecycle_status"/>', status)
+       trim(timepath), <xsl:value-of select="$fieldvar"/>, 1, '<xsl:value-of select="@lifecycle_status"/>', status)
 	  <xsl:call-template name="checkErrorCtx">
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
@@ -2016,15 +2077,14 @@ end module
   <!-- integer 1D vector data -->
   <xsl:when test="@data_type='int_1d_type' or @data_type='INT_1D'">
     ! Put <xsl:value-of select="@name"/>
-    if (<xsl:if test="@type='dynamic'">(timemode.NE.IDS_TIME_MODE_INDEPENDENT) .AND. </xsl:if>associated(<xsl:value-of select="$fieldvar"/>)) then
-    <xsl:call-template name="set_timepath_and_lastdimsize">
+    if (<xsl:if test="@type='dynamic'">(timemode.NE.IDS_TIME_MODE_INDEPENDENT) .AND. </xsl:if> .true. ) then
+    <xsl:call-template name="set_timepath2">
       <xsl:with-param name="slice" select="$slice"/>
       <xsl:with-param name="fieldpath" select="$fieldpath"/>
       <xsl:with-param name="fieldvar" select="$fieldvar"/>
-      <xsl:with-param name="rank" select="1"/>
     </xsl:call-template>
        call put_vect1d_int(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
-       trim(timepath), <xsl:value-of select="$fieldvar"/>, lastdimsize, '<xsl:value-of select="@lifecycle_status"/>', status)
+       trim(timepath), <xsl:value-of select="$fieldvar"/>, 1, '<xsl:value-of select="@lifecycle_status"/>', status)
 	  <xsl:call-template name="checkErrorCtx">
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
@@ -2037,17 +2097,15 @@ end module
   <!-- float 2D vector data -->
   <xsl:when test="@data_type='FLT_2D'">
     ! Put <xsl:value-of select="@name"/>
-    if (<xsl:if test="@type='dynamic'">(timemode.NE.IDS_TIME_MODE_INDEPENDENT) .AND. </xsl:if>associated(<xsl:value-of select="$fieldvar"/>)) then
-    <xsl:call-template name="set_timepath_and_lastdimsize">
+    if (<xsl:if test="@type='dynamic'">(timemode.NE.IDS_TIME_MODE_INDEPENDENT) .AND. </xsl:if> .true. ) then
+    <xsl:call-template name="set_timepath2">
       <xsl:with-param name="slice" select="$slice"/>
       <xsl:with-param name="fieldpath" select="$fieldpath"/>
       <xsl:with-param name="fieldvar" select="$fieldvar"/>
-      <xsl:with-param name="rank" select="2"/>
     </xsl:call-template>
         call put_vect2d_double(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
         trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
-	  size(<xsl:value-of select="$fieldvar"/>,1),&amp;
-      lastdimsize, '<xsl:value-of select="@lifecycle_status"/>', status)
+      2, '<xsl:value-of select="@lifecycle_status"/>', status)
 	  <xsl:call-template name="checkErrorCtx">
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
@@ -2060,17 +2118,15 @@ end module
   <!-- complex 2D vector data -->
   <xsl:when test="@data_type='cpx_2d_type' or @data_type='CPX_2D'">
     ! Put <xsl:value-of select="@name"/>
-    if (<xsl:if test="@type='dynamic'">(timemode.NE.IDS_TIME_MODE_INDEPENDENT) .AND. </xsl:if>associated(<xsl:value-of select="$fieldvar"/>)) then
-    <xsl:call-template name="set_timepath_and_lastdimsize">
+    if (<xsl:if test="@type='dynamic'">(timemode.NE.IDS_TIME_MODE_INDEPENDENT) .AND. </xsl:if> .true. ) then
+    <xsl:call-template name="set_timepath2">
       <xsl:with-param name="slice" select="$slice"/>
       <xsl:with-param name="fieldpath" select="$fieldpath"/>
       <xsl:with-param name="fieldvar" select="$fieldvar"/>
-      <xsl:with-param name="rank" select="2"/>
     </xsl:call-template>
         call put_vect2d_complex(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
         trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
-	  size(<xsl:value-of select="$fieldvar"/>,1),&amp;
-      lastdimsize, '<xsl:value-of select="@lifecycle_status"/>', status)
+      2, '<xsl:value-of select="@lifecycle_status"/>', status)
 	  <xsl:call-template name="checkErrorCtx">
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
@@ -2083,17 +2139,15 @@ end module
   <!-- integer 2D vector data -->
   <xsl:when test="@data_type='INT_2D'">
     ! Put <xsl:value-of select="@name"/>
-    if (<xsl:if test="@type='dynamic'">(timemode.NE.IDS_TIME_MODE_INDEPENDENT) .AND. </xsl:if>associated(<xsl:value-of select="$fieldvar"/>)) then
-    <xsl:call-template name="set_timepath_and_lastdimsize">
+    if (<xsl:if test="@type='dynamic'">(timemode.NE.IDS_TIME_MODE_INDEPENDENT) .AND. </xsl:if> .true. ) then
+    <xsl:call-template name="set_timepath2">
       <xsl:with-param name="slice" select="$slice"/>
       <xsl:with-param name="fieldpath" select="$fieldpath"/>
       <xsl:with-param name="fieldvar" select="$fieldvar"/>
-      <xsl:with-param name="rank" select="2"/>
     </xsl:call-template>
           call put_vect2d_int(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
           trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
-          size(<xsl:value-of select="$fieldvar"/>,1),&amp;
-          lastdimsize, '<xsl:value-of select="@lifecycle_status"/>', status)
+          2, '<xsl:value-of select="@lifecycle_status"/>', status)
 	  <xsl:call-template name="checkErrorCtx">
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
@@ -2106,18 +2160,15 @@ end module
   <!-- float 3D vector data -->
   <xsl:when test="@data_type='FLT_3D'">
     ! Put <xsl:value-of select="@name"/>
-    if (<xsl:if test="@type='dynamic'">(timemode.NE.IDS_TIME_MODE_INDEPENDENT) .AND. </xsl:if>associated(<xsl:value-of select="$fieldvar"/>)) then
-    <xsl:call-template name="set_timepath_and_lastdimsize">
+    if (<xsl:if test="@type='dynamic'">(timemode.NE.IDS_TIME_MODE_INDEPENDENT) .AND. </xsl:if> .true. ) then
+    <xsl:call-template name="set_timepath2">
       <xsl:with-param name="slice" select="$slice"/>
       <xsl:with-param name="fieldpath" select="$fieldpath"/>
       <xsl:with-param name="fieldvar" select="$fieldvar"/>
-      <xsl:with-param name="rank" select="3"/>
     </xsl:call-template>
           call put_vect3d_double(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
           trim(timepath), <xsl:value-of select="$fieldvar"/>, &amp;
-          size(<xsl:value-of select="$fieldvar"/>,1),&amp;
-          size(<xsl:value-of select="$fieldvar"/>,2),&amp;
-          lastdimsize, '<xsl:value-of select="@lifecycle_status"/>', status)
+          3, '<xsl:value-of select="@lifecycle_status"/>', status)
 	  <xsl:call-template name="checkErrorCtx">
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
@@ -2130,18 +2181,15 @@ end module
   <!-- complex 3D vector data -->
   <xsl:when test="@data_type='CPX_3D'">
     ! Put <xsl:value-of select="@name"/>
-    if (<xsl:if test="@type='dynamic'">(timemode.NE.IDS_TIME_MODE_INDEPENDENT) .AND. </xsl:if>associated(<xsl:value-of select="$fieldvar"/>)) then
-    <xsl:call-template name="set_timepath_and_lastdimsize">
+    if (<xsl:if test="@type='dynamic'">(timemode.NE.IDS_TIME_MODE_INDEPENDENT) .AND. </xsl:if> .true. ) then
+    <xsl:call-template name="set_timepath2">
       <xsl:with-param name="slice" select="$slice"/>
       <xsl:with-param name="fieldpath" select="$fieldpath"/>
       <xsl:with-param name="fieldvar" select="$fieldvar"/>
-      <xsl:with-param name="rank" select="3"/>
     </xsl:call-template>
           call put_vect3d_complex(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
           trim(timepath), <xsl:value-of select="$fieldvar"/>, &amp;
-          size(<xsl:value-of select="$fieldvar"/>,1),&amp;
-          size(<xsl:value-of select="$fieldvar"/>,2),&amp;
-          lastdimsize, '<xsl:value-of select="@lifecycle_status"/>', status)
+          3, '<xsl:value-of select="@lifecycle_status"/>', status)
 	  <xsl:call-template name="checkErrorCtx">
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
@@ -2154,18 +2202,15 @@ end module
   <!-- integer 3D vector data -->
   <xsl:when test="@data_type='INT_3D'">
     ! Put <xsl:value-of select="@path"/>
-    if (<xsl:if test="@type='dynamic'">(timemode.NE.IDS_TIME_MODE_INDEPENDENT) .AND. </xsl:if>associated(<xsl:value-of select="$fieldvar"/>)) then
-    <xsl:call-template name="set_timepath_and_lastdimsize">
+    if (<xsl:if test="@type='dynamic'">(timemode.NE.IDS_TIME_MODE_INDEPENDENT) .AND. </xsl:if> .true. ) then
+    <xsl:call-template name="set_timepath2">
       <xsl:with-param name="slice" select="$slice"/>
       <xsl:with-param name="fieldpath" select="$fieldpath"/>
       <xsl:with-param name="fieldvar" select="$fieldvar"/>
-      <xsl:with-param name="rank" select="3"/>
     </xsl:call-template>
           call put_vect3d_int(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
           trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
-          size(<xsl:value-of select="$fieldvar"/>,1),&amp;
-	      size(<xsl:value-of select="$fieldvar"/>,2),&amp;
-          lastdimsize, '<xsl:value-of select="@lifecycle_status"/>', status)
+          3, '<xsl:value-of select="@lifecycle_status"/>', status)
 	  <xsl:call-template name="checkErrorCtx">
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
@@ -2178,19 +2223,15 @@ end module
   <!-- float 4D vector data -->
   <xsl:when test="@data_type='FLT_4D'">
     ! Put <xsl:value-of select="@name"/>
-    if (<xsl:if test="@type='dynamic'">(timemode.NE.IDS_TIME_MODE_INDEPENDENT) .AND. </xsl:if>associated(<xsl:value-of select="$fieldvar"/>)) then
-    <xsl:call-template name="set_timepath_and_lastdimsize">
+    if (<xsl:if test="@type='dynamic'">(timemode.NE.IDS_TIME_MODE_INDEPENDENT) .AND. </xsl:if> .true. ) then
+    <xsl:call-template name="set_timepath2">
       <xsl:with-param name="slice" select="$slice"/>
       <xsl:with-param name="fieldpath" select="$fieldpath"/>
       <xsl:with-param name="fieldvar" select="$fieldvar"/>
-      <xsl:with-param name="rank" select="4"/>
     </xsl:call-template>
           call put_vect4d_double(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
           trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
-	      size(<xsl:value-of select="$fieldvar"/>,1),&amp;
-	      size(<xsl:value-of select="$fieldvar"/>,2),&amp;
-	      size(<xsl:value-of select="$fieldvar"/>,3),&amp;
-          lastdimsize, '<xsl:value-of select="@lifecycle_status"/>', status)
+          4, '<xsl:value-of select="@lifecycle_status"/>', status)
 	  <xsl:call-template name="checkErrorCtx">
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
@@ -2203,19 +2244,15 @@ end module
   <!-- complex 4D vector data -->
   <xsl:when test="@data_type='CPX_4D'">
     ! Put <xsl:value-of select="@name"/>
-    if (<xsl:if test="@type='dynamic'">(timemode.NE.IDS_TIME_MODE_INDEPENDENT) .AND. </xsl:if>associated(<xsl:value-of select="$fieldvar"/>)) then
-    <xsl:call-template name="set_timepath_and_lastdimsize">
+    if (<xsl:if test="@type='dynamic'">(timemode.NE.IDS_TIME_MODE_INDEPENDENT) .AND. </xsl:if> .true. ) then
+    <xsl:call-template name="set_timepath2">
       <xsl:with-param name="slice" select="$slice"/>
       <xsl:with-param name="fieldpath" select="$fieldpath"/>
       <xsl:with-param name="fieldvar" select="$fieldvar"/>
-      <xsl:with-param name="rank" select="4"/>
     </xsl:call-template>
           call put_vect4d_complex(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
           trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
-	  size(<xsl:value-of select="$fieldvar"/>,1),&amp;
-	  size(<xsl:value-of select="$fieldvar"/>,2),&amp;
-	  size(<xsl:value-of select="$fieldvar"/>,3),&amp;
-      lastdimsize, '<xsl:value-of select="@lifecycle_status"/>', status)
+      4, '<xsl:value-of select="@lifecycle_status"/>', status)
 	  <xsl:call-template name="checkErrorCtx">
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
@@ -2228,20 +2265,15 @@ end module
   <!-- float 5D vector data -->
   <xsl:when test="@data_type='FLT_5D'">
     ! Put <xsl:value-of select="@name"/>
-    if (<xsl:if test="@type='dynamic'">(timemode.NE.IDS_TIME_MODE_INDEPENDENT) .AND. </xsl:if>associated(<xsl:value-of select="$fieldvar"/>)) then
-    <xsl:call-template name="set_timepath_and_lastdimsize">
+    if (<xsl:if test="@type='dynamic'">(timemode.NE.IDS_TIME_MODE_INDEPENDENT) .AND. </xsl:if> .true. ) then
+    <xsl:call-template name="set_timepath2">
       <xsl:with-param name="slice" select="$slice"/>
       <xsl:with-param name="fieldpath" select="$fieldpath"/>
       <xsl:with-param name="fieldvar" select="$fieldvar"/>
-      <xsl:with-param name="rank" select="5"/>
     </xsl:call-template>
         call put_vect5d_double(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
         trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
-	  size(<xsl:value-of select="$fieldvar"/>,1),&amp;
-	  size(<xsl:value-of select="$fieldvar"/>,2),&amp;
-	  size(<xsl:value-of select="$fieldvar"/>,3),&amp;
-	  size(<xsl:value-of select="$fieldvar"/>,4),&amp;
-      lastdimsize, '<xsl:value-of select="@lifecycle_status"/>', status)
+      5, '<xsl:value-of select="@lifecycle_status"/>', status)
 	  <xsl:call-template name="checkErrorCtx">
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
@@ -2254,20 +2286,15 @@ end module
   <!-- complex 5D vector data -->
   <xsl:when test="@data_type='CPX_5D'">
     ! Put <xsl:value-of select="@name"/>
-    if (<xsl:if test="@type='dynamic'">(timemode.NE.IDS_TIME_MODE_INDEPENDENT) .AND. </xsl:if>associated(<xsl:value-of select="$fieldvar"/>)) then
-    <xsl:call-template name="set_timepath_and_lastdimsize">
+    if (<xsl:if test="@type='dynamic'">(timemode.NE.IDS_TIME_MODE_INDEPENDENT) .AND. </xsl:if> .true. ) then
+    <xsl:call-template name="set_timepath2">
       <xsl:with-param name="slice" select="$slice"/>
       <xsl:with-param name="fieldpath" select="$fieldpath"/>
       <xsl:with-param name="fieldvar" select="$fieldvar"/>
-      <xsl:with-param name="rank" select="5"/>
     </xsl:call-template>
        call put_vect5d_complex(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
        trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
-	  size(<xsl:value-of select="$fieldvar"/>,1),&amp;
-	  size(<xsl:value-of select="$fieldvar"/>,2),&amp;
-	  size(<xsl:value-of select="$fieldvar"/>,3),&amp;
-	  size(<xsl:value-of select="$fieldvar"/>,4),&amp;
-      lastdimsize, '<xsl:value-of select="@lifecycle_status"/>', status)
+      5, '<xsl:value-of select="@lifecycle_status"/>', status)
 	  <xsl:call-template name="checkErrorCtx">
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
@@ -2280,21 +2307,15 @@ end module
   <!-- float 6D vector data -->
   <xsl:when test="@data_type='FLT_6D'">
     ! Put <xsl:value-of select="@name"/>
-    if (<xsl:if test="@type='dynamic'">(timemode.NE.IDS_TIME_MODE_INDEPENDENT) .AND. </xsl:if>associated(<xsl:value-of select="$fieldvar"/>)) then
-    <xsl:call-template name="set_timepath_and_lastdimsize">
+    if (<xsl:if test="@type='dynamic'">(timemode.NE.IDS_TIME_MODE_INDEPENDENT) .AND. </xsl:if> .true. ) then
+    <xsl:call-template name="set_timepath2">
       <xsl:with-param name="slice" select="$slice"/>
       <xsl:with-param name="fieldpath" select="$fieldpath"/>
       <xsl:with-param name="fieldvar" select="$fieldvar"/>
-      <xsl:with-param name="rank" select="6"/>
     </xsl:call-template>
       call put_vect6d_double(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
       trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
-	  size(<xsl:value-of select="$fieldvar"/>,1),&amp;
-	  size(<xsl:value-of select="$fieldvar"/>,2),&amp;
-	  size(<xsl:value-of select="$fieldvar"/>,3),&amp;
-	  size(<xsl:value-of select="$fieldvar"/>,4),&amp;
-	  size(<xsl:value-of select="$fieldvar"/>,5),&amp;
-      lastdimsize, '<xsl:value-of select="@lifecycle_status"/>', status)
+      6, '<xsl:value-of select="@lifecycle_status"/>', status)
 	  <xsl:call-template name="checkErrorCtx">
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
@@ -2307,21 +2328,15 @@ end module
   <!-- complex 6D vector data -->
   <xsl:when test="@data_type='CPX_6D'">
     ! Put <xsl:value-of select="@name"/>
-    if (<xsl:if test="@type='dynamic'">(timemode.NE.IDS_TIME_MODE_INDEPENDENT) .AND. </xsl:if>associated(<xsl:value-of select="$fieldvar"/>)) then
-    <xsl:call-template name="set_timepath_and_lastdimsize">
+    if (<xsl:if test="@type='dynamic'">(timemode.NE.IDS_TIME_MODE_INDEPENDENT) .AND. </xsl:if> .true.) then
+    <xsl:call-template name="set_timepath2">
       <xsl:with-param name="slice" select="$slice"/>
       <xsl:with-param name="fieldpath" select="$fieldpath"/>
       <xsl:with-param name="fieldvar" select="$fieldvar"/>
-      <xsl:with-param name="rank" select="6"/>
     </xsl:call-template>
       call put_vect6d_complex(<xsl:value-of select="$contextvar"/>, name, <xsl:value-of select="$fieldpath"/>,&amp;
       trim(timepath), <xsl:value-of select="$fieldvar"/>,&amp;
-	  size(<xsl:value-of select="$fieldvar"/>,1),&amp;
-	  size(<xsl:value-of select="$fieldvar"/>,2),&amp;
-	  size(<xsl:value-of select="$fieldvar"/>,3),&amp;
-	  size(<xsl:value-of select="$fieldvar"/>,4),&amp;
-	  size(<xsl:value-of select="$fieldvar"/>,5),&amp;
-      lastdimsize, '<xsl:value-of select="@lifecycle_status"/>', status)
+      6, '<xsl:value-of select="@lifecycle_status"/>', status)
 	  <xsl:call-template name="checkErrorCtx">
             <xsl:with-param name="method" select="'put'"/>
 	    <xsl:with-param name="ctx" select="$contextvar"/>
@@ -2395,7 +2410,7 @@ end module
           timepath = ""
       </xsl:otherwise>
     </xsl:choose>
-          call ual_begin_arraystruct_action(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>, timepath, aoslen, aosctx, status)
+          call hli_begin_arraystruct_action(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>, timepath, aoslen, aosctx, status)
           if (status.eq.0) then
              if (aoslen.gt.0) allocate(<xsl:value-of select="$fieldvar"/>(aoslen))
              do i = 1,aoslen
@@ -2407,11 +2422,11 @@ end module
        </xsl:apply-templates> 
                 call ual_iterate_over_arraystruct(aosctx, 1, status)
              enddo
-             call ual_end_action(aosctx, status)
+             call hli_end_action(aosctx, status)
           else
              write(*,*) "ERROR! with field "//<xsl:value-of select="$fieldpath"/><xsl:text>&#xa;</xsl:text>
 	     <xsl:if test="$structvar='IDS'">if (present(retstatus)) </xsl:if>retstatus = aosctx
-             call ual_end_action(<xsl:value-of select="$contextvar"/>, status)
+             call hli_end_action(<xsl:value-of select="$contextvar"/>, status)
              return
           endif
     <xsl:if test="@type='dynamic'">endif</xsl:if>
@@ -2856,14 +2871,14 @@ end module
     <xsl:when test="$method='put'">
   if(isErrorCritical(status, <xsl:value-of select="$ctx"/>, <xsl:value-of select="$path"/>)) then
      <xsl:if test="$structvar='IDS'">if (present(retstatus)) </xsl:if>retstatus = status
-     <xsl:if test="$closectx='yes'">call ual_end_action(<xsl:value-of select="$ctx"/>, status)</xsl:if>
+     <xsl:if test="$closectx='yes'">call hli_end_action(<xsl:value-of select="$ctx"/>, status)</xsl:if>
      return
   endif
     </xsl:when>
     <xsl:otherwise>
   if(isErrorCritical(status, <xsl:value-of select="$ctx"/>, <xsl:value-of select="$path"/>)) then
      <xsl:if test="$structvar='IDS'">if (present(retstatus)) </xsl:if>retstatus = status
-     <xsl:if test="$closectx='yes'">call ual_end_action(<xsl:value-of select="$ctx"/>, status)</xsl:if>
+     <xsl:if test="$closectx='yes'">call hli_end_action(<xsl:value-of select="$ctx"/>, status)</xsl:if>
      return
   endif
   <xsl:if test="@type='dynamic'"><xsl:if test="$withtimepath='yes'">endif</xsl:if></xsl:if> <!-- closes the timemode.NE.IDS_TIME_MODE_INDEPENDENT test -->
@@ -2898,28 +2913,24 @@ end module
 
 
 
-<xsl:template name="set_timepath_and_lastdimsize">
+<xsl:template name="set_timepath2">
   <xsl:param name="slice"/>
   <xsl:param name="fieldpath"/>
   <xsl:param name="fieldvar"/>
-  <xsl:param name="rank"/>
   <xsl:choose>
     <xsl:when test="@type='dynamic'">
       if (timedparent) then
          timepath=""
-	 lastdimsize = size(<xsl:value-of select="$fieldvar"/>,<xsl:value-of select="$rank"/>)
       else
          if (timemode.EQ.IDS_TIME_MODE_HOMOGENEOUS) then
             timepath="/time"
          else
 	    timepath=<xsl:if test="substring(@timebasepath,1,1)='\'">path//</xsl:if>"<xsl:value-of select="translate(@timebasepath,'\','')"/>"
          endif
-         lastdimsize = size(<xsl:value-of select="$fieldvar"/>,<xsl:value-of select="$rank"/>)
       endif
     </xsl:when>
     <xsl:otherwise>
       timepath = ""
-      lastdimsize = size(<xsl:value-of select="$fieldvar"/>,<xsl:value-of select="$rank"/>)
     </xsl:otherwise>
   </xsl:choose>
 </xsl:template>
