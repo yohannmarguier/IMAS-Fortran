@@ -83,13 +83,14 @@ module ual_low_level_wrap
        character(C_CHAR), dimension(*), intent(in) :: opt
      end function c_ual_close_pulse
 
-     function c_hli_begin_global_action(pctx, dataobjectname, rwmode, opctx) &
-          bind(C,name="hli_begin_global_action")
+     function c_hli_begin_global_action(pctx, dataobjectname, datapath, rwmode, opctx) &
+          bind(C,name="ual_begin_global_action")
        use, intrinsic :: ISO_C_BINDING
        import c_al_status_t
        type(c_al_status_t) :: c_hli_begin_global_action
        integer(C_INT), value, intent(in) :: pctx, rwmode
        character(C_CHAR), dimension(*), intent(in) :: dataobjectname
+       character(C_CHAR), dimension(*), intent(in) :: datapath
        integer(C_INT), intent(out) :: opctx
      end function c_hli_begin_global_action
 
@@ -445,7 +446,7 @@ contains
     character(:), optional, allocatable, intent(out) :: retmesg
     integer(C_INT) :: cctx
     type(al_status) :: status
-    status = fstatus(c_hli_begin_global_action(pctx, trim(cponame)//C_NULL_CHAR, rwmode, cctx))
+    status = fstatus(c_hli_begin_global_action(pctx, trim(cponame)//C_NULL_CHAR, ""//C_NULL_CHAR, rwmode, cctx))
     if (status%code.ne.0) then
        if (present(retmesg)) then
           retmesg = status%message
