@@ -26,13 +26,14 @@
 <xsl:template match="/IDSs">
   <xsl:result-document href="ids_routines.f90">
 module ids_routines
-use ids_schemas
+! use ids_schemas_<xsl:value-of select="@name"/>
 use ual_low_level_wrap
 use utilities_copy_struct
 use utilities_deallocate_struct
 <!--use specific_validate_struct-->
 
 <xsl:for-each select="IDS">
+use ids_schemas_<xsl:value-of select="@name"/>
 use <xsl:value-of select="@name"/>_put_struct
 use <xsl:value-of select="@name"/>_put_slice_struct
 use <xsl:value-of select="@name"/>_get_struct
@@ -300,6 +301,8 @@ end module
   <xsl:result-document href="{@name}_delete.f90">
 module <xsl:value-of select="@name"/>_delete
 
+! use ids_schemas_<xsl:value-of select="@name"/>
+
 ! Declaration of the generic IDS DELETE routine
 interface ids_delete
   module procedure ids_delete_<xsl:value-of select="local:unique_name(@name)"/> <!-- subroutine for the whole IDS -->
@@ -309,7 +312,7 @@ contains
 
 !!!!!! Routine to DELETE the IDS
 subroutine ids_delete_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, IDSpath, IDS)  <!-- systematic calls to the low level delete_data routine. The IDS input argument is added just for the interface to identify the relevant IDS type -->
-  use ids_schemas
+  use ids_schemas_<xsl:value-of select="@name"/>
   use ual_low_level_wrap
   implicit none
   character*(*) :: IDSpath
@@ -437,7 +440,7 @@ end interface
 subroutine ids_deallocate_struct_<xsl:value-of select="local:unique_name(@name)"/>(struct_in)
   use ual_low_level_wrap
   use, intrinsic :: ISO_C_BINDING, only: C_LOC
-  use ids_schemas
+  use ids_schemas_<xsl:value-of select="@name"/>
   implicit none
 
   integer(ids_int) :: i
@@ -470,7 +473,7 @@ end subroutine ids_deallocate_struct_<xsl:value-of select="local:unique_name(@na
 subroutine ids_deallocate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(struct_in,  c_data)
   use ual_low_level_wrap
   use, intrinsic :: ISO_C_BINDING, only: C_LOC
-  use ids_schemas
+  use ids_schemas_<xsl:value-of select="ancestor::IDS/@name"/>
   implicit none
 
   integer(ids_int) :: i
@@ -591,7 +594,7 @@ end interface
 subroutine ids_copy_struct_<xsl:value-of select="local:unique_name(@name)"/>(struct_in, struct_out)
   ! Copies all fields of struct_in to struct_out
   ! Assumes that struct_in is a single instance of a given structure
-  use ids_schemas
+  use ids_schemas_<xsl:value-of select="@name"/>
   implicit none
 
   integer(ids_int) :: i
@@ -622,7 +625,7 @@ end subroutine ids_copy_struct_<xsl:value-of select="local:unique_name(@name)"/>
 subroutine ids_copy_struct_<xsl:value-of select="local:unique_name($this-type)"/>(struct_in,  struct_out)
   ! Copies all fields of struct_in to struct_out
   ! Assumes that struct_in is a single instance of a given structure
-  use ids_schemas
+  use ids_schemas_<xsl:value-of select="ancestor::IDS/@name"/>
   implicit none
 
   integer(ids_int) :: i
@@ -768,7 +771,7 @@ end interface
 <!-- subroutine for the whole IDS -->
 !!! Routines to PUT the full IDS !!!
 subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS, retstatus)
-  use ids_schemas
+  use ids_schemas_<xsl:value-of select="@name"/>
   use ual_low_level_wrap
   use <xsl:value-of select="@name"/>_delete
   <!--<xsl:if test="@specific_validation_rules='yes'">
@@ -850,7 +853,7 @@ end subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
   <xsl:variable name="this-ids" select="ancestor::IDS/@name"/>
   <xsl:if test="not (preceding::field[@structure_reference=$this-type and ancestor::IDS/@name=$this-ids] or /IDSs/utilities/field/@name=$this-type)">
 subroutine put_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>(ctx, name, path, struct, timemode, timedparent, retstatus)
-  use ids_schemas
+  use ids_schemas_<xsl:value-of select="ancestor::IDS/@name"/>
   use ual_low_level_wrap
   implicit none
 
@@ -995,7 +998,7 @@ end interface
 <!-- subroutine for the whole IDS -->
 !!! Routines to PUT_SLICE one time slice of an IDS !!!
 subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS, retstatus)
-  use ids_schemas
+  use ids_schemas_<xsl:value-of select="@name"/>
   use ual_low_level_wrap
   use <xsl:value-of select="@name"/>_put_struct
   <!--<xsl:if test="@specific_validation_rules='yes'">
@@ -1119,7 +1122,7 @@ end subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@nam
   <xsl:variable name="this-ids" select="ancestor::IDS/@name"/>
   <xsl:if test="not (preceding::field[@structure_reference=$this-type and ancestor::IDS/@name=$this-ids] or /IDSs/utilities/field/@name=$this-type)">
 subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>(ctx, name, path, struct, timemode, timedparent, retstatus)
-  use ids_schemas
+  use ids_schemas_<xsl:value-of select="ancestor::IDS/@name"/>
   use ual_low_level_wrap
   implicit none
 
@@ -1269,7 +1272,7 @@ end interface
 <!-- subroutine for the whole IDS -->
 !!! Routines to GET the full IDS !!!
 subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS, retstatus)
-  use ids_schemas
+  use ids_schemas_<xsl:value-of select="@name"/>
   use ual_low_level_wrap
   implicit none
 
@@ -1328,7 +1331,7 @@ end subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
   <xsl:variable name="this-ids" select="ancestor::IDS/@name"/>
   <xsl:if test="not (preceding::field[@structure_reference=$this-type and ancestor::IDS/@name=$this-ids] or /IDSs/utilities/field/@name=$this-type)">
 subroutine get_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>(ctx, path, struct, timemode, timedparent, retstatus)
-  use ids_schemas
+  use ids_schemas_<xsl:value-of select="ancestor::IDS/@name"/>
   use ual_low_level_wrap
   implicit none
 
@@ -1380,7 +1383,7 @@ end interface
 <!-- subroutine for the whole IDS -->
 !!! Routines to GET one time slice of an IDS, with time interpolation !!!
 subroutine get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS, twant, interpol, retstatus)
-  use ids_schemas
+  use ids_schemas_<xsl:value-of select="@name"/>
   use ual_low_level_wrap
   implicit none
 
