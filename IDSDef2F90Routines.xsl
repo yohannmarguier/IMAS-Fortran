@@ -24,9 +24,16 @@
 </xsl:function>
 
 <xsl:template match="/IDSs">
+  <xsl:result-document href="ids_schemas.f90">
+  module ids_schemas
+  <xsl:for-each select="IDS">
+  use ids_schemas_<xsl:value-of select="@name"/>
+  </xsl:for-each>  
+  end module
+  </xsl:result-document>
   <xsl:result-document href="ids_routines.f90">
 module ids_routines
-! use ids_schemas_<xsl:value-of select="@name"/>
+use ids_schemas
 use ual_low_level_wrap
 use utilities_copy_struct
 use utilities_deallocate_struct
@@ -300,8 +307,6 @@ end module
 <xsl:template match="IDS" mode="delete">
   <xsl:result-document href="{@name}_delete.f90">
 module <xsl:value-of select="@name"/>_delete
-
-! use ids_schemas_<xsl:value-of select="@name"/>
 
 ! Declaration of the generic IDS DELETE routine
 interface ids_delete

@@ -82,7 +82,7 @@ uninstall: $(INSTALL_TARGETS:%_install=%_uninstall) pkgconfig_uninstall
 $(libdir) $(includedir)/fortran $(datadir)/src/fortraninterface $(MODDIR):
 	$(mkdir_p) $@
 
-sources: $(SOURCES) $(addsuffix _def.f90,$(IDSNAMES)) $(addsuffix _schema.f90,$(IDSNAMES)) id_f90_sources
+sources: $(SOURCES) $(addsuffix _def.f90,$(IDSNAMES)) $(addsuffix _schema.f90,$(IDSNAMES)) ids_schemas.f90 id_f90_sources
 	
 clean: pkgconfig_clean id_fortran_clean check-clean
 	$(RM) -r *.o *.mod *.so* *~ $(MODDIR) *.a *.lib *.dll
@@ -101,7 +101,7 @@ check-clean-src test-clean-src:
 	$(MAKE) -C tests/generator clean-src
 
 
-LIBFILES_fortran = ual_defs.o ual_low_level_wrap.o ids_types.o ids_utilities.o $(addsuffix _def.o,$(IDSNAMES)) $(addsuffix _schema.o,$(IDSNAMES))  utilities_copy_struct.o utilities_deallocate_struct.o utilities_put_struct.o utilities_put_slice_struct.o utilities_get_struct.o $(IDSOBJECTS) ids_routines.o $(DEP)
+LIBFILES_fortran = ual_defs.o ual_low_level_wrap.o ids_types.o ids_utilities.o $(addsuffix _def.o,$(IDSNAMES)) $(addsuffix _schema.o,$(IDSNAMES)) ids_schemas.o utilities_copy_struct.o utilities_deallocate_struct.o utilities_put_struct.o utilities_put_slice_struct.o utilities_get_struct.o $(IDSOBJECTS) ids_routines.o $(DEP)
 
 ids_routines.o: ids_routines.f90 ual_defs.o ual_low_level_wrap.o utilities_copy_struct.o utilities_deallocate_struct.o utilities_put_struct.o utilities_put_slice_struct.o utilities_get_struct.o $(IDSOBJECTS)
 	$(FC) -c $(FCFLAGS) $(MODINC) ids_routines.f90 -o $@
@@ -143,11 +143,13 @@ $(filter %_deallocate_struct.o,$(IDSOBJECTS)): %_deallocate_struct.o:%_deallocat
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
 %_schema.o: %_schema.f90 ual_defs.o ids_types.o ids_utilities.o %_def.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
-
+ids_schemas.o: ids_schemas.f90 $(addsuffix _schema.o,$(IDSNAMES))
+	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
 
 #----------------------- xslt ---------------------
 # Test if all idsroutines are found to exist as files.
 $(SOURCES): idsroutines
+
 idsroutines: IDSDef2F90Routines.xsl | saxonicajar
 	$(if $(call allnewerthan,$(IDSROUTINES),$^),, $(SAXON) -t -s:$(IDSDEF) -xsl:IDSDef2F90Routines.xsl DD_GIT_DESCRIBE=$(DD_GIT_DESCRIBE) UAL_GIT_DESCRIBE=$(UAL_GIT_DESCRIBE))
 

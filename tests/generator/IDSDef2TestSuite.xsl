@@ -62,7 +62,7 @@
 
         <xsl:text>module utilities_init_mod&#10;</xsl:text>
         <xsl:text>&#xA;</xsl:text>
-        <xsl:text>&#9;use ids_routines, only: ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>&#10;</xsl:text>
+        <xsl:text>&#9;use ids_schemas, only: ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>&#10;</xsl:text>
          <xsl:text>&#9;use setter&#10;</xsl:text>
         <xsl:text>&#xA;</xsl:text> 
         <xsl:text>&#9;implicit none&#10;</xsl:text>
@@ -146,6 +146,7 @@
   <xsl:result-document href="src/{@name}_init.f90">
         <xsl:text>module </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_mod&#10;</xsl:text>
         <xsl:text>&#xA;</xsl:text>
+        <xsl:text>&#9;use ids_schemas&#10;</xsl:text>
         <xsl:text>&#9;use ids_routines&#10;</xsl:text>
         <xsl:text>&#9;!use generator&#10;</xsl:text>
          <xsl:text>&#9;use setter&#10;</xsl:text>
@@ -228,6 +229,7 @@
         <xsl:text>&#xA;</xsl:text>
         <xsl:text>&#9;use generator&#10;</xsl:text>
         <xsl:text>&#9;use comparator &#10;</xsl:text>
+        <xsl:text>&#9;use ids_schemas&#10;</xsl:text>
         <xsl:text>&#9;use ids_routines&#10;</xsl:text>
          <xsl:text>&#9;use helper&#10;</xsl:text>
         <xsl:text>&#xA;</xsl:text> 
