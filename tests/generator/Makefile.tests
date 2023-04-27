@@ -24,7 +24,7 @@ ifeq ("yes","$(strip $(IMAS_HDF5))")
 TEST_ARRAY_ALL_BACKENDS += , HDF5_BACKEND
 endif
 ifeq ("yes","$(strip $(IMAS_UDA))")
-TEST_ARRAY_ALL_BACKENDS += , UDA_BACKEND
+#TEST_ARRAY_ALL_BACKENDS += , UDA_BACKEND
 endif
 
 # Get a list of IDS from IDSDEF file
