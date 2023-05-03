@@ -148,10 +148,25 @@ end module ! end of the utilities module
 </xsl:template>
 
 <xsl:template match="IDS" mode="declare_in_file">
-  <xsl:result-document href="{@name}_def.f90">
-    module def_<xsl:value-of select="@name"/>
+  <xsl:result-document href="{@name}_schema.f90">
+    module ids_schemas_<xsl:value-of select="@name"/>
     use ids_types
     use ids_utilities
+
+
+    interface set_c_data
+      module procedure set_c_data_<xsl:value-of select="@name"/>
+    end interface
+
+    interface is_c_data
+      module procedure is_c_data_<xsl:value-of select="@name"/> 
+    end interface
+
+    interface get_max_occurrences
+      module procedure get_max_occurrences_<xsl:value-of select="@name"/>
+    end interface
+
+
   ! ***********  <xsl:value-of select="@name"/> IDS internal structures declaration
   <xsl:variable name="this-ids" select="@name"/>
   <xsl:for-each select="./field[@data_type='structure' or @data_type='struct_array']">
@@ -201,30 +216,6 @@ function get_max_occurrences_<xsl:value-of select="@name"/>(ids)
 
   end module
 </xsl:result-document>
-
-<xsl:result-document href="{@name}_schema.f90">
-module ids_schemas_<xsl:value-of select="@name"/>     
-<!-- declare that utilities is an external  module -->
-use ids_utilities
-use def_<xsl:value-of select="@name"/>
-
-
-interface set_c_data
-  module procedure set_c_data_<xsl:value-of select="@name"/>
-end interface
-
-interface is_c_data
-  module procedure is_c_data_<xsl:value-of select="@name"/> 
-end interface
-
-interface get_max_occurrences
-  module procedure get_max_occurrences_<xsl:value-of select="@name"/>
-end interface
-
-
-end module
-
-  </xsl:result-document>
 </xsl:template>
 
 <xsl:template match="IDS" mode="sbrt_c_data">
