@@ -140,8 +140,6 @@ $(filter %_copy_struct.o,$(IDSOBJECTS)): %_copy_struct.o:%_copy_struct.f90 %_sch
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
 $(filter %_deallocate_struct.o,$(IDSOBJECTS)): %_deallocate_struct.o:%_deallocate_struct.f90 %_schema.o utilities_deallocate_struct.o ual_defs.o ual_low_level_wrap.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
-# %_def.o: %_def.f90 ual_defs.o ids_types.o ids_utilities.o
-# 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
 %_schema.o: %_schema.f90 ual_defs.o ids_types.o ids_utilities.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
 ids_schemas.o: ids_schemas.f90 $(addsuffix _schema.o,$(IDSNAMES))
