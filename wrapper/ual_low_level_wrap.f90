@@ -420,7 +420,6 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: pctx, mode
-    character(*), intent(in) :: opt
     integer, optional, intent(out) :: retstatus
     character(:), optional, allocatable, intent(out) :: retmesg
     type(al_status) :: status
