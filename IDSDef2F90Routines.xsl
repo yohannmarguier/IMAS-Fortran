@@ -117,7 +117,7 @@ subroutine ids_serialize(ids_in, buffer, protocol)
     end select
     
 
-    call ual_close_pulse(pulsectx, CLOSE_PULSE, '', status)
+    call ual_close_pulse(pulsectx, CLOSE_PULSE, status)
     if (status .ne. 0) then
       write(*,*) "SERIALIZE: ERROR closing ASCII backend - ual_close_pulse"
       buffer = ''
@@ -193,7 +193,7 @@ subroutine ids_deserialize(buffer, ids_out)
     end select
     
 
-    call ual_close_pulse(pulsectx, CLOSE_PULSE, '', status)
+    call ual_close_pulse(pulsectx, CLOSE_PULSE, status)
     if (status .ne. 0) then
       write(*,*) "SERIALIZE: ERROR closing ASCII backend - ual_close_pulse"
       call hli_end_action(pulsectx, status)

@@ -74,13 +74,12 @@ module ual_low_level_wrap
        integer(C_INT), intent(out) :: pctx
      end function c_ual_begin_dataentry_action
 
-     function c_ual_close_pulse(pctx, mode, opt) &
+     function c_ual_close_pulse(pctx, mode) &
           bind(C,name="ual_close_pulse")
        use, intrinsic :: ISO_C_BINDING
        import c_al_status_t
        type(c_al_status_t) :: c_ual_close_pulse
        integer(C_INT), value, intent(in) :: pctx, mode
-       character(C_CHAR), dimension(*), intent(in) :: opt
      end function c_ual_close_pulse
 
      function c_hli_begin_global_action(pctx, dataobjectname, datapath, rwmode, opctx) &
@@ -417,7 +416,7 @@ contains
     if (present(retstatus)) retstatus = status%code
   end subroutine ual_begin_dataentry_action
 
-  subroutine ual_close_pulse(pctx, mode, opt, retstatus, retmesg)
+  subroutine ual_close_pulse(pctx, mode, retstatus, retmesg)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: pctx, mode
@@ -425,7 +424,7 @@ contains
     integer, optional, intent(out) :: retstatus
     character(:), optional, allocatable, intent(out) :: retmesg
     type(al_status) :: status
-    status = fstatus(c_ual_close_pulse(pctx, mode, trim(opt)//C_NULL_CHAR))
+    status = fstatus(c_ual_close_pulse(pctx, mode))
     if (status%code.ne.0) then
        if (present(retmesg)) then
           retmesg = status%message
@@ -761,7 +760,7 @@ contains
     integer, intent(in) :: pulseCtx
     integer, optional, intent(out) :: retstatus
     integer :: status
-    call ual_close_pulse(pulseCtx, CLOSE_PULSE, "", status)
+    call ual_close_pulse(pulseCtx, CLOSE_PULSE, status)
     if (status.eq.0) then
        call hli_end_action(pulseCtx, status)
     endif
