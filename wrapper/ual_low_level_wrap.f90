@@ -84,7 +84,7 @@ module ual_low_level_wrap
      end function c_ual_close_pulse
 
      function c_hli_begin_global_action(pctx, dataobjectname, datapath, rwmode, opctx) &
-          bind(C,name="ual_begin_global_action")
+          bind(C,name="hli_begin_global_action")
        use, intrinsic :: ISO_C_BINDING
        import c_al_status_t
        type(c_al_status_t) :: c_hli_begin_global_action
