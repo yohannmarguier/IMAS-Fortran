@@ -98,7 +98,7 @@ subroutine ids_serialize(ids_in, buffer, protocol)
 
     ! Write to file
     !call ual_build_uri_from_legacy_parameters(ASCII_BACKEND, 0, 0, 'serialize', 'serialize', '3','-fullpath '//fname, uri, status)
-    uri = "imas:ascii?path=/dev/null;options=fullpath="//fname
+    uri = "imas:ascii?path=/dev/null;fullpath="//fname
     call ual_begin_dataentry_action(uri, FORCE_CREATE_PULSE, pulsectx, status)
     if (status .ne. 0) then
       write(*,*) "SERIALIZE: ERROR opening ASCII backend - ual_open_pulse"
@@ -175,7 +175,7 @@ subroutine ids_deserialize(buffer, ids_out)
     flush(unit)
 
     !call ual_build_uri_from_legacy_parameters(ASCII_BACKEND, 0, 0, 'serialize', 'serialize', '3','-fullpath '//fname, uri, status)
-    uri = "imas:ascii?path=/dev/null;options=fullpath="//fname
+    uri = "imas:ascii?path=/dev/null;fullpath="//fname
     call ual_begin_dataentry_action(uri, FORCE_CREATE_PULSE, pulsectx, status)
     if (status .ne. 0) then
       write(*,*) "SERIALIZE: ERROR opening ASCII backend - ual_open_pulse"
