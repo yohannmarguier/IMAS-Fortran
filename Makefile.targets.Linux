@@ -1,5 +1,5 @@
-sources_install: $(SOURCES) ids_schemas.f90 id_f90_sources_install
-	$(INSTALL_DATA) $(SOURCES) ids_schemas.f90 $(datadir)/src/fortraninterface
+sources_install: $(SOURCES) id_f90_sources_install
+	$(INSTALL_DATA) $(SOURCES) $(datadir)/src/fortraninterface
 sources_uninstall:
 	-rm -rf $(datadir)/src/fortraninterface
 
