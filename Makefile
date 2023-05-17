@@ -47,6 +47,7 @@ IDSNAMES_FUNC+=$(addsuffix _put,$(IDSNAMES))
 IDSNAMES_FUNC+=$(addsuffix _put_slice,$(IDSNAMES))
 IDSNAMES_FUNC+=$(addsuffix _get,$(IDSNAMES))
 IDSNAMES_FUNC+=$(addsuffix _get_slice,$(IDSNAMES))
+IDSNAMES_FUNC+=$(addsuffix _validate,$(IDSNAMES))
 
 # IDS routines
 IDSROUTINES=$(addsuffix .f90,$(IDSNAMES_FUNC)) ids_schemas.f90 ids_routines.f90 utilities_copy_struct.f90 utilities_deallocate_struct.f90 utilities_put_struct.f90 utilities_put_slice_struct.f90 utilities_get_struct.f90
@@ -141,6 +142,8 @@ $(filter %_copy_struct.o,$(IDSOBJECTS)): %_copy_struct.o:%_copy_struct.f90 %_sch
 $(filter %_deallocate_struct.o,$(IDSOBJECTS)): %_deallocate_struct.o:%_deallocate_struct.f90 %_schema.o utilities_deallocate_struct.o al_defs.o al_low_level_wrap.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
 %_schema.o: %_schema.f90 al_defs.o ids_types.o ids_utilities.o
+	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
+%_validate.o: %_validate.f90 ual_defs.o ids_types.o ids_utilities.o %_schema.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
 ids_schemas.o: ids_schemas.f90 $(addsuffix _schema.o,$(IDSNAMES))
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
