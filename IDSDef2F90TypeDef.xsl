@@ -11,7 +11,7 @@
 
 
 <xsl:template match="/IDSs">
-  <xsl:result-document href="ids_schemas.f90">
+  <xsl:result-document href="ids_types.f90">
 ! IDS FORTRAN 90 type definitions
 ! Contains the type definition of all IDSs
 <!-- -->
@@ -84,52 +84,26 @@ end module ids_types
 
 <!-- -->
 <!-- ======================= ====   Begin : Common Utility definition ==== =====================-->
+</xsl:result-document>
+<xsl:result-document href="ids_utilities.f90">
 module ids_utilities    ! declare the set of types common to all sub-trees
 
 use ids_types
-
-<!-- Declare utilities types -->
-<xsl:apply-templates select="/IDSs/utilities" mode="module"/> <!-- Original IDS structure -->
-
-end module ! end of the utilities module
-<!-- ======================= ====   End :Common Utility definition ==== =====================-->
-
-<!-- ======================= ====   Begin : declare schema  ==== =====================-->
-module ids_schemas       ! declaration of all IDSs
-<!-- declare that utilities is an external  module -->
-use ids_utilities
-
-
-
-interface set_c_data
-<xsl:apply-templates select="IDS" mode="declare_set_c_data"/>
-end interface
-
-interface is_c_data
-<xsl:apply-templates select="IDS" mode="declare_is_c_data"/>
-end interface
-
-interface get_max_occurrences
-<xsl:apply-templates select="IDS" mode="declare_get_max_occurrences"/>
-end interface
 
 <!-- Base IDS type -->
 type, abstract :: IDS_base
 end type
 
-<!-- declare each IDS and their structures -->
-! declare each IDS and their substructures
-<xsl:apply-templates select="IDS" mode="declare"/>  
+<!-- Declare utilities types -->
+<xsl:apply-templates select="/IDSs/utilities" mode="module"/> <!-- Original IDS structure -->
 
+end module ! end of the utilities module
+</xsl:result-document>
+<!-- ======================= ====   End :Common Utility definition ==== =====================-->
 
-contains 
+<!-- ======================= ====   Begin : declare schema  ==== =====================-->
 
-<xsl:apply-templates select="IDS" mode="sbrt_c_data"/>
-<xsl:apply-templates select="IDS" mode="sbrt_max_occurrences"/>
-
-end module
-
-  </xsl:result-document>
+  <xsl:apply-templates select="IDS" mode="declare_in_file"/>  
 
 </xsl:template>
 <!-- ============================  End : declare schema ========================= -->
@@ -147,27 +121,6 @@ end module
 
 <xsl:template match="IDS" mode="declare_get_max_occurrences">
   module procedure get_max_occurrences_<xsl:value-of select="@name"/>
-</xsl:template>
-
-<xsl:template match="IDS" mode="sbrt_c_data">
-  subroutine set_c_data_<xsl:value-of select="@name"/>(ids, bool)
-    type(ids_<xsl:value-of select="@name"/>), intent(inout) :: ids
-    logical, intent(in) :: bool
-    ids%c_data = bool
-  end subroutine
-  subroutine is_c_data_<xsl:value-of select="@name"/>(ids, bool)
-    type(ids_<xsl:value-of select="@name"/>), intent(in) :: ids
-    logical, intent(out) :: bool
-    bool = ids%c_data
-  end subroutine
-</xsl:template>
-
-<xsl:template match="IDS" mode="sbrt_max_occurrences">
-  function get_max_occurrences_<xsl:value-of select="@name"/>(ids)
-    type(ids_<xsl:value-of select="@name"/>), intent(in) :: ids
-    integer :: get_max_occurrences_<xsl:value-of select="@name"/>
-    get_max_occurrences_<xsl:value-of select="@name"/> = ids%max_occurrence
-  end function
 </xsl:template>
 
 <xsl:template match="utilities" mode="module">
@@ -191,6 +144,29 @@ end module
 
 
 <xsl:template match="IDS" mode="declare">
+  use <xsl:value-of select="@name"/>
+</xsl:template>
+
+<xsl:template match="IDS" mode="declare_in_file">
+  <xsl:result-document href="{@name}_schema.f90">
+    module ids_schemas_<xsl:value-of select="@name"/>
+    use ids_types
+    use ids_utilities
+
+
+    interface set_c_data
+      module procedure set_c_data_<xsl:value-of select="@name"/>
+    end interface
+
+    interface is_c_data
+      module procedure is_c_data_<xsl:value-of select="@name"/> 
+    end interface
+
+    interface get_max_occurrences
+      module procedure get_max_occurrences_<xsl:value-of select="@name"/>
+    end interface
+
+
   ! ***********  <xsl:value-of select="@name"/> IDS internal structures declaration
   <xsl:variable name="this-ids" select="@name"/>
   <xsl:for-each select="./field[@data_type='structure' or @data_type='struct_array']">
@@ -218,6 +194,49 @@ end module
     integer, private :: max_occurrence = <xsl:value-of select="@maxoccur"/>! Maximum occurrence allowed as defined in the DD
     <xsl:apply-templates select="./field" mode="declare_field"/>
   end type
+
+  contains 
+
+    subroutine set_c_data_<xsl:value-of select="@name"/>(ids, bool)
+    type(ids_<xsl:value-of select="@name"/>), intent(inout) :: ids
+    logical, intent(in) :: bool
+    ids%c_data = bool
+  end subroutine
+  subroutine is_c_data_<xsl:value-of select="@name"/>(ids, bool)
+    type(ids_<xsl:value-of select="@name"/>), intent(in) :: ids
+    logical, intent(out) :: bool
+    bool = ids%c_data
+  end subroutine
+
+function get_max_occurrences_<xsl:value-of select="@name"/>(ids)
+    type(ids_<xsl:value-of select="@name"/>), intent(in) :: ids
+    integer :: get_max_occurrences_<xsl:value-of select="@name"/>
+    get_max_occurrences_<xsl:value-of select="@name"/> = ids%max_occurrence
+  end function
+
+  end module
+</xsl:result-document>
+</xsl:template>
+
+<xsl:template match="IDS" mode="sbrt_c_data">
+  subroutine set_c_data_<xsl:value-of select="@name"/>(ids, bool)
+    type(ids_<xsl:value-of select="@name"/>), intent(inout) :: ids
+    logical, intent(in) :: bool
+    ids%c_data = bool
+  end subroutine
+  subroutine is_c_data_<xsl:value-of select="@name"/>(ids, bool)
+    type(ids_<xsl:value-of select="@name"/>), intent(in) :: ids
+    logical, intent(out) :: bool
+    bool = ids%c_data
+  end subroutine
+</xsl:template>
+
+<xsl:template match="IDS" mode="sbrt_max_occurrences">
+  function get_max_occurrences_<xsl:value-of select="@name"/>(ids)
+    type(ids_<xsl:value-of select="@name"/>), intent(in) :: ids
+    integer :: get_max_occurrences_<xsl:value-of select="@name"/>
+    get_max_occurrences_<xsl:value-of select="@name"/> = ids%max_occurrence
+  end function
 </xsl:template>
 
 
@@ -358,4 +377,3 @@ end module
 
 
 </xsl:stylesheet>
-

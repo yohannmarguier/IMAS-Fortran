@@ -49,8 +49,9 @@ IDSNAMES_FUNC+=$(addsuffix _get,$(IDSNAMES))
 IDSNAMES_FUNC+=$(addsuffix _get_slice,$(IDSNAMES))
 
 # IDS routines
-IDSROUTINES=$(addsuffix .f90,$(IDSNAMES_FUNC))
-SOURCES=ids_routines.f90 utilities_copy_struct.f90 utilities_deallocate_struct.f90 utilities_put_struct.f90 utilities_put_slice_struct.f90 utilities_get_struct.f90 $(IDSROUTINES)
+IDSROUTINES=$(addsuffix .f90,$(IDSNAMES_FUNC)) ids_schemas.f90 ids_routines.f90 utilities_copy_struct.f90 utilities_deallocate_struct.f90 utilities_put_struct.f90 utilities_put_slice_struct.f90 utilities_get_struct.f90
+IDSTYPES= ids_types.f90 ids_utilities.f90 $(addsuffix _schema.f90,$(IDSNAMES))
+SOURCES= $(IDSTYPES) $(IDSROUTINES)
 
 # pkg-config files
 PC_FILES=al-fortran.pc
@@ -82,14 +83,14 @@ uninstall: $(INSTALL_TARGETS:%_install=%_uninstall) pkgconfig_uninstall
 $(libdir) $(includedir)/fortran $(datadir)/src/fortraninterface $(MODDIR):
 	$(mkdir_p) $@
 
-sources: $(SOURCES) ids_schemas.f90 id_f90_sources
-
+sources: $(SOURCES)
+	
 clean: pkgconfig_clean id_fortran_clean check-clean
 	$(RM) -r *.o *.mod *.so* *~ $(MODDIR) *.a *.lib *.dll
 
 clean-src: clean id_f90_clean-src check-clean-src
 	$(RM) $(SOURCES)
-	$(RM) ids_schemas.f90
+	$(RM) $(addsuffix _schema.f90,$(IDSNAMES))
 
 check test:
 	$(MAKE) -C tests/generator test
@@ -101,7 +102,7 @@ check-clean-src test-clean-src:
 	$(MAKE) -C tests/generator clean-src
 
 
-LIBFILES_fortran = ids_schemas.o ual_defs.o ual_low_level_wrap.o utilities_copy_struct.o utilities_deallocate_struct.o utilities_put_struct.o utilities_put_slice_struct.o utilities_get_struct.o $(IDSOBJECTS) ids_routines.o $(DEP)
+LIBFILES_fortran = ual_defs.o ual_low_level_wrap.o ids_types.o ids_utilities.o $(addsuffix _schema.o,$(IDSNAMES)) ids_schemas.o utilities_copy_struct.o utilities_deallocate_struct.o utilities_put_struct.o utilities_put_slice_struct.o utilities_get_struct.o $(IDSOBJECTS) ids_routines.o $(DEP)
 
 ids_routines.o: ids_routines.f90 ual_defs.o ual_low_level_wrap.o utilities_copy_struct.o utilities_deallocate_struct.o utilities_put_struct.o utilities_put_slice_struct.o utilities_get_struct.o $(IDSOBJECTS)
 	$(FC) -c $(FCFLAGS) $(MODINC) ids_routines.f90 -o $@
@@ -110,44 +111,49 @@ ual_defs.o: %.o:wrapper/%.f90 | $(MODDIR)
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
 ual_low_level_wrap.o: %.o:wrapper/%.f90 ual_defs.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
-ids_schemas.o: %.o:%.f90 ual_defs.o
+ids_types.o: ids_types.f90
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
-utilities_copy_struct.o: utilities_copy_struct.f90 ids_schemas.o ual_defs.o ual_low_level_wrap.o
+ids_utilities.o: ids_utilities.f90 ids_types.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
-utilities_deallocate_struct.o: utilities_deallocate_struct.f90 ids_schemas.o ual_defs.o ual_low_level_wrap.o
+utilities_copy_struct.o: utilities_copy_struct.f90 ual_defs.o ual_low_level_wrap.o ids_utilities.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
-utilities_put_struct.o: utilities_put_struct.f90 ids_schemas.o ual_defs.o ual_low_level_wrap.o
+utilities_deallocate_struct.o: utilities_deallocate_struct.f90 ual_defs.o ual_low_level_wrap.o ids_utilities.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
-utilities_put_slice_struct.o: utilities_put_slice_struct.f90 ids_schemas.o ual_defs.o ual_low_level_wrap.o
+utilities_put_struct.o: utilities_put_struct.f90 ual_defs.o ual_low_level_wrap.o ids_utilities.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
-utilities_get_struct.o: utilities_get_struct.f90 ids_schemas.o ual_defs.o ual_low_level_wrap.o
+utilities_put_slice_struct.o: utilities_put_slice_struct.f90 ual_defs.o ual_low_level_wrap.o ids_utilities.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
-
-$(filter %_put.o,$(IDSOBJECTS)): %_put.o : %_put.f90 %_delete.o ids_schemas.o utilities_put_struct.o ual_defs.o ual_low_level_wrap.o
-	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
-$(filter %_put_slice.o,$(IDSOBJECTS)): %_put_slice.o : %_put_slice.f90 ids_schemas.o %_put.o utilities_put_slice_struct.o ual_defs.o ual_low_level_wrap.o
-	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
-$(filter %_get.o,$(IDSOBJECTS)): %_get.o:%_get.f90 ids_schemas.o utilities_get_struct.o ual_defs.o ual_low_level_wrap.o
-	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
-$(filter %_get_slice.o,$(IDSOBJECTS)): %_get_slice.o:%_get_slice.f90 ids_schemas.o utilities_get_struct.o %_get.o ual_defs.o ual_low_level_wrap.o
-	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
-$(filter %_delete.o,$(IDSOBJECTS)): %.o:%.f90 ids_schemas.o ual_defs.o ual_low_level_wrap.o
-	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
-$(filter %_copy_struct.o,$(IDSOBJECTS)): %.o:%.f90 ids_schemas.o utilities_copy_struct.o ual_defs.o ual_low_level_wrap.o
-	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
-$(filter %_deallocate_struct.o,$(IDSOBJECTS)): %.o:%.f90 ids_schemas.o utilities_deallocate_struct.o ual_defs.o ual_low_level_wrap.o
+utilities_get_struct.o: utilities_get_struct.f90 ual_defs.o ual_low_level_wrap.o ids_utilities.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
 
+$(filter %_put.o,$(IDSOBJECTS)): %_put.o : %_put.f90 %_delete.o %_schema.o utilities_put_struct.o ual_defs.o ual_low_level_wrap.o
+	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
+$(filter %_put_slice.o,$(IDSOBJECTS)): %_put_slice.o : %_put_slice.f90 %_schema.o %_put.o utilities_put_slice_struct.o ual_defs.o ual_low_level_wrap.o
+	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
+$(filter %_get.o,$(IDSOBJECTS)): %_get.o:%_get.f90 %_schema.o utilities_get_struct.o ual_defs.o ual_low_level_wrap.o
+	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
+$(filter %_get_slice.o,$(IDSOBJECTS)): %_get_slice.o:%_get_slice.f90 %_schema.o utilities_get_struct.o %_get.o ual_defs.o ual_low_level_wrap.o
+	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
+$(filter %_delete.o,$(IDSOBJECTS)): %_delete.o:%_delete.f90 %_schema.o ual_defs.o ual_low_level_wrap.o
+	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
+$(filter %_copy_struct.o,$(IDSOBJECTS)): %_copy_struct.o:%_copy_struct.f90 %_schema.o utilities_copy_struct.o ual_defs.o ual_low_level_wrap.o
+	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
+$(filter %_deallocate_struct.o,$(IDSOBJECTS)): %_deallocate_struct.o:%_deallocate_struct.f90 %_schema.o utilities_deallocate_struct.o ual_defs.o ual_low_level_wrap.o
+	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
+%_schema.o: %_schema.f90 ual_defs.o ids_types.o ids_utilities.o
+	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
+ids_schemas.o: ids_schemas.f90 $(addsuffix _schema.o,$(IDSNAMES))
+	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
 
 #----------------------- xslt ---------------------
 # Test if all idsroutines are found to exist as files.
-$(SOURCES): idsroutines
+$(SOURCES): idsdef idsroutines
+
 idsroutines: IDSDef2F90Routines.xsl | saxonicajar
-	$(if $(call allnewerthan,$(IDSROUTINES),$^),, $(SAXON) -t -s:$(IDSDEF) -xsl:IDSDef2F90Routines.xsl DD_GIT_DESCRIBE=$(DD_GIT_DESCRIBE) UAL_GIT_DESCRIBE=$(UAL_GIT_DESCRIBE))
+	$(if $(call allnewerthan,$(SOURCES),$^),, $(SAXON) -t -s:$(IDSDEF) -xsl:IDSDef2F90Routines.xsl DD_GIT_DESCRIBE=$(DD_GIT_DESCRIBE) UAL_GIT_DESCRIBE=$(UAL_GIT_DESCRIBE))
 
-ids_schemas.f90: IDSDef2F90TypeDef.xsl | saxonicajar
-	$(SAXON) -t -s:$(IDSDEF) -xsl:IDSDef2F90TypeDef.xsl
-
+idsdef:  IDSDef2F90TypeDef.xsl | saxonicajar
+	$(if $(call allnewerthan,$(IDSTYPES),$^),, $(SAXON) -t -s:$(IDSDEF) -xsl:IDSDef2F90TypeDef.xsl DD_GIT_DESCRIBE=$(DD_GIT_DESCRIBE) UAL_GIT_DESCRIBE=$(UAL_GIT_DESCRIBE))
 
 # Include OS-specific Makefile.targets, if exists.
 ifneq (,$(wildcard Makefile.targets.$(SYSTEM)))

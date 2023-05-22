@@ -1,5 +1,5 @@
 
-sources_install: $(SOURCES) ids_schemas.f90 id_f90_sources_install
+sources_install: $(SOURCES) id_f90_sources_install
 sources_uninstall: id_f90_sources_uninstall
 
 fortran_install: $(IDSOBJECTS) libal-fortran.dll libal-fortran.lib

@@ -147,10 +147,10 @@
         <xsl:text>module </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_mod&#10;</xsl:text>
         <xsl:text>&#xA;</xsl:text>
         <xsl:text>&#9;use ids_schemas&#10;</xsl:text>
+        <xsl:text>&#9;use ids_routines&#10;</xsl:text>
         <xsl:text>&#9;!use generator&#10;</xsl:text>
          <xsl:text>&#9;use setter&#10;</xsl:text>
          <xsl:text>&#9;use helper&#10;</xsl:text>
-        <xsl:text>&#9;use ids_routines, only: IDS_TIME_MODE_INDEPENDENT&#10;</xsl:text>
         <xsl:text>&#xA;</xsl:text> 
         <xsl:text>&#9;implicit none&#10;</xsl:text>
         <xsl:text>&#xA;</xsl:text> 
@@ -230,8 +230,8 @@
         <xsl:text>&#9;use generator&#10;</xsl:text>
         <xsl:text>&#9;use comparator &#10;</xsl:text>
         <xsl:text>&#9;use ids_schemas&#10;</xsl:text>
+        <xsl:text>&#9;use ids_routines&#10;</xsl:text>
          <xsl:text>&#9;use helper&#10;</xsl:text>
-        <xsl:text>&#9;use ids_routines, only: IDS_TIME_MODE_INDEPENDENT&#10;</xsl:text>
         <xsl:text>&#xA;</xsl:text> 
         <xsl:text>&#9;implicit none&#10;</xsl:text>
         <xsl:text>&#xA;</xsl:text> 
