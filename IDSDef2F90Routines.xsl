@@ -1771,11 +1771,11 @@ end if
 	<xsl:param name="relativepathdoc"/>
   <xsl:param name="self"/>
 	<xsl:if test="contains($coord,' OR')">
-  <xsl:variable name="target" select="replace(substring-after(substring-before($coord,' OR'),$relativepathdoc),'/','%')"/>
-  <!-- ! <xsl:value-of select="$target"/>
+  <xsl:variable name="target" select="replace(substring-before(substring-after($coord,$relativepathdoc),' OR'),'/','%')"/>
+  ! <xsl:value-of select="$target"/>
   ! <xsl:value-of select="$relativepathdoc"/>
-  ! <xsl:value-of select="$coord"/> -->
-  <xsl:if test="not(starts-with($target,concat($self,'%')))">
+  ! <xsl:value-of select="$coord"/>
+  <xsl:if test="not(contains(substring-before($coord,' OR'),'1...'))">
           if (associated(ids%<xsl:value-of select="$target"/>)) i = i + 1
   </xsl:if>
   <xsl:apply-templates select="." mode="possible-coordinates">
@@ -1786,10 +1786,10 @@ end if
   </xsl:if>
   <xsl:if test="not(contains($coord,' OR'))">
   <xsl:variable name="target" select="replace(substring-after($coord,$relativepathdoc),'/','%')"/>
-  <!-- ! <xsl:value-of select="$target"/>
+  ! <xsl:value-of select="$target"/>
   ! <xsl:value-of select="$relativepathdoc"/>
-  ! <xsl:value-of select="$coord"/> -->
-  <xsl:if test="not(starts-with($target,concat($self,'%')))">
+  ! <xsl:value-of select="$coord"/>
+  <xsl:if test="not(contains($coord,'1...'))">
       if (associated(ids%<xsl:value-of select="$target"/>)) i = i + 1
   </xsl:if>
       if (i.ne.1) check = .FALSE.
@@ -1803,8 +1803,8 @@ end if
   <xsl:param name="self"/>
   <xsl:param name="targetdim"/>
 	<xsl:if test="contains($coord,' OR')">
-        <xsl:variable name="target" select="replace(substring-after(substring-before($coord,' OR'),$relativepathdoc),'/','%')"/>
-        <xsl:if test="not(starts-with($target,concat($self,'%')))">
+        <xsl:variable name="target" select="replace(substring-before(substring-after($coord,$relativepathdoc),' OR'),'/','%')"/>
+        <xsl:if test="not(contains(substring-before($coord,' OR'),'1...'))">
         if (associated(ids%<xsl:value-of select="$target"/>)) then
           if (arraySize .eq. size(ids%<xsl:value-of select="$target"/>,<xsl:value-of select="number($targetdim)+1"/>)) then
             error = .FALSE.
@@ -1821,7 +1821,7 @@ end if
   </xsl:if>
   <xsl:if test="not(contains($coord,' OR'))">
         <xsl:variable name="target" select="replace(substring-after($coord,$relativepathdoc),'/','%')"/>
-        <xsl:if test="not(starts-with($target,concat($self,'%')))">
+        <xsl:if test="not(contains($coord,'1...'))">
         if (associated(ids%<xsl:value-of select="$target"/>)) then
           if (arraySize .eq. size(ids%<xsl:value-of select="$target"/>,<xsl:value-of select="number($targetdim)+1"/>)) then
           error = .FALSE.
@@ -1837,9 +1837,9 @@ end if
   <xsl:param name="dimension"/>
   <xsl:param name="self"/>
 	<xsl:if test="contains($coord,' OR')">
-        <xsl:variable name="target" select="replace(substring-after(substring-before($coord,' OR'),$relativepathdoc),'/','%')"/>
-        <xsl:if test="starts-with($target,concat($self,'%'))">
-        if (.not. check .and. arraySize .eq. <xsl:value-of select="substring-after($target,concat($self,'%'))"/>) then  
+        <xsl:variable name="target" select="replace(substring-before(substring-after($coord,$relativepathdoc),' OR'),'/','%')"/>
+        <xsl:if test="contains(substring-before($coord,' OR'),'1...')">
+        if (.not. check .and. arraySize .eq. <xsl:value-of select="substring-after($coord,'1...')"/>) then  
         error = .FALSE. 
         endif
         </xsl:if>
@@ -1852,8 +1852,8 @@ end if
   </xsl:if>
   <xsl:if test="not(contains($coord,' OR'))">
         <xsl:variable name="target" select="replace(substring-after($coord,$relativepathdoc),'/','%')"/>
-        <xsl:if test="starts-with($target,concat($self,'%'))">
-        if (.not. check .and. arraySize .eq. <xsl:value-of select="substring-after($target,concat($self,'%'))"/>) then   
+        <xsl:if test="contains($coord,'1...')">
+        if (.not. check .and. arraySize .eq. <xsl:value-of select="substring-after($coord,'1...')"/>) then   
         error = .FALSE. 
         endif
         </xsl:if>
