@@ -50,7 +50,7 @@ IDSNAMES_FUNC+=$(addsuffix _get_slice,$(IDSNAMES))
 IDSNAMES_FUNC+=$(addsuffix _validate,$(IDSNAMES))
 
 # IDS routines
-IDSROUTINES=$(addsuffix .f90,$(IDSNAMES_FUNC)) ids_schemas.f90 ids_routines.f90 utilities_copy_struct.f90 utilities_deallocate_struct.f90 utilities_put_struct.f90 utilities_put_slice_struct.f90 utilities_get_struct.f90
+IDSROUTINES=$(addsuffix .f90,$(IDSNAMES_FUNC)) ids_schemas.f90 ids_routines.f90 utilities_copy_struct.f90 utilities_deallocate_struct.f90 utilities_put_struct.f90 utilities_put_slice_struct.f90 utilities_get_struct.f90 utilities_validate_struct.f90
 IDSTYPES= ids_types.f90 ids_utilities.f90 $(addsuffix _schema.f90,$(IDSNAMES))
 SOURCES= $(IDSTYPES) $(IDSROUTINES)
 
@@ -103,7 +103,7 @@ check-clean-src test-clean-src:
 	$(MAKE) -C tests/generator clean-src
 
 
-LIBFILES_fortran = al_defs.o al_low_level_wrap.o ids_types.o ids_utilities.o $(addsuffix _schema.o,$(IDSNAMES)) ids_schemas.o utilities_copy_struct.o utilities_deallocate_struct.o utilities_put_struct.o utilities_put_slice_struct.o utilities_get_struct.o $(IDSOBJECTS) ids_routines.o $(DEP)
+LIBFILES_fortran = ual_defs.o ual_low_level_wrap.o ids_types.o ids_utilities.o $(addsuffix _schema.o,$(IDSNAMES)) ids_schemas.o utilities_copy_struct.o utilities_deallocate_struct.o utilities_put_struct.o utilities_put_slice_struct.o utilities_get_struct.o  utilities_validate_struct.o $(IDSOBJECTS) ids_routines.o $(DEP)
 
 ids_routines.o: ids_routines.f90 al_defs.o al_low_level_wrap.o utilities_copy_struct.o utilities_deallocate_struct.o utilities_put_struct.o utilities_put_slice_struct.o utilities_get_struct.o $(IDSOBJECTS)
 	$(FC) -c $(FCFLAGS) $(MODINC) ids_routines.f90 -o $@
@@ -124,10 +124,12 @@ utilities_put_struct.o: utilities_put_struct.f90 al_defs.o al_low_level_wrap.o i
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
 utilities_put_slice_struct.o: utilities_put_slice_struct.f90 al_defs.o al_low_level_wrap.o ids_utilities.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
-utilities_get_struct.o: utilities_get_struct.f90 al_defs.o al_low_level_wrap.o ids_utilities.o
+utilities_get_struct.o: utilities_get_struct.f90 ual_defs.o ual_low_level_wrap.o ids_utilities.o
+	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
+utilities_validate_struct.o: utilities_validate_struct.f90 ual_defs.o ual_low_level_wrap.o ids_utilities.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
 
-$(filter %_put.o,$(IDSOBJECTS)): %_put.o : %_put.f90 %_delete.o %_schema.o utilities_put_struct.o al_defs.o al_low_level_wrap.o
+$(filter %_put.o,$(IDSOBJECTS)): %_put.o : %_put.f90 %_delete.o %_schema.o %_validate.o utilities_put_struct.o ual_defs.o ual_low_level_wrap.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
 $(filter %_put_slice.o,$(IDSOBJECTS)): %_put_slice.o : %_put_slice.f90 %_schema.o %_put.o utilities_put_slice_struct.o al_defs.o al_low_level_wrap.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
@@ -143,7 +145,7 @@ $(filter %_deallocate_struct.o,$(IDSOBJECTS)): %_deallocate_struct.o:%_deallocat
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
 %_schema.o: %_schema.f90 al_defs.o ids_types.o ids_utilities.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
-%_validate.o: %_validate.f90 ual_defs.o ids_types.o ids_utilities.o %_schema.o
+%_validate.o: %_validate.f90 ual_defs.o ids_types.o ids_utilities.o %_schema.o utilities_validate_struct.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
 ids_schemas.o: ids_schemas.f90 $(addsuffix _schema.o,$(IDSNAMES))
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
