@@ -835,15 +835,17 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   character(len=300) :: timepath
   character(*), parameter :: path = ''
   integer(ids_int) :: validation_status
-  character(99) :: err_msg
+  character(999) :: err_msg
+  character(len=1) :: buffer
 
   ! Automatic validation of the data (if enabled)
-  if (automaticValidation) then 
+  CALL get_environment_variable("IMAS_AL_ENABLE_VALIDATION_AT_PUT", buffer)
+  if (len_trim(buffer).ne.0 .and. buffer .ne. '0') then
     call ids_validate(IDS,validation_status,err_msg)
     if(validation_status == -1) then 
       write(*,*) "Error during automatic validation before put of <xsl:value-of select="@name"/>"
       write(*,*) err_msg
-      if (present(retstatus)) retstatus = UNKNOWN_ERR
+      if (present(retstatus)) retstatus = CONSISTENCY_ERR
       return
     end if
   end if 
@@ -1340,37 +1342,33 @@ subroutine validate_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
   implicit none
   type(ids_<xsl:value-of select="@name"/>), intent(in) :: ids
   integer(ids_int), intent(out), optional :: status
-  character(99), intent(out), optional :: err_msg
+  character(999), intent(out), optional :: err_msg
 
-  integer(ids_int) :: arraySize, i 
-  integer(ids_int) :: idsTimeMode
-  integer(ids_int) :: idsTimeSize
+  integer(ids_int) :: array_size, i 
+  integer(ids_int) :: ids_time_mode
+  integer(ids_int) :: ids_time_size
 
-  idsTimeMode = ids%ids_properties%homogeneous_time;
-  if (idsTimeMode .ne. IDS_TIME_MODE_HOMOGENEOUS .and. \
-      idsTimeMode .ne. IDS_TIME_MODE_HETEROGENEOUS .and. \
-      idsTimeMode .ne. IDS_TIME_MODE_INDEPENDENT) then
+  ids_time_mode = ids%ids_properties%homogeneous_time;
+  if (ids_time_mode .ne. IDS_TIME_MODE_HOMOGENEOUS .and. \
+      ids_time_mode .ne. IDS_TIME_MODE_HETEROGENEOUS .and. \
+      ids_time_mode .ne. IDS_TIME_MODE_INDEPENDENT) then
         err_msg = "ids_properties.homogeneous_time wrong value"
         status = -1 
         return
   end if
 
-  if (idsTimeMode .eq. IDS_TIME_MODE_HOMOGENEOUS .and. .not. associated(ids%time)) then 
+  if (ids_time_mode .eq. IDS_TIME_MODE_HOMOGENEOUS .and. .not. associated(ids%time)) then 
         err_msg = "the time array must be associated"
         status = -1 
         return
-  else  
-    if (size(ids%time) &lt; 1) then
-        err_msg = "the time array must be at least of size 1"
-        status = -1 
-        return
-    end if
   end if
   
-  idsTimeSize = size(ids%time)
+  ids_time_size = size(ids%time)
 
 <!-- call ids_validate for each field-->
 <xsl:apply-templates select="field" mode="VALIDATE_CHILD"/>
+<!-- check the array shapes of the field of this ids-->
+	<xsl:apply-templates select="field[@data_type='struct_array']" mode="VALIDATE_CHILD_1D"/>
   status = 0
   return
 end subroutine
@@ -1379,6 +1377,198 @@ end subroutine
 <xsl:apply-templates select=".//field[@data_type='structure' or @data_type='struct_array']" mode="VALIDATE_DEFINITIONS"/>
 end module    
   </xsl:result-document>
+</xsl:template>
+
+<xsl:template match="field[@data_type='struct_array' or  @data_type='flt_1d_type' or @data_type='FLT_1D'
+or @data_type='int_1d_type' or @data_type='INT_1D'
+or @data_type='cpx_1d_type' or @data_type='CPX_1D']" mode="VALIDATE_UTILITIES_CHILD_1D">
+<xsl:apply-templates select="." mode="VALIDATE_UTILITIES_CHILD_SINGLE">
+<xsl:with-param name="coord" select="@coordinate1"/>
+<xsl:with-param name="dimension" select="'1'"/>
+</xsl:apply-templates>
+</xsl:template>
+
+<xsl:template match="field[@data_type='FLT_2D' or @data_type='INT_2D' or @data_type='CPX_2D']" mode="VALIDATE_UTILITIES_CHILD_2D">
+<xsl:apply-templates select="." mode="VALIDATE_UTILITIES_CHILD_SINGLE">
+<xsl:with-param name="coord" select="@coordinate1"/>
+<xsl:with-param name="dimension" select="'1'"/>
+</xsl:apply-templates>
+<xsl:apply-templates select="." mode="VALIDATE_UTILITIES_CHILD_SINGLE">
+<xsl:with-param name="coord" select="@coordinate2"/>
+<xsl:with-param name="dimension" select="'2'"/>
+</xsl:apply-templates>
+</xsl:template>
+
+<xsl:template match="field[@data_type='FLT_3D' or @data_type='INT_3D' or @data_type='CPX_3D']" mode="VALIDATE_UTILITIES_CHILD_3D">
+<xsl:apply-templates select="." mode="VALIDATE_UTILITIES_CHILD_SINGLE">
+<xsl:with-param name="coord" select="@coordinate1"/>
+<xsl:with-param name="dimension" select="'1'"/>
+</xsl:apply-templates>
+<xsl:apply-templates select="." mode="VALIDATE_UTILITIES_CHILD_SINGLE">
+<xsl:with-param name="coord" select="@coordinate2"/>
+<xsl:with-param name="dimension" select="'2'"/>
+</xsl:apply-templates>
+<xsl:apply-templates select="." mode="VALIDATE_UTILITIES_CHILD_SINGLE">
+<xsl:with-param name="coord" select="@coordinate3"/>
+<xsl:with-param name="dimension" select="'3'"/>
+</xsl:apply-templates>
+</xsl:template>
+
+<xsl:template match="field[@data_type='FLT_4D' or @data_type='INT_4D' or @data_type='CPX_4D']" mode="VALIDATE_UTILITIES_CHILD_4D">
+<xsl:apply-templates select="." mode="VALIDATE_UTILITIES_CHILD_SINGLE">
+<xsl:with-param name="coord" select="@coordinate1"/>
+<xsl:with-param name="dimension" select="'1'"/>
+</xsl:apply-templates>
+<xsl:apply-templates select="." mode="VALIDATE_UTILITIES_CHILD_SINGLE">
+<xsl:with-param name="coord" select="@coordinate2"/>
+<xsl:with-param name="dimension" select="'2'"/>
+</xsl:apply-templates>
+<xsl:apply-templates select="." mode="VALIDATE_UTILITIES_CHILD_SINGLE">
+<xsl:with-param name="coord" select="@coordinate3"/>
+<xsl:with-param name="dimension" select="'3'"/>
+</xsl:apply-templates>
+<xsl:apply-templates select="." mode="VALIDATE_UTILITIES_CHILD_SINGLE">
+<xsl:with-param name="coord" select="@coordinate4"/>
+<xsl:with-param name="dimension" select="'4'"/>
+</xsl:apply-templates>
+</xsl:template>
+
+<xsl:template match="field[@data_type='FLT_5D' or @data_type='INT_5D' or @data_type='CPX_5D']" mode="VALIDATE_UTILITIES_CHILD_5D">
+<xsl:apply-templates select="." mode="VALIDATE_UTILITIES_CHILD_SINGLE">
+<xsl:with-param name="coord" select="@coordinate1"/>
+<xsl:with-param name="dimension" select="'1'"/>
+</xsl:apply-templates>
+<xsl:apply-templates select="." mode="VALIDATE_UTILITIES_CHILD_SINGLE">
+<xsl:with-param name="coord" select="@coordinate2"/>
+<xsl:with-param name="dimension" select="'2'"/>
+</xsl:apply-templates>
+<xsl:apply-templates select="." mode="VALIDATE_UTILITIES_CHILD_SINGLE">
+<xsl:with-param name="coord" select="@coordinate3"/>
+<xsl:with-param name="dimension" select="'3'"/>
+</xsl:apply-templates>
+<xsl:apply-templates select="." mode="VALIDATE_UTILITIES_CHILD_SINGLE">
+<xsl:with-param name="coord" select="@coordinate4"/>
+<xsl:with-param name="dimension" select="'4'"/>
+</xsl:apply-templates>
+<xsl:apply-templates select="." mode="VALIDATE_UTILITIES_CHILD_SINGLE">
+<xsl:with-param name="coord" select="@coordinate5"/>
+<xsl:with-param name="dimension" select="'5'"/>
+</xsl:apply-templates>
+</xsl:template>
+
+<xsl:template match="field[@data_type='FLT_6D' or @data_type='INT_6D' or @data_type='CPX_6D']" mode="VALIDATE_UTILITIES_CHILD_6D">
+<xsl:apply-templates select="." mode="VALIDATE_UTILITIES_CHILD_SINGLE">
+<xsl:with-param name="coord" select="@coordinate1"/>
+<xsl:with-param name="dimension" select="'1'"/>
+</xsl:apply-templates>
+<xsl:apply-templates select="." mode="VALIDATE_UTILITIES_CHILD_SINGLE">
+<xsl:with-param name="coord" select="@coordinate2"/>
+<xsl:with-param name="dimension" select="'2'"/>
+</xsl:apply-templates>
+<xsl:apply-templates select="." mode="VALIDATE_UTILITIES_CHILD_SINGLE">
+<xsl:with-param name="coord" select="@coordinate3"/>
+<xsl:with-param name="dimension" select="'3'"/>
+</xsl:apply-templates>
+<xsl:apply-templates select="." mode="VALIDATE_UTILITIES_CHILD_SINGLE">
+<xsl:with-param name="coord" select="@coordinate4"/>
+<xsl:with-param name="dimension" select="'4'"/>
+</xsl:apply-templates>
+<xsl:apply-templates select="." mode="VALIDATE_UTILITIES_CHILD_SINGLE">
+<xsl:with-param name="coord" select="@coordinate5"/>
+<xsl:with-param name="dimension" select="'5'"/>
+</xsl:apply-templates>
+<xsl:apply-templates select="." mode="VALIDATE_UTILITIES_CHILD_SINGLE">
+<xsl:with-param name="coord" select="@coordinate6"/>
+<xsl:with-param name="dimension" select="'6'"/>
+</xsl:apply-templates>
+</xsl:template>
+
+
+<xsl:template match="field" mode="VALIDATE_UTILITIES_CHILD_SINGLE">
+<xsl:param name="coord"/>
+<xsl:param name="dimension"/>
+<!-- check if as_parent is present in the coordinate path (assume at the end) if yes: check if the path does not refer to the field himself -->
+<xsl:variable name="targetcoord">
+<xsl:choose>
+<xsl:when test="contains($coord,'as_parent')">
+  <xsl:if test="not(ends-with(substring-before($coord,'/as_parent'),@name))">
+    <xsl:value-of select="substring-before($coord,'/as_parent')"/>
+  </xsl:if>
+  <xsl:if test="ends-with(substring-before($coord,'/as_parent'),@name)">
+    <xsl:value-of select="$coord"/>
+  </xsl:if>
+</xsl:when>
+<xsl:otherwise>
+  <xsl:value-of select="$coord"/>
+</xsl:otherwise>
+</xsl:choose>
+</xsl:variable>
+<!--  if as_parent is present define the target dimension, if not: targetdimension='1'-->
+<xsl:variable name="targetdimension">
+<xsl:choose>
+<xsl:when test="contains($coord,'as_parent')">
+  <xsl:if test="not(ends-with(substring-before($coord,'/as_parent'),@name))">
+    <xsl:value-of select="$dimension"/>
+  </xsl:if>
+  <xsl:if test="ends-with(substring-before($coord,'/as_parent'),@name)">
+    <xsl:value-of select="'1'"/>
+  </xsl:if>
+</xsl:when>
+<xsl:otherwise>
+  <xsl:value-of select="'1'"/>
+</xsl:otherwise>
+</xsl:choose>
+</xsl:variable>
+<xsl:choose>
+      <xsl:when test="not(contains($targetcoord,' OR ')) and not(contains($targetcoord, '1...')) and ../field[@name=$targetcoord]">
+	    ! validation of <xsl:value-of select="@path"/>
+      if (associated(ids%<xsl:value-of select="@name"/>)) then
+        array_size = size(ids%<xsl:value-of select="@name"/>,<xsl:value-of select="$dimension"/>)
+      <xsl:if test="contains($targetcoord,'time') and ../field[@name='time']">
+        if (ids_time_mode .eq. IDS_TIME_MODE_HOMOGENEOUS ) then
+            if(array_size .ne. ids_time_size) then
+              err_msg = "array_size of <xsl:value-of select="@path"/> wrong dimension."
+              status = -1 
+              return
+            endif
+        endif
+      <xsl:if test="../field[@name='time' and @data_type='flt_1d_type' or @data_type='FLT_1D'
+      or @data_type='int_1d_type' or @data_type='INT_1D'
+      or @data_type='cpx_1d_type' or @data_type='CPX_1D']">
+        if (ids_time_mode .eq. IDS_TIME_MODE_HETEROGENEOUS ) then
+          if (.not.associated(ids%<xsl:value-of select="$targetcoord"/>)) then 
+            err_msg = "<xsl:value-of select="../@name"/>/<xsl:value-of select="$targetcoord"/> must be allocated."
+            status = -1 
+            return
+          end if
+          if(array_size .ne. size(ids%<xsl:value-of select="$targetcoord"/>,<xsl:value-of select="$targetdimension"/>)) then
+            err_msg = "array_size of <xsl:value-of select="@path"/> wrong dimension."
+            status = -1 
+            return
+          endif
+        endif
+      </xsl:if>
+      </xsl:if>
+      <xsl:if test="not(contains($targetcoord,'time'))">
+        if (.not.associated(ids%<xsl:value-of select="$targetcoord"/>)) then 
+          err_msg = "<xsl:value-of select="../@name"/>/<xsl:value-of select="$targetcoord"/> must be allocated."
+          status = -1 
+          return
+        end if
+        if(array_size .ne. size(ids%<xsl:value-of select="$targetcoord"/>,<xsl:value-of select="$targetdimension"/>)) then
+          err_msg = "array_size of <xsl:value-of select="@path"/> wrong dimension. Must be the size of <xsl:value-of select="$targetcoord"/>."
+          status = -1 
+          return
+        endif
+      </xsl:if>
+      <xsl:text>
+      end if
+      </xsl:text>
+      </xsl:when>
+      <xsl:otherwise>
+	    ! warning <xsl:value-of select="@path_doc"/> coordinates consistency not verified (<xsl:value-of select="@coordinate1"/>)
+      </xsl:otherwise>
+</xsl:choose>
 </xsl:template>
 
 
@@ -1424,26 +1614,28 @@ contains
   !----------------------------------------------------------------------- 
   !--- validation of <xsl:value-of select="$this-type"/>
   !-----------------------------------------------------------------------
-  subroutine ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(ids, status, err_msg, idsTimeMode, idsTimeSize)
+  subroutine ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(ids, status, err_msg, ids_time_mode, ids_time_size)
     use ids_utilities, only: ids_<xsl:value-of select="$this-type"/>
     use ual_low_level_wrap, only: IDS_TIME_MODE_HOMOGENEOUS, IDS_TIME_MODE_HETEROGENEOUS, IDS_TIME_MODE_INDEPENDENT
     implicit none
     type(ids_<xsl:value-of select="$this-type"/>), intent(in) :: ids
     integer(ids_int), intent(out), optional :: status
-    character(99), intent(out), optional :: err_msg
-    integer(ids_int), intent(in) :: idsTimeMode
-    integer(ids_int), intent(in) :: idsTimeSize
-    integer(ids_int) :: arraySize, i, itime, i1, i2, i3, i4
+    character(999), intent(out), optional :: err_msg
+    integer(ids_int), intent(in) :: ids_time_mode
+    integer(ids_int), intent(in) :: ids_time_size
+    integer(ids_int) :: array_size, i, itime, i1, i2, i3, i4
     logical :: check, error
     <!-- call ids_validate for each field of this structure-->
     <xsl:apply-templates select="field" mode="VALIDATE_CHILD"/>
-    <!-- check the array shapes of the field that have this structure as deeper common ancestor with the coordinateX reference field-->
-	<xsl:apply-templates select="." mode="VALIDATE_DESCENDANT_1D"/>
-	<xsl:apply-templates select="." mode="VALIDATE_DESCENDANT_2D"/>
-	<xsl:apply-templates select="." mode="VALIDATE_DESCENDANT_3D"/>
-	<xsl:apply-templates select="." mode="VALIDATE_DESCENDANT_4D"/>
-	<xsl:apply-templates select="." mode="VALIDATE_DESCENDANT_5D"/>
-	<xsl:apply-templates select="." mode="VALIDATE_DESCENDANT_6D"/>
+     <!-- check the arrays-->
+    <xsl:apply-templates select="field[@data_type='struct_array' or  @data_type='flt_1d_type' or @data_type='FLT_1D'
+or @data_type='int_1d_type' or @data_type='INT_1D'
+or @data_type='cpx_1d_type' or @data_type='CPX_1D']" mode="VALIDATE_UTILITIES_CHILD_1D"/>
+    <xsl:apply-templates select="field[@data_type='FLT_2D' or @data_type='INT_2D' or @data_type='CPX_2D']" mode="VALIDATE_UTILITIES_CHILD_2D"/>
+    <xsl:apply-templates select="field[@data_type='FLT_3D' or @data_type='INT_3D' or @data_type='CPX_3D']" mode="VALIDATE_UTILITIES_CHILD_3D"/>
+    <xsl:apply-templates select="field[@data_type='FLT_4D' or @data_type='INT_4D' or @data_type='CPX_4D']" mode="VALIDATE_UTILITIES_CHILD_4D"/>
+    <xsl:apply-templates select="field[@data_type='FLT_5D' or @data_type='INT_5D' or @data_type='CPX_5D']" mode="VALIDATE_UTILITIES_CHILD_5D"/>
+    <xsl:apply-templates select="field[@data_type='FLT_6D' or @data_type='INT_6D' or @data_type='CPX_6D']" mode="VALIDATE_UTILITIES_CHILD_6D"/>
     status = 0
     return
   end subroutine
@@ -1452,10 +1644,43 @@ contains
 </xsl:for-each>
 end module 
 </xsl:result-document>
-
 </xsl:template>
 
-<!-- validate routines for strucure and struct-array children -->
+<xsl:template match="field[@data_type='struct_array']" mode="VALIDATE_CHILD_1D">
+<xsl:choose>
+      <xsl:when test="not(contains(@coordinate1,' OR ')) and not(contains(@coordinate1, '1...'))">
+	    ! validation of <xsl:value-of select="@path"/>
+      if (associated(ids%<xsl:value-of select="@name"/>)) then
+      array_size = size(ids%<xsl:value-of select="@name"/>)
+      else
+        err_msg = "<xsl:value-of select="@path"/> must be allocated."
+        status = -1 
+        return
+      end if
+      <xsl:if test="contains(@coordinate1,'/time')">
+      if (ids_time_mode .eq. IDS_TIME_MODE_HOMOGENEOUS ) then
+          if(array_size .ne. ids_time_size) then
+            err_msg = "array_size of <xsl:value-of select="@path"/> wrong dimension."
+            status = -1 
+            return
+          endif
+      endif
+      </xsl:if>
+      <xsl:if test="not(contains(@coordinate1,'/time'))">
+      if(array_size .ne. size(ids%<xsl:value-of select="@coordinate1"/>)) then
+        err_msg = "array_size of <xsl:value-of select="@path"/> wrong dimension. Must be the size of <xsl:value-of select="@coordinate1"/>."
+        status = -1 
+        return
+      endif
+      </xsl:if>
+      </xsl:when>
+      <xsl:otherwise>
+	      ! warning <xsl:value-of select="@path_doc"/> coordinates consistency not verified (<xsl:value-of select="@coordinate1"/>)
+      </xsl:otherwise>
+</xsl:choose>
+</xsl:template>
+
+<!-- call validate routines for strucure and struct-array children -->
 <xsl:template match="field" mode="VALIDATE_CHILD">
 <xsl:variable name="this-type">
     <xsl:choose>
@@ -1468,29 +1693,24 @@ end module
     </xsl:choose>
   </xsl:variable>
 <xsl:choose>
-<xsl:when test="@data_type='int_type' or @data_type='INT_0D' or @data_type='flt_type' or @data_type='FLT_0D' or 
-		    @data_type='CPX_0D'">
-<xsl:if test="not(@lifecycle_status='obsolescent')" >
-! Validation of <xsl:value-of select = "@path"/>
-if (.not.ids_is_valid(ids%<xsl:value-of select="@name"/>)) then 
-  write(err_msg,*) "<xsl:value-of select = "@path"/> (",ids%<xsl:value-of select = "@name"/>,") is not valid."
-    status = -1 
-    return
-end if
-</xsl:if>
-</xsl:when>
 <xsl:when test="@data_type='structure'">
   ! Validation of <xsl:value-of select = "@path"/>
-  call ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(ids%<xsl:value-of select = "@name"/>, status, err_msg, idsTimeMode, idsTimeSize)
-  if (status.eq.-1) return 
+  call ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(ids%<xsl:value-of select = "@name"/>, status, err_msg, ids_time_mode, ids_time_size)
+  if (status.eq.-1) then
+    err_msg = "Error with <xsl:value-of select = "@path"/>."//achar(13)//achar(10)//trim(err_msg)
+    return 
+  end if
 </xsl:when>
 <xsl:when test="@data_type='struct_array'">
   if (associated(ids%<xsl:value-of select = "@name"/>)) then
-  arraySize = size(ids%<xsl:value-of select = "@name"/>)
-  do i = 1, arraySize
+  array_size = size(ids%<xsl:value-of select = "@name"/>)
+  do i = 1, array_size
     ! Validation of <xsl:value-of select = "@path"/>
-    call ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(ids%<xsl:value-of select = "@name"/>(i), status, err_msg, idsTimeMode, idsTimeSize) 
-    if (status.eq.-1) return 
+    call ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(ids%<xsl:value-of select = "@name"/>(i), status, err_msg, ids_time_mode, ids_time_size) 
+    if (status.eq.-1) then
+      err_msg = "Error with <xsl:value-of select = "@path"/>."//achar(13)//achar(10)//trim(err_msg)
+      return 
+    end if
   end do
   end if 
   </xsl:when>
@@ -1512,16 +1732,16 @@ end if
   !----------------------------------------------------------------------- 
   !--- validation of <xsl:value-of select="$this-type"/>
   !-----------------------------------------------------------------------
-  subroutine ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(ids, status, err_msg, idsTimeMode, idsTimeSize)
+  subroutine ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(ids, status, err_msg, ids_time_mode, ids_time_size)
     use ids_schemas_<xsl:value-of select="ancestor::IDS/@name"/>
     use ual_low_level_wrap, only: IDS_TIME_MODE_HOMOGENEOUS, IDS_TIME_MODE_HETEROGENEOUS, IDS_TIME_MODE_INDEPENDENT
     implicit none
     type(ids_<xsl:value-of select="$this-type"/>), intent(in) :: ids
     integer(ids_int), intent(out), optional :: status
-    character(99), intent(out), optional :: err_msg
-    integer(ids_int), intent(in) :: idsTimeMode
-    integer(ids_int), intent(in) :: idsTimeSize
-    integer(ids_int) :: arraySize, i, itime, i1, i2, i3, i4
+    character(999), intent(out), optional :: err_msg
+    integer(ids_int), intent(in) :: ids_time_mode
+    integer(ids_int), intent(in) :: ids_time_size
+    integer(ids_int) :: array_size, i, itime, i1, i2, i3, i4
     logical :: check, error
     <!-- call ids_validate for each field of this structure-->
     <xsl:apply-templates select="field" mode="VALIDATE_CHILD"/>
@@ -1801,14 +2021,20 @@ end if
 	</xsl:if>
 	<xsl:if test="not(contains($newpath,'/'))">
   if (associated(ids%<xsl:value-of select="$string"/><xsl:value-of select="@name"/>)) then
-		arraySize = size(ids%<xsl:value-of select="$string"/><xsl:value-of select="@name"/>,<xsl:value-of select="number($dimension) + 1"/>)
+		array_size = size(ids%<xsl:value-of select="$string"/><xsl:value-of select="@name"/>,<xsl:value-of select="number($dimension) + 1"/>)
 		<xsl:if test="@type='dynamic' and contains($coord,'/time')">
-		if (idsTimeMode .eq. IDS_TIME_MODE_HETEROGENEOUS ) then
+		if (ids_time_mode .eq. IDS_TIME_MODE_HETEROGENEOUS ) then
 		</xsl:if>
       check = .TRUE.
       error = .TRUE.
       i = 0
       <xsl:apply-templates select="." mode="possible-coordinates"><xsl:with-param name="coord" select="$coord"/><xsl:with-param name="relativepathdoc" select="$root"/><xsl:with-param name="self" select="concat($string,@name)"/></xsl:apply-templates>
+      if (i.ne.1) then 
+        check = .FALSE.
+        err_msg = "Coordinate consistency error for <xsl:value-of select="@path"/> (dimension <xsl:value-of select="number($dimension) + 1"/>). Exactly one of the coordinate must be verified. (<xsl:value-of select="$coord"/>) "
+        status = -1 
+        return
+      end if 
       if(check) then
         <xsl:apply-templates select="." mode="check-possible-coordinates">
           <xsl:with-param name="coord" select="$coord"/>
@@ -1832,16 +2058,16 @@ end if
       end if
 	<xsl:if test="@type='dynamic' and contains($coord,'/time')">
     endif
-    if (idsTimeMode .eq. IDS_TIME_MODE_HOMOGENEOUS ) then
-      if(arraySize .ne. idsTimeSize) then
-        err_msg = "arraySize of <xsl:value-of select="@path"/> wrong dimension <xsl:value-of select="number($dimension) + 1"/>."
+    if (ids_time_mode .eq. IDS_TIME_MODE_HOMOGENEOUS ) then
+      if(array_size .ne. ids_time_size) then
+        err_msg = "array_size of <xsl:value-of select="@path"/> wrong dimension <xsl:value-of select="number($dimension) + 1"/>."
         status = -1 
         return
       endif
     endif
-    if (idsTimeMode .eq. IDS_TIME_MODE_INDEPENDENT ) then
-      if(arraySize .ne. 0) then
-        err_msg = "arraySize of <xsl:value-of select="@path"/> wrong dimension <xsl:value-of select="number($dimension) + 1"/>."
+    if (ids_time_mode .eq. IDS_TIME_MODE_INDEPENDENT ) then
+      if(array_size .ne. 0) then
+        err_msg = "array_size of <xsl:value-of select="@path"/> wrong dimension <xsl:value-of select="number($dimension) + 1"/>."
         status = -1 
         return
       endif
@@ -1873,7 +2099,10 @@ end if
   <xsl:if test="not(contains($coord,'1...'))">
       if (associated(ids%<xsl:value-of select="$target"/>)) i = i + 1
   </xsl:if>
-      if (i.ne.1) check = .FALSE.
+      if (i.ne.1) then 
+        check = .FALSE.
+      
+      end if 
   </xsl:if>
 </xsl:template>
 
@@ -1887,7 +2116,7 @@ end if
         <xsl:variable name="target" select="replace(substring-before(substring-after($coord,$relativepathdoc),' OR'),'/','%')"/>
         <xsl:if test="not(contains(substring-before($coord,' OR'),'1...'))">
         if (associated(ids%<xsl:value-of select="$target"/>)) then
-          if (arraySize .eq. size(ids%<xsl:value-of select="$target"/>,<xsl:value-of select="number($targetdim)+1"/>)) then
+          if (array_size .eq. size(ids%<xsl:value-of select="$target"/>,<xsl:value-of select="number($targetdim)+1"/>)) then
             error = .FALSE.
           endif 
         endif 
@@ -1904,7 +2133,7 @@ end if
         <xsl:variable name="target" select="replace(substring-after($coord,$relativepathdoc),'/','%')"/>
         <xsl:if test="not(contains($coord,'1...'))">
         if (associated(ids%<xsl:value-of select="$target"/>)) then
-          if (arraySize .eq. size(ids%<xsl:value-of select="$target"/>,<xsl:value-of select="number($targetdim)+1"/>)) then
+          if (array_size .eq. size(ids%<xsl:value-of select="$target"/>,<xsl:value-of select="number($targetdim)+1"/>)) then
           error = .FALSE.
           endif 
         endif 
@@ -1920,7 +2149,7 @@ end if
 	<xsl:if test="contains($coord,' OR')">
         <xsl:variable name="target" select="replace(substring-before(substring-after($coord,$relativepathdoc),' OR'),'/','%')"/>
         <xsl:if test="contains(substring-before($coord,' OR'),'1...')">
-        if (.not. check .and. arraySize .eq. <xsl:value-of select="substring-after($coord,'1...')"/>) then  
+        if (.not. check .and. array_size .eq. <xsl:value-of select="substring-after($coord,'1...')"/>) then  
         error = .FALSE. 
         endif
         </xsl:if>
@@ -1934,7 +2163,7 @@ end if
   <xsl:if test="not(contains($coord,' OR'))">
         <xsl:variable name="target" select="replace(substring-after($coord,$relativepathdoc),'/','%')"/>
         <xsl:if test="contains($coord,'1...')">
-        if (.not. check .and. arraySize .eq. <xsl:value-of select="substring-after($coord,'1...')"/>) then   
+        if (.not. check .and. array_size .eq. <xsl:value-of select="substring-after($coord,'1...')"/>) then   
         error = .FALSE. 
         endif
         </xsl:if>
