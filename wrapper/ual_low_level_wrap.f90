@@ -17,7 +17,6 @@ module ual_low_level_wrap
 
   integer, parameter :: STRMAXLEN = 100000
 
-
   ! C functions interface
   interface
 
