@@ -315,6 +315,10 @@
 
     <xsl:apply-templates select=".[.//field[@type='dynamic']]" mode="putSlice"/>
         <xsl:apply-templates select="." mode="getSlice"/>
+
+        <xsl:apply-templates select="." mode="validate"/>
+
+
     <xsl:text>END MODULE </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_routines&#10;</xsl:text>
       </xsl:result-document>
 
@@ -367,6 +371,8 @@
    <xsl:text>&#9;&#9;&#9;END IF&#10;</xsl:text>
     <xsl:text>&#9;&#9;END DO  ! time mode  &#10;</xsl:text>
     <xsl:text>&#10;</xsl:text>
+    <xsl:text>&#9;&#9;</xsl:text>call <xsl:value-of select="@name"/>_validation_tests()<xsl:text>&#10;</xsl:text>
+    <xsl:text>&#10;</xsl:text>
     <xsl:text>&#9;&#9;call close_db(idx);&#10;</xsl:text>
     <xsl:text>&#9;END DO  ! backend  &#10;</xsl:text>
     <xsl:text>&#10;</xsl:text>
@@ -375,6 +381,44 @@
 	<!-- ================================ MAIN PROGRAM (end)================================= -->
 	
       </xsl:result-document>
+    </xsl:template>
+
+    <!-- IDS validate() -->
+    <xsl:template match="IDS" mode="validate">
+    <xsl:text>!==================================================================&#10;</xsl:text>
+    <xsl:text>!&#9;&#9; VALIDATE </xsl:text><xsl:value-of select="@name"/> <xsl:text> &#10;</xsl:text>
+    <xsl:text>!==================================================================&#10;</xsl:text>
+    <xsl:text>SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_validation_tests()&#10;</xsl:text>
+    <xsl:text>&#9;use comparator, only: assertField_validate&#10;</xsl:text> 
+    <xsl:if test="@name='magnetics' or @name='distributions'">
+    <xsl:text>&#9;use validation_example_tests, only: </xsl:text><xsl:value-of select="@name"/><xsl:text>_example_tests&#10;</xsl:text> 
+    </xsl:if>
+    <xsl:text>&#9;IMPLICIT NONE&#10;</xsl:text> 
+    <xsl:text>&#9;TYPE (ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>) :: ids &#10;</xsl:text>
+    <xsl:text>&#9;CHARACTER (999) :: err_msg = "" &#10;</xsl:text>
+    <xsl:text>&#9;INTEGER         :: status &#10;</xsl:text>
+    <xsl:text>&#9;LOGICAL         :: isEqual &#10;</xsl:text>
+    <xsl:text>&#10;</xsl:text>
+    <xsl:text>&#9;write(*,*) "--- </xsl:text><xsl:value-of select="@name"/><xsl:text>"&#10;</xsl:text>
+    <xsl:text>&#10;</xsl:text>
+    <xsl:text>&#9;write(*,*) "--- Testing empty ids"&#10;</xsl:text>
+    <xsl:text>&#9;call ids_validate(ids, status, err_msg) &#10;</xsl:text>
+    <xsl:text>&#9;isEqual = assertField_validate(err_msg, "</xsl:text><xsl:value-of select="@name"/><xsl:text>","ids_properties.homogeneous_time wrong value")&#10;</xsl:text>
+	<xsl:text>&#9;if (.not.isEqual) STOP &#10;</xsl:text>
+    <xsl:text>&#10;</xsl:text>
+    <xsl:text>&#9;write(*,*) "--- Testing time mode"&#10;</xsl:text>
+    <xsl:text>&#9;ids%ids_properties%homogeneous_time = IDS_TIME_MODE_HOMOGENEOUS&#10;</xsl:text>
+    <xsl:text>&#10;</xsl:text>
+	<xsl:text>&#9;call ids_validate(ids, status, err_msg) &#10;</xsl:text>
+    <xsl:text>&#9;isEqual = assertField_validate(err_msg, "</xsl:text><xsl:value-of select="@name"/><xsl:text>","the time array must be associated")&#10;</xsl:text>
+	<xsl:text>&#9;if (.not.isEqual) STOP &#10;</xsl:text>
+    <xsl:text>&#10;</xsl:text>
+    <xsl:if test="@name='magnetics' or @name='distributions'">
+    <xsl:text>&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_example_tests() &#10;</xsl:text>
+    <xsl:text>&#10;</xsl:text>
+    </xsl:if>
+    <xsl:text>END SUBROUTINE </xsl:text> <xsl:value-of select="@name"/><xsl:text>_validation_tests &#10;</xsl:text>
+    <xsl:text>&#10;</xsl:text>
     </xsl:template>
 
     <!-- IDS put()-->
