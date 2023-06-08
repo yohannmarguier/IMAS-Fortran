@@ -27,7 +27,7 @@ SUBROUTINE distributions_example_tests
 
     CALL ids_validate(ids, status, err_msg) 
 	IF (status .ne. 0) THEN
-        WRITE(*,*) "--- --- ---Testing HOMOGENEOUS simplest case Failed"
+        WRITE(*,*) "--- --- ---Testing HOMOGENEOUS simplest case Failed (error)"
         WRITE(*,*) err_msg
         STOP
     END IF 
@@ -80,7 +80,7 @@ SUBROUTINE distributions_example_tests
     END DO
     CALL ids_validate(ids, status, err_msg)
     IF (status .ne. 0) THEN
-        WRITE(*,*) "--- --- ---Testing HOMOGENEOUS multiple alternative coordinates fixing dim2 Failed"
+        WRITE(*,*) "--- --- ---Testing HOMOGENEOUS multiple alternative coordinates fixing dim2 Failed (error)"
         WRITE(*,*) err_msg
         STOP
     END IF
@@ -124,7 +124,7 @@ SUBROUTINE distributions_example_tests
     END DO
     CALL ids_validate(ids, status, err_msg)
     IF (status .ne. 0) THEN
-        WRITE(*,*) "--- --- ---Testing HETEROGENEOUS time coordinate Failed"
+        WRITE(*,*) "--- --- ---Testing HETEROGENEOUS time coordinate Failed (error)"
         WRITE(*,*) err_msg
         STOP
     END IF
@@ -161,7 +161,7 @@ SUBROUTINE distributions_example_tests
     END DO
     CALL ids_validate(ids, status, err_msg)
     IF (status .ne. 0) THEN
-        WRITE(*,*) "--- --- ---Testing HETEROGENEOUS time coordinate Failed"
+        WRITE(*,*) "--- --- ---Testing HETEROGENEOUS time coordinate Failed (error)"
         WRITE(*,*) err_msg
         STOP
     END IF
@@ -196,7 +196,7 @@ SUBROUTINE magnetics_example_tests
 
     CALL ids_validate(ids, status, err_msg) 
 	IF (status .ne. 0) THEN
-        WRITE(*,*) "--- --- ---Testing HOMOGENEOUS simplest case Failed"
+        WRITE(*,*) "--- --- ---Testing HOMOGENEOUS simplest case Failed (error)"
         WRITE(*,*) err_msg
         STOP
     END IF 
@@ -242,13 +242,13 @@ SUBROUTINE magnetics_example_tests
 
 
     !---- Testing HETEROGENEOUS by fixing the error
-    WRITE(*,*) "--- --- Testing HETEROGENEOUS by fixing the error"
+    WRITE(*,*) "--- --- Testing HETEROGENEOUS by fixing the issue"
     DO i1=1,static_size
         ALLOCATE(ids%flux_loop(i1)%flux%time(static_size+1))
     END DO
     CALL ids_validate(ids, status, err_msg) 
 	IF (status .ne. 0) THEN
-        WRITE(*,*) "--- --- ---Testing HETEROGENEOUS by fixing the error Failed"
+        WRITE(*,*) "--- --- ---Testing HETEROGENEOUS by fixing the issue Failed (error)"
         WRITE(*,*) err_msg
         STOP
     END IF 
@@ -275,7 +275,7 @@ SUBROUTINE magnetics_example_tests
     END DO
     CALL ids_validate(ids, status, err_msg) 
 	IF (status .ne. 0) THEN
-        WRITE(*,*) "--- --- ---Testing HETEROGENEOUS advanced usage"
+        WRITE(*,*) "--- --- ---Testing HETEROGENEOUS advanced usage (error)"
         WRITE(*,*) err_msg
         STOP
     END IF
