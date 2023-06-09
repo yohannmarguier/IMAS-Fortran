@@ -390,7 +390,7 @@
     <xsl:text>!==================================================================&#10;</xsl:text>
     <xsl:text>SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_validation_tests()&#10;</xsl:text>
     <xsl:text>&#9;use comparator, only: assertField_validate&#10;</xsl:text> 
-    <xsl:if test="@name='magnetics' or @name='distributions'">
+    <xsl:if test="@name='magnetics' or @name='distributions' or @name='waves'">
     <xsl:text>&#9;use validation_example_tests, only: </xsl:text><xsl:value-of select="@name"/><xsl:text>_example_tests&#10;</xsl:text> 
     </xsl:if>
     <xsl:text>&#9;IMPLICIT NONE&#10;</xsl:text> 
@@ -413,7 +413,7 @@
     <xsl:text>&#9;isEqual = assertField_validate(err_msg, "</xsl:text><xsl:value-of select="@name"/><xsl:text>","the time array must be associated")&#10;</xsl:text>
 	<xsl:text>&#9;if (.not.isEqual) STOP &#10;</xsl:text>
     <xsl:text>&#10;</xsl:text>
-    <xsl:if test="@name='magnetics' or @name='distributions'">
+    <xsl:if test="@name='magnetics' or @name='distributions' or @name='waves'">
     <xsl:text>&#9;call </xsl:text><xsl:value-of select="@name"/><xsl:text>_example_tests() &#10;</xsl:text>
     <xsl:text>&#10;</xsl:text>
     </xsl:if>

@@ -5,6 +5,59 @@ USE comparator, ONLY: assertField_validate
 
 contains
 
+SUBROUTINE waves_example_tests
+	IMPLICIT NONE
+	TYPE (ids_waves) :: ids 
+	CHARACTER (999) :: err_msg = "" 
+    CHARACTER(999)  :: expected
+	INTEGER         :: status 
+	LOGICAL         :: isEqual 
+    INTEGER         :: static_size = 3
+	INTEGER :: i1, i2, i3, itime
+    INTEGER :: max1 = 5
+    INTEGER :: max2 = 4
+    INTEGER :: max3 = 3
+    INTEGER :: max_dim = 8
+
+    !---- Testing HOMOGENEOUS simplest case
+    WRITE(*,*) "--- --- Testing HOMOGENEOUS simplest case"
+    ids%ids_properties%homogeneous_time = IDS_TIME_MODE_HOMOGENEOUS
+    ALLOCATE(ids%time(static_size)) 
+
+    CALL ids_validate(ids, status, err_msg) 
+	IF (status .ne. 0) THEN
+        WRITE(*,*) "--- --- ---Testing HOMOGENEOUS simplest case Failed (error)"
+        WRITE(*,*) err_msg
+        STOP
+    END IF 
+
+    !---- Testing HOMOGENEOUS multiple alternative coordinates
+    WRITE(*,*) "--- --- Testing HOMOGENEOUS alternative/fixed coordinates"
+    ALLOCATE(ids%coherent_wave(max1))
+    DO i1=1, max1 
+        ALLOCATE(ids%coherent_wave(i1)%beam_tracing(max_dim))
+        DO itime=1, max_dim
+            ALLOCATE(ids%coherent_wave(i1)%beam_tracing(itime)%beam(max2))
+            DO i2=1, max2 
+                ALLOCATE(ids%coherent_wave(i1)%beam_tracing(itime)%beam(i2)%wave_vector%n_tor(5))
+            END DO
+        END DO
+    END DO
+    expected = "Error with coherent_wave."
+    expected = trim(expected)//achar(13)//achar(10)//"Error with coherent_wave/beam_tracing."
+    expected = trim(expected)//achar(13)//achar(10)//"Error with coherent_wave/beam_tracing/beam."
+    expected = trim(expected)//achar(13)//achar(10)//"Wrong dimension 1 for coherent_wave/beam_tracing/beam/wave_vector/n_tor. "//&
+                "(coherent_wave(i1)/beam_tracing(itime)/beam(i2)/length OR 1...1)"
+    CALL ids_validate(ids, status, err_msg)
+    isEqual = assertField_validate(err_msg, "distributions",expected)
+	IF (.not.isEqual) STOP
+
+
+    !---- Garbage collection
+    call ids_deallocate(ids)
+    
+
+END SUBROUTINE waves_example_tests
 
 SUBROUTINE distributions_example_tests
 	IMPLICIT NONE
@@ -167,13 +220,7 @@ SUBROUTINE distributions_example_tests
     END IF
 
     !---- Garbage collection
-    DO i1=1,max1
-        DEALLOCATE(ids%distribution(i1)%global_quantities)
-        DEALLOCATE(ids%distribution(i1)%profiles_1d)
-        DEALLOCATE(ids%distribution(i1)%profiles_2d)
-    END DO
-    DEALLOCATE(ids%distribution)
-    DEALLOCATE(ids%time)
+    call ids_deallocate(ids)
     
 
 END SUBROUTINE distributions_example_tests
@@ -295,33 +342,7 @@ SUBROUTINE magnetics_example_tests
 	IF (.not.isEqual) STOP
 
     !---- Garbage collection
-    DO i1=1,13
-        DEALLOCATE(ids%b_field_pol_probe(i1)%non_linear_response%b_field_linear)
-        DEALLOCATE(ids%b_field_pol_probe(i1)%non_linear_response%b_field_non_linear)
-        DEALLOCATE(ids%b_field_tor_probe(i1)%field%data)
-        DEALLOCATE(ids%b_field_tor_probe(i1)%field%time)
-        DEALLOCATE(ids%b_field_pol_probe(i1)%field%data)
-        DEALLOCATE(ids%b_field_pol_probe(i1)%field%time)
-    END DO
-    DEALLOCATE(ids%b_field_tor_probe)
-    DEALLOCATE(ids%b_field_pol_probe)
-    DO i1=1,5
-        DEALLOCATE(ids%shunt(i1)%voltage%data)
-        DEALLOCATE(ids%shunt(i1)%voltage%time)
-    END DO
-    DEALLOCATE(ids%shunt)
-    DO i1=1,7
-        DEALLOCATE(ids%diamagnetic_flux(i1)%data)
-        DEALLOCATE(ids%diamagnetic_flux(i1)%time)
-    END DO
-    DEALLOCATE(ids%diamagnetic_flux)
-    DO i1=1,static_size
-        DEALLOCATE(ids%flux_loop(i1)%indices_differential)
-        DEALLOCATE(ids%flux_loop(i1)%flux%data)
-        DEALLOCATE(ids%flux_loop(i1)%flux%time)
-    END DO
-    DEALLOCATE(ids%flux_loop)
-    DEALLOCATE(ids%time)
+    call ids_deallocate(ids)
 
 END SUBROUTINE magnetics_example_tests
 
