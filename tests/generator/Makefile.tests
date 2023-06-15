@@ -118,13 +118,10 @@ $(BUILD_DIR)/%_test.o: $(TEST_SRC_DIR)/%_test.f90 $(BUILD_DIR)/comparator.o $(BU
 $(BUILD_DIR)/%_test_routines.o: $(TEST_SRC_DIR)/%_test_routines.f90  $(BUILD_DIR)/%_init.o $(BUILD_DIR)/%_test.o
 	$(FC) $(FCFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/tests_validation_examples.o: tests_validation_examples.f90 $(BUILD_DIR)/comparator.o
-	$(FC) $(FCFLAGS) -c $< -o $@
-
 $(BUILD_DIR)/%_all_tests.o: $(TEST_SRC_DIR)/%_all_tests.f90 $(BUILD_DIR)/%_test_routines.o $(BUILD_DIR)/helper.o
 	$(FC) $(FCFLAGS) -c $< -o $@
 	
-$(BIN_DIR)/%_all_tests.exe: $(BUILD_DIR)/%_all_tests.o  $(BUILD_DIR)/tests_validation_examples.o $(BUILD_DIR)/comparator.o  $(BUILD_DIR)/generator.o $(BUILD_DIR)/helper.o $(BUILD_DIR)/%_test_routines.o  $(BUILD_DIR)/setter.o $(BUILD_DIR)/%_init.o  $(BUILD_DIR)/%_test.o $(BUILD_DIR)/test_defs.o| $(BIN_DIR)
+$(BIN_DIR)/%_all_tests.exe: $(BUILD_DIR)/%_all_tests.o  $(BUILD_DIR)/comparator.o  $(BUILD_DIR)/generator.o $(BUILD_DIR)/helper.o $(BUILD_DIR)/%_test_routines.o  $(BUILD_DIR)/setter.o $(BUILD_DIR)/%_init.o  $(BUILD_DIR)/%_test.o $(BUILD_DIR)/test_defs.o| $(BIN_DIR)
 	$(FC) $(FCFLAGS) -o $@   $^ $(LIBS)
 	
 #-------------

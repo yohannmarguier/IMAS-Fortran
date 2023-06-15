@@ -1208,31 +1208,6 @@ FUNCTION assertField_STR(observed, isSliceMode, fieldName) RESULT (outValue)
 	deallocate(expected)
 END FUNCTION assertField_STR
 
-! =================================================================
-! 		VALIDATION MESSAGE
-! =================================================================
-FUNCTION assertField_validate(observed, idsName, expected) RESULT (outValue)
-   IMPLICIT NONE
-
-   CHARACTER(999),INTENT(IN) :: observed
-   CHARACTER*(*) ,INTENT(IN) :: expected
-   CHARACTER*(*) ,INTENT(IN) :: idsName
-   LOGICAL    :: outValue
-   
-   INTEGER     :: lastDim
-
-
-      outValue = .TRUE.
-
-if(trim(observed) == trim(expected)) then
-  if(debugMode) write(*,*) idsName, " : OK "
-else
-  write(*,*) idsName, " : ERROR: observed=", trim(observed),  ", expected=", trim(expected)
-            outValue = .FALSE.
-            return
-end if
-END FUNCTION assertField_validate
-
 
 END MODULE comparator
 
