@@ -82,6 +82,11 @@ end subroutine
 
 ! Turn an IDS into a bunch of bytes
 subroutine ids_serialize(ids_in, buffer, protocol)
+  #if defined(_Linux)
+  #  define SERIALIZE_TEMPORARY_DIRECTORY '/dev/shm/'
+  #else
+  #  define SERIALIZE_TEMPORARY_DIRECTORY ''
+  #endif
   class(IDS_base) :: ids_in ! no intent(in) because ids_put also does not have that
   integer(ids_int), intent(in), optional :: protocol
   character(len=1), dimension(:), allocatable :: buffer
@@ -104,9 +109,11 @@ subroutine ids_serialize(ids_in, buffer, protocol)
       return
     end if
 
+    index = SCAN(fname,'/')
+    filename=fname(index+1:)
     ! Write to file
     !call ual_build_uri_from_legacy_parameters(ASCII_BACKEND, 0, 0, 'serialize', 'serialize', '3','-fullpath '//fname, uri, status)
-    uri = "imas:ascii?path=/dev/null;fullpath="//fname
+    uri = "imas:ascii?path=//SERIALIZE_TEMPORARY_DIRECTORY//;filename="//filename
     call ual_begin_dataentry_action(uri, FORCE_CREATE_PULSE, pulsectx, status)
     if (status .ne. 0) then
       write(*,*) "SERIALIZE: ERROR opening ASCII backend - ual_open_pulse"
@@ -155,6 +162,11 @@ end subroutine ids_serialize
 
 ! Turn a bunch of bytes into an IDS
 subroutine ids_deserialize(buffer, ids_out)
+  #if defined(_Linux)
+  #  define SERIALIZE_TEMPORARY_DIRECTORY '/dev/shm/'
+  #else
+  #  define SERIALIZE_TEMPORARY_DIRECTORY ''
+  #endif
   class(IDS_base) :: ids_out ! it is up to you to pass the correct buffer and ids type
   character(len=1), dimension(:), allocatable, intent(in) :: buffer
 
@@ -170,11 +182,14 @@ subroutine ids_deserialize(buffer, ids_out)
 
   if (protocol .eq. ASCII_SERIALIZER_PROTOCOL) then
     fname = generate_tmp_file()
+    
     if (len_trim(fname) .eq. 0) then
       write(*,*) 'SERIALIZE: ERROR generating temporary file name'
       return
     end if
 
+    index = SCAN(fname,'/')
+    filename=fname(index+1:)
     ! Write to file
     unit = get_file_unit()
     open(unit=unit, file=fname, action='write', status='new', form='unformatted', access='stream')
@@ -183,7 +198,7 @@ subroutine ids_deserialize(buffer, ids_out)
     flush(unit)
 
     !call ual_build_uri_from_legacy_parameters(ASCII_BACKEND, 0, 0, 'serialize', 'serialize', '3','-fullpath '//fname, uri, status)
-    uri = "imas:ascii?path=/dev/null;fullpath="//fname
+    uri = "imas:ascii?path=//SERIALIZE_TEMPORARY_DIRECTORY//;filename="//filename
     call ual_begin_dataentry_action(uri, FORCE_CREATE_PULSE, pulsectx, status)
     if (status .ne. 0) then
       write(*,*) "SERIALIZE: ERROR opening ASCII backend - ual_open_pulse"
