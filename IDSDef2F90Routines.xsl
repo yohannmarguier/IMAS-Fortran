@@ -82,11 +82,11 @@ end subroutine
 
 ! Turn an IDS into a bunch of bytes
 subroutine ids_serialize(ids_in, buffer, protocol)
-  #if defined(_Linux)
-  #  define SERIALIZE_TEMPORARY_DIRECTORY '/dev/shm/'
-  #else
-  #  define SERIALIZE_TEMPORARY_DIRECTORY ''
-  #endif
+#if defined(_Linux)
+#  define SERIALIZE_TEMPORARY_DIRECTORY '/dev/shm/'
+#else
+#  define SERIALIZE_TEMPORARY_DIRECTORY ''
+#endif
   class(IDS_base) :: ids_in ! no intent(in) because ids_put also does not have that
   integer(ids_int), intent(in), optional :: protocol
   character(len=1), dimension(:), allocatable :: buffer
@@ -97,7 +97,9 @@ subroutine ids_serialize(ids_in, buffer, protocol)
   integer(ids_int) :: status
   integer(ids_int) :: unit
   integer(ids_int) :: file_size
+  integer(ids_int) :: index
   character(STRMAXLEN):: uri
+  character(STRMAXLEN):: filename
   
   my_protocol = DEFAULT_SERIALIZER_PROTOCOL
   if (present(protocol)) my_protocol = protocol
@@ -162,11 +164,11 @@ end subroutine ids_serialize
 
 ! Turn a bunch of bytes into an IDS
 subroutine ids_deserialize(buffer, ids_out)
-  #if defined(_Linux)
-  #  define SERIALIZE_TEMPORARY_DIRECTORY '/dev/shm/'
-  #else
-  #  define SERIALIZE_TEMPORARY_DIRECTORY ''
-  #endif
+#if defined(_Linux)
+#  define SERIALIZE_TEMPORARY_DIRECTORY '/dev/shm/'
+#else
+#  define SERIALIZE_TEMPORARY_DIRECTORY ''
+#endif
   class(IDS_base) :: ids_out ! it is up to you to pass the correct buffer and ids type
   character(len=1), dimension(:), allocatable, intent(in) :: buffer
 
@@ -176,7 +178,9 @@ subroutine ids_deserialize(buffer, ids_out)
   integer(ids_int) :: status
   integer(ids_int) :: unit
   integer(ids_int) :: file_size
+  integer(ids_int) :: index
   character(STRMAXLEN):: uri
+  character(STRMAXLEN):: filename
 
   protocol = ichar(buffer(1))
 
