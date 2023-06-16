@@ -422,13 +422,13 @@
     <xsl:text>&#10;</xsl:text>
     <xsl:text>&#9;write(*,*) "--- Testing empty ids"&#10;</xsl:text>
     <xsl:text>&#9;call ids_validate(ids, status, err_msg) &#10;</xsl:text>
-	<xsl:text>&#9;if (status==-1) STOP "Testing empty ids error" &#10;</xsl:text>
+    <xsl:text>&#9;if (status.ne.-1 .and. trim(err_msg) .ne. "ids_properties.homogeneous_time wrong value") STOP "Testing empty ids error" &#10;</xsl:text>
     <xsl:text>&#10;</xsl:text>
     <xsl:text>&#9;write(*,*) "--- Testing time mode"&#10;</xsl:text>
     <xsl:text>&#9;ids%ids_properties%homogeneous_time = IDS_TIME_MODE_HOMOGENEOUS&#10;</xsl:text>
     <xsl:text>&#10;</xsl:text>
 	<xsl:text>&#9;call ids_validate(ids, status, err_msg) &#10;</xsl:text>
-    <xsl:text>&#9;if (status==-1) STOP "Testing time mode" &#10;</xsl:text>
+    <xsl:text>&#9;if (status.ne.-1 .and. trim(err_msg) .ne. "the time array must be associated") STOP "Testing time mode error" &#10;</xsl:text>
     <xsl:text>&#10;</xsl:text>
     <xsl:text>END SUBROUTINE </xsl:text> <xsl:value-of select="@name"/><xsl:text>_validation_tests &#10;</xsl:text>
     <xsl:text>&#10;</xsl:text>
