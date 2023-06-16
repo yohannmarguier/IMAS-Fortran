@@ -111,11 +111,11 @@ subroutine ids_serialize(ids_in, buffer, protocol)
       return
     end if
 
-    index = SCAN(fname,'/')
+    index = SCAN(fname,'/', .TRUE.)
     filename=fname(index+1:)
     ! Write to file
     !call ual_build_uri_from_legacy_parameters(ASCII_BACKEND, 0, 0, 'serialize', 'serialize', '3','-fullpath '//fname, uri, status)
-    uri = "imas:ascii?path=//SERIALIZE_TEMPORARY_DIRECTORY//;filename="//filename
+    uri = "imas:ascii?path=" // SERIALIZE_TEMPORARY_DIRECTORY // ";filename="//filename
     call ual_begin_dataentry_action(uri, FORCE_CREATE_PULSE, pulsectx, status)
     if (status .ne. 0) then
       write(*,*) "SERIALIZE: ERROR opening ASCII backend - ual_open_pulse"
@@ -192,7 +192,7 @@ subroutine ids_deserialize(buffer, ids_out)
       return
     end if
 
-    index = SCAN(fname,'/')
+    index = SCAN(fname,'/', .TRUE.)
     filename=fname(index+1:)
     ! Write to file
     unit = get_file_unit()
@@ -202,7 +202,7 @@ subroutine ids_deserialize(buffer, ids_out)
     flush(unit)
 
     !call ual_build_uri_from_legacy_parameters(ASCII_BACKEND, 0, 0, 'serialize', 'serialize', '3','-fullpath '//fname, uri, status)
-    uri = "imas:ascii?path=//SERIALIZE_TEMPORARY_DIRECTORY//;filename="//filename
+    uri = "imas:ascii?path=" // SERIALIZE_TEMPORARY_DIRECTORY // ";filename="//filename
     call ual_begin_dataentry_action(uri, FORCE_CREATE_PULSE, pulsectx, status)
     if (status .ne. 0) then
       write(*,*) "SERIALIZE: ERROR opening ASCII backend - ual_open_pulse"
