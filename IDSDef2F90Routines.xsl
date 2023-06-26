@@ -1063,6 +1063,7 @@ end interface
 !!! Routines to PUT_SLICE one time slice of an IDS !!!
 subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS, retstatus)
   use ids_schemas_<xsl:value-of select="@name"/>
+  use <xsl:value-of select="@name"/>_validate_struct
   use al_low_level_wrap
   use <xsl:value-of select="@name"/>_put_struct
   <!--<xsl:if test="@specific_validation_rules='yes'">
