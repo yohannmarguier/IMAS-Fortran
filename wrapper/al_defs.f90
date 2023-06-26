@@ -54,7 +54,7 @@ module al_defs
   integer, parameter :: CONTEXT_ERR        = ERR_0-1
   integer, parameter :: BACKEND_ERR        = ERR_0-2
   integer, parameter :: LOWLEVEL_ERR       = ERR_0-3
-  integer, parameter :: CONSISTENCY_ERR    = ERR_0-3
+  integer, parameter :: CONSISTENCY_ERR    = ERR_0-4
 
   integer, parameter :: IDS_TIME_MODE_UNKNOWN = -999999999
   integer, parameter :: IDS_TIME_MODE_HETEROGENEOUS = 0

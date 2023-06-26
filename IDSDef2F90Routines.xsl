@@ -1086,6 +1086,21 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   character(len=100000) :: longstring
   character(len=300) :: timepath
   character(*), parameter :: path = ''
+  integer(ids_int) :: validation_status
+  character(999) :: err_msg
+  character(len=1) :: buffer
+
+  ! Automatic validation of the data (if enabled)
+  CALL get_environment_variable("IMAS_AL_ENABLE_VALIDATION_AT_PUT", buffer)
+  if (len_trim(buffer).ne.0 .and. buffer .ne. '0') then
+    call ids_validate(IDS,validation_status,err_msg)
+    if(validation_status == -1) then 
+      write(*,*) "Error during automatic validation before put of <xsl:value-of select="@name"/>"
+      write(*,*) err_msg
+      if (present(retstatus)) retstatus = CONSISTENCY_ERR
+      return
+    end if
+  end if 
 
   if (IDS%ids_properties%homogeneous_time.EQ.IDS_TIME_MODE_UNKNOWN) then
      write(*,*) "Warning : <xsl:value-of select="@name"/> is found to be EMPTY (homogeneous_time undefined). PUTSLICE returns with no action."
