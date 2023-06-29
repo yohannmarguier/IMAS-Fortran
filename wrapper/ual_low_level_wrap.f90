@@ -813,13 +813,11 @@ contains
     type(al_status) :: status
     if (valid_data) then
        call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-       pdata = C_LOC(data)
-	   status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, pdata, INTEGER_DATA, 0, C_NULL_PTR))
-       if (status%code.ne.0) write(*,*) TRIM(status%message)
-       retstatus = status%code
-    else
-       retstatus = 0
     end if
+    pdata = C_LOC(data)
+	status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, pdata, INTEGER_DATA, 0, C_NULL_PTR))
+    if (status%code.ne.0) write(*,*) TRIM(status%message)
+    retstatus = status%code
   end subroutine put_int
 
   subroutine put_double(opCtx, idsName, fieldPath, timebasePath, data, valid_data, lifeCycleStatus, retstatus)
@@ -834,14 +832,11 @@ contains
     type(al_status) :: status
     if (valid_data) then
        call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-       pdata = C_LOC(data)
-	   status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, pdata, DOUBLE_DATA, 0, C_NULL_PTR))
-        if (status%code.ne.0) write(*,*) TRIM(status%message)
-        retstatus = status%code
-    else
-       retstatus = 0
     end if
-	
+    pdata = C_LOC(data)
+	status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, pdata, DOUBLE_DATA, 0, C_NULL_PTR))
+    if (status%code.ne.0) write(*,*) TRIM(status%message)
+    retstatus = status%code
   end subroutine put_double
 
   subroutine put_complex(opCtx, idsName, fieldPath, timebasePath, data, valid_data, lifeCycleStatus, retstatus)
@@ -856,14 +851,11 @@ contains
     type(al_status) :: status
     if (valid_data) then
        call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-       pdata = C_LOC(data)
-	   status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, pdata, COMPLEX_DATA, 0, C_NULL_PTR))
-       if (status%code.ne.0) write(*,*) TRIM(status%message)
-       retstatus = status%code
-    else
-       retstatus = 0
     end if
-	
+    pdata = C_LOC(data)
+	status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, pdata, COMPLEX_DATA, 0, C_NULL_PTR))
+    if (status%code.ne.0) write(*,*) TRIM(status%message)
+    retstatus = status%code
   end subroutine put_complex
 
   subroutine put_string(opCtx, idsName, fieldPath, timebasePath, data, lifeCycleStatus, retstatus)
