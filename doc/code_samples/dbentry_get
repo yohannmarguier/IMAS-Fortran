@@ -1,0 +1,20 @@
+program load_ids
+    ! Make the Access Layer available
+    use ids_routines
+    implicit none
+
+    integer :: data_entry, status
+    type(ids_core_profiles) :: cp, cp1
+
+    ! Open the database entry by providing an IMAS URI
+    call imas_open( &
+        "imas:mdsplus?user=public;shot=131024;run=41;database=ITER?version=3", &
+        OPEN_PULSE, data_entry, status)
+
+    ! Load the core_profiles IDS, occurrence 0
+    ids_get(data_entry, "core_profiles", cp)
+
+    ! Load the core_profiles IDS, occurrence 1
+    ids_get(data_entry, "core_profiles/1", cp1)
+
+end program load_ids

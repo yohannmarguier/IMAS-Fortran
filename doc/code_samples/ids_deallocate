@@ -1,0 +1,15 @@
+program deallocate_ids
+    ! Make the Access Layer available
+    use ids_routines
+    implicit none
+
+    ! Create an empty magnetics IDS
+    type(ids_magnetics) :: magnetics
+
+    ! Use the IDS ...
+
+    ! We are done with the IDS, deallocate it
+    ids_deallocate(magnetics)
+    ! The magnetics IDS is cleaned up now
+
+end program deallocate_ids

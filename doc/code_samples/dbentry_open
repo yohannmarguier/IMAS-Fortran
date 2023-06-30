@@ -1,0 +1,16 @@
+program open_data_entry
+    ! Make the Access Layer available
+    use ids_routines
+    implicit none
+
+    integer :: data_entry, data_entry2, status
+
+    ! Open the database entry by providing an IMAS URI
+    call imas_open( &
+        "imas:mdsplus?user=public;shot=131024;run=41;database=ITER?version=3", &
+        OPEN_PULSE, data_entry, status)
+
+    ! Alternatively, we can open an IDS providing legacy arguments
+    call imas_open_env("", 131024, 24, data_entry2, "public", "ITER", "3", status)
+
+end program open_data_entry

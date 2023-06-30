@@ -1,0 +1,16 @@
+program create_ids
+    ! Make the Access Layer available
+    use ids_routines
+    implicit none
+
+    ! Create empty core_profiles and equilibrium IDSs
+    type(ids_core_profiles) :: core_profiles
+    type(ids_equilibrium) :: equilibrium
+
+    ! This outputs -999999999 (default INT_0D value)
+    write(*,*) core_profiles%ids_properties%homogeneous_time
+
+    ! This outputs 0 (default size of array of structure)
+    write(*,*) size(equilibrium%time_slice)
+
+end program create_ids
