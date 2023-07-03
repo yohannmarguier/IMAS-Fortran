@@ -9,7 +9,7 @@ program deallocate_ids
     ! Use the IDS ...
 
     ! We are done with the IDS, deallocate it
-    ids_deallocate(magnetics)
+    call ids_deallocate(magnetics)
     ! The magnetics IDS is cleaned up now
 
 end program deallocate_ids

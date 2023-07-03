@@ -1,0 +1,9 @@
+program testindentifiers
+    use al_coordinate_identifier
+    implicit none
+    integer :: i_phi = coordinate_identifier%phi
+    print *,i_phi
+    print *,coordinate_identifier%index('phi')
+    print *,coordinate_identifier%name(i_phi)
+    print *,coordinate_identifier%description(i_phi)
+end program

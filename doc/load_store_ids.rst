@@ -18,9 +18,9 @@
 .. |dbentry_open| replace:: :f:func:`imas_open`, :f:func:`imas_open_env` (legacy)
 .. |dbentry_get| replace:: :f:func:`ids_get`
 .. |dbentry_getslice| replace:: :f:func:`ids_get_slice`
-.. |CLOSEST_INTERP| replace:: :f:var:`CLOSEST_SAMPLE`
-.. |PREVIOUS_INTERP| replace:: :f:var:`PREVIOUS_SAMPLE`
-.. |LINEAR_INTERP| replace:: :f:var:`INTERPOLATION`
+.. |CLOSEST_INTERP| replace:: :f:var:`CLOSEST_INTERP`
+.. |PREVIOUS_INTERP| replace:: :f:var:`PREVIOUS_INTERP`
+.. |LINEAR_INTERP| replace:: :f:var:`LINEAR_INTERP`
 
 .. |dbentry_create| replace:: :f:func:`imas_open`, :f:func:`imas_create_env` (legacy)
 .. |dbentry_put| replace:: :f:func:`ids_put`

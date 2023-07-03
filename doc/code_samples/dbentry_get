@@ -12,9 +12,9 @@ program load_ids
         OPEN_PULSE, data_entry, status)
 
     ! Load the core_profiles IDS, occurrence 0
-    ids_get(data_entry, "core_profiles", cp)
+    call ids_get(data_entry, "core_profiles", cp)
 
     ! Load the core_profiles IDS, occurrence 1
-    ids_get(data_entry, "core_profiles/1", cp1)
+    call ids_get(data_entry, "core_profiles/1", cp1)
 
 end program load_ids

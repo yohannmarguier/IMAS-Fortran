@@ -143,61 +143,49 @@ IDS API
         Access Layer, and :code:`.false.` if it was allocated directly in
         Fortran.
 
-..
-    #########################################################################
+.. f:subroutine:: ids_is_valid(in)
 
-.. cpp:namespace:: IdsNs
+    Verify if a data node is not empty.
 
-.. cpp:class:: Ids
+    :param in: Data node to verify, supported data types are INT_0D and FLT_0D.
+    :returns logical ids_is_valid: :code:`.true.` if the node is not empty.
 
-    Abstract base class for all IDS classes. All methods defined here are
-    available on all concrete IDS objects.
+.. f:subroutine:: ids_serialize(ids_in, buffer, protocol)
 
-    .. cpp:function:: std::string serialize(int protocol=DEFAULT_SERIALIZER_PROTOCOL)
+    Serialize the contents of this IDS into binary data.
 
-        Serialize the contents of this IDS into binary data.
+    While it is by design allowed to specify various serialization
+    protocols, it currently implements only a serialization through usage of
+    the ASCII backend (simpler but less efficient) which is de-facto the
+    default serializer protocol. The ID of the used serializer protocol is
+    kept in the serialized buffer, such that specifying the protocol is not
+    necessary when deserializing.
 
-        While it is by design allowed to specify various serialization
-        protocols, it currently implements only a serialization through usage of
-        the ASCII backend (simpler but less efficient) which is de-facto the
-        default serializer protocol. The ID of the used serializer protocol is
-        kept in the serialized buffer, such that specifying the protocol is not
-        necessary when deserializing.
+    :param ids_in: IDS to serialize.
+    :param character(len=1) buffer [dimension(:), allocatable]: Binary
+        representation of this IDS.
+    :option integer protocol: Which serialization protocol to use. Available
+        options are: 
 
-        :param protocol: Which serialization protocol to use. Available options
-            are: 
+        - :f:var:`ASCII_SERIALIZER_PROTOCOL`
+        - :f:var:`DEFAULT_SERIALIZER_PROTOCOL`
+    :example:
+        .. code-block:: fortran
 
-            - :cpp:expr:`ASCII_SERIALIZER_PROTOCOL`
-            - :cpp:expr:`DEFAULT_SERIALIZER_PROTOCOL`
-        :returns: Binary representation of this IDS.
-        :example:
-            .. code-block:: c++
+            type(ids_pf_active) ids, ids2;
+            character(len=1), dimension(:), allocatable :: buffer
+            // populate the IDS
+            // ...
+            ids_serialize(ids, buffer)
 
-                IdsNs::IDS::pf_active ids;
-                // populate the IDS
-                // ...
-                auto binary_data = ids.serialize();
+            // move the binary data around, for example to another process using
+            // memory communication, then deserialize
+            ids_deserialize(buffer, ids2);
 
-                // move the binary data around, for example to another process using
-                // memory communication, then deserialize
+.. f:subroutine:: ids_deserialize(buffer, ids_out)
 
-                IdsNs::IDS::pf_active ids2;
-                ids2.deserialize(binary_data);
+    Deserialize the provided binary data into an IDS.
 
-    .. cpp:function:: int deserialize(std::string &data)
-
-        Deserialize the provided binary data into this IDS.
-
-        :param data: data representing a serialized IDS.
-        :returns: Status code: ``0`` on success, ``<0`` on failure.
-        :example: See :cpp:func:`serialize`.
-
-    .. cpp:function:: void setPulseCtx(int pulseCtx)
-
-        Set the pulse context used for database operations (:cpp:func:`get`,
-        :cpp:func:`getSlice`, :cpp:func:`put`, :cpp:func:`putSlice`).
-
-        :param pulseCtx: Pulse context ID obtained through
-            :cpp:expr:`IDS::getPulseCtx()`.
-        :example: .. literalinclude:: code_samples//dbentry_put
-
+    :param character(len=1) buffer [dimension(:), allocatable]: data representing a serialized IDS.
+    :param ids_in: IDS to store the deserialized data in.
+    :example: See :f:func:`ids_serialize`.

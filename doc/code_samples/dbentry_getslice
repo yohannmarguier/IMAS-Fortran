@@ -3,8 +3,9 @@ program load_ids_slice
     use ids_routines
     implicit none
 
-    integer :: data_entry, status
-    type(ids_core_profiles) :: cp, cp1
+    integer(ids_int) :: data_entry, status
+    real(ids_real) :: twant
+    type(ids_core_profiles) :: cp
 
     ! Open the database entry by providing an IMAS URI
     call imas_open( &
@@ -12,6 +13,7 @@ program load_ids_slice
         OPEN_PULSE, data_entry, status)
 
     ! Retrieve the time slice just before t=370 of the core_profiles IDS
-    ids_get_slice(data_entry, "core_profiles", cp, 370, PREVIOUS_SAMPLE)
+    twant = 370
+    call ids_get_slice(data_entry, "core_profiles", cp, twant, PREVIOUS_INTERP)
 
 end program load_ids_slice

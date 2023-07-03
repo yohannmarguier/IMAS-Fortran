@@ -1,0 +1,15 @@
+program ids_structure
+    ! Make the Access Layer available
+    use ids_routines
+    implicit none
+
+    ! Create an empty core_profiles IDS
+    type(ids_core_profiles) :: core_profiles
+
+    ! core_profiles/time is a FLT_1D data node
+    ! We can assign values to it:
+    allocate(core_profiles%time(3))
+    core_profiles%time = (/ 0.5, 1.0, 1.5 /)
+    write(*,'(5(F0.3,TR1))') core_profiles%time ! -> .500 1.000 1.500
+
+end program ids_structure

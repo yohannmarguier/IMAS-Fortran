@@ -24,12 +24,14 @@ program store_ids_slice
     dt = 0.1
 
     do while (t .lt. t_stop)
-         core_profiles%time = (/ t /)
-         ! Fill your time-dependent data in the core_profiles IDS here
-         ! ...
+        core_profiles%time = (/ t /)
+        ! Fill your time-dependent data in the core_profiles IDS here
+        ! ...
 
-         ! Append the current time slice to the data stored on disk
-         ids_put_slice(data_entry, "core_profiles", core_profiles)
+        ! Append the current time slice to the data stored on disk
+        call ids_put_slice(data_entry, "core_profiles", core_profiles)
+
+        t = t + dt
     end do
 
 end program store_ids_slice

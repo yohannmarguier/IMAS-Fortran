@@ -3,7 +3,7 @@
 Using the Access Layer with your Fortran program
 ------------------------------------------------
 
-The following example program will load the C++ interface to the Access Layer
+The following example program will load the Fortran interface to the Access Layer
 to print the version of the access layer and data dictionary.
 
 .. highlight:: fortran
