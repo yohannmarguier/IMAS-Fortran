@@ -814,8 +814,7 @@ contains
     if (valid_data) then
        call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
     end if
-	pdata = C_LOC(data)
-	call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+    pdata = C_LOC(data)
 	status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, pdata, INTEGER_DATA, 0, C_NULL_PTR))
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
@@ -834,7 +833,7 @@ contains
     if (valid_data) then
        call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
     end if
-	pdata = C_LOC(data)
+    pdata = C_LOC(data)
 	status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, pdata, DOUBLE_DATA, 0, C_NULL_PTR))
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
@@ -853,7 +852,7 @@ contains
     if (valid_data) then
        call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
     end if
-	pdata = C_LOC(data)
+    pdata = C_LOC(data)
 	status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, pdata, COMPLEX_DATA, 0, C_NULL_PTR))
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
