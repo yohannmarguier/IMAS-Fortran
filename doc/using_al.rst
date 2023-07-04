@@ -38,7 +38,7 @@ was compiled for you. When you execute it, the result is:
 
     $ ./imas_hello_world
      Hello world!
-     Using access layer version: 3.38.1
+     Using access layer version: 5rc
 
 
 Congratulations if this runs successfully! You have included the Fortran Access

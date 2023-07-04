@@ -180,7 +180,7 @@ IDS API
 
             // move the binary data around, for example to another process using
             // memory communication, then deserialize
-            ids_deserialize(buffer, ids2);
+            ids_deserialize(buffer, ids2)
 
 .. f:subroutine:: ids_deserialize(buffer, ids_out)
 

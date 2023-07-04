@@ -3,11 +3,11 @@ program imas_hello_world
     use ids_routines
     implicit none
 
-    CHARACTER(len=255) :: imas_version
+    CHARACTER(len=255) :: ual_version
 
-    call get_environment_variable("IMAS_VERSION", imas_version)
+    call get_environment_variable("UAL_VERSION", ual_version)
 
     write(*,*) "Hello world!"
-    write(*,*) "Using access layer version: ", imas_version
+    write(*,*) "Using access layer version: ", ual_version
 
 end program imas_hello_world

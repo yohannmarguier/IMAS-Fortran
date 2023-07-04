@@ -32,7 +32,7 @@ Data entry API
 
 .. f:subroutine:: imas_create_env(name, shot, run, refShot, refRun, pulseCtx, user, tokamak, version, retstatus)
 
-    Open the Data Entry defined by the provided parameters.
+    Create the Data Entry defined by the provided parameters.
 
     :param character(*) name [in]: `Unused`
     :param integer shot [in]: Shot number
