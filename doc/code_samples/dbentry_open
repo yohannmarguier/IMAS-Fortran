@@ -11,6 +11,6 @@ program open_data_entry
         OPEN_PULSE, data_entry, status)
 
     ! Alternatively, we can open an IDS providing legacy arguments
-    call imas_open_env("", 131024, 24, data_entry2, "public", "ITER", "3", status)
+    call imas_open_env("", 131024, 41, data_entry2, "public", "ITER", "3", status)
 
 end program open_data_entry
