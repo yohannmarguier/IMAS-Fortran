@@ -38,6 +38,5 @@
 .. |tm_heterogeneous| replace:: :f:var:`IDS_TIME_MODE_HETEROGENEOUS`
 .. |tm_independent| replace:: :f:var:`IDS_TIME_MODE_INDEPENDENT`
 
-.. todo
-    .. |ids_validate| replace:: :py:meth:`ids.validate <imas.ids_base.IDSBase.validate>`
-    .. |validate_error| replace:: raises an error
+.. |ids_validate| replace:: `not implemented yet for Fortran`
+.. |validate_error| replace:: returns a nonzero status and error message
