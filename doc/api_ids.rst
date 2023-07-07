@@ -111,9 +111,33 @@ IDS API
 
     Create a copy of an IDS or structure inside an IDS.
 
+    .. note::
+
+        This method can only copy IDSs and structures. See below example on how
+        to copy an array of structures.
+
     :param struct_in: IDS or sub-structure to copy from.
     :param struct_out: IDS or sub-structure to copy to. Must be of the same
         ``type`` as ``struct_in``.
+    :example:
+        .. code-block:: fortran
+
+            type(ids_core_profiles) cp1, cp2;
+
+            ! Assume cp1 is a filled IDS
+            ! Copy a structure of cp1 to cp2
+            call ids_copy(cp1%ids_properties, cp2%ids_properties)
+
+            ! To copy an array of structures, we need to allocate the aos first
+            if associated(cp1%profiles_1d) then
+                allocate(cp2%profiles_1d (size(cp1%profiles_1d)) )
+                do i = 1, size(cp1%profiles_1d)
+                    call ids_copy(cp1%profiles_1d(i), cp2%profiles_1d(i))
+                enddo
+            endif
+
+            ! Example copying the full IDS
+            call ids_copy(cp1, cp2)
 
 .. f:subroutine:: ids_deallocate(struct_in)
 
