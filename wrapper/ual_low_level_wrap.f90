@@ -785,6 +785,18 @@ contains
     endif
   end subroutine warningWritingObsolescentNode
 
+  subroutine is_al_plugins_enabled(ret)
+     integer, intent(out) :: ret
+     CHARACTER(len=10) :: buffer
+     ret = 0
+     CALL get_environment_variable("AL_PLUGINS_ENABLED", buffer)
+     if (len_trim(buffer).ne.0) then
+      if (buffer.eq.'TRUE') then
+         ret = 1
+      end if
+     end if
+  end subroutine is_al_plugins_enabled
+
   subroutine put_char(opCtx, idsName, fieldPath, timebasePath, data, lifeCycleStatus, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
@@ -805,58 +817,69 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx
+    integer :: AL_PLUGINS_ENABLED
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     integer, intent(in), target :: data
     logical, intent(in) :: valid_data
     integer, intent(out) :: retstatus
     type(C_PTR) :: pdata
     type(al_status) :: status
-    if (valid_data) then
-       call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+    if (valid_data .eqv. .true.) then
+      call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
     end if
-	pdata = C_LOC(data)
-	call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-	status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, pdata, INTEGER_DATA, 0, C_NULL_PTR))
-    if (status%code.ne.0) write(*,*) TRIM(status%message)
-    retstatus = status%code
+    call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
+    if ((valid_data .eqv. .true.) .or. ( (valid_data .eqv. .false.) .and. (AL_PLUGINS_ENABLED.eq.1) )) then
+      pdata = C_LOC(data)
+      status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, pdata, INTEGER_DATA, 0, C_NULL_PTR))
+      if (status%code.ne.0) write(*,*) TRIM(status%message)
+      retstatus = status%code
+    end if
   end subroutine put_int
 
   subroutine put_double(opCtx, idsName, fieldPath, timebasePath, data, valid_data, lifeCycleStatus, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx
+    integer :: AL_PLUGINS_ENABLED
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     real(8), intent(in), target :: data
     logical, intent(in) :: valid_data
     integer, intent(out) :: retstatus
     type(C_PTR) :: pdata
     type(al_status) :: status
-    if (valid_data) then
+    if (valid_data .eqv. .true.) then
        call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
     end if
-	pdata = C_LOC(data)
-	status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, pdata, DOUBLE_DATA, 0, C_NULL_PTR))
-    if (status%code.ne.0) write(*,*) TRIM(status%message)
-    retstatus = status%code
+    call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
+    if ((valid_data .eqv. .true.) .or. ( (valid_data .eqv. .false.) .and. (AL_PLUGINS_ENABLED.eq.1) )) then
+      pdata = C_LOC(data)
+      status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, pdata, DOUBLE_DATA, 0, C_NULL_PTR))
+      if (status%code.ne.0) write(*,*) TRIM(status%message)
+      retstatus = status%code
+    end if
   end subroutine put_double
 
   subroutine put_complex(opCtx, idsName, fieldPath, timebasePath, data, valid_data, lifeCycleStatus, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx
+    integer :: AL_PLUGINS_ENABLED
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     complex(8), intent(in), target :: data
     logical, intent(in) :: valid_data
     integer, intent(out) :: retstatus
     type(C_PTR) :: pdata
     type(al_status) :: status
-    if (valid_data) then
+    if (valid_data .eqv. .true.) then
        call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
     end if
-	pdata = C_LOC(data)
-	status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, pdata, COMPLEX_DATA, 0, C_NULL_PTR))
-    if (status%code.ne.0) write(*,*) TRIM(status%message)
-    retstatus = status%code
+    call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
+    if ((valid_data .eqv. .true.) .or. ( (valid_data .eqv. .false.) .and. (AL_PLUGINS_ENABLED.eq.1) )) then
+      pdata = C_LOC(data)
+      status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, pdata, COMPLEX_DATA, 0, C_NULL_PTR))
+      if (status%code.ne.0) write(*,*) TRIM(status%message)
+      retstatus = status%code
+    end if
   end subroutine put_complex
 
   subroutine put_string(opCtx, idsName, fieldPath, timebasePath, data, lifeCycleStatus, retstatus)
@@ -888,18 +911,23 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx
+    integer :: AL_PLUGINS_ENABLED
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     integer, intent(out) :: retstatus
     type(al_status) :: status
-    status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, CHAR_DATA, 1, C_NULL_PTR))
-    if (status%code.ne.0) write(*,*) TRIM(status%message)
-    retstatus = status%code
+    call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
+    if (AL_PLUGINS_ENABLED.eq.1) then
+      status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, CHAR_DATA, 1, C_NULL_PTR))
+      if (status%code.ne.0) write(*,*) TRIM(status%message)
+      retstatus = status%code
+    end if
   end subroutine put_empty_string
 
   subroutine put_vect1d_int(opCtx, idsName, fieldPath, timebasePath, data, rank, lifeCycleStatus, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx, rank
+    integer :: AL_PLUGINS_ENABLED
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     integer, dimension(:), pointer :: data
     integer, intent(out) :: retstatus
@@ -908,7 +936,10 @@ contains
     integer :: dim1
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-        status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, INTEGER_DATA, rank, C_NULL_PTR))
+        call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
+        if (AL_PLUGINS_ENABLED.eq.1) then
+         status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, INTEGER_DATA, rank, C_NULL_PTR))
+        end if
     else 
         dim1 = size(data, 1)   
 		dsize = (/ dim1 /)
@@ -925,6 +956,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx, rank
+    integer :: AL_PLUGINS_ENABLED
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     real(8), dimension(:), pointer :: data
     integer, intent(out) :: retstatus
@@ -933,7 +965,10 @@ contains
     integer(C_INT), target :: dsize(1)
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-		status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, DOUBLE_DATA, rank, C_NULL_PTR))
+      call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
+      if (AL_PLUGINS_ENABLED.eq.1) then
+		   status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, DOUBLE_DATA, rank, C_NULL_PTR))
+      end if
     else
         dim1 = size(data, 1)
 		dsize = (/ dim1 /)
@@ -950,6 +985,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx, rank
+    integer :: AL_PLUGINS_ENABLED
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     complex(8), dimension(:), pointer :: data
     integer, intent(out) :: retstatus
@@ -958,7 +994,10 @@ contains
     integer(C_INT), target :: dsize(1)
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-        status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, COMPLEX_DATA, rank, C_NULL_PTR))
+        call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
+        if (AL_PLUGINS_ENABLED.eq.1) then
+         status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, COMPLEX_DATA, rank, C_NULL_PTR))
+        end if
     else
         dim1 = size(data, 1)
 		dsize = (/ dim1 /)
@@ -975,6 +1014,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none 
     integer, intent(in) :: opCtx, rank
+    integer :: AL_PLUGINS_ENABLED
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     character(132), dimension(:), pointer :: data
     integer, intent(out) :: retstatus
@@ -986,7 +1026,10 @@ contains
     integer(C_INT), target :: dsize(2)
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-        status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, CHAR_DATA, rank + 1, C_NULL_PTR))
+        call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
+        if (AL_PLUGINS_ENABLED.eq.1) then
+         status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, CHAR_DATA, rank + 1, C_NULL_PTR))
+        end if
     else
         dim1 = size(data, 1)
 		csize1 = dim1
@@ -1012,6 +1055,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx, rank
+    integer :: AL_PLUGINS_ENABLED
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     integer, dimension(:,:), pointer :: data
     integer, intent(out) :: retstatus
@@ -1020,7 +1064,10 @@ contains
     integer(C_INT), target :: dsize(2)
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-        status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, INTEGER_DATA, rank, C_NULL_PTR))
+        call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
+        if (AL_PLUGINS_ENABLED.eq.1) then
+         status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, INTEGER_DATA, rank, C_NULL_PTR))
+        end if
     else
 		dim1 = size(data, 1)
 		dim2 = size(data, 2)
@@ -1038,6 +1085,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx, rank
+    integer :: AL_PLUGINS_ENABLED
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     real(8), dimension(:,:), pointer :: data
     integer, intent(out) :: retstatus
@@ -1046,7 +1094,10 @@ contains
     integer(C_INT), target :: dsize(2)
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-        status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, DOUBLE_DATA, rank, C_NULL_PTR))
+        call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
+        if (AL_PLUGINS_ENABLED.eq.1) then
+           status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, DOUBLE_DATA, rank, C_NULL_PTR))
+        end if
     else
 		dim1 = size(data, 1)
 		dim2 = size(data, 2)
@@ -1064,6 +1115,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx, rank
+    integer :: AL_PLUGINS_ENABLED
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     complex(8), dimension(:,:), pointer :: data
     integer, intent(out) :: retstatus
@@ -1072,7 +1124,10 @@ contains
     integer(C_INT), target :: dsize(2)
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-        status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, COMPLEX_DATA, rank, C_NULL_PTR))
+        call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
+        if (AL_PLUGINS_ENABLED.eq.1) then
+         status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, COMPLEX_DATA, rank, C_NULL_PTR))
+        end if
     else
 		dim1 = size(data, 1)
 		dim2 = size(data, 2)
@@ -1090,6 +1145,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx, rank
+    integer :: AL_PLUGINS_ENABLED
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     integer, dimension(:,:,:), pointer :: data
     integer, intent(out) :: retstatus
@@ -1098,7 +1154,10 @@ contains
     integer(C_INT), target :: dsize(3)
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-		status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, INTEGER_DATA, rank, C_NULL_PTR))
+      call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
+      if (AL_PLUGINS_ENABLED.eq.1) then
+		   status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, INTEGER_DATA, rank, C_NULL_PTR))
+      end if
     else
 		dim1 = size(data, 1)
 		dim2 = size(data, 2)
@@ -1117,6 +1176,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx, rank
+    integer :: AL_PLUGINS_ENABLED
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     real(8), dimension(:,:,:), pointer :: data
     integer, intent(out) :: retstatus
@@ -1125,7 +1185,10 @@ contains
     integer(C_INT), target :: dsize(3)
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-        status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, DOUBLE_DATA, rank, C_NULL_PTR))
+        call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
+        if (AL_PLUGINS_ENABLED.eq.1) then
+         status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, DOUBLE_DATA, rank, C_NULL_PTR))
+        end if
     else
 		dim1 = size(data, 1)
 		dim2 = size(data, 2)
@@ -1144,6 +1207,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx, rank
+    integer :: AL_PLUGINS_ENABLED
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     complex(8), dimension(:,:,:), pointer :: data
     integer, intent(out) :: retstatus
@@ -1152,7 +1216,10 @@ contains
     integer(C_INT), target :: dsize(3)
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-        status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, COMPLEX_DATA, rank, C_NULL_PTR))
+        call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
+        if (AL_PLUGINS_ENABLED.eq.1) then
+         status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, COMPLEX_DATA, rank, C_NULL_PTR))
+        end if
     else
 		dim1 = size(data, 1)
 		dim2 = size(data, 2)
@@ -1171,6 +1238,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx, rank
+    integer :: AL_PLUGINS_ENABLED
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     integer, dimension(:,:,:,:), pointer :: data
     integer, intent(out) :: retstatus
@@ -1179,7 +1247,10 @@ contains
     integer(C_INT), target :: dsize(4)
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-        status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, INTEGER_DATA, rank, C_NULL_PTR))
+        call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
+        if (AL_PLUGINS_ENABLED.eq.1) then
+         status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, INTEGER_DATA, rank, C_NULL_PTR))
+        end if
     else
 		dim1 = size(data, 1)
 		dim2 = size(data, 2)
@@ -1199,6 +1270,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx, rank
+    integer :: AL_PLUGINS_ENABLED
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     real(8), dimension(:,:,:,:), pointer :: data
     integer, intent(out) :: retstatus
@@ -1207,7 +1279,10 @@ contains
     integer(C_INT), target :: dsize(4)
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-		status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, DOUBLE_DATA, rank, C_NULL_PTR))
+      call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
+      if (AL_PLUGINS_ENABLED.eq.1) then
+		   status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, DOUBLE_DATA, rank, C_NULL_PTR))
+      end if
     else
 		dim1 = size(data, 1)
 		dim2 = size(data, 2)
@@ -1227,6 +1302,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx, rank
+    integer :: AL_PLUGINS_ENABLED
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     complex(8), dimension(:,:,:,:), pointer :: data
     integer, intent(out) :: retstatus
@@ -1235,7 +1311,10 @@ contains
     integer(C_INT), target :: dsize(4)
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-		status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, COMPLEX_DATA, rank, C_NULL_PTR))
+      call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
+      if (AL_PLUGINS_ENABLED.eq.1) then
+		   status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, COMPLEX_DATA, rank, C_NULL_PTR))
+      end if
     else
 		dim1 = size(data, 1)
 		dim2 = size(data, 2)
@@ -1255,6 +1334,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx, rank
+    integer :: AL_PLUGINS_ENABLED
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     integer, dimension(:,:,:,:,:), pointer :: data
     integer, intent(out) :: retstatus
@@ -1263,7 +1343,10 @@ contains
     integer(C_INT), target :: dsize(5)
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-		status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, INTEGER_DATA, rank, C_NULL_PTR))
+      call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
+      if (AL_PLUGINS_ENABLED.eq.1) then
+		   status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, INTEGER_DATA, rank, C_NULL_PTR))
+      end if
     else
 		dim1 = size(data, 1)
 		dim2 = size(data, 2)
@@ -1284,6 +1367,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx, rank
+    integer :: AL_PLUGINS_ENABLED
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     real(8), dimension(:,:,:,:,:), pointer :: data
     integer, intent(out) :: retstatus
@@ -1292,7 +1376,10 @@ contains
     integer(C_INT), target :: dsize(5)
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-		status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, DOUBLE_DATA, rank, C_NULL_PTR))
+      call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
+      if (AL_PLUGINS_ENABLED.eq.1) then
+		   status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, DOUBLE_DATA, rank, C_NULL_PTR))
+      end if
     else
 		dim1 = size(data, 1)
 		dim2 = size(data, 2)
@@ -1313,6 +1400,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx, rank
+    integer :: AL_PLUGINS_ENABLED
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     complex(8), dimension(:,:,:,:,:), pointer :: data
     integer, intent(out) :: retstatus
@@ -1321,7 +1409,10 @@ contains
     integer(C_INT), target :: dsize(5)
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-		status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, COMPLEX_DATA, rank, C_NULL_PTR))
+      call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
+      if (AL_PLUGINS_ENABLED.eq.1) then
+		   status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, COMPLEX_DATA, rank, C_NULL_PTR))
+      end if
     else
 		dim1 = size(data, 1)
 		dim2 = size(data, 2)
@@ -1342,6 +1433,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx, rank
+    integer :: AL_PLUGINS_ENABLED
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     integer, dimension(:,:,:,:,:,:), pointer :: data
     integer, intent(out) :: retstatus
@@ -1350,7 +1442,10 @@ contains
     integer(C_INT), target :: dsize(6)
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-		status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, INTEGER_DATA, rank, C_NULL_PTR))
+      call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
+      if (AL_PLUGINS_ENABLED.eq.1) then
+		   status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, INTEGER_DATA, rank, C_NULL_PTR))
+      end if
     else
 		dim1 = size(data, 1)
 		dim2 = size(data, 2)
@@ -1372,6 +1467,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx, rank
+    integer :: AL_PLUGINS_ENABLED
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     real(8), dimension(:,:,:,:,:,:), pointer :: data
     integer, intent(out) :: retstatus
@@ -1380,7 +1476,10 @@ contains
     integer(C_INT), target :: dsize(6)
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-        status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, DOUBLE_DATA, rank, C_NULL_PTR))
+        call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
+        if (AL_PLUGINS_ENABLED.eq.1) then
+         status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, DOUBLE_DATA, rank, C_NULL_PTR))
+        end if
     else
 		dim1 = size(data, 1)
 		dim2 = size(data, 2)
@@ -1402,6 +1501,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx, rank
+    integer :: AL_PLUGINS_ENABLED
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     complex(8), dimension(:,:,:,:,:,:), pointer :: data
     integer, intent(out) :: retstatus
@@ -1410,7 +1510,10 @@ contains
     integer(C_INT), target :: dsize(6)
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-		status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, rank, csize))
+      call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
+      if (AL_PLUGINS_ENABLED.eq.1) then
+		   status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, rank, csize))
+      end if
     else
 		dim1 = size(data, 1)
 		dim2 = size(data, 2)
@@ -1432,6 +1535,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx, rank
+    integer :: AL_PLUGINS_ENABLED
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     integer, dimension(:,:,:,:,:,:,:), pointer :: data
     integer, intent(out) :: retstatus
@@ -1440,7 +1544,10 @@ contains
     integer(C_INT), target :: dsize(7)
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-		status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, INTEGER_DATA, rank, C_NULL_PTR))
+      call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
+      if (AL_PLUGINS_ENABLED.eq.1) then
+		   status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, INTEGER_DATA, rank, C_NULL_PTR))
+      end if
     else
 		dim1 = size(data, 1)
 		dim2 = size(data, 2)
@@ -1463,6 +1570,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx, rank
+    integer :: AL_PLUGINS_ENABLED
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     real(8), dimension(:,:,:,:,:,:,:), pointer :: data
     integer, intent(out) :: retstatus
@@ -1471,7 +1579,10 @@ contains
     integer(C_INT), target :: dsize(7)
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-		status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, DOUBLE_DATA, rank, C_NULL_PTR))
+      call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
+      if (AL_PLUGINS_ENABLED.eq.1) then
+		   status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, DOUBLE_DATA, rank, C_NULL_PTR))
+      end if
     else
 		dim1 = size(data, 1)
 		dim2 = size(data, 2)
@@ -1494,6 +1605,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx, rank
+    integer :: AL_PLUGINS_ENABLED
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     complex(8), dimension(:,:,:,:,:,:,:), pointer :: data
     integer, intent(out) :: retstatus
@@ -1502,7 +1614,10 @@ contains
     integer(C_INT), target :: dsize(7)
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-		status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, COMPLEX_DATA, rank, C_NULL_PTR))
+      call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
+      if (AL_PLUGINS_ENABLED.eq.1) then
+		   status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, COMPLEX_DATA, rank, C_NULL_PTR))
+      end if
     else
 		dim1 = size(data, 1)
 		dim2 = size(data, 2)
