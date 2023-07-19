@@ -1942,6 +1942,7 @@ end module
 <xsl:param name="coord"/>
 <xsl:param name="dimension"/>
 <xsl:if test="not(contains($coord,' OR ')) and contains($coord, '1...') and not(contains($coord, '1...N')) and not(string(number(substring-after($coord,'1...')))='NaN')">
+! validation of <xsl:value-of select="@path"/> dimension <xsl:value-of select="number($dimension)+1"/>
 if (associated(ids%<xsl:value-of select = "@name"/>)) then
   array_size = size(ids%<xsl:value-of select = "@name"/>,<xsl:value-of select = "number($dimension)+1"/>)
   if (array_size .ne. <xsl:value-of select = "substring-after($coord,'1...')"/>) then
@@ -2147,7 +2148,7 @@ end if
   this variable is a safeguard that prevents wrong code generation-->
 	<xsl:variable name="ispresent">
     <xsl:choose>
-    <xsl:when test="$currpath='' and not($coord='')">
+    <xsl:when test="$currpath='' and not($coord='') and not(contains($coord, '1...'))">
       	<xsl:value-of select="'yes'"/>
     </xsl:when>
 		<xsl:when test="contains($coord,'OR')">
