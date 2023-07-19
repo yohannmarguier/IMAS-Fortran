@@ -1773,11 +1773,6 @@ end module
 	    ! validation of <xsl:value-of select="@path"/>
       if (associated(ids%<xsl:value-of select="@name"/>)) then
       array_size = size(ids%<xsl:value-of select="@name"/>)
-      else
-        err_msg = "<xsl:value-of select="@path"/> must be allocated."
-        status = -1 
-        return
-      end if
       <xsl:if test="contains(@coordinate1,'/time')">
       if (ids_time_mode .eq. IDS_TIME_MODE_HOMOGENEOUS ) then
           if(array_size .ne. ids_time_size) then
@@ -1794,6 +1789,7 @@ end module
         return
       endif
       </xsl:if>
+      end if
       </xsl:when>
       <xsl:otherwise>
 	      ! warning <xsl:value-of select="@path_doc"/> coordinates consistency not verified (<xsl:value-of select="@coordinate1"/>)
@@ -2003,15 +1999,6 @@ end if
 <xsl:param name="path_doc_to_check"/>
 	<xsl:if test="descendant-or-self::field[@path_doc=$path_doc_to_check]">
 		<xsl:value-of select="'yes'"/>
-    <xsl:if test="not(descendant-or-self::field[@path_doc=$path_doc_to_check]/@data_type='INT_1D' or 
-                      descendant-or-self::field[@path_doc=$path_doc_to_check]/@data_type='FLT_1D' or
-                      descendant-or-self::field[@path_doc=$path_doc_to_check]/@data_type='flt_1d_type' or
-                      descendant-or-self::field[@path_doc=$path_doc_to_check]/@data_type='STR_1D')">
-    <xsl:message>
-        <xsl:value-of select="descendant-or-self::field[@path_doc=$path_doc_to_check]/@data_type"/>
-        <xsl:value-of select="descendant-or-self::field[@path_doc=$path_doc_to_check]/@path"/>
-    </xsl:message>
-    </xsl:if>
 	</xsl:if >
 </xsl:template> 
 <!-- get the target coordinate (if 'as_parent' or not) -->
@@ -2304,7 +2291,43 @@ end if
 		</xsl:when>
 	</xsl:choose>
 	</xsl:if>
-	<xsl:if test="not(contains($newpath,'/'))">
+	<xsl:variable name="istimeslice">
+  <xsl:if test="contains($coord,' OR')">
+  <xsl:if test="not($root='/')">
+    <xsl:if test="contains(substring-before(substring-after($coord,$root),' OR'),'(itime)')">
+      <xsl:if test="not(contains(concat($string,@name),'(itime)'))">
+        <xsl:value-of select="'yes'"/>
+      </xsl:if>
+    </xsl:if>
+  </xsl:if>
+  <xsl:if test="$root='/'">
+    <xsl:if test="contains(substring-before($coord,' OR'),'(itime)')">
+      <xsl:if test="not(contains(concat($string,@name),'(itime)'))">
+        <xsl:value-of select="'yes'"/>
+      </xsl:if>
+    </xsl:if>
+  </xsl:if>
+  </xsl:if>
+  <xsl:if test="not($root='/')">
+  <xsl:if test="not(contains($coord,' OR'))">
+    <xsl:if test="contains(substring-after($coord,$root),'(itime)')">
+      <xsl:if test="not(contains(concat($string,@name),'(itime)'))">
+        <xsl:value-of select="'yes'"/>
+      </xsl:if>
+    </xsl:if>
+  </xsl:if>
+  </xsl:if>
+  <xsl:if test="$root='/'">
+  <xsl:if test="not(contains($coord,' OR'))">
+    <xsl:if test="contains($coord,'(itime)')">
+      <xsl:if test="not(contains(concat($string,@name),'(itime)'))">
+        <xsl:value-of select="'yes'"/>
+      </xsl:if>
+    </xsl:if>
+  </xsl:if>
+  </xsl:if>
+  </xsl:variable>
+  <xsl:if test="not(contains($newpath,'/')) and not($istimeslice='yes')">
   if (associated(ids%<xsl:value-of select="$string"/><xsl:value-of select="@name"/>)) then
 		array_size = size(ids%<xsl:value-of select="$string"/><xsl:value-of select="@name"/>,<xsl:value-of select="number($dimension) + 1"/>)
 		<xsl:if test="@type='dynamic' and contains($coord,'/time')">
@@ -2362,6 +2385,48 @@ end if
 	</xsl:if> 
 </xsl:template> 
 
+<xsl:template match='field' mode="resolve_indices">
+  <xsl:param name="target"/>
+  <xsl:param name="string-resolved"/>
+  <xsl:if test="contains($target,'(')">
+    <xsl:variable name="indexstr">
+      <xsl:apply-templates select="." mode="get_indices">
+        <xsl:with-param name="target" select="$target"/>
+      </xsl:apply-templates>
+    </xsl:variable>
+    <xsl:variable name="resolved_indexstr">
+    <xsl:if test="matches($indexstr, '^[0-9]+$') or matches($indexstr, '^itime|i[1-9]$')">
+      <xsl:value-of select="$indexstr"/>
+    </xsl:if>
+    <xsl:if test="not(matches($indexstr, '^[0-9]+$') or matches($indexstr, '^itime|i[1-9]$'))">
+      <xsl:value-of select="concat('ids%',$indexstr)"/>
+    </xsl:if>
+    </xsl:variable>
+    <xsl:apply-templates select="." mode="resolve_indices">
+        <xsl:with-param name="target" select="substring-after($target,concat($indexstr,')'))"/>
+        <xsl:with-param name="string-resolved" select="concat($string-resolved,substring-before($target,concat($indexstr,')')), concat($resolved_indexstr,')'))"/>
+    </xsl:apply-templates>
+  </xsl:if>
+  <xsl:if test="not(contains($target,'('))">
+    <xsl:value-of select="concat($string-resolved, $target)"/>
+  </xsl:if>
+  </xsl:template>
+
+  <!-- the get_indices function return the sub-string between parenthesis
+        process(i1)/coordinate_index ===> i1
+        struct(process(i1)/coordinate_index)/substruc ===> process(i1)/coordinate_index
+  -->
+  <xsl:template match='field' mode="get_indices">
+  <xsl:param name="target"/>
+  <xsl:variable name="partialindex" select="substring-before(substring-after($target,'('),')')"/>
+  <xsl:if test="contains($partialindex,'(')">
+    <xsl:value-of select="concat($partialindex,')',substring-before(substring-after($target,concat($partialindex,')')),')'))"/>
+  </xsl:if>
+  <xsl:if test="not(contains($partialindex,'('))">
+    <xsl:value-of select="$partialindex"/>
+  </xsl:if>
+  </xsl:template>
+
 <xsl:template match='field' mode="possible-coordinates">
 	<xsl:param name="coord"/>
 	<xsl:param name="relativepathdoc"/>
@@ -2372,16 +2437,18 @@ end if
         <xsl:value-of select="replace(substring-before(substring-after($coord,$relativepathdoc),' OR'),'/','%')"/>
       </xsl:if>
       <xsl:if test="$relativepathdoc='/'">
-        <xsl:if test="ancestor::IDS/@name='amns_data'">
-          <xsl:value-of select="replace(concat(substring-before(substring-before($coord,' OR'),'process(i1)/coordinate_index'),'ids/process(i1)/coordinate_index', substring-after(substring-before($coord,' OR'),'process(i1)/coordinate_index')),'/','%')"/>
-        </xsl:if>
-        <xsl:if test="not(ancestor::IDS/@name='amns_data')">
           <xsl:value-of select="replace(substring-before($coord,' OR'),'/','%')"/>
-        </xsl:if>
       </xsl:if>
   </xsl:variable>
+  ! <xsl:value-of select="$target"/>
+  <xsl:variable name="resolved_target">
+    <xsl:apply-templates select="." mode="resolve_indices">
+      <xsl:with-param name="target" select="$target"/>
+      <xsl:with-param name="string-resolved" select="''"/>
+    </xsl:apply-templates>
+  </xsl:variable>
   <xsl:if test="not(contains(substring-before($coord,' OR'),'1...'))">
-          if (associated(ids%<xsl:value-of select="$target"/>)) i = i + 1
+          if (associated(ids%<xsl:value-of select="$resolved_target"/>)) i = i + 1
   </xsl:if>
   <xsl:apply-templates select="." mode="possible-coordinates">
     <xsl:with-param name="coord" select="substring-after($coord,' OR')"/>
@@ -2391,20 +2458,22 @@ end if
   </xsl:if>
   <xsl:if test="not(contains($coord,' OR'))">
   <xsl:variable name="target">
-      <xsl:if test="not($relativepathdoc='/')">
+    <xsl:if test="not($relativepathdoc='/')">
         <xsl:value-of select="replace(substring-after($coord,$relativepathdoc),'/','%')"/>
-      </xsl:if>
-      <xsl:if test="$relativepathdoc='/'">
-        <xsl:if test="ancestor::IDS/@name='amns_data'">
-          <xsl:value-of select="replace(concat(substring-before($coord,'process(i1)/coordinate_index'),'ids/process(i1)/coordinate_index', substring-after($coord,'process(i1)/coordinate_index')),'/','%')"/>
-        </xsl:if>
-        <xsl:if test="not(ancestor::IDS/@name='amns_data')">
-          <xsl:value-of select="replace($coord,'/','%')"/>
-        </xsl:if>
-      </xsl:if>
+    </xsl:if>
+    <xsl:if test="$relativepathdoc='/'">
+        <xsl:value-of select="replace($coord,'/','%')"/>
+    </xsl:if>
+  </xsl:variable>
+  ! <xsl:value-of select="$coord"/> <xsl:value-of select="$relativepathdoc"/>
+  <xsl:variable name="resolved_target">
+    <xsl:apply-templates select="." mode="resolve_indices">
+      <xsl:with-param name="target" select="$target"/>
+      <xsl:with-param name="string-resolved" select="''"/>
+    </xsl:apply-templates>
   </xsl:variable>
   <xsl:if test="not(contains($coord,'1...'))">
-      if (associated(ids%<xsl:value-of select="$target"/>)) i = i + 1
+      if (associated(ids%<xsl:value-of select="$resolved_target"/>)) i = i + 1
   </xsl:if>
       if (i.ne.1) then 
         check = .FALSE.
