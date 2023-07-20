@@ -5,6 +5,17 @@
 <!-- -->
 <xsl:output method="text" version="1.0" encoding="UTF-8" indent="yes"/>
 <!-- -->
+<xsl:param name="DD_GIT_DESCRIBE" as="xs:string" required="yes"/>
+<xsl:param name="AL_GIT_DESCRIBE" as="xs:string" required="yes"/>
+
+<xsl:variable name="version_regex" select="'^([0-9]+)\.([0-9]+)\.([0-9]+)(-.*)?$'"/>
+<xsl:variable name="DD_MAJOR" as="xs:int" select="xs:int(replace($DD_GIT_DESCRIBE, $version_regex, '$1'))"/>
+<xsl:variable name="DD_MINOR" as="xs:int" select="xs:int(replace($DD_GIT_DESCRIBE, $version_regex, '$2'))"/>
+<xsl:variable name="DD_PATCH" as="xs:int" select="xs:int(replace($DD_GIT_DESCRIBE, $version_regex, '$3'))"/>
+
+<xsl:variable name="HLI_MAJOR" as="xs:int" select="xs:int(replace($AL_GIT_DESCRIBE, $version_regex, '$1'))"/>
+<xsl:variable name="HLI_MINOR" as="xs:int" select="xs:int(replace($AL_GIT_DESCRIBE, $version_regex, '$2'))"/>
+<xsl:variable name="HLI_PATCH" as="xs:int" select="xs:int(replace($AL_GIT_DESCRIBE, $version_regex, '$3'))"/>
 <!-- TOP -->
 
 <xsl:include href="utils.xsl"/>
@@ -47,6 +58,18 @@ Possible way to extend the types to single precision floats, c_int, etc
           ids_is_valid_array_of_int, &amp;
           ids_is_valid_array_of_real
   end interface
+
+  ! Version info
+  ! HLI version, currently this is the same as the lowlevel version (see al_get_version)
+  character(*), parameter :: al_fortran_version = '<xsl:value-of select="$UAL_GIT_DESCRIBE"/>'
+  integer(ids_int), parameter :: al_fortran_major_version = <xsl:value-of select="$HLI_MAJOR"/>
+  integer(ids_int), parameter :: al_fortran_minor_version = <xsl:value-of select="$HLI_MINOR"/>
+  integer(ids_int), parameter :: al_fortran_patch_version = <xsl:value-of select="$HLI_PATCH"/>
+  ! DD version
+  character(*), parameter :: al_dd_version = '<xsl:value-of select="$DD_GIT_DESCRIBE"/>'
+  integer(ids_int), parameter :: al_dd_major_version = <xsl:value-of select="$DD_MAJOR"/>
+  integer(ids_int), parameter :: al_dd_minor_version = <xsl:value-of select="$DD_MINOR"/>
+  integer(ids_int), parameter :: al_dd_patch_version = <xsl:value-of select="$DD_PATCH"/>
 
 contains
 

@@ -247,6 +247,12 @@ module al_low_level_wrap
        type(C_PTR), intent(in) :: parameter_data
      end function c_al_setvalue_parameter_plugin
 
+     function c_getalversion() &
+          bind(C,name="getALVersion")
+       use, intrinsic :: ISO_C_BINDING
+       type(c_ptr) :: c_getalversion
+     end function c_getalversion
+
   end interface
 
 contains 
@@ -303,6 +309,18 @@ contains
        lenstring = (arrsize-1)*132 + len_trim(cpostring(arrsize))
     endif
   end subroutine pack_string
+
+  subroutine al_get_version(version)
+    use, intrinsic :: ISO_C_BINDING
+    implicit none
+    character,pointer,dimension(:) :: version
+    integer(kind=c_size_t) :: c_len
+    type(c_ptr) :: c_string
+
+    c_string = c_getalversion()
+    c_len = c_strlen(c_string)
+    call c_f_pointer(c_string, version, (/ c_len /))
+  end subroutine al_get_version
 
   subroutine al_context_info(ctx, info, retstatus, retmesg)
     use, intrinsic :: ISO_C_BINDING
