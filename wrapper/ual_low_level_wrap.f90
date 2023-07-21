@@ -789,7 +789,7 @@ contains
      integer, intent(out) :: ret
      CHARACTER(len=10) :: buffer
      ret = 0
-     CALL get_environment_variable("AL_PLUGINS_ENABLED", buffer)
+     CALL get_environment_variable("IMAS_AL_ENABLE_PLUGINS", buffer)
      if (len_trim(buffer).ne.0) then
       if (buffer.eq.'TRUE') then
          ret = 1
@@ -817,7 +817,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx
-    integer :: AL_PLUGINS_ENABLED
+    integer :: IMAS_AL_ENABLE_PLUGINS
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     integer, intent(in), target :: data
     logical, intent(in) :: valid_data
@@ -827,8 +827,8 @@ contains
     if (valid_data .eqv. .true.) then
       call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
     end if
-    call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
-    if ((valid_data .eqv. .true.) .or. ( (valid_data .eqv. .false.) .and. (AL_PLUGINS_ENABLED.eq.1) )) then
+    call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
+    if ((valid_data .eqv. .true.) .or. ( (valid_data .eqv. .false.) .and. (IMAS_AL_ENABLE_PLUGINS.eq.1) )) then
       pdata = C_LOC(data)
       status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, pdata, INTEGER_DATA, 0, C_NULL_PTR))
       if (status%code.ne.0) write(*,*) TRIM(status%message)
@@ -840,7 +840,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx
-    integer :: AL_PLUGINS_ENABLED
+    integer :: IMAS_AL_ENABLE_PLUGINS
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     real(8), intent(in), target :: data
     logical, intent(in) :: valid_data
@@ -850,8 +850,8 @@ contains
     if (valid_data .eqv. .true.) then
        call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
     end if
-    call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
-    if ((valid_data .eqv. .true.) .or. ( (valid_data .eqv. .false.) .and. (AL_PLUGINS_ENABLED.eq.1) )) then
+    call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
+    if ((valid_data .eqv. .true.) .or. ( (valid_data .eqv. .false.) .and. (IMAS_AL_ENABLE_PLUGINS.eq.1) )) then
       pdata = C_LOC(data)
       status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, pdata, DOUBLE_DATA, 0, C_NULL_PTR))
       if (status%code.ne.0) write(*,*) TRIM(status%message)
@@ -863,7 +863,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx
-    integer :: AL_PLUGINS_ENABLED
+    integer :: IMAS_AL_ENABLE_PLUGINS
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     complex(8), intent(in), target :: data
     logical, intent(in) :: valid_data
@@ -873,8 +873,8 @@ contains
     if (valid_data .eqv. .true.) then
        call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
     end if
-    call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
-    if ((valid_data .eqv. .true.) .or. ( (valid_data .eqv. .false.) .and. (AL_PLUGINS_ENABLED.eq.1) )) then
+    call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
+    if ((valid_data .eqv. .true.) .or. ( (valid_data .eqv. .false.) .and. (IMAS_AL_ENABLE_PLUGINS.eq.1) )) then
       pdata = C_LOC(data)
       status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, pdata, COMPLEX_DATA, 0, C_NULL_PTR))
       if (status%code.ne.0) write(*,*) TRIM(status%message)
@@ -911,12 +911,12 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx
-    integer :: AL_PLUGINS_ENABLED
+    integer :: IMAS_AL_ENABLE_PLUGINS
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     integer, intent(out) :: retstatus
     type(al_status) :: status
-    call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
-    if (AL_PLUGINS_ENABLED.eq.1) then
+    call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
+    if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
       status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, CHAR_DATA, 1, C_NULL_PTR))
       if (status%code.ne.0) write(*,*) TRIM(status%message)
       retstatus = status%code
@@ -927,7 +927,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx, rank
-    integer :: AL_PLUGINS_ENABLED
+    integer :: IMAS_AL_ENABLE_PLUGINS
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     integer, dimension(:), pointer :: data
     integer, intent(out) :: retstatus
@@ -936,8 +936,8 @@ contains
     integer :: dim1
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-        call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
-        if (AL_PLUGINS_ENABLED.eq.1) then
+        call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
+        if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
          status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, INTEGER_DATA, rank, C_NULL_PTR))
         end if
     else 
@@ -956,7 +956,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx, rank
-    integer :: AL_PLUGINS_ENABLED
+    integer :: IMAS_AL_ENABLE_PLUGINS
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     real(8), dimension(:), pointer :: data
     integer, intent(out) :: retstatus
@@ -965,8 +965,8 @@ contains
     integer(C_INT), target :: dsize(1)
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-      call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
-      if (AL_PLUGINS_ENABLED.eq.1) then
+      call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
+      if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
 		   status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, DOUBLE_DATA, rank, C_NULL_PTR))
       end if
     else
@@ -985,7 +985,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx, rank
-    integer :: AL_PLUGINS_ENABLED
+    integer :: IMAS_AL_ENABLE_PLUGINS
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     complex(8), dimension(:), pointer :: data
     integer, intent(out) :: retstatus
@@ -994,8 +994,8 @@ contains
     integer(C_INT), target :: dsize(1)
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-        call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
-        if (AL_PLUGINS_ENABLED.eq.1) then
+        call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
+        if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
          status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, COMPLEX_DATA, rank, C_NULL_PTR))
         end if
     else
@@ -1014,7 +1014,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none 
     integer, intent(in) :: opCtx, rank
-    integer :: AL_PLUGINS_ENABLED
+    integer :: IMAS_AL_ENABLE_PLUGINS
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     character(132), dimension(:), pointer :: data
     integer, intent(out) :: retstatus
@@ -1026,8 +1026,8 @@ contains
     integer(C_INT), target :: dsize(2)
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-        call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
-        if (AL_PLUGINS_ENABLED.eq.1) then
+        call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
+        if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
          status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, CHAR_DATA, rank + 1, C_NULL_PTR))
         end if
     else
@@ -1055,7 +1055,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx, rank
-    integer :: AL_PLUGINS_ENABLED
+    integer :: IMAS_AL_ENABLE_PLUGINS
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     integer, dimension(:,:), pointer :: data
     integer, intent(out) :: retstatus
@@ -1064,8 +1064,8 @@ contains
     integer(C_INT), target :: dsize(2)
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-        call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
-        if (AL_PLUGINS_ENABLED.eq.1) then
+        call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
+        if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
          status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, INTEGER_DATA, rank, C_NULL_PTR))
         end if
     else
@@ -1085,7 +1085,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx, rank
-    integer :: AL_PLUGINS_ENABLED
+    integer :: IMAS_AL_ENABLE_PLUGINS
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     real(8), dimension(:,:), pointer :: data
     integer, intent(out) :: retstatus
@@ -1094,8 +1094,8 @@ contains
     integer(C_INT), target :: dsize(2)
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-        call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
-        if (AL_PLUGINS_ENABLED.eq.1) then
+        call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
+        if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
            status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, DOUBLE_DATA, rank, C_NULL_PTR))
         end if
     else
@@ -1115,7 +1115,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx, rank
-    integer :: AL_PLUGINS_ENABLED
+    integer :: IMAS_AL_ENABLE_PLUGINS
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     complex(8), dimension(:,:), pointer :: data
     integer, intent(out) :: retstatus
@@ -1124,8 +1124,8 @@ contains
     integer(C_INT), target :: dsize(2)
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-        call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
-        if (AL_PLUGINS_ENABLED.eq.1) then
+        call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
+        if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
          status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, COMPLEX_DATA, rank, C_NULL_PTR))
         end if
     else
@@ -1145,7 +1145,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx, rank
-    integer :: AL_PLUGINS_ENABLED
+    integer :: IMAS_AL_ENABLE_PLUGINS
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     integer, dimension(:,:,:), pointer :: data
     integer, intent(out) :: retstatus
@@ -1154,8 +1154,8 @@ contains
     integer(C_INT), target :: dsize(3)
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-      call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
-      if (AL_PLUGINS_ENABLED.eq.1) then
+      call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
+      if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
 		   status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, INTEGER_DATA, rank, C_NULL_PTR))
       end if
     else
@@ -1176,7 +1176,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx, rank
-    integer :: AL_PLUGINS_ENABLED
+    integer :: IMAS_AL_ENABLE_PLUGINS
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     real(8), dimension(:,:,:), pointer :: data
     integer, intent(out) :: retstatus
@@ -1185,8 +1185,8 @@ contains
     integer(C_INT), target :: dsize(3)
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-        call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
-        if (AL_PLUGINS_ENABLED.eq.1) then
+        call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
+        if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
          status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, DOUBLE_DATA, rank, C_NULL_PTR))
         end if
     else
@@ -1207,7 +1207,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx, rank
-    integer :: AL_PLUGINS_ENABLED
+    integer :: IMAS_AL_ENABLE_PLUGINS
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     complex(8), dimension(:,:,:), pointer :: data
     integer, intent(out) :: retstatus
@@ -1216,8 +1216,8 @@ contains
     integer(C_INT), target :: dsize(3)
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-        call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
-        if (AL_PLUGINS_ENABLED.eq.1) then
+        call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
+        if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
          status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, COMPLEX_DATA, rank, C_NULL_PTR))
         end if
     else
@@ -1238,7 +1238,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx, rank
-    integer :: AL_PLUGINS_ENABLED
+    integer :: IMAS_AL_ENABLE_PLUGINS
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     integer, dimension(:,:,:,:), pointer :: data
     integer, intent(out) :: retstatus
@@ -1247,8 +1247,8 @@ contains
     integer(C_INT), target :: dsize(4)
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-        call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
-        if (AL_PLUGINS_ENABLED.eq.1) then
+        call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
+        if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
          status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, INTEGER_DATA, rank, C_NULL_PTR))
         end if
     else
@@ -1270,7 +1270,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx, rank
-    integer :: AL_PLUGINS_ENABLED
+    integer :: IMAS_AL_ENABLE_PLUGINS
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     real(8), dimension(:,:,:,:), pointer :: data
     integer, intent(out) :: retstatus
@@ -1279,8 +1279,8 @@ contains
     integer(C_INT), target :: dsize(4)
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-      call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
-      if (AL_PLUGINS_ENABLED.eq.1) then
+      call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
+      if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
 		   status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, DOUBLE_DATA, rank, C_NULL_PTR))
       end if
     else
@@ -1302,7 +1302,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx, rank
-    integer :: AL_PLUGINS_ENABLED
+    integer :: IMAS_AL_ENABLE_PLUGINS
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     complex(8), dimension(:,:,:,:), pointer :: data
     integer, intent(out) :: retstatus
@@ -1311,8 +1311,8 @@ contains
     integer(C_INT), target :: dsize(4)
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-      call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
-      if (AL_PLUGINS_ENABLED.eq.1) then
+      call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
+      if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
 		   status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, COMPLEX_DATA, rank, C_NULL_PTR))
       end if
     else
@@ -1334,7 +1334,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx, rank
-    integer :: AL_PLUGINS_ENABLED
+    integer :: IMAS_AL_ENABLE_PLUGINS
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     integer, dimension(:,:,:,:,:), pointer :: data
     integer, intent(out) :: retstatus
@@ -1343,8 +1343,8 @@ contains
     integer(C_INT), target :: dsize(5)
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-      call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
-      if (AL_PLUGINS_ENABLED.eq.1) then
+      call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
+      if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
 		   status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, INTEGER_DATA, rank, C_NULL_PTR))
       end if
     else
@@ -1367,7 +1367,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx, rank
-    integer :: AL_PLUGINS_ENABLED
+    integer :: IMAS_AL_ENABLE_PLUGINS
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     real(8), dimension(:,:,:,:,:), pointer :: data
     integer, intent(out) :: retstatus
@@ -1376,8 +1376,8 @@ contains
     integer(C_INT), target :: dsize(5)
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-      call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
-      if (AL_PLUGINS_ENABLED.eq.1) then
+      call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
+      if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
 		   status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, DOUBLE_DATA, rank, C_NULL_PTR))
       end if
     else
@@ -1400,7 +1400,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx, rank
-    integer :: AL_PLUGINS_ENABLED
+    integer :: IMAS_AL_ENABLE_PLUGINS
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     complex(8), dimension(:,:,:,:,:), pointer :: data
     integer, intent(out) :: retstatus
@@ -1409,8 +1409,8 @@ contains
     integer(C_INT), target :: dsize(5)
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-      call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
-      if (AL_PLUGINS_ENABLED.eq.1) then
+      call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
+      if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
 		   status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, COMPLEX_DATA, rank, C_NULL_PTR))
       end if
     else
@@ -1433,7 +1433,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx, rank
-    integer :: AL_PLUGINS_ENABLED
+    integer :: IMAS_AL_ENABLE_PLUGINS
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     integer, dimension(:,:,:,:,:,:), pointer :: data
     integer, intent(out) :: retstatus
@@ -1442,8 +1442,8 @@ contains
     integer(C_INT), target :: dsize(6)
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-      call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
-      if (AL_PLUGINS_ENABLED.eq.1) then
+      call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
+      if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
 		   status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, INTEGER_DATA, rank, C_NULL_PTR))
       end if
     else
@@ -1467,7 +1467,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx, rank
-    integer :: AL_PLUGINS_ENABLED
+    integer :: IMAS_AL_ENABLE_PLUGINS
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     real(8), dimension(:,:,:,:,:,:), pointer :: data
     integer, intent(out) :: retstatus
@@ -1476,8 +1476,8 @@ contains
     integer(C_INT), target :: dsize(6)
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-        call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
-        if (AL_PLUGINS_ENABLED.eq.1) then
+        call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
+        if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
          status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, DOUBLE_DATA, rank, C_NULL_PTR))
         end if
     else
@@ -1501,7 +1501,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx, rank
-    integer :: AL_PLUGINS_ENABLED
+    integer :: IMAS_AL_ENABLE_PLUGINS
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     complex(8), dimension(:,:,:,:,:,:), pointer :: data
     integer, intent(out) :: retstatus
@@ -1510,8 +1510,8 @@ contains
     integer(C_INT), target :: dsize(6)
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-      call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
-      if (AL_PLUGINS_ENABLED.eq.1) then
+      call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
+      if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
 		   status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, rank, csize))
       end if
     else
@@ -1535,7 +1535,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx, rank
-    integer :: AL_PLUGINS_ENABLED
+    integer :: IMAS_AL_ENABLE_PLUGINS
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     integer, dimension(:,:,:,:,:,:,:), pointer :: data
     integer, intent(out) :: retstatus
@@ -1544,8 +1544,8 @@ contains
     integer(C_INT), target :: dsize(7)
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-      call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
-      if (AL_PLUGINS_ENABLED.eq.1) then
+      call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
+      if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
 		   status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, INTEGER_DATA, rank, C_NULL_PTR))
       end if
     else
@@ -1570,7 +1570,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx, rank
-    integer :: AL_PLUGINS_ENABLED
+    integer :: IMAS_AL_ENABLE_PLUGINS
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     real(8), dimension(:,:,:,:,:,:,:), pointer :: data
     integer, intent(out) :: retstatus
@@ -1579,8 +1579,8 @@ contains
     integer(C_INT), target :: dsize(7)
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-      call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
-      if (AL_PLUGINS_ENABLED.eq.1) then
+      call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
+      if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
 		   status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, DOUBLE_DATA, rank, C_NULL_PTR))
       end if
     else
@@ -1605,7 +1605,7 @@ contains
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: opCtx, rank
-    integer :: AL_PLUGINS_ENABLED
+    integer :: IMAS_AL_ENABLE_PLUGINS
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     complex(8), dimension(:,:,:,:,:,:,:), pointer :: data
     integer, intent(out) :: retstatus
@@ -1614,8 +1614,8 @@ contains
     integer(C_INT), target :: dsize(7)
     type(al_status) :: status
     if (associated(data) .eqv. .false.) then
-      call is_al_plugins_enabled(AL_PLUGINS_ENABLED)
-      if (AL_PLUGINS_ENABLED.eq.1) then
+      call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
+      if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
 		   status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, COMPLEX_DATA, rank, C_NULL_PTR))
       end if
     else
