@@ -915,6 +915,7 @@ contains
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
     integer, intent(out) :: retstatus
     type(al_status) :: status
+    retstatus = 0
     call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
     if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
       status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, CHAR_DATA, 1, C_NULL_PTR))
