@@ -824,6 +824,7 @@ contains
     integer, intent(out) :: retstatus
     type(C_PTR) :: pdata
     type(al_status) :: status
+    retstatus = 0
     if (valid_data .eqv. .true.) then
       call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
     end if
@@ -847,6 +848,7 @@ contains
     integer, intent(out) :: retstatus
     type(C_PTR) :: pdata
     type(al_status) :: status
+    retstatus = 0
     if (valid_data .eqv. .true.) then
        call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
     end if
@@ -870,6 +872,7 @@ contains
     integer, intent(out) :: retstatus
     type(C_PTR) :: pdata
     type(al_status) :: status
+    retstatus = 0
     if (valid_data .eqv. .true.) then
        call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
     end if
@@ -936,6 +939,7 @@ contains
     integer(C_INT), target :: dsize(1)
     integer :: dim1
     type(al_status) :: status
+    status%code = 0
     if (associated(data) .eqv. .false.) then
         call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
         if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
@@ -950,7 +954,7 @@ contains
 		status = fstatus(c_ual_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, rank, csize))
     end if
     if (status%code.ne.0) write(*,*) TRIM(status%message)
-		retstatus = status%code
+    retstatus = status%code
   end subroutine put_vect1d_int
 
   subroutine put_vect1d_double(opCtx, idsName, fieldPath, timebasePath, data, rank, lifeCycleStatus, retstatus)
@@ -965,6 +969,7 @@ contains
     type(C_PTR) :: cptr, csize
     integer(C_INT), target :: dsize(1)
     type(al_status) :: status
+    status%code = 0
     if (associated(data) .eqv. .false.) then
       call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
       if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
@@ -994,6 +999,7 @@ contains
     type(C_PTR) :: cptr, csize
     integer(C_INT), target :: dsize(1)
     type(al_status) :: status
+    status%code = 0
     if (associated(data) .eqv. .false.) then
         call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
         if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
@@ -1026,6 +1032,7 @@ contains
     integer :: i,j
     integer(C_INT), target :: dsize(2)
     type(al_status) :: status
+    status%code = 0
     if (associated(data) .eqv. .false.) then
         call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
         if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
@@ -1049,7 +1056,7 @@ contains
 		deallocate(cdata)
    end if
    if (status%code.ne.0) write(*,*) TRIM(status%message)
-		retstatus = status%code
+   retstatus = status%code
   end subroutine put_vect1d_string
 
   subroutine put_vect2d_int(opCtx, idsName, fieldPath, timebasePath, data, rank, lifeCycleStatus, retstatus)
@@ -1064,6 +1071,7 @@ contains
     type(C_PTR) :: cptr, csize
     integer(C_INT), target :: dsize(2)
     type(al_status) :: status
+    status%code = 0
     if (associated(data) .eqv. .false.) then
         call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
         if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
@@ -1094,6 +1102,7 @@ contains
     type(C_PTR) :: cptr, csize
     integer(C_INT), target :: dsize(2)
     type(al_status) :: status
+    status%code = 0
     if (associated(data) .eqv. .false.) then
         call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
         if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
@@ -1124,6 +1133,7 @@ contains
     type(C_PTR) :: cptr, csize
     integer(C_INT), target :: dsize(2)
     type(al_status) :: status
+    status%code = 0
     if (associated(data) .eqv. .false.) then
         call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
         if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
@@ -1154,6 +1164,7 @@ contains
     type(C_PTR) :: cptr, csize
     integer(C_INT), target :: dsize(3)
     type(al_status) :: status
+    status%code = 0
     if (associated(data) .eqv. .false.) then
       call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
       if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
@@ -1185,6 +1196,7 @@ contains
     type(C_PTR) :: cptr, csize
     integer(C_INT), target :: dsize(3)
     type(al_status) :: status
+    status%code = 0
     if (associated(data) .eqv. .false.) then
         call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
         if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
@@ -1216,6 +1228,7 @@ contains
     type(C_PTR) :: cptr, csize
     integer(C_INT), target :: dsize(3)
     type(al_status) :: status
+    status%code = 0
     if (associated(data) .eqv. .false.) then
         call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
         if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
@@ -1247,6 +1260,7 @@ contains
     type(C_PTR) :: cptr, csize
     integer(C_INT), target :: dsize(4)
     type(al_status) :: status
+    status%code = 0
     if (associated(data) .eqv. .false.) then
         call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
         if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
@@ -1279,6 +1293,7 @@ contains
     type(C_PTR) :: cptr, csize
     integer(C_INT), target :: dsize(4)
     type(al_status) :: status
+    status%code = 0
     if (associated(data) .eqv. .false.) then
       call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
       if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
@@ -1311,6 +1326,7 @@ contains
     type(C_PTR) :: cptr, csize
     integer(C_INT), target :: dsize(4)
     type(al_status) :: status
+    status%code = 0
     if (associated(data) .eqv. .false.) then
       call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
       if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
@@ -1343,6 +1359,7 @@ contains
     type(C_PTR) :: cptr, csize
     integer(C_INT), target :: dsize(5)
     type(al_status) :: status
+    status%code = 0
     if (associated(data) .eqv. .false.) then
       call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
       if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
@@ -1376,6 +1393,7 @@ contains
     type(C_PTR) :: cptr, csize
     integer(C_INT), target :: dsize(5)
     type(al_status) :: status
+    status%code = 0
     if (associated(data) .eqv. .false.) then
       call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
       if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
@@ -1409,6 +1427,7 @@ contains
     type(C_PTR) :: cptr, csize
     integer(C_INT), target :: dsize(5)
     type(al_status) :: status
+    status%code = 0
     if (associated(data) .eqv. .false.) then
       call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
       if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
@@ -1442,6 +1461,7 @@ contains
     type(C_PTR) :: cptr, csize
     integer(C_INT), target :: dsize(6)
     type(al_status) :: status
+    status%code = 0
     if (associated(data) .eqv. .false.) then
       call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
       if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
@@ -1476,6 +1496,7 @@ contains
     type(C_PTR) :: cptr, csize
     integer(C_INT), target :: dsize(6)
     type(al_status) :: status
+    status%code = 0
     if (associated(data) .eqv. .false.) then
         call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
         if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
@@ -1510,6 +1531,7 @@ contains
     type(C_PTR) :: cptr, csize
     integer(C_INT), target :: dsize(6)
     type(al_status) :: status
+    status%code = 0
     if (associated(data) .eqv. .false.) then
       call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
       if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
@@ -1544,6 +1566,7 @@ contains
     type(C_PTR) :: cptr, csize
     integer(C_INT), target :: dsize(7)
     type(al_status) :: status
+    status%code = 0
     if (associated(data) .eqv. .false.) then
       call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
       if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
@@ -1579,6 +1602,7 @@ contains
     type(C_PTR) :: cptr, csize
     integer(C_INT), target :: dsize(7)
     type(al_status) :: status
+    status%code = 0
     if (associated(data) .eqv. .false.) then
       call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
       if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
@@ -1614,6 +1638,7 @@ contains
     type(C_PTR) :: cptr, csize
     integer(C_INT), target :: dsize(7)
     type(al_status) :: status
+    status%code = 0
     if (associated(data) .eqv. .false.) then
       call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
       if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
