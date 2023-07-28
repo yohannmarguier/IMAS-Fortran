@@ -1,9 +1,9 @@
 #------------------------- gfortran ----------------------------
 ifeq ("gfortran","$(strip $(FC))")
-FCFLAGS ?= -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none -I$(UAL_BUILD)/fortraninterface/include
+FCFLAGS ?= -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none -I$(AL_BUILD)/fortraninterface/include
 endif
 
-LIBS = -L$(UAL_BUILD)/lowlevel -L$(UAL_BUILD)/fortraninterface $(UAL_BUILD)/fortraninterface/libal-fortran.lib $(UAL_BUILD)/lowlevel/libal.lib -lm -lstdc++
+LIBS = -L$(AL_BUILD)/lowlevel -L$(AL_BUILD)/fortraninterface $(AL_BUILD)/fortraninterface/libal-fortran.lib $(AL_BUILD)/lowlevel/libal.lib -lm -lstdc++
 
 
 ifeq ("yes","$(strip $(IMAS_MDSPLUS))")

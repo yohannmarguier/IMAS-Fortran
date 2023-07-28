@@ -102,45 +102,45 @@ check-clean-src test-clean-src:
 	$(MAKE) -C tests/generator clean-src
 
 
-LIBFILES_fortran = ual_defs.o ual_low_level_wrap.o ids_types.o ids_utilities.o $(addsuffix _schema.o,$(IDSNAMES)) ids_schemas.o utilities_copy_struct.o utilities_deallocate_struct.o utilities_put_struct.o utilities_put_slice_struct.o utilities_get_struct.o $(IDSOBJECTS) ids_routines.o $(DEP)
+LIBFILES_fortran = al_defs.o al_low_level_wrap.o ids_types.o ids_utilities.o $(addsuffix _schema.o,$(IDSNAMES)) ids_schemas.o utilities_copy_struct.o utilities_deallocate_struct.o utilities_put_struct.o utilities_put_slice_struct.o utilities_get_struct.o $(IDSOBJECTS) ids_routines.o $(DEP)
 
-ids_routines.o: ids_routines.f90 ual_defs.o ual_low_level_wrap.o utilities_copy_struct.o utilities_deallocate_struct.o utilities_put_struct.o utilities_put_slice_struct.o utilities_get_struct.o $(IDSOBJECTS)
+ids_routines.o: ids_routines.f90 al_defs.o al_low_level_wrap.o utilities_copy_struct.o utilities_deallocate_struct.o utilities_put_struct.o utilities_put_slice_struct.o utilities_get_struct.o $(IDSOBJECTS)
 	$(FC) -c $(FCFLAGS) $(MODINC) ids_routines.f90 -o $@
 
-ual_defs.o: %.o:wrapper/%.f90 | $(MODDIR)
+al_defs.o: %.o:wrapper/%.f90 | $(MODDIR)
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
-ual_low_level_wrap.o: %.o:wrapper/%.f90 ual_defs.o
+al_low_level_wrap.o: %.o:wrapper/%.f90 al_defs.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
 ids_types.o: ids_types.f90
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
 ids_utilities.o: ids_utilities.f90 ids_types.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
-utilities_copy_struct.o: utilities_copy_struct.f90 ual_defs.o ual_low_level_wrap.o ids_utilities.o
+utilities_copy_struct.o: utilities_copy_struct.f90 al_defs.o al_low_level_wrap.o ids_utilities.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
-utilities_deallocate_struct.o: utilities_deallocate_struct.f90 ual_defs.o ual_low_level_wrap.o ids_utilities.o
+utilities_deallocate_struct.o: utilities_deallocate_struct.f90 al_defs.o al_low_level_wrap.o ids_utilities.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
-utilities_put_struct.o: utilities_put_struct.f90 ual_defs.o ual_low_level_wrap.o ids_utilities.o
+utilities_put_struct.o: utilities_put_struct.f90 al_defs.o al_low_level_wrap.o ids_utilities.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
-utilities_put_slice_struct.o: utilities_put_slice_struct.f90 ual_defs.o ual_low_level_wrap.o ids_utilities.o
+utilities_put_slice_struct.o: utilities_put_slice_struct.f90 al_defs.o al_low_level_wrap.o ids_utilities.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
-utilities_get_struct.o: utilities_get_struct.f90 ual_defs.o ual_low_level_wrap.o ids_utilities.o
+utilities_get_struct.o: utilities_get_struct.f90 al_defs.o al_low_level_wrap.o ids_utilities.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
 
-$(filter %_put.o,$(IDSOBJECTS)): %_put.o : %_put.f90 %_delete.o %_schema.o utilities_put_struct.o ual_defs.o ual_low_level_wrap.o
+$(filter %_put.o,$(IDSOBJECTS)): %_put.o : %_put.f90 %_delete.o %_schema.o utilities_put_struct.o al_defs.o al_low_level_wrap.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
-$(filter %_put_slice.o,$(IDSOBJECTS)): %_put_slice.o : %_put_slice.f90 %_schema.o %_put.o utilities_put_slice_struct.o ual_defs.o ual_low_level_wrap.o
+$(filter %_put_slice.o,$(IDSOBJECTS)): %_put_slice.o : %_put_slice.f90 %_schema.o %_put.o utilities_put_slice_struct.o al_defs.o al_low_level_wrap.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
-$(filter %_get.o,$(IDSOBJECTS)): %_get.o:%_get.f90 %_schema.o utilities_get_struct.o ual_defs.o ual_low_level_wrap.o
+$(filter %_get.o,$(IDSOBJECTS)): %_get.o:%_get.f90 %_schema.o utilities_get_struct.o al_defs.o al_low_level_wrap.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
-$(filter %_get_slice.o,$(IDSOBJECTS)): %_get_slice.o:%_get_slice.f90 %_schema.o utilities_get_struct.o %_get.o ual_defs.o ual_low_level_wrap.o
+$(filter %_get_slice.o,$(IDSOBJECTS)): %_get_slice.o:%_get_slice.f90 %_schema.o utilities_get_struct.o %_get.o al_defs.o al_low_level_wrap.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
-$(filter %_delete.o,$(IDSOBJECTS)): %_delete.o:%_delete.f90 %_schema.o ual_defs.o ual_low_level_wrap.o
+$(filter %_delete.o,$(IDSOBJECTS)): %_delete.o:%_delete.f90 %_schema.o al_defs.o al_low_level_wrap.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
-$(filter %_copy_struct.o,$(IDSOBJECTS)): %_copy_struct.o:%_copy_struct.f90 %_schema.o utilities_copy_struct.o ual_defs.o ual_low_level_wrap.o
+$(filter %_copy_struct.o,$(IDSOBJECTS)): %_copy_struct.o:%_copy_struct.f90 %_schema.o utilities_copy_struct.o al_defs.o al_low_level_wrap.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
-$(filter %_deallocate_struct.o,$(IDSOBJECTS)): %_deallocate_struct.o:%_deallocate_struct.f90 %_schema.o utilities_deallocate_struct.o ual_defs.o ual_low_level_wrap.o
+$(filter %_deallocate_struct.o,$(IDSOBJECTS)): %_deallocate_struct.o:%_deallocate_struct.f90 %_schema.o utilities_deallocate_struct.o al_defs.o al_low_level_wrap.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
-%_schema.o: %_schema.f90 ual_defs.o ids_types.o ids_utilities.o
+%_schema.o: %_schema.f90 al_defs.o ids_types.o ids_utilities.o
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
 ids_schemas.o: ids_schemas.f90 $(addsuffix _schema.o,$(IDSNAMES))
 	$(FC) -c $(FCFLAGS) $(MODINC) $< -o $@
@@ -150,10 +150,10 @@ ids_schemas.o: ids_schemas.f90 $(addsuffix _schema.o,$(IDSNAMES))
 $(SOURCES): idsdef idsroutines
 
 idsroutines: IDSDef2F90Routines.xsl | saxonicajar
-	$(if $(call allnewerthan,$(SOURCES),$^),, $(SAXON) -t -s:$(IDSDEF) -xsl:IDSDef2F90Routines.xsl DD_GIT_DESCRIBE=$(DD_GIT_DESCRIBE) UAL_GIT_DESCRIBE=$(UAL_GIT_DESCRIBE))
+	$(if $(call allnewerthan,$(SOURCES),$^),, $(SAXON) -t -s:$(IDSDEF) -xsl:IDSDef2F90Routines.xsl DD_GIT_DESCRIBE=$(DD_GIT_DESCRIBE) AL_GIT_DESCRIBE=$(AL_GIT_DESCRIBE))
 
 idsdef:  IDSDef2F90TypeDef.xsl | saxonicajar
-	$(if $(call allnewerthan,$(IDSTYPES),$^),, $(SAXON) -t -s:$(IDSDEF) -xsl:IDSDef2F90TypeDef.xsl DD_GIT_DESCRIBE=$(DD_GIT_DESCRIBE) UAL_GIT_DESCRIBE=$(UAL_GIT_DESCRIBE))
+	$(if $(call allnewerthan,$(IDSTYPES),$^),, $(SAXON) -t -s:$(IDSDEF) -xsl:IDSDef2F90TypeDef.xsl DD_GIT_DESCRIBE=$(DD_GIT_DESCRIBE) AL_GIT_DESCRIBE=$(AL_GIT_DESCRIBE))
 
 # Include OS-specific Makefile.targets, if exists.
 ifneq (,$(wildcard Makefile.targets.$(SYSTEM)))

@@ -2,7 +2,7 @@ MODULE helper
   use test_defs
   use generator
   use ids_routines
-  use ual_low_level_wrap
+  use al_low_level_wrap
   implicit none
 
 
@@ -326,12 +326,12 @@ SUBROUTINE create_db(backendID, shot, run, idx)
   CHARACTER(STRMAXLEN) :: uri
 
   !CALL imas_create_env('ids',TESTSHOT,TESTRUN, TESTSHOT,TESTRUN,idx, userName, 'test', dataVersion)
-  CALL ual_build_uri_from_legacy_parameters(backendID, shot, run, userName, 'test', dataVersion, '', uri, status)
+  CALL al_build_uri_from_legacy_parameters(backendID, shot, run, userName, 'test', dataVersion, '', uri, status)
 
   mode = FORCE_CREATE_PULSE
 
   if (idx .ge. 0) then
-     CALL ual_begin_dataentry_action(uri, mode, idx, status)
+     CALL al_begin_dataentry_action(uri, mode, idx, status)
      if (status .eq. 0) then
         print *, "IDX:", idx
         return
@@ -350,10 +350,10 @@ SUBROUTINE open_db(backendID, shot, run, idx)
   CHARACTER(STRMAXLEN) :: uri
 
   !CALL imas_open_env('ids',TESTSHOT,TESTRUN, idx, userName, 'test', dataVersion)
-  CALL ual_build_uri_from_legacy_parameters(backendID, shot, run, userName, 'test', dataVersion, '', uri, status)
+  CALL al_build_uri_from_legacy_parameters(backendID, shot, run, userName, 'test', dataVersion, '', uri, status)
 
   if (idx .ge. 0) then
-     CALL ual_begin_dataentry_action(uri, OPEN_PULSE, idx, status)
+     CALL al_begin_dataentry_action(uri, OPEN_PULSE, idx, status)
      if (status .eq. 0) then
         print *, "IDX:", idx
         return

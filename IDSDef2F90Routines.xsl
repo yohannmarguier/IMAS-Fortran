@@ -5,7 +5,7 @@
 <xsl:output method="text" version="1.0" encoding="UTF-8" indent="yes"/>	<!-- This XSL translates the list of IMAS IDSDefs to Fortran 90 GET/PUT Routines for IDSs -->
 
 <xsl:param name="DD_GIT_DESCRIBE" as="xs:string" required="yes"/>
-<xsl:param name="UAL_GIT_DESCRIBE" as="xs:string" required="yes"/>
+<xsl:param name="AL_GIT_DESCRIBE" as="xs:string" required="yes"/>
 
 <xsl:function name="local:unique_name" as="xs:string">
   <!-- Provides pseudo-unique 16 characters reference to arbitrary long field name  -->
@@ -34,7 +34,7 @@
   <xsl:result-document href="ids_routines.f90">
 module ids_routines
 use ids_schemas
-use ual_low_level_wrap
+use al_low_level_wrap
 use utilities_copy_struct
 use utilities_deallocate_struct
 <!--use specific_validate_struct-->
@@ -60,7 +60,7 @@ use f90_unix, only : getpid  ! required for getpid() in nagfor
 contains
 
 subroutine ids_get_times(pulseCtx,path,time)
-use ual_low_level_wrap
+use al_low_level_wrap
 use ids_types
 implicit none
 
@@ -69,14 +69,14 @@ character*(*) :: path
 real(ids_real), pointer :: time(:)
 integer(ids_int) :: dim1
 
-call ual_begin_global_action(pulsectx, path, READ_OP, opctx, status) 
+call al_begin_global_action(pulsectx, path, READ_OP, opctx, status) 
 if (status.ne.0) then
-   STOP 'Error in ual_begin_global_action from ids_get_times'
+   STOP 'Error in al_begin_global_action from ids_get_times'
 end if
 
 call get_vect1d_double(opctx, "time", "time", time, dim1, status)
 
-call ual_end_action(opctx, status)
+call al_end_action(opctx, status)
 
 end subroutine
 
@@ -114,11 +114,11 @@ subroutine ids_serialize(ids_in, buffer, protocol)
     index = SCAN(fname,'/', .TRUE.)
     filename=fname(index+1:)
     ! Write to file
-    !call ual_build_uri_from_legacy_parameters(ASCII_BACKEND, 0, 0, 'serialize', 'serialize', '3','-fullpath '//fname, uri, status)
+    !call al_build_uri_from_legacy_parameters(ASCII_BACKEND, 0, 0, 'serialize', 'serialize', '3','-fullpath '//fname, uri, status)
     uri = "imas:ascii?path=" // SERIALIZE_TEMPORARY_DIRECTORY // ";filename="//filename
-    call ual_begin_dataentry_action(uri, FORCE_CREATE_PULSE, pulsectx, status)
+    call al_begin_dataentry_action(uri, FORCE_CREATE_PULSE, pulsectx, status)
     if (status .ne. 0) then
-      write(*,*) "SERIALIZE: ERROR opening ASCII backend - ual_open_pulse"
+      write(*,*) "SERIALIZE: ERROR opening ASCII backend - al_open_pulse"
       buffer = ''
       return
     end if
@@ -134,16 +134,16 @@ subroutine ids_serialize(ids_in, buffer, protocol)
     end select
     
 
-    call ual_close_pulse(pulsectx, CLOSE_PULSE, status)
+    call al_close_pulse(pulsectx, CLOSE_PULSE, status)
     if (status .ne. 0) then
-      write(*,*) "SERIALIZE: ERROR closing ASCII backend - ual_close_pulse"
+      write(*,*) "SERIALIZE: ERROR closing ASCII backend - al_close_pulse"
       buffer = ''
-      call ual_end_action(pulsectx, status)
+      call al_end_action(pulsectx, status)
       return
     end if
-    call ual_end_action(pulsectx, status)
+    call al_end_action(pulsectx, status)
     if (status .ne. 0) then
-      write(*,*) "SERIALIZE: ERROR closing ASCII backend - ual_end_action"
+      write(*,*) "SERIALIZE: ERROR closing ASCII backend - al_end_action"
       buffer = ''
       return
     end if
@@ -201,11 +201,11 @@ subroutine ids_deserialize(buffer, ids_out)
     ! keep the file open, so we can delete it later in one go
     flush(unit)
 
-    !call ual_build_uri_from_legacy_parameters(ASCII_BACKEND, 0, 0, 'serialize', 'serialize', '3','-fullpath '//fname, uri, status)
+    !call al_build_uri_from_legacy_parameters(ASCII_BACKEND, 0, 0, 'serialize', 'serialize', '3','-fullpath '//fname, uri, status)
     uri = "imas:ascii?path=" // SERIALIZE_TEMPORARY_DIRECTORY // ";filename="//filename
-    call ual_begin_dataentry_action(uri, FORCE_CREATE_PULSE, pulsectx, status)
+    call al_begin_dataentry_action(uri, FORCE_CREATE_PULSE, pulsectx, status)
     if (status .ne. 0) then
-      write(*,*) "SERIALIZE: ERROR opening ASCII backend - ual_open_pulse"
+      write(*,*) "SERIALIZE: ERROR opening ASCII backend - al_open_pulse"
       return
     end if
 
@@ -220,15 +220,15 @@ subroutine ids_deserialize(buffer, ids_out)
     end select
     
 
-    call ual_close_pulse(pulsectx, CLOSE_PULSE, status)
+    call al_close_pulse(pulsectx, CLOSE_PULSE, status)
     if (status .ne. 0) then
-      write(*,*) "SERIALIZE: ERROR closing ASCII backend - ual_close_pulse"
-      call ual_end_action(pulsectx, status)
+      write(*,*) "SERIALIZE: ERROR closing ASCII backend - al_close_pulse"
+      call al_end_action(pulsectx, status)
       return
     end if
-    call ual_end_action(pulsectx, status)
+    call al_end_action(pulsectx, status)
     if (status .ne. 0) then
-      write(*,*) "SERIALIZE: ERROR closing ASCII backend - ual_end_action"
+      write(*,*) "SERIALIZE: ERROR closing ASCII backend - al_end_action"
       return
     end if
 
@@ -349,20 +349,20 @@ contains
 !!!!!! Routine to DELETE the IDS
 subroutine ids_delete_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, IDSpath, IDS)  <!-- systematic calls to the low level delete_data routine. The IDS input argument is added just for the interface to identify the relevant IDS type -->
   use ids_schemas_<xsl:value-of select="@name"/>
-  use ual_low_level_wrap
+  use al_low_level_wrap
   implicit none
   character*(*) :: IDSpath
   integer(ids_int) :: pulsectx, opctx, status
   type(ids_<xsl:value-of select="@name"/>) :: IDS
 
-  call ual_begin_global_action(pulsectx, IDSpath, WRITE_OP, opctx, status)
+  call al_begin_global_action(pulsectx, IDSpath, WRITE_OP, opctx, status)
   if (status.ne.0) then
-     STOP 'Error in ual_begin_global_action (from ids_delete for IDS <xsl:value-of select="@name"/>)'
+     STOP 'Error in al_begin_global_action (from ids_delete for IDS <xsl:value-of select="@name"/>)'
   end if
 
   <xsl:apply-templates select="field" mode="DELETE"/>
 
-  call ual_end_action(opctx,status)
+  call al_end_action(opctx,status)
 
 end subroutine ids_delete_<xsl:value-of select="local:unique_name(@name)"/>
 
@@ -413,7 +413,7 @@ end interface
   <xsl:if test="not (preceding::field[@structure_reference=$this-type or @name=$this-type])">
 
 subroutine ids_deallocate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(struct_in,  c_data)
-  use ual_low_level_wrap
+  use al_low_level_wrap
   use, intrinsic :: ISO_C_BINDING, only: C_LOC
   use ids_types
   use ids_utilities, only: ids_<xsl:value-of select="$this-type"/>
@@ -474,7 +474,7 @@ end interface
 
 <!-- subroutine for the whole IDS -->
 subroutine ids_deallocate_struct_<xsl:value-of select="local:unique_name(@name)"/>(struct_in)
-  use ual_low_level_wrap
+  use al_low_level_wrap
   use, intrinsic :: ISO_C_BINDING, only: C_LOC
   use ids_schemas_<xsl:value-of select="@name"/>
   implicit none
@@ -507,7 +507,7 @@ end subroutine ids_deallocate_struct_<xsl:value-of select="local:unique_name(@na
   <xsl:if test="not (preceding::field[@structure_reference=$this-type and ancestor::IDS/@name=$this-ids] or /IDSs/utilities/field/@name=$this-type)">
 
 subroutine ids_deallocate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(struct_in,  c_data)
-  use ual_low_level_wrap
+  use al_low_level_wrap
   use, intrinsic :: ISO_C_BINDING, only: C_LOC
   use ids_schemas_<xsl:value-of select="ancestor::IDS/@name"/>
   implicit none
@@ -726,7 +726,7 @@ end interface
 subroutine put_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>(ctx, name, path, struct, timemode, timedparent, retstatus)
   use ids_types
   use ids_utilities, only: ids_<xsl:value-of select="$this-type"/>
-  use ual_low_level_wrap
+  use al_low_level_wrap
   implicit none
 
   integer(ids_int), intent(in) :: ctx
@@ -808,7 +808,7 @@ end interface
 !!! Routines to PUT the full IDS !!!
 subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS, retstatus)
   use ids_schemas_<xsl:value-of select="@name"/>
-  use ual_low_level_wrap
+  use al_low_level_wrap
   use <xsl:value-of select="@name"/>_delete
   <!--<xsl:if test="@specific_validation_rules='yes'">
   use specific_validate_struct
@@ -854,9 +854,9 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   endif
   </xsl:if>-->
   
-  call ual_begin_global_action(pulsectx, name, WRITE_OP, opctx, status) 
+  call al_begin_global_action(pulsectx, name, WRITE_OP, opctx, status) 
   if (status.ne.0) then
-     write(*,*) 'Error in ual_begin_global_action (from ids_put for IDS <xsl:value-of select="@name"/>)'
+     write(*,*) 'Error in al_begin_global_action (from ids_put for IDS <xsl:value-of select="@name"/>)'
      if (present(retstatus)) then 
         retstatus = opctx
      else
@@ -871,16 +871,16 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
     <xsl:with-param name="timedparentexpr" select="''"/>
   </xsl:apply-templates>
   
-  call ual_write_plugins_metadata(opctx, status)
+  call al_write_plugins_metadata(opctx, status)
   if (status.ne.0) then
-     write(*,*) 'Error in ual_write_plugins_metadata (from ids_put for IDS <xsl:value-of select="@name"/>)'
+     write(*,*) 'Error in al_write_plugins_metadata (from ids_put for IDS <xsl:value-of select="@name"/>)'
      if (present(retstatus)) then
         retstatus = opctx
      else
         STOP 
      end if
   end if
-  call ual_end_action(opctx, status)
+  call al_end_action(opctx, status)
   if (present(retstatus)) retstatus = status
 end subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
 
@@ -899,7 +899,7 @@ end subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
   <xsl:if test="not (preceding::field[@structure_reference=$this-type and ancestor::IDS/@name=$this-ids] or /IDSs/utilities/field/@name=$this-type)">
 subroutine put_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>(ctx, name, path, struct, timemode, timedparent, retstatus)
   use ids_schemas_<xsl:value-of select="ancestor::IDS/@name"/>
-  use ual_low_level_wrap
+  use al_low_level_wrap
   implicit none
 
   integer(ids_int), intent(in) :: ctx
@@ -975,7 +975,7 @@ end interface
 subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>(ctx, name, path, struct, timemode, timedparent, retstatus)
   use ids_types
   use ids_utilities, only: ids_<xsl:value-of select="$this-type"/>
-  use ual_low_level_wrap
+  use al_low_level_wrap
   implicit none
 
   integer(ids_int), intent(in) :: ctx
@@ -1044,7 +1044,7 @@ end interface
 !!! Routines to PUT_SLICE one time slice of an IDS !!!
 subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS, retstatus)
   use ids_schemas_<xsl:value-of select="@name"/>
-  use ual_low_level_wrap
+  use al_low_level_wrap
   use <xsl:value-of select="@name"/>_put_struct
   <!--<xsl:if test="@specific_validation_rules='yes'">
   use specific_validate_struct
@@ -1086,10 +1086,10 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   endif
 
   storedtimemode = IDS_TIME_MODE_UNKNOWN
-  call ual_begin_global_action(pulsectx, name, READ_OP, opctx, status) 
+  call al_begin_global_action(pulsectx, name, READ_OP, opctx, status) 
   if (status.ne.0) then
      !! error when trying to get new ctx => stop!
-     write(*,*) 'Error in ual_begin_slice_action (from ids_put_slice for IDS <xsl:value-of select="@name"/>)'     
+     write(*,*) 'Error in al_begin_slice_action (from ids_put_slice for IDS <xsl:value-of select="@name"/>)'     
      if (present(retstatus)) then
         retstatus = status
      else
@@ -1107,7 +1107,7 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
            STOP
         endif
      endif
-     call ual_end_action(opctx, status)
+     call al_end_action(opctx, status)
   endif
 
   if (storedtimemode.eq.IDS_TIME_MODE_UNKNOWN) then
@@ -1125,10 +1125,10 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
      endif
   endif
 
-  call ual_begin_slice_action(pulsectx, name, WRITE_OP, UNDEFINED_TIME, UNDEFINED_INTERP, opctx, status)
+  call al_begin_slice_action(pulsectx, name, WRITE_OP, UNDEFINED_TIME, UNDEFINED_INTERP, opctx, status)
   if (status.ne.0) then
      !! error when trying to get new ctx => stop!
-     write(*,*) 'Error in ual_begin_slice_action (from ids_put_slice for IDS <xsl:value-of select="@name"/>)'     
+     write(*,*) 'Error in al_begin_slice_action (from ids_put_slice for IDS <xsl:value-of select="@name"/>)'     
      if (present(retstatus)) then
         retstatus = opctx
      else
@@ -1149,9 +1149,9 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
     <xsl:with-param name="slice" select="'yes'"/>
   </xsl:apply-templates>
   
-  call ual_write_plugins_metadata(opctx, status)
+  call al_write_plugins_metadata(opctx, status)
   if (status.ne.0) then
-     write(*,*) 'Error in ual_write_plugins_metadata (from ids_put_slice for IDS <xsl:value-of select="@name"/>)'
+     write(*,*) 'Error in al_write_plugins_metadata (from ids_put_slice for IDS <xsl:value-of select="@name"/>)'
      if (present(retstatus)) then
         retstatus = opctx
      else
@@ -1159,7 +1159,7 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
      end if
   end if
 
-  call ual_end_action(opctx, status)
+  call al_end_action(opctx, status)
   if (present(retstatus)) retstatus = status
 end subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
 
@@ -1178,7 +1178,7 @@ end subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@nam
   <xsl:if test="not (preceding::field[@structure_reference=$this-type and ancestor::IDS/@name=$this-ids] or /IDSs/utilities/field/@name=$this-type)">
 subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>(ctx, name, path, struct, timemode, timedparent, retstatus)
   use ids_schemas_<xsl:value-of select="ancestor::IDS/@name"/>
-  use ual_low_level_wrap
+  use al_low_level_wrap
   implicit none
 
   integer(ids_int), intent(in) :: ctx
@@ -1257,7 +1257,7 @@ end interface
 subroutine get_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>(ctx, path, struct, timemode, timedparent, retstatus)
   use ids_types
   use ids_utilities, only: ids_<xsl:value-of select="$this-type"/>
-  use ual_low_level_wrap
+  use al_low_level_wrap
   implicit none
 
   integer(ids_int), intent(in) :: ctx
@@ -1328,7 +1328,7 @@ end interface
 !!! Routines to GET the full IDS !!!
 subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS, retstatus)
   use ids_schemas_<xsl:value-of select="@name"/>
-  use ual_low_level_wrap
+  use al_low_level_wrap
   implicit none
 
   integer(ids_int), intent(out), optional :: retstatus
@@ -1344,10 +1344,10 @@ subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   character(len=300) :: timepath
   character(*), parameter :: path = ''
 
-  call ual_begin_global_action(pulsectx, name, READ_OP, opctx, status) 
+  call al_begin_global_action(pulsectx, name, READ_OP, opctx, status) 
   if (status.ne.0) then
      !! error when trying to get new ctx => stop!
-     write(*,*) 'Error in ual_begin_global_action (from ids_get for IDS <xsl:value-of select="@name"/>)'
+     write(*,*) 'Error in al_begin_global_action (from ids_get for IDS <xsl:value-of select="@name"/>)'
      if (present(retstatus)) then
         retstatus = opctx
      else
@@ -1355,9 +1355,9 @@ subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
      end if
   end if
   
-  call ual_bind_readback_plugins(opctx, status)
+  call al_bind_readback_plugins(opctx, status)
   if (status.ne.0) then
-     write(*,*) 'Error in ual_bind_readback_plugins (from ids_get for IDS <xsl:value-of select="@name"/>)'
+     write(*,*) 'Error in al_bind_readback_plugins (from ids_get for IDS <xsl:value-of select="@name"/>)'
      if (present(retstatus)) then
         retstatus = opctx
      else
@@ -1375,9 +1375,9 @@ subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
     <xsl:with-param name="root" select="'yes'"/>
   </xsl:apply-templates>
 
-  call ual_unbind_readback_plugins(opctx, status)
+  call al_unbind_readback_plugins(opctx, status)
   if (status.ne.0) then
-     write(*,*) 'Error in ual_unbind_readback_plugins (from ids_get for IDS <xsl:value-of select="@name"/>)'
+     write(*,*) 'Error in al_unbind_readback_plugins (from ids_get for IDS <xsl:value-of select="@name"/>)'
      if (present(retstatus)) then
         retstatus = opctx
      else
@@ -1385,7 +1385,7 @@ subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
      end if
   end if
 
-  call ual_end_action(opctx, status)
+  call al_end_action(opctx, status)
 
   if (present(retstatus)) retstatus = status
   return
@@ -1407,7 +1407,7 @@ end subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
   <xsl:if test="not (preceding::field[@structure_reference=$this-type and ancestor::IDS/@name=$this-ids] or /IDSs/utilities/field/@name=$this-type)">
 subroutine get_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>(ctx, path, struct, timemode, timedparent, retstatus)
   use ids_schemas_<xsl:value-of select="ancestor::IDS/@name"/>
-  use ual_low_level_wrap
+  use al_low_level_wrap
   implicit none
 
   integer(ids_int), intent(in) :: ctx
@@ -1459,7 +1459,7 @@ end interface
 !!! Routines to GET one time slice of an IDS, with time interpolation !!!
 subroutine get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS, twant, interpol, retstatus)
   use ids_schemas_<xsl:value-of select="@name"/>
-  use ual_low_level_wrap
+  use al_low_level_wrap
   implicit none
 
   integer(ids_int), intent(out), optional :: retstatus
@@ -1477,10 +1477,10 @@ subroutine get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   character(len=300) :: timepath
   character(*), parameter :: path = ''
 
-  call ual_begin_slice_action(pulsectx, name, READ_OP, twant, interpol, opctx, status) 
+  call al_begin_slice_action(pulsectx, name, READ_OP, twant, interpol, opctx, status) 
   if (status.ne.0) then
      !! error when trying to get new ctx => stop!
-     write(*,*) 'Error in ual_begin_slice_action (from ids_get_slice for IDS <xsl:value-of select="@name"/>)'    
+     write(*,*) 'Error in al_begin_slice_action (from ids_get_slice for IDS <xsl:value-of select="@name"/>)'    
      if (present(retstatus)) then 
         retstatus = opctx
      else
@@ -1488,9 +1488,9 @@ subroutine get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
      end if
   end if
   
-  call ual_bind_readback_plugins(opctx, status)
+  call al_bind_readback_plugins(opctx, status)
   if (status.ne.0) then
-     write(*,*) 'Error in ual_bind_readback_plugins (from ids_get_slice for IDS <xsl:value-of select="@name"/>)'
+     write(*,*) 'Error in al_bind_readback_plugins (from ids_get_slice for IDS <xsl:value-of select="@name"/>)'
      if (present(retstatus)) then
         retstatus = opctx
      else
@@ -1508,9 +1508,9 @@ subroutine get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
     <xsl:with-param name="root" select="'yes'"/>
   </xsl:apply-templates>
 
-  call ual_unbind_readback_plugins(opctx, status)
+  call al_unbind_readback_plugins(opctx, status)
   if (status.ne.0) then
-     write(*,*) 'Error in ual_unbind_readback_plugins (from ids_get_slice for IDS <xsl:value-of select="@name"/>)'
+     write(*,*) 'Error in al_unbind_readback_plugins (from ids_get_slice for IDS <xsl:value-of select="@name"/>)'
      if (present(retstatus)) then
         retstatus = opctx
      else
@@ -1518,7 +1518,7 @@ subroutine get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
      end if
   end if
 
-  call ual_end_action(opctx, status)
+  call al_end_action(opctx, status)
 
   if (present(retstatus)) retstatus = status
   return
@@ -1571,7 +1571,7 @@ end module
 	<xsl:with-param name ="field_path" select="$updated_field_path"/>
       </xsl:apply-templates>
     </xsl:when>
-    <xsl:otherwise>call ual_delete_data(opctx, <xsl:value-of select="$updated_field_path"/>, status)
+    <xsl:otherwise>call al_delete_data(opctx, <xsl:value-of select="$updated_field_path"/>, status)
     </xsl:otherwise>
   </xsl:choose>
 </xsl:template>
@@ -1912,7 +1912,7 @@ end module
        timepath = ""
 	 </xsl:otherwise>
        </xsl:choose>
-       call ual_begin_arraystruct_action(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>, timepath, aoslen, aosctx, status)
+       call al_begin_arraystruct_action(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>, timepath, aoslen, aosctx, status)
        if (status.eq.0) then
           do i = 1,aoslen
 	  <xsl:apply-templates select="." mode="PUT_FIELD">
@@ -1921,12 +1921,12 @@ end module
 	    <xsl:with-param name="timedparentexpr" select="'timedparent.or.'"/>
 	    <xsl:with-param name="slice" select="$slice"/>
 	  </xsl:apply-templates> 
-             call ual_iterate_over_arraystruct(aosctx, 1, status)
+             call al_iterate_over_arraystruct(aosctx, 1, status)
           enddo
-          call ual_end_action(aosctx, status)
+          call al_end_action(aosctx, status)
        else
           write(*,*) "ERROR! with field "//<xsl:value-of select="$fieldpath"/>
-          call ual_end_action(<xsl:value-of select="$contextvar"/>, status)
+          call al_end_action(<xsl:value-of select="$contextvar"/>, status)
           return
        endif
     endif
@@ -1970,7 +1970,7 @@ end module
        longstring = "<xsl:value-of select="$DD_GIT_DESCRIBE"/>"
 	  </xsl:when>
 	  <xsl:when test="@name='access_layer'">
-       longstring = "<xsl:value-of select="$UAL_GIT_DESCRIBE"/>"
+       longstring = "<xsl:value-of select="$AL_GIT_DESCRIBE"/>"
 	  </xsl:when>
 	  <xsl:when test="@name='access_layer_language'">
        longstring = "fortran"
@@ -2449,7 +2449,7 @@ end module
           timepath = ""
       </xsl:otherwise>
     </xsl:choose>
-          call ual_begin_arraystruct_action(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>, timepath, aoslen, aosctx, status)
+          call al_begin_arraystruct_action(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>, timepath, aoslen, aosctx, status)
           if (status.eq.0) then
              if (aoslen.gt.0) allocate(<xsl:value-of select="$fieldvar"/>(aoslen))
              do i = 1,aoslen
@@ -2459,13 +2459,13 @@ end module
 	 <xsl:with-param name="timedparentexpr" select="'timedparent.or.'"/>
 	 <xsl:with-param name="root" select="$root"/>
        </xsl:apply-templates> 
-                call ual_iterate_over_arraystruct(aosctx, 1, status)
+                call al_iterate_over_arraystruct(aosctx, 1, status)
              enddo
-             call ual_end_action(aosctx, status)
+             call al_end_action(aosctx, status)
           else
              write(*,*) "ERROR! with field "//<xsl:value-of select="$fieldpath"/><xsl:text>&#xa;</xsl:text>
 	     <xsl:if test="$structvar='IDS'">if (present(retstatus)) </xsl:if>retstatus = aosctx
-             call ual_end_action(<xsl:value-of select="$contextvar"/>, status)
+             call al_end_action(<xsl:value-of select="$contextvar"/>, status)
              return
           endif
     <xsl:if test="@type='dynamic'">endif</xsl:if>
@@ -2910,14 +2910,14 @@ end module
     <xsl:when test="$method='put'">
   if(isErrorCritical(status, <xsl:value-of select="$ctx"/>, <xsl:value-of select="$path"/>)) then
      <xsl:if test="$structvar='IDS'">if (present(retstatus)) </xsl:if>retstatus = status
-     <xsl:if test="$closectx='yes'">call ual_end_action(<xsl:value-of select="$ctx"/>, status)</xsl:if>
+     <xsl:if test="$closectx='yes'">call al_end_action(<xsl:value-of select="$ctx"/>, status)</xsl:if>
      return
   endif
     </xsl:when>
     <xsl:otherwise>
   if(isErrorCritical(status, <xsl:value-of select="$ctx"/>, <xsl:value-of select="$path"/>)) then
      <xsl:if test="$structvar='IDS'">if (present(retstatus)) </xsl:if>retstatus = status
-     <xsl:if test="$closectx='yes'">call ual_end_action(<xsl:value-of select="$ctx"/>, status)</xsl:if>
+     <xsl:if test="$closectx='yes'">call al_end_action(<xsl:value-of select="$ctx"/>, status)</xsl:if>
      return
   endif
   <xsl:if test="@type='dynamic'"><xsl:if test="$withtimepath='yes'">endif</xsl:if></xsl:if> <!-- closes the timemode.NE.IDS_TIME_MODE_INDEPENDENT test -->
@@ -2979,7 +2979,7 @@ end module
 <xsl:template name="isCriticalFuncCtx">
 FUNCTION isErrorCritical(status, ctx, path) RESULT (exitRequest)
    use ids_types
-   use ual_low_level_wrap
+   use al_low_level_wrap
    implicit none
 
    integer(ids_int) :: status, ctx

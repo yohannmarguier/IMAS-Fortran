@@ -1,7 +1,7 @@
 PROGRAM initpulse
   use ids_schemas
   use ids_routines
-  use ual_low_level_wrap
+  use al_low_level_wrap
   implicit none
 
   INTEGER, PARAMETER :: TESTSHOT = 9998

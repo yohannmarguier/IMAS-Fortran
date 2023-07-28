@@ -1,4 +1,4 @@
-module ual_defs
+module al_defs
 
   integer, parameter :: MAXDIM             = 7
 
@@ -88,4 +88,4 @@ contains
     end if
   end function fallback_backend
   
-end module ual_defs
+end module al_defs
