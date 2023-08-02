@@ -1,0 +1,18 @@
+program create_data_entry
+    ! Make the Access Layer available
+    use ids_routines
+    implicit none
+
+    integer :: data_entry, status, shot, run
+    character(len=132) :: user
+
+    ! Create the database entry by providing an IMAS URI
+    call imas_open("imas:hdf5?path=my-data", FORCE_CREATE_PULSE, data_entry, status)
+    
+    ! Alternatively, we can open an IDS providing legacy arguments
+    shot = 1
+    run = 1
+    call get_environment_variable("USER", user)
+    call imas_create_env("ids", shot, run, 0, 0, data_entry, user, "TEST", "3", status)
+
+end program create_data_entry

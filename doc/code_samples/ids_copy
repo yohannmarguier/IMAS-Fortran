@@ -1,0 +1,33 @@
+program copy_ids
+    ! Make the Access Layer available
+    use ids_routines
+    implicit none
+
+    integer :: i, j
+    type(ids_core_profiles) :: core_profiles, core_profiles_copy
+
+    core_profiles%ids_properties%homogeneous_time = IDS_TIME_MODE_HOMOGENEOUS;
+    allocate(core_profiles%time(2))
+    allocate(core_profiles%profiles_1d(2))
+    do i = 1, 2
+        core_profiles%time(i) = i
+        allocate(core_profiles%profiles_1d(i)%grid%rho_tor_norm(5))
+        allocate(core_profiles%profiles_1d(i)%j_total(5))
+        do j = 1, 5
+            core_profiles%profiles_1d(i)%grid%rho_tor_norm(j) = 0.25 * (j - 1)
+            core_profiles%profiles_1d(i)%j_total(j) = 0.25 * (j - 1) + i
+        end do
+    end do
+
+    call ids_copy(core_profiles, core_profiles_copy)
+
+    ! Adjust some data
+    core_profiles_copy%profiles_1d(1)%j_total = &
+        2 * core_profiles_copy%profiles_1d(1)%j_total
+
+    ! Verify that we didn't change the original IDS
+    ! -> 2.000 2.500 3.000 3.500 4.000
+    write(*,'(5(F0.3,TR1))') core_profiles_copy%profiles_1d(1)%j_total
+    ! -> 1.000 1.250 1.500 1.750 2.000
+    write(*,'(5(F0.3,TR1))') core_profiles%profiles_1d(1)%j_total
+end program copy_ids

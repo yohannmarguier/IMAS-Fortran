@@ -1,0 +1,19 @@
+program load_ids_slice
+    ! Make the Access Layer available
+    use ids_routines
+    implicit none
+
+    integer(ids_int) :: data_entry, status
+    real(ids_real) :: twant
+    type(ids_core_profiles) :: cp
+
+    ! Open the database entry by providing an IMAS URI
+    call imas_open( &
+        "imas:mdsplus?user=public;shot=131024;run=41;database=ITER?version=3", &
+        OPEN_PULSE, data_entry, status)
+
+    ! Retrieve the time slice just before t=370 of the core_profiles IDS
+    twant = 370
+    call ids_get_slice(data_entry, "core_profiles", cp, twant, PREVIOUS_INTERP)
+
+end program load_ids_slice
