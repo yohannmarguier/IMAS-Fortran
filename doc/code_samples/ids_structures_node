@@ -1,0 +1,15 @@
+program ids_structure
+    ! Make the Access Layer available
+    use ids_routines
+    implicit none
+
+    ! Create an empty core_profiles IDS
+    type(ids_core_profiles) :: core_profiles
+
+    ! core_profiles/ids_properties is a structure, which has multiple child
+    ! nodes. One of the child nodes is homogeneous time:
+    write(*,*) core_profiles%ids_properties%homogeneous_time
+    ! Since we created an empty IDS, this will output "-999999999": the default
+    ! value for integers.
+
+end program ids_structure

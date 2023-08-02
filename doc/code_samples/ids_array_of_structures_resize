@@ -1,0 +1,41 @@
+program ids_aos
+    ! Make the Access Layer available
+    use ids_routines
+    implicit none
+
+    integer :: i
+    type(ids_interferometer) :: interferometer
+    type(ids_interferometer_channel), pointer :: tmp_channel(:)
+
+    ! interferometer/channel is an array of structures, add some data
+    allocate(interferometer%channel(1))
+    write(*,*) size(interferometer%channel)  ! -> 1
+    allocate(interferometer%channel(1)%name(1))
+    interferometer%channel(1)%name(1) = 'test'
+
+    ! resize, this will destroy the data that we just stored
+    do i = 1,size(interferometer%channel)
+        call ids_deallocate_struct(interferometer%channel(i), .false.)
+    end do
+    deallocate(interferometer%channel)
+    allocate(interferometer%channel(2))
+    write(*,*) associated(interferometer%channel(1)%name)  ! F
+
+    allocate(interferometer%channel(1)%name(1))
+    interferometer%channel(1)%name(1) = 'test'
+    allocate(interferometer%channel(2)%name(1))
+    interferometer%channel(2)%name(1) = 'test2'
+
+    ! Resize, preserving existing data
+    allocate(tmp_channel(3))
+    tmp_channel(1:size(interferometer%channel)) = interferometer%channel
+    deallocate(interferometer%channel)
+    allocate(interferometer%channel(3))
+    interferometer%channel = tmp_channel
+    deallocate(tmp_channel)
+
+    write(*,*) interferometer%channel(1)%name(1)  ! test
+    write(*,*) interferometer%channel(2)%name(1)  ! test2
+    write(*,*) associated(interferometer%channel(3)%name)  ! F
+
+end program ids_aos

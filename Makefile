@@ -162,6 +162,15 @@ else
 $(error No Makefile.targets.$(SYSTEM) found for this system: $(UNAME_S))
 endif
 
+#----------------------- documentation -------------------
+
+.PHONY: docs clean-docs
+docs:
+	$(MAKE) -C doc html
+
+clean-docs:
+	$(MAKE) -C doc clean
+
 #----------------------- identifiers ---------------------
 include ../Makefile.identifiers
 

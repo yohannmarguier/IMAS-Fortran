@@ -1,0 +1,20 @@
+program ids_aos
+    ! Make the Access Layer available
+    use ids_routines
+    implicit none
+
+    ! Create an empty core_profiles IDS
+    type(ids_core_profiles) :: core_profiles
+
+    ! core_profiles/profiles_1d is an array of structures
+    write(*,*) associated(core_profiles%profiles_1d)  ! -> F
+    ! It currently has no elements, so let's allocate one
+    allocate(core_profiles%profiles_1d(1))
+    write(*,*) size(core_profiles%profiles_1d)  ! -> 1
+
+    ! Use Fortran array indexation to get a specific structure from the array,
+    ! then we can address child nodes as usual (for example, the average ion
+    ! temperature, which is an unallocated data array):
+    write(*,*) core_profiles%profiles_1d(1)%t_i_average ! -> <empty>
+
+end program ids_aos
