@@ -61,7 +61,7 @@ Possible way to extend the types to single precision floats, c_int, etc
 
   ! Version info
   ! HLI version, currently this is the same as the lowlevel version (see al_get_version)
-  character(*), parameter :: al_fortran_version = '<xsl:value-of select="$UAL_GIT_DESCRIBE"/>'
+  character(*), parameter :: al_fortran_version = '<xsl:value-of select="$AL_GIT_DESCRIBE"/>'
   integer(ids_int), parameter :: al_fortran_major_version = <xsl:value-of select="$HLI_MAJOR"/>
   integer(ids_int), parameter :: al_fortran_minor_version = <xsl:value-of select="$HLI_MINOR"/>
   integer(ids_int), parameter :: al_fortran_patch_version = <xsl:value-of select="$HLI_PATCH"/>
