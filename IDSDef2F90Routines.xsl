@@ -812,7 +812,7 @@ end interface
 subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS, retstatus)
   use ids_schemas_<xsl:value-of select="@name"/>
   use <xsl:value-of select="@name"/>_validate_struct
-  use ual_low_level_wrap
+  use al_low_level_wrap
   use <xsl:value-of select="@name"/>_delete
   <!--<xsl:if test="@specific_validation_rules='yes'">
   use specific_validate_struct
@@ -1354,7 +1354,7 @@ contains
 
 subroutine validate_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(ids, status, err_msg)
   use ids_schemas_<xsl:value-of select="@name"/>
-  use ual_low_level_wrap, only: IDS_TIME_MODE_HOMOGENEOUS, IDS_TIME_MODE_HETEROGENEOUS, IDS_TIME_MODE_INDEPENDENT
+  use al_low_level_wrap, only: IDS_TIME_MODE_HOMOGENEOUS, IDS_TIME_MODE_HETEROGENEOUS, IDS_TIME_MODE_INDEPENDENT
   implicit none
   type(ids_<xsl:value-of select="@name"/>), intent(in) :: ids
   integer(ids_int), intent(out), optional :: status
@@ -1739,7 +1739,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(ids, status, err_msg, ids_time_mode, ids_time_size)
     use ids_utilities, only: ids_<xsl:value-of select="$this-type"/>
-    use ual_low_level_wrap, only: IDS_TIME_MODE_HOMOGENEOUS, IDS_TIME_MODE_HETEROGENEOUS, IDS_TIME_MODE_INDEPENDENT
+    use al_low_level_wrap, only: IDS_TIME_MODE_HOMOGENEOUS, IDS_TIME_MODE_HETEROGENEOUS, IDS_TIME_MODE_INDEPENDENT
     implicit none
     type(ids_<xsl:value-of select="$this-type"/>), intent(in) :: ids
     integer(ids_int), intent(out), optional :: status
@@ -1971,7 +1971,7 @@ end if
   !-----------------------------------------------------------------------
   subroutine ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(ids, status, err_msg, ids_time_mode, ids_time_size)
     use ids_schemas_<xsl:value-of select="ancestor::IDS/@name"/>
-    use ual_low_level_wrap, only: IDS_TIME_MODE_HOMOGENEOUS, IDS_TIME_MODE_HETEROGENEOUS, IDS_TIME_MODE_INDEPENDENT
+    use al_low_level_wrap, only: IDS_TIME_MODE_HOMOGENEOUS, IDS_TIME_MODE_HETEROGENEOUS, IDS_TIME_MODE_INDEPENDENT
     implicit none
     type(ids_<xsl:value-of select="$this-type"/>), intent(in) :: ids
     integer(ids_int), intent(out), optional :: status
