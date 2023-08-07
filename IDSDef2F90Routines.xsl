@@ -835,13 +835,13 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   character(len=300) :: timepath
   character(*), parameter :: path = ''
   integer(ids_int) :: validation_status
-  character(999) :: err_msg
+  character(:), allocatable :: err_msg
   character(len=1) :: buffer
 
   ! Automatic validation of the data (if enabled)
   CALL get_environment_variable("IMAS_DISABLE_VALIDATE", buffer)
-  if (len_trim(buffer)==0 .or. buffer .ne. '1') then
-    call ids_validate(IDS,validation_status,err_msg)
+  if (len_trim(buffer)==0 .or. buffer .eq. '0') then
+    call ids_validate(IDS, validation_status, err_msg)
     if(validation_status == -1) then 
       write(*,*) "Error during automatic validation before put of <xsl:value-of select="@name"/>"
       write(*,*) err_msg
@@ -1088,13 +1088,13 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   character(len=300) :: timepath
   character(*), parameter :: path = ''
   integer(ids_int) :: validation_status
-  character(999) :: err_msg
+  character(:), allocatable :: err_msg
   character(len=1) :: buffer
 
   ! Automatic validation of the data (if enabled)
   CALL get_environment_variable("IMAS_DISABLE_VALIDATE", buffer)
-  if (len_trim(buffer)==0 .or. buffer .ne. '1') then
-    call ids_validate(IDS,validation_status,err_msg)
+  if (len_trim(buffer)==0 .or. buffer .eq. '0') then
+    call ids_validate(IDS, validation_status, err_msg)
     if(validation_status == -1) then 
       write(*,*) "Error during automatic validation before put of <xsl:value-of select="@name"/>"
       write(*,*) err_msg
@@ -1358,7 +1358,7 @@ subroutine validate_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
   implicit none
   type(ids_<xsl:value-of select="@name"/>), intent(in) :: ids
   integer(ids_int), intent(out), optional :: status
-  character(999), intent(out), optional :: err_msg
+  character(:), allocatable, intent(out) :: err_msg
 
   integer(ids_int) :: array_size, i, itime, i1, i2, i3
   integer(ids_int) :: ids_time_mode
@@ -1743,7 +1743,7 @@ contains
     implicit none
     type(ids_<xsl:value-of select="$this-type"/>), intent(in) :: ids
     integer(ids_int), intent(out), optional :: status
-    character(999), intent(out), optional :: err_msg
+    character(:), allocatable, intent(out) :: err_msg
     integer(ids_int), intent(in) :: ids_time_mode
     integer(ids_int), intent(in) :: ids_time_size
     integer(ids_int) :: array_size, i, itime, i1, i2, i3, i4
@@ -1814,7 +1814,7 @@ end module
   ! Validation of <xsl:value-of select = "@path"/>
   call ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(ids%<xsl:value-of select = "@name"/>, status, err_msg, ids_time_mode, ids_time_size)
   if (status.eq.-1) then
-    err_msg = "Error with <xsl:value-of select = "@path"/>."//achar(13)//achar(10)//trim(err_msg)
+    err_msg = "Error with <xsl:value-of select = "@path"/>."//achar(13)//achar(10)//err_msg
     return 
   end if
 </xsl:when>
@@ -1825,7 +1825,7 @@ end module
     ! Validation of <xsl:value-of select = "@path"/>
     call ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(ids%<xsl:value-of select = "@name"/>(i), status, err_msg, ids_time_mode, ids_time_size) 
     if (status.eq.-1) then
-      err_msg = "Error with <xsl:value-of select = "@path"/>."//achar(13)//achar(10)//trim(err_msg)
+      err_msg = "Error with <xsl:value-of select = "@path"/>."//achar(13)//achar(10)//err_msg
       return 
     end if
   end do
@@ -1975,7 +1975,7 @@ end if
     implicit none
     type(ids_<xsl:value-of select="$this-type"/>), intent(in) :: ids
     integer(ids_int), intent(out), optional :: status
-    character(999), intent(out), optional :: err_msg
+    character(:), allocatable, intent(out) :: err_msg
     integer(ids_int), intent(in) :: ids_time_mode
     integer(ids_int), intent(in) :: ids_time_size
     integer(ids_int) :: array_size, i, itime, i1, i2, i3, i4
