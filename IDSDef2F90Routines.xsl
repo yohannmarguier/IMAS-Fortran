@@ -1394,6 +1394,7 @@ subroutine validate_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
 	<xsl:apply-templates select="." mode="VALIDATE_DESCENDANT_5D"/>
 	<xsl:apply-templates select="." mode="VALIDATE_DESCENDANT_6D"/>
   status = 0
+  err_msg = ""
   return
 end subroutine
 
@@ -1569,7 +1570,7 @@ end module
       </xsl:apply-templates>
       if (associated(ids%<xsl:value-of select="$relativepath"/><xsl:value-of select="@name"/>)) then
         array_size = size(ids%<xsl:value-of select="$relativepath"/><xsl:value-of select="@name"/>,<xsl:value-of select="number($dimension)+1"/>)
-      <xsl:if test="contains($targetcoord,'time')">
+      <xsl:if test="ends-with($targetcoord,'time')">
         if (ids_time_mode .eq. IDS_TIME_MODE_HOMOGENEOUS ) then
             if(array_size .ne. ids_time_size) then
               err_msg = "array_size of <xsl:value-of select="@path"/> wrong dimension."
@@ -1594,7 +1595,7 @@ end module
         endif
       <!-- </xsl:if> -->
       </xsl:if>
-      <xsl:if test="not(contains($targetcoord,'time'))">
+      <xsl:if test="not(ends-with($targetcoord,'time'))">
         if (.not.associated(ids%<xsl:value-of select="$targetcoord"/>)) then 
           err_msg = "<xsl:value-of select="../@name"/>/<xsl:value-of select="$targetcoord"/> must be allocated."
           status = -1 
@@ -1781,6 +1782,20 @@ end module
             return
           endif
       endif
+      <xsl:variable name="coord" select="@coordinate1"/>
+      <xsl:if test=".//field[@path_doc=$coord and (@data_type='int_type' or @data_type='INT_0D' or 
+      @data_type='flt_type' or @data_type='FLT_0D' or 
+      @data_type='CPX_0D')]">
+      if (ids_time_mode .eq. IDS_TIME_MODE_HETEROGENEOUS ) then
+         do itime =1, array_size
+          if (.not. ids_is_valid(ids%<xsl:value-of select="@name"/>(itime)%time)) then 
+            err_msg = "Time coordinate of <xsl:value-of select="@name"/> wrong. ids%<xsl:value-of select="@name"/>(itime)/time is invalid."
+            status = -1 
+            return
+          end if
+         end do 
+      endif
+      </xsl:if>
       </xsl:if>
       <xsl:if test="not(contains(@coordinate1,'/time'))">
       if(array_size .ne. size(ids%<xsl:value-of select="@coordinate1"/>)) then
@@ -1998,7 +2013,7 @@ end if
 <!-- return yes if some field exist like @path_doc equals to the parameter path_doc_to_check -->
 <xsl:template match="field" mode="ISPRESENT_PATH_DOC">
 <xsl:param name="path_doc_to_check"/>
-	<xsl:if test="descendant-or-self::field[@path_doc=$path_doc_to_check]">
+	<xsl:if test="descendant-or-self::field[contains(@path_doc,$path_doc_to_check)]">
 		<xsl:value-of select="'yes'"/>
 	</xsl:if >
 </xsl:template> 
@@ -2153,12 +2168,12 @@ end if
     </xsl:when>
 		<xsl:when test="contains($coord,'OR')">
 		<xsl:apply-templates select="ancestor::field[@path_doc = $currpath]" mode="ISPRESENT_PATH_DOC">
-			<xsl:with-param name="path_doc_to_check" select="concat(substring-before($coord,' OR'),'(:)')"/>
+			<xsl:with-param name="path_doc_to_check" select="substring-before($coord,' OR')"/>
 		</xsl:apply-templates>
 		</xsl:when>
     <xsl:otherwise>
       <xsl:apply-templates select="ancestor::field[@path_doc = $currpath]" mode="ISPRESENT_PATH_DOC">
-			<xsl:with-param name="path_doc_to_check" select="concat($coord,'(:)')"/>
+			<xsl:with-param name="path_doc_to_check" select="$coord"/>
 		  </xsl:apply-templates>
     </xsl:otherwise>
   </xsl:choose>
@@ -2384,6 +2399,31 @@ end if
 		</xsl:if>
   endif
 	</xsl:if> 
+  <xsl:if test="not(contains($newpath,'/')) and $istimeslice='yes'">
+  <xsl:if test="@type='dynamic' and contains($coord,'/time')">
+  if (associated(ids%<xsl:value-of select="$string"/><xsl:value-of select="@name"/>)) then
+		array_size = size(ids%<xsl:value-of select="$string"/><xsl:value-of select="@name"/>,<xsl:value-of select="number($dimension) + 1"/>)
+    if (ids_time_mode .eq. IDS_TIME_MODE_HOMOGENEOUS ) then
+      if(array_size .ne. ids_time_size) then
+        err_msg = "array_size of <xsl:value-of select="@path"/> wrong dimension <xsl:value-of select="number($dimension) + 1"/>."
+        status = -1 
+        return
+      endif
+    endif
+		if (ids_time_mode .eq. IDS_TIME_MODE_HETEROGENEOUS ) then
+      do itime =1, array_size
+      if (.not. ids_is_valid(ids%<xsl:value-of select="@name"/>(itime)%time)) then 
+        err_msg = "Time coordinate of <xsl:value-of select="@name"/> wrong. ids%<xsl:value-of select="@name"/>(itime)/time is invalid."
+        status = -1 
+        return
+      end if
+      end do 
+    endif
+  endif
+  </xsl:if>
+</xsl:if>
+
+
 </xsl:template> 
 
 <xsl:template match='field' mode="resolve_indices">
@@ -2441,7 +2481,6 @@ end if
           <xsl:value-of select="replace(substring-before($coord,' OR'),'/','%')"/>
       </xsl:if>
   </xsl:variable>
-  ! <xsl:value-of select="$target"/>
   <xsl:variable name="resolved_target">
     <xsl:apply-templates select="." mode="resolve_indices">
       <xsl:with-param name="target" select="$target"/>
@@ -2466,7 +2505,6 @@ end if
         <xsl:value-of select="replace($coord,'/','%')"/>
     </xsl:if>
   </xsl:variable>
-  ! <xsl:value-of select="$coord"/> <xsl:value-of select="$relativepathdoc"/>
   <xsl:variable name="resolved_target">
     <xsl:apply-templates select="." mode="resolve_indices">
       <xsl:with-param name="target" select="$target"/>
