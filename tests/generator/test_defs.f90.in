@@ -1,6 +1,6 @@
 MODULE test_defs
     USE ids_utilities
-    USE ual_defs
+    USE al_defs
     IMPLICIT NONE
 
     LOGICAL, PARAMETER :: debugMode = .FALSE.

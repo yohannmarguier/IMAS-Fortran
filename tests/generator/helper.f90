@@ -1,7 +1,7 @@
 MODULE helper
   use test_defs
   use generator
-  use ual_defs
+  use al_defs
   use al_low_level_wrap
   implicit none
 

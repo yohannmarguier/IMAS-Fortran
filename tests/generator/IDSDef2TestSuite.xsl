@@ -415,7 +415,7 @@
     </xsl:if>
     <xsl:text>&#9;IMPLICIT NONE&#10;</xsl:text> 
     <xsl:text>&#9;TYPE (ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>) :: ids &#10;</xsl:text>
-    <xsl:text>&#9;CHARACTER (999) :: err_msg = "" &#10;</xsl:text>
+    <xsl:text>&#9;CHARACTER(:) , ALLOCATABLE:: err_msg&#10;</xsl:text>
     <xsl:text>&#9;INTEGER         :: status &#10;</xsl:text>
     <xsl:text>&#10;</xsl:text>
     <xsl:text>&#9;write(*,*) "--- </xsl:text><xsl:value-of select="@name"/><xsl:text>"&#10;</xsl:text>
