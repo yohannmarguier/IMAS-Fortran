@@ -1204,11 +1204,6 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name($this-ty
   character(len=100000) :: longstring
   character(len=300) :: timepath
 
-  if (IDS%ids_name .ne. name) then
-    write(*,*) 'Error in put_slice_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>'
-    status = -3
-    STOP
-  end if
   <xsl:apply-templates select="./field" mode="PUT_FIELD">
     <xsl:with-param name="structvar" select="'struct'"/>
     <xsl:with-param name="contextvar" select="'ctx'"/>
