@@ -192,6 +192,7 @@ end module ! end of the utilities module
   type, extends(IDS_base) :: ids_<xsl:value-of select="@name"/> !<xsl:value-of select="local:commentstring(@documentation)"/>
     logical, private :: c_data = .FALSE. ! Fortran specific metadata telling whether the IDS has been populated from C allocated data (LL) or not
     integer, private :: max_occurrence = <xsl:value-of select="@maxoccur"/>! Maximum occurrence allowed as defined in the DD
+    character(len = 50) :: ids_name = '<xsl:value-of select="@name"/>'
     <xsl:apply-templates select="./field" mode="declare_field"/>
   end type
 

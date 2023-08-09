@@ -831,6 +831,12 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   character(len=300) :: timepath
   character(*), parameter :: path = ''
 
+  if (IDS%ids_name .ne. name) then
+    write(*,*) 'Error in put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>'
+    status = -3
+    STOP
+  end if
+
   ! Systematic delete of the previous IDS, in case it existed
   call ids_delete(pulsectx, name, IDS)
 
@@ -1068,6 +1074,12 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   character(len=300) :: timepath
   character(*), parameter :: path = ''
 
+  if (IDS%ids_name .ne. name) then
+    write(*,*) 'Error in put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>'
+    status = -3
+    STOP
+  end if
+
   if (IDS%ids_properties%homogeneous_time.EQ.IDS_TIME_MODE_UNKNOWN) then
      write(*,*) "Warning : <xsl:value-of select="@name"/> is found to be EMPTY (homogeneous_time undefined). PUTSLICE returns with no action."
      if (present(retstatus)) retstatus = 0
@@ -1192,6 +1204,11 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name($this-ty
   character(len=100000) :: longstring
   character(len=300) :: timepath
 
+  if (IDS%ids_name .ne. name) then
+    write(*,*) 'Error in put_slice_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>'
+    status = -3
+    STOP
+  end if
   <xsl:apply-templates select="./field" mode="PUT_FIELD">
     <xsl:with-param name="structvar" select="'struct'"/>
     <xsl:with-param name="contextvar" select="'ctx'"/>
@@ -1344,6 +1361,13 @@ subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   character(len=300) :: timepath
   character(*), parameter :: path = ''
 
+  
+  if (IDS%ids_name .ne. name) then
+    write(*,*) 'Error in get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>'
+    status = -3
+    STOP
+  end if
+
   call al_begin_global_action(pulsectx, name, READ_OP, opctx, status) 
   if (status.ne.0) then
      !! error when trying to get new ctx => stop!
@@ -1477,6 +1501,12 @@ subroutine get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   character(len=300) :: timepath
   character(*), parameter :: path = ''
 
+  if (IDS%ids_name .ne. name) then
+    write(*,*) 'Error in get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>'
+    status = -3
+    STOP
+  end if
+ 
   call al_begin_slice_action(pulsectx, name, READ_OP, twant, interpol, opctx, status) 
   if (status.ne.0) then
      !! error when trying to get new ctx => stop!
