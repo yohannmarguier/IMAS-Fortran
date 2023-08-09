@@ -826,15 +826,16 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   ! internal variables declaration
   logical :: timedparent
   integer :: timemode
-  integer(ids_int) :: aoslen, i, lenstring, lastdimsize
+  integer(ids_int) :: aoslen, i, lenstring, lastdimsize, slash_index
   character(len=100000) :: longstring
   character(len=300) :: timepath
   character(*), parameter :: path = ''
-
-  if (IDS%ids_name .ne. name) then
+  
+  slash_index = INDEX(name, '/')
+  if ( (slash_index == 0 .AND. IDS%ids_name /= name) .OR. (slash_index /= 0 .AND. IDS%ids_name /= name(1:slash_index)) ) then
     write(*,*) 'Error in put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>'
     status = -3
-    STOP
+    return
   end if
 
   ! Systematic delete of the previous IDS, in case it existed
@@ -1069,15 +1070,16 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   ! internal variables declaration
   logical :: timedparent
   integer :: timemode, storedtimemode
-  integer(ids_int) :: aoslen, i, lenstring, lastdimsize
+  integer(ids_int) :: aoslen, i, lenstring, lastdimsize, slash_index
   character(len=100000) :: longstring
   character(len=300) :: timepath
   character(*), parameter :: path = ''
 
-  if (IDS%ids_name .ne. name) then
+  slash_index = INDEX(name, '/')
+  if ((slash_index == 0 .AND. IDS%ids_name /= name) .OR. (slash_index /= 0 .AND. IDS%ids_name /= name(1:slash_index))) then
     write(*,*) 'Error in put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>'
     status = -3
-    STOP
+    return
   end if
 
   if (IDS%ids_properties%homogeneous_time.EQ.IDS_TIME_MODE_UNKNOWN) then
@@ -1350,17 +1352,17 @@ subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   type(ids_<xsl:value-of select="@name"/>) :: IDS
   ! internal variables declaration
   logical :: timedparent
-  integer(ids_int) :: aoslen, i, lenstring
+  integer(ids_int) :: aoslen, i, lenstring, slash_index
   integer(ids_int) :: size1, size2, size3, size4, size5, size6, size7
   character(len=100000) :: longstring
   character(len=300) :: timepath
   character(*), parameter :: path = ''
-
   
-  if (IDS%ids_name .ne. name) then
+  slash_index = INDEX(name, '/')
+  if ((slash_index == 0 .AND. IDS%ids_name /= name) .OR. (slash_index /= 0 .AND. IDS%ids_name /= name(1:slash_index))) then
     write(*,*) 'Error in get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>'
-    status = -3
-    STOP
+    retstatus = -3
+    return
   end if
 
   call al_begin_global_action(pulsectx, name, READ_OP, opctx, status) 
@@ -1490,16 +1492,17 @@ subroutine get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   type(ids_<xsl:value-of select="@name"/>) :: IDS
   ! internal variables declaration
   logical :: timedparent
-  integer(ids_int) :: aoslen, i, lenstring
+  integer(ids_int) :: aoslen, i, lenstring, slash_index
   integer(ids_int) :: size1, size2, size3, size4, size5, size6, size7
   character(len=100000) :: longstring
   character(len=300) :: timepath
   character(*), parameter :: path = ''
 
-  if (IDS%ids_name .ne. name) then
+  slash_index = INDEX(name, '/')
+  if ((slash_index == 0 .AND. IDS%ids_name /= name) .OR. (slash_index /= 0 .AND. IDS%ids_name /= name(1:slash_index))) then
     write(*,*) 'Error in get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>'
     status = -3
-    STOP
+    return
   end if
  
   call al_begin_slice_action(pulsectx, name, READ_OP, twant, interpol, opctx, status) 
