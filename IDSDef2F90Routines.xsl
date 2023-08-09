@@ -832,7 +832,7 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   character(*), parameter :: path = ''
   
   slash_index = INDEX(name, '/')
-  if ( (slash_index == 0 .AND. IDS%ids_name /= name) .OR. (slash_index /= 0 .AND. IDS%ids_name /= name(1:slash_index)) ) then
+  if ( (slash_index == 0 .AND. IDS%ids_name /= name) .OR. (slash_index /= 0 .AND. IDS%ids_name /= name(1:slash_index - 1)) ) then
     write(*,*) 'Error in put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>'
     status = -3
     return
@@ -1076,7 +1076,7 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   character(*), parameter :: path = ''
 
   slash_index = INDEX(name, '/')
-  if ((slash_index == 0 .AND. IDS%ids_name /= name) .OR. (slash_index /= 0 .AND. IDS%ids_name /= name(1:slash_index))) then
+  if ((slash_index == 0 .AND. IDS%ids_name /= name) .OR. (slash_index /= 0 .AND. IDS%ids_name /= name(1:slash_index - 1))) then
     write(*,*) 'Error in put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>'
     status = -3
     return
@@ -1357,9 +1357,9 @@ subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   character(len=100000) :: longstring
   character(len=300) :: timepath
   character(*), parameter :: path = ''
-  
+
   slash_index = INDEX(name, '/')
-  if ((slash_index == 0 .AND. IDS%ids_name /= name) .OR. (slash_index /= 0 .AND. IDS%ids_name /= name(1:slash_index))) then
+  if ((slash_index == 0 .AND. IDS%ids_name /= name) .OR. (slash_index /= 0 .AND. IDS%ids_name /= name(1:slash_index - 1))) then
     write(*,*) 'Error in get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>'
     retstatus = -3
     return
@@ -1499,7 +1499,7 @@ subroutine get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   character(*), parameter :: path = ''
 
   slash_index = INDEX(name, '/')
-  if ((slash_index == 0 .AND. IDS%ids_name /= name) .OR. (slash_index /= 0 .AND. IDS%ids_name /= name(1:slash_index))) then
+  if ((slash_index == 0 .AND. IDS%ids_name /= name) .OR. (slash_index /= 0 .AND. IDS%ids_name /= name(1:slash_index - 1))) then
     write(*,*) 'Error in get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>'
     status = -3
     return
