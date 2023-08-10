@@ -834,7 +834,7 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   slash_index = INDEX(name, '/')
   if ( (slash_index == 0 .AND. IDS%ids_name /= name) .OR. (slash_index /= 0 .AND. IDS%ids_name /= name(1:slash_index - 1)) ) then
     write(*,*) 'Error in put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>'
-    status = -3
+    if (present(retstatus)) retstatus = -3
     return
   end if
 
@@ -1078,7 +1078,7 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   slash_index = INDEX(name, '/')
   if ((slash_index == 0 .AND. IDS%ids_name /= name) .OR. (slash_index /= 0 .AND. IDS%ids_name /= name(1:slash_index - 1))) then
     write(*,*) 'Error in put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>'
-    status = -3
+    if (present(retstatus)) retstatus = -3
     return
   end if
 
@@ -1361,7 +1361,7 @@ subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   slash_index = INDEX(name, '/')
   if ((slash_index == 0 .AND. IDS%ids_name /= name) .OR. (slash_index /= 0 .AND. IDS%ids_name /= name(1:slash_index - 1))) then
     write(*,*) 'Error in get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>'
-    retstatus = -3
+    if (present(retstatus)) retstatus = -3
     return
   end if
 
@@ -1501,7 +1501,7 @@ subroutine get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   slash_index = INDEX(name, '/')
   if ((slash_index == 0 .AND. IDS%ids_name /= name) .OR. (slash_index /= 0 .AND. IDS%ids_name /= name(1:slash_index - 1))) then
     write(*,*) 'Error in get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>'
-    status = -3
+    if (present(retstatus)) retstatus = -3
     return
   end if
  
