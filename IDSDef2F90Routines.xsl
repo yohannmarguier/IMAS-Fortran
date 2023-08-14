@@ -826,17 +826,17 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   ! internal variables declaration
   logical :: timedparent
   integer :: timemode
-  integer(ids_int) :: aoslen, i, lenstring, lastdimsize, slash_index
+  integer(ids_int) :: aoslen, i, lenstring, lastdimsize
   character(len=100000) :: longstring
   character(len=300) :: timepath
   character(*), parameter :: path = ''
-  
-  slash_index = INDEX(name, '/')
-  if ( (slash_index == 0 .AND. IDS%ids_name /= name) .OR. (slash_index /= 0 .AND. IDS%ids_name /= name(1:slash_index - 1)) ) then
+
+  call IDS%check_name_<xsl:value-of select="@name"/>(name, status)
+  if(status.ne.0) then
     write(*,*) 'Error in put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>'
-    if (present(retstatus)) retstatus = -3
+    if(present(retstatus)) retstatus = status
     return
-  end if
+  end if 
 
   ! Systematic delete of the previous IDS, in case it existed
   call ids_delete(pulsectx, name, IDS)
@@ -1070,17 +1070,17 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   ! internal variables declaration
   logical :: timedparent
   integer :: timemode, storedtimemode
-  integer(ids_int) :: aoslen, i, lenstring, lastdimsize, slash_index
+  integer(ids_int) :: aoslen, i, lenstring, lastdimsize
   character(len=100000) :: longstring
   character(len=300) :: timepath
   character(*), parameter :: path = ''
 
-  slash_index = INDEX(name, '/')
-  if ((slash_index == 0 .AND. IDS%ids_name /= name) .OR. (slash_index /= 0 .AND. IDS%ids_name /= name(1:slash_index - 1))) then
+  call IDS%check_name_<xsl:value-of select="@name"/>(name, status)
+  if(status.ne.0) then
     write(*,*) 'Error in put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>'
-    if (present(retstatus)) retstatus = -3
+    if(present(retstatus)) retstatus = status
     return
-  end if
+  end if 
 
   if (IDS%ids_properties%homogeneous_time.EQ.IDS_TIME_MODE_UNKNOWN) then
      write(*,*) "Warning : <xsl:value-of select="@name"/> is found to be EMPTY (homogeneous_time undefined). PUTSLICE returns with no action."
@@ -1352,19 +1352,18 @@ subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   type(ids_<xsl:value-of select="@name"/>) :: IDS
   ! internal variables declaration
   logical :: timedparent
-  integer(ids_int) :: aoslen, i, lenstring, slash_index
+  integer(ids_int) :: aoslen, i, lenstring
   integer(ids_int) :: size1, size2, size3, size4, size5, size6, size7
   character(len=100000) :: longstring
   character(len=300) :: timepath
   character(*), parameter :: path = ''
-
-  slash_index = INDEX(name, '/')
-  if ((slash_index == 0 .AND. IDS%ids_name /= name) .OR. (slash_index /= 0 .AND. IDS%ids_name /= name(1:slash_index - 1))) then
+  
+  call IDS%check_name_<xsl:value-of select="@name"/>(name, status)
+  if(status.ne.0) then
     write(*,*) 'Error in get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>'
-    if (present(retstatus)) retstatus = -3
+    if(present(retstatus)) retstatus = status
     return
-  end if
-
+  end if 
   call al_begin_global_action(pulsectx, name, READ_OP, opctx, status) 
   if (status.ne.0) then
      !! error when trying to get new ctx => stop!
@@ -1492,18 +1491,18 @@ subroutine get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   type(ids_<xsl:value-of select="@name"/>) :: IDS
   ! internal variables declaration
   logical :: timedparent
-  integer(ids_int) :: aoslen, i, lenstring, slash_index
+  integer(ids_int) :: aoslen, i, lenstring
   integer(ids_int) :: size1, size2, size3, size4, size5, size6, size7
   character(len=100000) :: longstring
   character(len=300) :: timepath
   character(*), parameter :: path = ''
-
-  slash_index = INDEX(name, '/')
-  if ((slash_index == 0 .AND. IDS%ids_name /= name) .OR. (slash_index /= 0 .AND. IDS%ids_name /= name(1:slash_index - 1))) then
+  
+  call IDS%check_name_<xsl:value-of select="@name"/>(name, status)
+  if(status.ne.0) then
     write(*,*) 'Error in get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>'
-    if (present(retstatus)) retstatus = -3
+    if(present(retstatus)) retstatus = status
     return
-  end if
+  end if 
  
   call al_begin_slice_action(pulsectx, name, READ_OP, twant, interpol, opctx, status) 
   if (status.ne.0) then
