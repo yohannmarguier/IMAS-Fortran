@@ -23,7 +23,7 @@ IDSDEF = $(AL_BUILD)/xml/IDSDef.xml
 ids_path = $(realpath $(AL_BUILD)/models/mdsplus)
 
 # Test environment (mimics loaded imas environment), write ids to tmp dir
-test_ENV = IMAS_AL_PLUGINS=$(AL_BUILD)/plugins LD_LIBRARY_PATH=$(AL_BUILD)/fortraninterface:$(AL_BUILD)/lowlevel:$$LD_LIBRARY_PATH ids_path="$$PWD/tmp;$(ids_path)" IMAS_DISABLE_VALIDATE=1
+test_ENV = IMAS_AL_PLUGINS=$(AL_BUILD)/plugins LD_LIBRARY_PATH=$(AL_BUILD)/fortraninterface:$(AL_BUILD)/lowlevel:$$LD_LIBRARY_PATH ids_path="$$PWD/tmp;$(ids_path)" IMAS_AL_DISABLE_VALIDATE=1
 
 include Makefile.tests
 endif # IMAS_FORTRAN

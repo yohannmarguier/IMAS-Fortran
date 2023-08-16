@@ -839,7 +839,7 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   character(len=1) :: buffer
 
   ! Automatic validation of the data (if enabled)
-  CALL get_environment_variable("IMAS_DISABLE_VALIDATE", buffer)
+  CALL get_environment_variable("IMAS_AL_DISABLE_VALIDATE", buffer)
   if (len_trim(buffer)==0 .or. buffer .eq. '0') then
     call ids_validate(IDS, validation_status, err_msg)
     if(validation_status == -1) then 
@@ -1092,7 +1092,7 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   character(len=1) :: buffer
 
   ! Automatic validation of the data (if enabled)
-  CALL get_environment_variable("IMAS_DISABLE_VALIDATE", buffer)
+  CALL get_environment_variable("IMAS_AL_DISABLE_VALIDATE", buffer)
   if (len_trim(buffer)==0 .or. buffer .eq. '0') then
     call ids_validate(IDS, validation_status, err_msg)
     if(validation_status == -1) then 
