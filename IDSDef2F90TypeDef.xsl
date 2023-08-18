@@ -220,6 +220,8 @@ end module ! end of the utilities module
   slash_index = INDEX(name, '/')
   if ( (slash_index == 0 .AND. ids%ids_name /= name) .OR. (slash_index /= 0 .AND. ids%ids_name /= name(1:slash_index - 1)) ) then
      retstatus = -3
+  else
+    retstatus = 0
   end if
   end subroutine
 
