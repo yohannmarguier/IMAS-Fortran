@@ -1569,7 +1569,8 @@ end module
         <xsl:with-param name="parent" select="$common_parent"/>
       </xsl:apply-templates>
       if (associated(ids%<xsl:value-of select="$relativepath"/><xsl:value-of select="@name"/>)) then
-        array_size = size(ids%<xsl:value-of select="$relativepath"/><xsl:value-of select="@name"/>,<xsl:value-of select="number($dimension)+1"/>)
+      array_size = size(ids%<xsl:value-of select="$relativepath"/><xsl:value-of select="@name"/>,<xsl:value-of select="number($dimension)+1"/>)
+      if (array_size &gt; 0) then
       <xsl:if test="ends-with($targetcoord,'time')">
         if (ids_time_mode .eq. IDS_TIME_MODE_HOMOGENEOUS ) then
             if(array_size .ne. ids_time_size) then
@@ -1608,11 +1609,12 @@ end module
         endif
       </xsl:if>
       <xsl:text>
-      end if
+	      end if
+	      end if 
       </xsl:text>
       <xsl:apply-templates select="." mode="print_end_child_loops">
         <xsl:with-param name="parent" select="$common_parent"/>
-      </xsl:apply-templates>
+</xsl:apply-templates> 
       </xsl:when>
       <xsl:otherwise>
       <xsl:if test="$common_parent=$currpath">
@@ -2345,7 +2347,8 @@ end if
   </xsl:variable>
   <xsl:if test="not(contains($newpath,'/')) and not($istimeslice='yes')">
   if (associated(ids%<xsl:value-of select="$string"/><xsl:value-of select="@name"/>)) then
-		array_size = size(ids%<xsl:value-of select="$string"/><xsl:value-of select="@name"/>,<xsl:value-of select="number($dimension) + 1"/>)
+  array_size = size(ids%<xsl:value-of select="$string"/><xsl:value-of select="@name"/>,<xsl:value-of select="number($dimension) + 1"/>)
+  if (array_size &gt; 0) then 
 		<xsl:if test="@type='dynamic' and contains($coord,'/time')">
 		if (ids_time_mode .eq. IDS_TIME_MODE_HETEROGENEOUS ) then
 		</xsl:if>
@@ -2397,7 +2400,8 @@ end if
       endif
     endif
 		</xsl:if>
-  endif
+		endif
+		endif
 	</xsl:if> 
   <xsl:if test="not(contains($newpath,'/')) and $istimeslice='yes'">
   <xsl:if test="@type='dynamic' and contains($coord,'/time')">
