@@ -2247,14 +2247,22 @@ end if
           <xsl:value-of select="concat($currpath,'/')"/>
         </xsl:if>
         </xsl:variable>
+	<xsl:variable name="onecoord">
+        <xsl:if test="not(contains($coord,' OR'))">
+           <xsl:value-of select="$coord"/>
+        </xsl:if>
+        <xsl:if test="contains($coord,' OR')">
+          <xsl:value-of select="substring-before($coord,' OR')"/>
+        </xsl:if>
+        </xsl:variable>
 	<xsl:variable name="is-index-dep">
 	<xsl:if test="$root='/'">
-          <xsl:if test="contains($coord,'(')">
+          <xsl:if test="contains($onecoord,'(')">
           <xsl:value-of select="'yes'"/>
         </xsl:if>
 	</xsl:if>
 	<xsl:if test="not($root='/')">
-	  <xsl:if test="contains(substring-after($coord,$root),'(')">
+	  <xsl:if test="contains(substring-after($onecoord,$root),'(')">
           <xsl:value-of select="'yes'"/>
         </xsl:if>
         </xsl:if>
