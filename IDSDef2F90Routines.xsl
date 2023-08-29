@@ -2257,12 +2257,12 @@ end if
         </xsl:variable>
 	<xsl:variable name="is-index-dep">
 	<xsl:if test="$root='/'">
-          <xsl:if test="contains($onecoord,'(')">
+          <xsl:if test="contains($onecoord,'(itime') and not(contains($onecoord,'(itime)/time'))">
           <xsl:value-of select="'yes'"/>
         </xsl:if>
 	</xsl:if>
 	<xsl:if test="not($root='/')">
-	  <xsl:if test="contains(substring-after($onecoord,$root),'(')">
+	  <xsl:if test="contains(substring-after($onecoord,$root),'(itime') and not(contains($onecoord,'(itime)/time'))">
           <xsl:value-of select="'yes'"/>
         </xsl:if>
         </xsl:if>
