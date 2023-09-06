@@ -1603,7 +1603,7 @@ end module
           return
         end if
         if(array_size .ne. size(ids%<xsl:value-of select="$targetcoord"/>,<xsl:value-of select="number($targetdimension)+1"/>)) then
-	err_msg = "IDS_TIME_MODE_HETEROGENEOUS: array_size of <xsl:value-of select="@path"/> ("//trim(str(array_size))//") wrong. Must be the size of <xsl:value-of select="$targetcoord"/> ("//trim(str(size(ids%<xsl:value-of select="$targetcoord"/>,<xsl:value-of select="number($targetdimension)+1"/>)))//")."
+	err_msg = "array_size of <xsl:value-of select="@path"/> ("//trim(str(array_size))//") wrong. Must be the size of <xsl:value-of select="$targetcoord"/> ("//trim(str(size(ids%<xsl:value-of select="$targetcoord"/>,<xsl:value-of select="number($targetdimension)+1"/>)))//")."
           status = -1 
           return
         endif
