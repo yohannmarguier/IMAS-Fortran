@@ -1574,7 +1574,7 @@ end module
       <xsl:if test="ends-with($targetcoord,'time')">
         if (ids_time_mode .eq. IDS_TIME_MODE_HOMOGENEOUS ) then
             if(array_size .ne. ids_time_size) then
-              err_msg = "array_size of <xsl:value-of select="@path"/> wrong dimension."
+	    err_msg = "IDS_TIME_MODE_HOMOGENEOUS: array_size of <xsl:value-of select="@path"/> ("//trim(str(array_size))//")  wrong. Must be the size of time ("//trim(str(ids_time_size))//")."
               status = -1 
               return
             endif
@@ -1589,8 +1589,8 @@ end module
             return
           end if
           if(array_size .ne. size(ids%<xsl:value-of select="$targetcoord"/>,<xsl:value-of select="number($targetdimension)+1"/>)) then
-            err_msg = "array_size of <xsl:value-of select="@path"/> wrong dimension."
-            status = -1 
+	    err_msg = "IDS_TIME_MODE_HETEROGENEOUS: array_size of <xsl:value-of select="@path"/> ("//trim(str(array_size))//") wrong. Must be the size of <xsl:value-of select="$targetcoord"/> ("//trim(str(size(ids%<xsl:value-of select="$targetcoord"/>,<xsl:value-of select="number($targetdimension)+1"/>)))//")."
+	    status = -1 
             return
           endif
         endif
@@ -1603,7 +1603,7 @@ end module
           return
         end if
         if(array_size .ne. size(ids%<xsl:value-of select="$targetcoord"/>,<xsl:value-of select="number($targetdimension)+1"/>)) then
-          err_msg = "array_size of <xsl:value-of select="@path"/> wrong dimension. Must be the size of <xsl:value-of select="$targetcoord"/>."
+	err_msg = "IDS_TIME_MODE_HETEROGENEOUS: array_size of <xsl:value-of select="@path"/> ("//trim(str(array_size))//") wrong. Must be the size of <xsl:value-of select="$targetcoord"/> ("//trim(str(size(ids%<xsl:value-of select="$targetcoord"/>,<xsl:value-of select="number($targetdimension)+1"/>)))//")."
           status = -1 
           return
         endif
@@ -1766,6 +1766,14 @@ contains
 
   </xsl:if>
 </xsl:for-each>
+
+character(len=20) function str(k)
+!   "Convert an integer to string."
+    integer, intent(in) :: k
+    write (str, *) k
+    str = adjustl(str)
+end function str
+
 end module 
 </xsl:result-document>
 </xsl:template>
@@ -1779,7 +1787,7 @@ end module
       <xsl:if test="contains(@coordinate1,'/time')">
       if (ids_time_mode .eq. IDS_TIME_MODE_HOMOGENEOUS ) then
           if(array_size .ne. ids_time_size) then
-            err_msg = "array_size of <xsl:value-of select="@path"/> wrong dimension."
+            err_msg = "IDS_TIME_MODE_HOMOGENEOUS: array_size of <xsl:value-of select="@path"/> ("//trim(str(array_size))//")  wrong. Must be the size of time ("//trim(str(ids_time_size))//")."
             status = -1 
             return
           endif
@@ -1791,7 +1799,7 @@ end module
       if (ids_time_mode .eq. IDS_TIME_MODE_HETEROGENEOUS ) then
          do itime =1, array_size
           if (.not. ids_is_valid(ids%<xsl:value-of select="@name"/>(itime)%time)) then 
-            err_msg = "Time coordinate of <xsl:value-of select="@name"/> wrong. ids%<xsl:value-of select="@name"/>(itime)/time is invalid."
+            err_msg = "Time coordinate of <xsl:value-of select="@name"/> wrong. ids%<xsl:value-of select="@name"/>(itime)/time is not set."
             status = -1 
             return
           end if
@@ -1801,7 +1809,7 @@ end module
       </xsl:if>
       <xsl:if test="not(contains(@coordinate1,'/time'))">
       if(array_size .ne. size(ids%<xsl:value-of select="@coordinate1"/>)) then
-        err_msg = "array_size of <xsl:value-of select="@path"/> wrong dimension. Must be the size of <xsl:value-of select="@coordinate1"/>."
+        err_msg = "IDS_TIME_MODE_HETEROGENEOUS: array_size of <xsl:value-of select="@path"/> ("//trim(str(array_size))//") wrong. Must be the size of <xsl:value-of select="@coordinate1"/> ("//trim(str(size(ids%<xsl:value-of select="@coordinate1"/>)))//")."
         status = -1 
         return
       endif
@@ -1831,7 +1839,7 @@ end module
   ! Validation of <xsl:value-of select = "@path"/>
   call ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(ids%<xsl:value-of select = "@name"/>, status, err_msg, ids_time_mode, ids_time_size)
   if (status.eq.-1) then
-    err_msg = "Error with <xsl:value-of select = "@path"/>."//achar(13)//achar(10)//err_msg
+    err_msg = "Error in <xsl:value-of select = "@path"/>."//achar(13)//achar(10)//err_msg
     return 
   end if
 </xsl:when>
@@ -1842,7 +1850,7 @@ end module
     ! Validation of <xsl:value-of select = "@path"/>
     call ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(ids%<xsl:value-of select = "@name"/>(i), status, err_msg, ids_time_mode, ids_time_size) 
     if (status.eq.-1) then
-      err_msg = "Error with <xsl:value-of select = "@path"/>."//achar(13)//achar(10)//err_msg
+      err_msg = "Error in <xsl:value-of select = "@path"/>."//achar(13)//achar(10)//err_msg
       return 
     end if
   end do
@@ -1964,7 +1972,7 @@ if (associated(ids%<xsl:value-of select = "@name"/>)) then
   array_size = size(ids%<xsl:value-of select = "@name"/>,<xsl:value-of select = "number($dimension)+1"/>)
   if (array_size .ne. <xsl:value-of select = "substring-after($coord,'1...')"/>) then
     status = -1
-    err_msg = "array_size of <xsl:value-of select="@path"/> wrong dimension <xsl:value-of select="number($dimension) + 1"/>. Must be <xsl:value-of select = "substring-after($coord,'1...')"/>."
+    err_msg = "array_size of <xsl:value-of select="@path"/> ("//trim(str(array_size))//") (dimension <xsl:value-of select="number($dimension) + 1"/>) wrong. Must be <xsl:value-of select = "substring-after($coord,'1...')"/>."
     return 
   end if
 end if
@@ -2370,6 +2378,8 @@ end if
   if (associated(ids%<xsl:value-of select="$string"/><xsl:value-of select="@name"/>)) then
   array_size = size(ids%<xsl:value-of select="$string"/><xsl:value-of select="@name"/>,<xsl:value-of select="number($dimension) + 1"/>)
   if (array_size &gt; 0) then 
+   <xsl:apply-templates select="." mode="check-target-indices"><xsl:with-param name="coord" select="$coord"/><xsl:with-param name="relativepathdoc" select="$root"/></xsl:apply-templates>
+
 		<xsl:if test="@type='dynamic' and contains($coord,'/time')">
 		if (ids_time_mode .eq. IDS_TIME_MODE_HETEROGENEOUS ) then
 		</xsl:if>
@@ -2379,7 +2389,7 @@ end if
       <xsl:apply-templates select="." mode="possible-coordinates"><xsl:with-param name="coord" select="$coord"/><xsl:with-param name="relativepathdoc" select="$root"/><xsl:with-param name="self" select="concat($string,@name)"/></xsl:apply-templates>
       if (i.gt.1) then 
         check = .FALSE.
-        err_msg = "Coordinate consistency error for <xsl:value-of select="@path"/> (dimension <xsl:value-of select="number($dimension) + 1"/>). Exactly one of the coordinate must be verified. (<xsl:value-of select="$coord"/>) "
+        err_msg = "Coordinate consistency error for <xsl:value-of select="@path"/> (dimension <xsl:value-of select="number($dimension) + 1"/>). Exactly one of the coordinate must be allocated. (<xsl:value-of select="$coord"/>) "
         status = -1 
         return
       end if 
@@ -2400,7 +2410,7 @@ end if
           <xsl:with-param name="self" select="concat($string,@name)"/>
         </xsl:apply-templates>
       if (error) then 
-        err_msg = "Wrong dimension <xsl:value-of select="number($dimension) + 1"/> for <xsl:value-of select="@path"/>. (<xsl:value-of select="$coord"/>) "
+        err_msg = "Wrong size for dimension <xsl:value-of select="number($dimension) + 1"/> of <xsl:value-of select="@path"/> ("//trim(str(array_size))//"). (<xsl:value-of select="$coord"/>) "
         status = -1 
         return
       end if
@@ -2408,14 +2418,14 @@ end if
     endif
     if (ids_time_mode .eq. IDS_TIME_MODE_HOMOGENEOUS ) then
       if(array_size .ne. ids_time_size) then
-        err_msg = "array_size of <xsl:value-of select="@path"/> wrong dimension <xsl:value-of select="number($dimension) + 1"/>."
+        err_msg = "IDS_TIME_MODE_HOMOGENEOUS: array_size of <xsl:value-of select="@path"/> ("//trim(str(array_size))//") dimension <xsl:value-of select="number($dimension) + 1"/> wrong. Must be the size of time ("//trim(str(ids_time_size))//")."
         status = -1 
         return
       endif
     endif
     if (ids_time_mode .eq. IDS_TIME_MODE_INDEPENDENT ) then
       if(array_size .ne. 0) then
-        err_msg = "array_size of <xsl:value-of select="@path"/> wrong dimension <xsl:value-of select="number($dimension) + 1"/>."
+        err_msg = "IDS_TIME_MODE_INDEPENDENT: array_size of <xsl:value-of select="@path"/> ("//trim(str(array_size))//") dimension <xsl:value-of select="number($dimension) + 1"/> wrong. Must be 0. (IDS_TIME_MODE_INDEPENDENT)."
         status = -1 
         return
       endif
@@ -2430,7 +2440,7 @@ end if
 		array_size = size(ids%<xsl:value-of select="$string"/><xsl:value-of select="@name"/>,<xsl:value-of select="number($dimension) + 1"/>)
     if (ids_time_mode .eq. IDS_TIME_MODE_HOMOGENEOUS ) then
       if(array_size .ne. ids_time_size) then
-        err_msg = "array_size of <xsl:value-of select="@path"/> wrong dimension <xsl:value-of select="number($dimension) + 1"/>."
+        err_msg = "IDS_TIME_MODE_HOMOGENEOUS: array_size of <xsl:value-of select="@path"/> ("//trim(str(array_size))//") dimension <xsl:value-of select="number($dimension) + 1"/> wrong."
         status = -1 
         return
       endif
@@ -2438,7 +2448,7 @@ end if
 		if (ids_time_mode .eq. IDS_TIME_MODE_HETEROGENEOUS ) then
       do itime =1, array_size
       if (.not. ids_is_valid(ids%<xsl:value-of select="@name"/>(itime)%time)) then 
-        err_msg = "Time coordinate of <xsl:value-of select="@name"/> wrong. ids%<xsl:value-of select="@name"/>(itime)/time is invalid."
+        err_msg = "IDS_TIME_MODE_HETEROGENEOUS: Time coordinate of <xsl:value-of select="@name"/> wrong. ids%<xsl:value-of select="@name"/>(itime)/time is invalid."
         status = -1 
         return
       end if
@@ -2492,6 +2502,94 @@ end if
     <xsl:value-of select="$partialindex"/>
   </xsl:if>
   </xsl:template>
+
+  <xsl:template match='field' mode="check-target-indices">
+      <xsl:param name="coord"/>
+      <xsl:param name="relativepathdoc"/>
+      <xsl:if test="contains($coord,' OR')">
+        <xsl:variable name="target">
+          <xsl:if test="not($relativepathdoc='/')">
+            <xsl:value-of select="substring-before(substring-after($coord,$relativepathdoc),' OR')"/>
+          </xsl:if>
+          <xsl:if test="$relativepathdoc='/'">
+              <xsl:value-of select="substring-before($coord,' OR')"/>
+          </xsl:if>
+        </xsl:variable>
+        <xsl:apply-templates select="." mode="check_indices">
+            <xsl:with-param name="target" select="$target"/>
+            <xsl:with-param name="string-resolved" select="''"/>
+            <xsl:with-param name="string-error" select="''"/>
+        </xsl:apply-templates>
+      <xsl:apply-templates select="." mode="check-target-indices">
+        <xsl:with-param name="coord" select="substring-after($coord,' OR')"/>
+        <xsl:with-param name="relativepathdoc" select="$relativepathdoc"/>
+      </xsl:apply-templates>
+      </xsl:if>
+      <xsl:if test="not(contains($coord,' OR'))">
+      <xsl:variable name="target">
+        <xsl:if test="not($relativepathdoc='/')">
+          <xsl:value-of select="substring-after($coord,$relativepathdoc)"/>
+        </xsl:if>
+        <xsl:if test="$relativepathdoc='/'">
+            <xsl:value-of select="$coord"/>
+        </xsl:if>
+      </xsl:variable>
+      <xsl:apply-templates select="." mode="check_indices">
+            <xsl:with-param name="target" select="$target"/>
+            <xsl:with-param name="string-resolved" select="''"/>
+            <xsl:with-param name="string-error" select="''"/>
+        </xsl:apply-templates>
+      </xsl:if>
+      </xsl:template>
+
+
+
+  <xsl:template match='field' mode="check_indices">
+      <xsl:param name="target"/>
+      <xsl:param name="string-resolved"/>
+      <xsl:param name="string-error"/>
+      <xsl:if test="contains($target,'(')">
+        <xsl:variable name="indexstr">
+          <xsl:apply-templates select="." mode="get_indices">
+            <xsl:with-param name="target" select="$target"/>
+          </xsl:apply-templates>
+        </xsl:variable>
+        <xsl:variable name="resolved_indexstr">
+        <xsl:if test="matches($indexstr, '^[0-9]+$')">
+          <xsl:value-of select="$indexstr"/>
+        </xsl:if>
+        <xsl:if test="matches($indexstr, '^itime|i[1-9]$')">
+          <xsl:value-of select="''"/>
+        </xsl:if>
+        <xsl:if test="not(matches($indexstr, '^[0-9]+$')) and not(matches($indexstr, '^itime|i[1-9]$'))">
+          <xsl:value-of select="concat('ids/',$indexstr)"/>
+        </xsl:if>
+        </xsl:variable>
+  <xsl:variable name="indexid_str">
+    <xsl:if test="starts-with($target,'.')">  <xsl:value-of select="substring-before(substring-after($target,'.'),'(')"/>_id </xsl:if>
+    <xsl:if test="not(starts-with($target,'.'))">  <xsl:value-of select="substring-before($target,'(')"/>_id </xsl:if>
+  </xsl:variable>
+   <xsl:if test="$resolved_indexstr != ''">
+          <xsl:if test="not(matches($resolved_indexstr, '^[0-9]+$'))">
+          if (<xsl:value-of select="replace($resolved_indexstr,'/','%')"/>==ids_int_invalid) then
+            err_msg = "<xsl:value-of select="replace(replace($resolved_indexstr,'\(','(&quot;//trim(str('),'\)','))//&quot;)')"/> is not set (/)."
+            status = -1
+            return
+          end if
+          </xsl:if>
+                if (size(<xsl:value-of select="replace(concat('ids/',$string-resolved,substring-before($target,'(')),'/','%')"/>)&lt;<xsl:value-of select="replace($resolved_indexstr,'/','%')"/>) then
+            err_msg = "<xsl:value-of select="concat($string-error,substring-before($target,concat($indexstr,')')),'&quot;//trim(str(',replace($resolved_indexstr,'/','%'),'))//&quot;)' )"/> is not allocated. (Required for <xsl:value-of select="replace(replace(substring-before(@path_doc,'(:'),'\(i','(&quot;//trim(str(i'),'\)','))//&quot;)')"/>)"
+            status = -1
+            return
+          end if
+        </xsl:if>
+        <xsl:apply-templates select="." mode="check_indices">
+            <xsl:with-param name="target" select="substring-after($target,concat($indexstr,')'))"/>
+            <xsl:with-param name="string-resolved" select="concat($string-resolved,substring-before($target,concat($indexstr,')')), concat($resolved_indexstr,')') )"/>
+            <xsl:with-param name="string-error" select="concat($string-error,substring-before($target,concat($indexstr,')')),'&quot;//trim(str(',replace($resolved_indexstr,'/','%'),'))//&quot;)' )"/>
+          </xsl:apply-templates>
+      </xsl:if>
+</xsl:template>
 
 <xsl:template match='field' mode="possible-coordinates">
 	<xsl:param name="coord"/>
