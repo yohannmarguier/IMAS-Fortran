@@ -213,3 +213,17 @@ IDS API
     :param character(len=1) buffer [dimension(:), allocatable]: data representing a serialized IDS.
     :param ids_in: IDS to store the deserialized data in.
     :example: See :f:func:`ids_serialize`.
+
+.. f:subroutine:: ids_validate(ids_in, status, err_msg)
+
+    Validate the coordinate consistency of the data of the ids.
+
+    If an exception is raised (inconsistency of one coordinate) status is returned -1. 
+    The char array 'err_msg' store the explanation as an error message. 
+    If the data are consistent err_msg is left empty and status = 0.
+
+    :param ids_in: IDS to validate.
+    :param integer status: final status of the validation
+    :param character(len=:) err_msg [dimension(:), allocatable]: Error message if a validation exception is raised.
+
+    :example: .. literalinclude:: code_samples/ids_validate
