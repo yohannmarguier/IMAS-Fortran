@@ -54,12 +54,12 @@ module al_low_level_wrap
        integer(C_INT), intent(out) :: beid
      end function c_al_get_backendID
 
-     function c_al_build_uri_from_legacy_parameters(beid, shot, run, usr, tok, ver, opt, uri) &
+     function c_al_build_uri_from_legacy_parameters(beid, pulse, run, usr, tok, ver, opt, uri) &
           bind(C,name="al_build_uri_from_legacy_parameters")
        use, intrinsic :: ISO_C_BINDING
        import c_al_status_t
        type(c_al_status_t) :: c_al_build_uri_from_legacy_parameters
-       integer(C_INT), value, intent(in) :: beid, shot, run
+       integer(C_INT), value, intent(in) :: beid, pulse, run
        character(C_CHAR), dimension(*), intent(in) :: usr, tok, ver, opt
        type(C_PTR), intent(out) :: uri
      end function c_al_build_uri_from_legacy_parameters
@@ -358,10 +358,10 @@ contains
     if (present(retstatus)) retstatus = status%code
   end subroutine al_get_backendID
 
-  subroutine al_build_uri_from_legacy_parameters(beid, shot, run, usr, tok, ver, opt, uri, retstatus, retmesg)
+  subroutine al_build_uri_from_legacy_parameters(beid, pulse, run, usr, tok, ver, opt, uri, retstatus, retmesg)
     use, intrinsic :: ISO_C_BINDING
     implicit none
-    integer, intent(in) :: beid, shot, run
+    integer, intent(in) :: beid, pulse, run
     character(*), intent(in) :: usr, tok, ver, opt
     character(STRMAXLEN), intent(out) :: uri
     integer, optional, intent(out) :: retstatus
@@ -370,7 +370,7 @@ contains
     integer :: s,i
     type(al_status) :: status
     type(C_PTR) :: cptr
-    status = fstatus(c_al_build_uri_from_legacy_parameters(beid, shot, run, trim(usr)//C_NULL_CHAR, &
+    status = fstatus(c_al_build_uri_from_legacy_parameters(beid, pulse, run, trim(usr)//C_NULL_CHAR, &
          trim(tok)//C_NULL_CHAR, trim(ver)//C_NULL_CHAR, trim(opt)//C_NULL_CHAR, cptr))
     if (status%code.ne.0) then
        if (present(retmesg)) then
@@ -713,40 +713,40 @@ contains
     if (present(retmesg)) retmesg = mesg
   end subroutine imas_open
 
-  subroutine imas_create_env(name, shot, run, refShot, refRun, pulseCtx, user, tokamak, version, retstatus)
+  subroutine imas_create_env(name, pulse, run, refPulse, refRun, pulseCtx, user, tokamak, version, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     character(*), intent(in) :: name, user, tokamak, version
-    integer, intent(in) :: shot, run, refShot, refRun
+    integer, intent(in) :: pulse, run, refPulse, refRun
     integer, intent(out) :: pulseCtx
     integer, intent(out), optional :: retstatus
     integer :: status
     character (STRMAXLEN) :: uri
     integer :: backend
     backend = default_backend()
-    call al_build_uri_from_legacy_parameters(backend, shot, run, user, tokamak, version, "", uri, status)
+    call al_build_uri_from_legacy_parameters(backend, pulse, run, user, tokamak, version, "", uri, status)
     call al_begin_dataentry_action(uri, FORCE_CREATE_PULSE, pulseCtx, status)
     if (present(retstatus)) retstatus = status
   end subroutine imas_create_env
 
-  subroutine imas_open_env(name, shot, run, pulseCtx, user, tokamak, version, retstatus)
+  subroutine imas_open_env(name, pulse, run, pulseCtx, user, tokamak, version, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     character(*), intent(in) :: name, user, tokamak, version
-    integer, intent(in) :: shot, run
+    integer, intent(in) :: pulse, run
     integer, intent(out) :: pulseCtx
     integer, optional, intent(out) :: retstatus
     integer :: status
     character (STRMAXLEN) :: uri
     integer :: backend, fallback
     backend = default_backend()
-    call al_build_uri_from_legacy_parameters(backend, shot, run, user, tokamak, version, "", uri, status)
+    call al_build_uri_from_legacy_parameters(backend, pulse, run, user, tokamak, version, "", uri, status)
     call al_begin_dataentry_action(uri, OPEN_PULSE, pulseCtx, status)
     if (status.ne.0) then
        fallback = fallback_backend()
        if (fallback.ne.NO_BACKEND) then
           write(*,*) "WARNING: the pulse file is not available with the backend ",backend,", now attempting to access it with the fallback backend ",fallback
-          call al_build_uri_from_legacy_parameters(fallback, shot, run, user, tokamak, version, "", uri, status)
+          call al_build_uri_from_legacy_parameters(fallback, pulse, run, user, tokamak, version, "", uri, status)
           call al_begin_dataentry_action(uri, OPEN_PULSE, pulseCtx, status)
        end if
     end if

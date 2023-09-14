@@ -348,7 +348,7 @@
     <xsl:text>&#9;&#9;IF (backendID == NO_BACKEND) CYCLE&#10;</xsl:text>
     <xsl:text>&#9;&#9;WRITE(*,*) "=== BACKEND : ", backend2str(backendID), "=== === === === === === === ==="&#10;</xsl:text>
     <xsl:text>&#10;</xsl:text>
-    <xsl:text>&#9;&#9;call create_db(backendID, TEST_SHOT, TEST_RUN, idx);&#10;</xsl:text>
+    <xsl:text>&#9;&#9;call create_db(backendID, TEST_PULSE, TEST_RUN, idx);&#10;</xsl:text>
 	<xsl:text>&#10;</xsl:text>
     <xsl:text>&#9;&#9;DO sliceIdx = 1, SIZE(config%idsTimeModeArray)&#10;</xsl:text>
     <xsl:text>&#9;&#9;&#9;idsTimeMode = config%idsTimeModeArray(sliceIdx)&#10;</xsl:text>
