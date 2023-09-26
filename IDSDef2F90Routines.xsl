@@ -838,7 +838,7 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
     return
   end if 
 
-<xsl:if test="@data_type='static'">
+<xsl:if test="@type='constant'">
   if (IDS%ids_properties%homogeneous_time.NE.IDS_TIME_MODE_UNKNOWN ) then
  
     write(*,*) "ERROR: Static IDS '<xsl:value-of select="@name"/>' must have 'ids_properties/homogeneous_time' property set to IDS_TIME_MODE_INDEPENDENT. "
@@ -1092,7 +1092,7 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
      return
   endif
   timemode = IDS%ids_properties%homogeneous_time
-<xsl:if test="@data_type='static'">
+<xsl:if test="@type='constant'">
   if (IDS%ids_properties%homogeneous_time.NE.IDS_TIME_MODE_UNKNOWN ) then
  
     write(*,*) "ERROR: Static IDS '<xsl:value-of select="@name"/>' must have 'ids_properties/homogeneous_time' property set to IDS_TIME_MODE_INDEPENDENT. "
@@ -1497,7 +1497,7 @@ subroutine get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   type(ids_<xsl:value-of select="@name"/>) :: IDS
 
 <xsl:choose>
-  <xsl:when test="@type='static'">
+  <xsl:when test="@type='constant'">
   ! for static IDSes only GET method is called
   CALL get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS, status)
   if(present(retstatus)) retstatus = status
