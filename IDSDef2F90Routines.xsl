@@ -809,7 +809,7 @@ end interface
 
 <!-- subroutine for the whole IDS -->
 !!! Routines to PUT the full IDS !!!
-subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS, retstatus)
+subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS, retstatus, verbose)
   use ids_schemas_<xsl:value-of select="@name"/>
   use <xsl:value-of select="@name"/>_validate_struct
   use al_low_level_wrap
@@ -820,6 +820,7 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   implicit none
 
   integer(ids_int), optional, intent(out) :: retstatus 
+  logical, optional, intent(in) :: verbose
   integer(ids_int) :: status = 0
   <!--<xsl:if test="@specific_validation_rules='yes'">
   integer(ids_int) :: validationstatus = 0
@@ -842,9 +843,11 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   CALL get_environment_variable("IMAS_AL_DISABLE_VALIDATE", buffer)
   if (len_trim(buffer)==0 .or. buffer .eq. '0') then
     call ids_validate(IDS, validation_status, err_msg)
-    if(validation_status == -1) then 
-      write(*,*) "Error during automatic validation before put of <xsl:value-of select="@name"/>"
-      write(*,*) err_msg
+    if(validation_status == -1) then
+      if (.not.present(verbose) .OR. (present(verbose) .AND. verbose)) then
+        write(*,*) "Error during automatic validation before put of <xsl:value-of select="@name"/>"
+        write(*,*) err_msg
+      end if 
       if (present(retstatus)) retstatus = CONSISTENCY_ERR
       return
     end if
@@ -1061,7 +1064,7 @@ end interface
 
 <!-- subroutine for the whole IDS -->
 !!! Routines to PUT_SLICE one time slice of an IDS !!!
-subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS, retstatus)
+subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS, retstatus, verbose)
   use ids_schemas_<xsl:value-of select="@name"/>
   use <xsl:value-of select="@name"/>_validate_struct
   use al_low_level_wrap
@@ -1073,6 +1076,7 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   implicit none
 
   integer(ids_int), intent(out), optional :: retstatus
+  logical, optional, intent(in) :: verbose
   integer(ids_int) :: status = 0
   <!--<xsl:if test="@specific_validation_rules='yes'">
   integer(ids_int) :: validationstatus = 0
@@ -1095,9 +1099,11 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   CALL get_environment_variable("IMAS_AL_DISABLE_VALIDATE", buffer)
   if (len_trim(buffer)==0 .or. buffer .eq. '0') then
     call ids_validate(IDS, validation_status, err_msg)
-    if(validation_status == -1) then 
-      write(*,*) "Error during automatic validation before put of <xsl:value-of select="@name"/>"
-      write(*,*) err_msg
+    if(validation_status == -1) then
+      if (.not.present(verbose) .OR. (present(verbose) .AND. verbose)) then
+        write(*,*) "Error during automatic validation before put_slice of <xsl:value-of select="@name"/>"
+        write(*,*) err_msg
+      end if 
       if (present(retstatus)) retstatus = CONSISTENCY_ERR
       return
     end if
