@@ -189,6 +189,10 @@ end module ! end of the utilities module
       module procedure get_max_occurrences_<xsl:value-of select="@name"/>
     end interface
 
+    interface is_defined
+      module procedure is_defined_<xsl:value-of select="@name"/>
+    end interface
+
 
   ! ***********  <xsl:value-of select="@name"/> IDS internal structures declaration
   <xsl:variable name="this-ids" select="@name"/>
@@ -253,6 +257,33 @@ function get_max_occurrences_<xsl:value-of select="@name"/>(ids)
     type(ids_<xsl:value-of select="@name"/>), intent(in) :: ids
     integer :: get_max_occurrences_<xsl:value-of select="@name"/>
     get_max_occurrences_<xsl:value-of select="@name"/> = ids%max_occurrence
+  end function
+
+function is_defined_<xsl:value-of select="@name"/>(ids) result(is_defined)
+    type(ids_<xsl:value-of select="@name"/>), intent(in) :: ids
+    logical :: is_defined
+    integer :: time_mode
+
+    time_mode = ids%ids_properties%homogeneous_time
+
+    if (time_mode == IDS_TIME_MODE_HETEROGENEOUS) then
+        is_defined = .TRUE.
+        return
+    endif
+
+    if (time_mode == IDS_TIME_MODE_HOMOGENEOUS) then
+        is_defined = .TRUE.
+        return
+    endif
+
+    if (time_mode == IDS_TIME_MODE_INDEPENDENT) then
+        is_defined = .TRUE.
+        return
+    endif
+
+
+    is_defined = .FALSE.
+
   end function
 
   end module
