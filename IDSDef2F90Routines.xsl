@@ -853,6 +853,13 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
     end if
   end if 
 
+  call IDS%check_name_<xsl:value-of select="@name"/>(name, status)
+  if(status.ne.0) then
+    write(*,*) 'Error in put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>'
+    if(present(retstatus)) retstatus = status
+    return
+  end if 
+
   ! Systematic delete of the previous IDS, in case it existed
   call ids_delete(pulsectx, name, IDS)
 
@@ -1107,6 +1114,13 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
       if (present(retstatus)) retstatus = CONSISTENCY_ERR
       return
     end if
+  end if 
+
+  call IDS%check_name_<xsl:value-of select="@name"/>(name, status)
+  if(status.ne.0) then
+    write(*,*) 'Error in put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>'
+    if(present(retstatus)) retstatus = status
+    return
   end if 
 
   if (IDS%ids_properties%homogeneous_time.EQ.IDS_TIME_MODE_UNKNOWN) then
@@ -3036,7 +3050,13 @@ subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   character(len=100000) :: longstring
   character(len=300) :: timepath
   character(*), parameter :: path = ''
-
+  
+  call IDS%check_name_<xsl:value-of select="@name"/>(name, status)
+  if(status.ne.0) then
+    write(*,*) 'Error in get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>'
+    if(present(retstatus)) retstatus = status
+    return
+  end if 
   call al_begin_global_action(pulsectx, name, READ_OP, opctx, status) 
   if (status.ne.0) then
      !! error when trying to get new ctx => stop!
@@ -3169,7 +3189,14 @@ subroutine get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   character(len=100000) :: longstring
   character(len=300) :: timepath
   character(*), parameter :: path = ''
-
+  
+  call IDS%check_name_<xsl:value-of select="@name"/>(name, status)
+  if(status.ne.0) then
+    write(*,*) 'Error in get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>'
+    if(present(retstatus)) retstatus = status
+    return
+  end if 
+ 
   call al_begin_slice_action(pulsectx, name, READ_OP, twant, interpol, opctx, status) 
   if (status.ne.0) then
      !! error when trying to get new ctx => stop!

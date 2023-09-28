@@ -192,7 +192,10 @@ end module ! end of the utilities module
   type, extends(IDS_base) :: ids_<xsl:value-of select="@name"/> !<xsl:value-of select="local:commentstring(@documentation)"/>
     logical, private :: c_data = .FALSE. ! Fortran specific metadata telling whether the IDS has been populated from C allocated data (LL) or not
     integer, private :: max_occurrence = <xsl:value-of select="@maxoccur"/>! Maximum occurrence allowed as defined in the DD
+    character(len = 50), private :: ids_name = '<xsl:value-of select="@name"/>'
     <xsl:apply-templates select="./field" mode="declare_field"/>
+    contains
+      procedure check_name_<xsl:value-of select="@name"/>
   end type
 
   contains 
@@ -207,6 +210,21 @@ end module ! end of the utilities module
     logical, intent(out) :: bool
     bool = ids%c_data
   end subroutine
+
+  subroutine check_name_<xsl:value-of select="@name"/>(ids, name, retstatus)
+  class(ids_<xsl:value-of select="@name"/>), intent(in) :: ids
+  character*(*), intent(in) :: name
+  integer, intent(out) :: retstatus
+  integer :: slash_index
+  
+  slash_index = INDEX(name, '/')
+  if ( (slash_index == 0 .AND. ids%ids_name /= name) .OR. (slash_index /= 0 .AND. ids%ids_name /= name(1:slash_index - 1)) ) then
+     retstatus = -3
+  else
+    retstatus = 0
+  end if
+  end subroutine
+
 
 function get_max_occurrences_<xsl:value-of select="@name"/>(ids)
     type(ids_<xsl:value-of select="@name"/>), intent(in) :: ids
