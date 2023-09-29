@@ -839,7 +839,7 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   end if 
 
 <xsl:if test="@type='constant'">
-  if (IDS%ids_properties%homogeneous_time.NE.IDS_TIME_MODE_UNKNOWN ) then
+  if (IDS%ids_properties%homogeneous_time.NE.IDS_TIME_MODE_INDEPENDENT ) then
  
     write(*,*) "ERROR: Static IDS '<xsl:value-of select="@name"/>' must have 'ids_properties/homogeneous_time' property set to IDS_TIME_MODE_INDEPENDENT. "
     if (present(retstatus)) retstatus = -1
