@@ -47,6 +47,7 @@ use <xsl:value-of select="@name"/>_get_slice_struct
 use <xsl:value-of select="@name"/>_delete
 use <xsl:value-of select="@name"/>_copy_struct
 use <xsl:value-of select="@name"/>_deallocate_struct
+use <xsl:value-of select="@name"/>_validate_struct
 </xsl:for-each>
 
 #if defined(__INTEL_COMPILER)
@@ -102,7 +103,7 @@ subroutine ids_serialize(ids_in, buffer, protocol)
   character(STRMAXLEN):: filename
   CHARACTER(len=255) :: bufferASCII_SERIALIZER_TMP_DIR
   CHARACTER(len=:), ALLOCATABLE :: ASCII_SERIALIZER_TMP_DIR
-
+  
   my_protocol = DEFAULT_SERIALIZER_PROTOCOL
   if (present(protocol)) my_protocol = protocol
 
@@ -124,7 +125,7 @@ subroutine ids_serialize(ids_in, buffer, protocol)
       ASCII_SERIALIZER_TMP_DIR = trim(bufferASCII_SERIALIZER_TMP_DIR)
       uri = "imas:ascii?path=" // ASCII_SERIALIZER_TMP_DIR // ";filename="//filename
     else
-      uri = "imas:ascii?path=" // SERIALIZE_TEMPORARY_DIRECTORY // ";filename="//filename
+    uri = "imas:ascii?path=" // SERIALIZE_TEMPORARY_DIRECTORY // ";filename="//filename
     endif
     call al_begin_dataentry_action(uri, FORCE_CREATE_PULSE, pulsectx, status)
     if (status .ne. 0) then
@@ -221,7 +222,7 @@ subroutine ids_deserialize(buffer, ids_out)
       ASCII_SERIALIZER_TMP_DIR = trim(bufferASCII_SERIALIZER_TMP_DIR)
       uri = "imas:ascii?path=" // ASCII_SERIALIZER_TMP_DIR // ";filename="//filename
     else
-      uri = "imas:ascii?path=" // SERIALIZE_TEMPORARY_DIRECTORY // ";filename="//filename
+    uri = "imas:ascii?path=" // SERIALIZE_TEMPORARY_DIRECTORY // ";filename="//filename
     endif
     call al_begin_dataentry_action(uri, FORCE_CREATE_PULSE, pulsectx, status)
     if (status .ne. 0) then
@@ -301,8 +302,8 @@ function generate_tmp_file() result(fname)
     string_base_length = len(ASCII_SERIALIZER_TMP_DIR) + len('al_serialize_') + len_trim(cpid) + 1
     fname = ASCII_SERIALIZER_TMP_DIR // 'al_serialize_' // trim(cpid) // "_"  // repeat(' ', n) ! implicitly allocates to the right size
   else
-    string_base_length = len(SERIALIZE_TEMPORARY_DIRECTORY) + len('al_serialize_') + len_trim(cpid) + 1
-    fname = SERIALIZE_TEMPORARY_DIRECTORY // 'al_serialize_' // trim(cpid) // "_"  // repeat(' ', n) ! implicitly allocates to the right size
+  string_base_length = len(SERIALIZE_TEMPORARY_DIRECTORY) + len('al_serialize_') + len_trim(cpid) + 1
+  fname = SERIALIZE_TEMPORARY_DIRECTORY // 'al_serialize_' // trim(cpid) // "_"  // repeat(' ', n) ! implicitly allocates to the right size
   endif
   ! get a free unit number
   unit = get_file_unit()
@@ -633,7 +634,7 @@ module <xsl:value-of select="@name"/>_copy_struct
 
 use utilities_copy_struct
 
-interface ids_copy
+interface ids_copy 
   module procedure ids_copy_struct_<xsl:value-of select="local:unique_name(@name)"/>
   <xsl:for-each select=".//field[@data_type='structure' or @data_type='struct_array']">
     <xsl:variable name="this-name" select="@name"/>
