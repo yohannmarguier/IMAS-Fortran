@@ -841,8 +841,9 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
 <xsl:if test="@type='constant'">
   if (IDS%ids_properties%homogeneous_time.NE.IDS_TIME_MODE_INDEPENDENT ) then
  
-    write(*,*) "ERROR: Static IDS '<xsl:value-of select="@name"/>' must have 'ids_properties/homogeneous_time' property set to IDS_TIME_MODE_INDEPENDENT. "
-    if (present(retstatus)) retstatus = -1
+    IDS%ids_properties%homogeneous_time = IDS_TIME_MODE_INDEPENDENT
+    write(*,*) "AL warning: ids_properties/homogeneous_time has been set to IDS_TIME_MODE_INDEPENDENT for the constant IDS '", name, &amp;
+    " Please check the program which has filled this IDS since this is the mandatory value for a constant IDS."
   endif
 </xsl:if>
 
@@ -1091,14 +1092,18 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
      if (present(retstatus)) retstatus = 0
      return
   endif
-  timemode = IDS%ids_properties%homogeneous_time
+
 <xsl:if test="@type='constant'">
-  if (IDS%ids_properties%homogeneous_time.NE.IDS_TIME_MODE_UNKNOWN ) then
+  if (IDS%ids_properties%homogeneous_time.NE.IDS_TIME_MODE_INDEPENDENT ) then
  
-    write(*,*) "ERROR: Static IDS '<xsl:value-of select="@name"/>' must have 'ids_properties/homogeneous_time' property set to IDS_TIME_MODE_INDEPENDENT. "
-    if (present(retstatus)) retstatus = -1
+    IDS%ids_properties%homogeneous_time = IDS_TIME_MODE_INDEPENDENT
+    write(*,*) "AL warning: ids_properties/homogeneous_time has been set to IDS_TIME_MODE_INDEPENDENT for the constant IDS '", name, &amp;
+    " Please check the program which has filled this IDS since this is the mandatory value for a constant IDS."
   endif
 </xsl:if>
+
+  timemode = IDS%ids_properties%homogeneous_time
+
   if (timemode.EQ.IDS_TIME_MODE_INDEPENDENT) then
      write(*,*) "WARNING : homogeneous_time=2 mark an IDS <xsl:value-of select="@name"/> with static/constant data only. No static data stored with put_slice operation."
      if (present(retstatus)) retstatus = 0
