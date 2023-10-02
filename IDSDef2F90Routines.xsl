@@ -98,10 +98,10 @@ subroutine ids_serialize(ids_in, buffer, protocol)
   integer(ids_int) :: unit
   integer(ids_int) :: file_size
   integer(ids_int) :: index
-  integer :: tmpDirSize
+  integer :: TMP_DIR_SIZE
   character(STRMAXLEN):: uri
   character(STRMAXLEN):: filename
-  CHARACTER(len=255) :: bufferASCII_SERIALIZER_TMP_DIR
+  CHARACTER(len=255) :: BUFFER_ASCII_SERIALIZER_TMP_DIR
   CHARACTER(len=:), ALLOCATABLE :: ASCII_SERIALIZER_TMP_DIR
   
   my_protocol = DEFAULT_SERIALIZER_PROTOCOL
@@ -118,11 +118,11 @@ subroutine ids_serialize(ids_in, buffer, protocol)
     filename=fname(index+1:)
     ! Write to file
     !call al_build_uri_from_legacy_parameters(ASCII_BACKEND, 0, 0, 'serialize', 'serialize', '3','-fullpath '//fname, uri, status)
-    CALL get_environment_variable("ASCII_SERIALIZER_TMP_DIR", bufferASCII_SERIALIZER_TMP_DIR)
-    tmpDirSize = LEN_TRIM(bufferASCII_SERIALIZER_TMP_DIR)
-    if(tmpDirSize > 0) then
-      allocate(character(tmpDirSize):: ASCII_SERIALIZER_TMP_DIR)
-      ASCII_SERIALIZER_TMP_DIR = trim(bufferASCII_SERIALIZER_TMP_DIR)
+    CALL get_environment_variable("ASCII_SERIALIZER_TMP_DIR", BUFFER_ASCII_SERIALIZER_TMP_DIR)
+    TMP_DIR_SIZE = LEN_TRIM(BUFFER_ASCII_SERIALIZER_TMP_DIR)
+    if(TMP_DIR_SIZE > 0) then
+      allocate(character(TMP_DIR_SIZE):: ASCII_SERIALIZER_TMP_DIR)
+      ASCII_SERIALIZER_TMP_DIR = trim(BUFFER_ASCII_SERIALIZER_TMP_DIR)
       uri = "imas:ascii?path=" // ASCII_SERIALIZER_TMP_DIR // ";filename="//filename
     else
     uri = "imas:ascii?path=" // SERIALIZE_TEMPORARY_DIRECTORY // ";filename="//filename
@@ -190,10 +190,10 @@ subroutine ids_deserialize(buffer, ids_out)
   integer(ids_int) :: unit
   integer(ids_int) :: file_size
   integer(ids_int) :: index
-  integer :: tmpDirSize
+  integer :: TMP_DIR_SIZE
   character(STRMAXLEN):: uri
   character(STRMAXLEN):: filename
-  CHARACTER(len=255) :: bufferASCII_SERIALIZER_TMP_DIR
+  CHARACTER(len=255) :: BUFFER_ASCII_SERIALIZER_TMP_DIR
   CHARACTER(len=:), ALLOCATABLE :: ASCII_SERIALIZER_TMP_DIR
   protocol = ichar(buffer(1))
 
@@ -215,11 +215,11 @@ subroutine ids_deserialize(buffer, ids_out)
     flush(unit)
 
     !call al_build_uri_from_legacy_parameters(ASCII_BACKEND, 0, 0, 'serialize', 'serialize', '3','-fullpath '//fname, uri, status)
-    CALL get_environment_variable("ASCII_SERIALIZER_TMP_DIR", bufferASCII_SERIALIZER_TMP_DIR)
-    tmpDirSize = LEN_TRIM(bufferASCII_SERIALIZER_TMP_DIR)
-    if(tmpDirSize > 0) then
-      allocate(character(tmpDirSize):: ASCII_SERIALIZER_TMP_DIR)
-      ASCII_SERIALIZER_TMP_DIR = trim(bufferASCII_SERIALIZER_TMP_DIR)
+    CALL get_environment_variable("ASCII_SERIALIZER_TMP_DIR", BUFFER_ASCII_SERIALIZER_TMP_DIR)
+    TMP_DIR_SIZE = LEN_TRIM(BUFFER_ASCII_SERIALIZER_TMP_DIR)
+    if(TMP_DIR_SIZE > 0) then
+      allocate(character(TMP_DIR_SIZE):: ASCII_SERIALIZER_TMP_DIR)
+      ASCII_SERIALIZER_TMP_DIR = trim(BUFFER_ASCII_SERIALIZER_TMP_DIR)
       uri = "imas:ascii?path=" // ASCII_SERIALIZER_TMP_DIR // ";filename="//filename
     else
     uri = "imas:ascii?path=" // SERIALIZE_TEMPORARY_DIRECTORY // ";filename="//filename
@@ -284,9 +284,9 @@ function generate_tmp_file() result(fname)
   integer :: unit ! Unit number to open file with
   integer :: iostat
   integer :: ipid
-  integer :: tmpDirSize
+  integer :: TMP_DIR_SIZE
   character(10) :: cpid
-  CHARACTER(len=255) :: bufferASCII_SERIALIZER_TMP_DIR
+  CHARACTER(len=255) :: BUFFER_ASCII_SERIALIZER_TMP_DIR
   CHARACTER(len=:), ALLOCATABLE :: ASCII_SERIALIZER_TMP_DIR
 
   ipid = getpid()
@@ -294,11 +294,11 @@ function generate_tmp_file() result(fname)
   write(cpid, '(I0)') ipid
 
   ! Setup the base of the filename
-  CALL get_environment_variable("ASCII_SERIALIZER_TMP_DIR", bufferASCII_SERIALIZER_TMP_DIR)
-  tmpDirSize = LEN_TRIM(bufferASCII_SERIALIZER_TMP_DIR)
-  if(tmpDirSize > 0) then
-    allocate(character(tmpDirSize):: ASCII_SERIALIZER_TMP_DIR)
-    ASCII_SERIALIZER_TMP_DIR = trim(bufferASCII_SERIALIZER_TMP_DIR)
+  CALL get_environment_variable("ASCII_SERIALIZER_TMP_DIR", BUFFER_ASCII_SERIALIZER_TMP_DIR)
+  TMP_DIR_SIZE = LEN_TRIM(BUFFER_ASCII_SERIALIZER_TMP_DIR)
+  if(TMP_DIR_SIZE > 0) then
+    allocate(character(TMP_DIR_SIZE):: ASCII_SERIALIZER_TMP_DIR)
+    ASCII_SERIALIZER_TMP_DIR = trim(BUFFER_ASCII_SERIALIZER_TMP_DIR)
     string_base_length = len(ASCII_SERIALIZER_TMP_DIR) + len('al_serialize_') + len_trim(cpid) + 1
     fname = ASCII_SERIALIZER_TMP_DIR // 'al_serialize_' // trim(cpid) // "_"  // repeat(' ', n) ! implicitly allocates to the right size
   else
@@ -358,6 +358,9 @@ end module
 <xsl:apply-templates select="IDS" mode="get_slice_struct"/> 
 
 <xsl:apply-templates select="IDS" mode="delete"/>
+
+<xsl:apply-templates select="/IDSs/utilities" mode="VALIDATE_UTILITIES"/>
+<xsl:apply-templates select="IDS" mode="validate_struct"/> 
 
 </xsl:template>
 
