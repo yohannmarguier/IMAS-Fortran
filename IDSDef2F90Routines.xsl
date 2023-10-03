@@ -838,6 +838,15 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
     return
   end if 
 
+  ! Systematic delete of the previous IDS, in case it existed
+  call ids_delete(pulsectx, name, IDS)
+
+  if (IDS%ids_properties%homogeneous_time.EQ.IDS_TIME_MODE_UNKNOWN) then
+     write(*,*) "Warning : <xsl:value-of select="@name"/> is found to be EMPTY (homogeneous_time undefined). PUT returns with no action."
+     if (present(retstatus)) retstatus = 0
+     return
+  endif
+
 <xsl:if test="@type='constant'">
   if (IDS%ids_properties%homogeneous_time.NE.IDS_TIME_MODE_INDEPENDENT ) then
  
@@ -847,15 +856,6 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   endif
 </xsl:if>
 
-
-  ! Systematic delete of the previous IDS, in case it existed
-  call ids_delete(pulsectx, name, IDS)
-
-  if (IDS%ids_properties%homogeneous_time.EQ.IDS_TIME_MODE_UNKNOWN) then
-     write(*,*) "Warning : <xsl:value-of select="@name"/> is found to be EMPTY (homogeneous_time undefined). PUT returns with no action."
-     if (present(retstatus)) retstatus = 0
-     return
-  endif
   timemode = IDS%ids_properties%homogeneous_time
 
   <!--<xsl:if test="@specific_validation_rules='yes'">
