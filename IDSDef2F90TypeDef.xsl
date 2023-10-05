@@ -175,7 +175,8 @@ end module ! end of the utilities module
     module ids_schemas_<xsl:value-of select="@name"/>
     use ids_types
     use ids_utilities
-
+    
+    implicit none
 
     interface set_c_data
       module procedure set_c_data_<xsl:value-of select="@name"/>
@@ -189,8 +190,8 @@ end module ! end of the utilities module
       module procedure get_max_occurrences_<xsl:value-of select="@name"/>
     end interface
 
-    interface is_defined
-      module procedure is_defined_<xsl:value-of select="@name"/>
+    interface ids_is_defined
+      module procedure ids_is_defined_<xsl:value-of select="@name"/>
     end interface
 
 
@@ -259,7 +260,9 @@ function get_max_occurrences_<xsl:value-of select="@name"/>(ids)
     get_max_occurrences_<xsl:value-of select="@name"/> = ids%max_occurrence
   end function
 
-function is_defined_<xsl:value-of select="@name"/>(ids) result(is_defined)
+function ids_is_defined_<xsl:value-of select="@name"/>(ids) result(is_defined)
+
+    use al_defs
     type(ids_<xsl:value-of select="@name"/>), intent(in) :: ids
     logical :: is_defined
     integer :: time_mode
