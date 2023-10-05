@@ -174,6 +174,29 @@ IDS API
     :param in: Data node to verify, supported data types are INT_0D and FLT_0D.
     :returns logical ids_is_valid: :code:`.true.` if the node is not empty.
 
+.. f:function:: ids_is_defined(ids_in)
+
+    Verifies if given IDS is 'defined' by checking if its field `ids_properties%homogeneous_time` is set
+
+    :param ids_in: IDS to be checked.
+    :returns logical ids_is_defined: :code:`.true.` if `ids_properties%homogeneous_time` is set
+    :example:
+        .. code-block:: fortran
+
+            type(ids_core_profiles) :: ids
+            logical :: is_defined
+
+            is_defined = ids_is_defined(ids) ! .FALSE. 
+
+            ! Set time mode
+            ids%ids_properties%homogeneous_time = IDS_TIME_MODE_HOMOGENEOUS
+
+            ! Fill the ids fields with other data
+
+            is_defined = ids_is_defined(ids) ! .TRUE. 
+
+
+
 .. f:subroutine:: ids_serialize(ids_in, buffer, protocol)
 
     Serialize the contents of this IDS into binary data.
