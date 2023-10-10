@@ -868,12 +868,17 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
      if (present(retstatus)) retstatus = 0
      return
   endif
-  timemode = IDS%ids_properties%homogeneous_time
-  if ((timemode.EQ.IDS_TIME_MODE_HOMOGENEOUS).AND.(.NOT.(associated(IDS%time)))) then
-     write(*,*) "ERROR : time vector of homogeneous <xsl:value-of select="@name"/> must be associated."
-     if (present(retstatus)) retstatus = UNKNOWN_ERR
-     return
+
+<xsl:if test="@type='constant'">
+  if (IDS%ids_properties%homogeneous_time.NE.IDS_TIME_MODE_INDEPENDENT ) then
+ 
+    IDS%ids_properties%homogeneous_time = IDS_TIME_MODE_INDEPENDENT
+    write(*,*) "AL warning: ids_properties/homogeneous_time has been set to IDS_TIME_MODE_INDEPENDENT for the constant IDS '", name, &amp;
+    " Please check the program which has filled this IDS since this is the mandatory value for a constant IDS."
   endif
+</xsl:if>
+
+  timemode = IDS%ids_properties%homogeneous_time
 
   <!--<xsl:if test="@specific_validation_rules='yes'">
   call ids_validate(IDS, validationstatus)
@@ -1128,12 +1133,18 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
      if (present(retstatus)) retstatus = 0
      return
   endif
-  timemode = IDS%ids_properties%homogeneous_time
-  if ((timemode.EQ.IDS_TIME_MODE_HOMOGENEOUS).AND.(.NOT.(associated(IDS%time)))) then
-     write(*,*) "ERROR : time vector of homogeneous <xsl:value-of select="@name"/> must be associated."
-     if (present(retstatus)) retstatus = 0
-     return
+
+<xsl:if test="@type='constant'">
+  if (IDS%ids_properties%homogeneous_time.NE.IDS_TIME_MODE_INDEPENDENT ) then
+ 
+    IDS%ids_properties%homogeneous_time = IDS_TIME_MODE_INDEPENDENT
+    write(*,*) "AL warning: ids_properties/homogeneous_time has been set to IDS_TIME_MODE_INDEPENDENT for the constant IDS '", name, &amp;
+    " Please check the program which has filled this IDS since this is the mandatory value for a constant IDS."
   endif
+</xsl:if>
+
+  timemode = IDS%ids_properties%homogeneous_time
+
   if (timemode.EQ.IDS_TIME_MODE_INDEPENDENT) then
      write(*,*) "WARNING : homogeneous_time=2 mark an IDS <xsl:value-of select="@name"/> with static/constant data only. No static data stored with put_slice operation."
      if (present(retstatus)) retstatus = 0
@@ -3182,6 +3193,15 @@ subroutine get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   integer(ids_int), intent(in) :: interpol
   integer(ids_int) :: pulsectx, opctx, aosctx
   type(ids_<xsl:value-of select="@name"/>) :: IDS
+
+<xsl:choose>
+  <xsl:when test="@type='constant'">
+  ! for static IDSes only GET method is called
+  CALL get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS, status)
+  if(present(retstatus)) retstatus = status
+    return
+  </xsl:when>
+  <xsl:otherwise>
   ! internal variables declaration
   logical :: timedparent
   integer(ids_int) :: aoslen, i, lenstring
@@ -3242,6 +3262,10 @@ subroutine get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
 
   if (present(retstatus)) retstatus = status
   return
+
+  </xsl:otherwise>
+</xsl:choose>
+    
 end subroutine get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
 
 end module    
