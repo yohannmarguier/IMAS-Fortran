@@ -4,7 +4,7 @@ PROGRAM initpulse
   use al_low_level_wrap
   implicit none
 
-  INTEGER, PARAMETER :: TESTSHOT = 9998
+  INTEGER, PARAMETER :: TESTPULSE = 9998
   INTEGER, PARAMETER :: TESTRUN = 9998
   CHARACTER(len=:), ALLOCATABLE :: dataVersion
   CHARACTER(len=:), ALLOCATABLE :: userName
@@ -30,12 +30,12 @@ PROGRAM initpulse
   allocate(character(dataVersionSize):: dataVersion)
   dataVersion = trim(buffer)
 
-  print *,"CREATE PULSEFILE ",TESTSHOT,TESTRUN," FOR FULL OPERATIONS"
-  CALL imas_create_env('ids',TESTSHOT,TESTRUN,0,0,idx,& 
+  print *,"CREATE PULSEFILE ",TESTPULSE,TESTRUN," FOR FULL OPERATIONS"
+  CALL imas_create_env('ids',TESTPULSE,TESTRUN,0,0,idx,&
        userName,'test',dataVersion)
 
-  print *,"CREATE PULSEFILE ",TESTSHOT+1,TESTRUN+1," FOR SLICE OPERATIONS"
-  CALL imas_create_env('ids',TESTSHOT+1,TESTRUN+1,0,0,&
+  print *,"CREATE PULSEFILE ",TESTPULSE+1,TESTRUN+1," FOR SLICE OPERATIONS"
+  CALL imas_create_env('ids',TESTPULSE+1,TESTRUN+1,0,0,&
        idxslice,userName,'test',dataVersion)
   
   call imas_close(idx)

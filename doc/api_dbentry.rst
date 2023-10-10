@@ -17,12 +17,12 @@ Data entry API
     :option character(:) retmesg [out]: Status message
     :example: See :ref:`Open an existing IMAS Database Entry`.
 
-.. f:subroutine:: imas_open_env(name, shot, run, pulseCtx, user, tokamak, version, retstatus)
+.. f:subroutine:: imas_open_env(name, pulse, run, pulseCtx, user, tokamak, version, retstatus)
 
     Open the Data Entry defined by the provided parameters.
 
     :param character(*) name [in]: `Unused`
-    :param integer shot [in]: Shot number
+    :param integer pulse [in]: Pulse number
     :param integer run [in]: Run number
     :param integer pulseCtx [out]: Opened data entry context
     :param character(*) user [in]: User name
@@ -30,14 +30,14 @@ Data entry API
     :param character(*) version [in]: Major version of the data dictionary, e.g. ``"3"``
     :option integer retstatus [out]: Status code: ``0`` on success, ``<0`` on failure
 
-.. f:subroutine:: imas_create_env(name, shot, run, refShot, refRun, pulseCtx, user, tokamak, version, retstatus)
+.. f:subroutine:: imas_create_env(name, pulse, run, refPulse, refRun, pulseCtx, user, tokamak, version, retstatus)
 
     Create the Data Entry defined by the provided parameters.
 
     :param character(*) name [in]: `Unused`
-    :param integer shot [in]: Shot number
+    :param integer pulse [in]: Pulse number
     :param integer run [in]: Run number
-    :param integer refShot [in]: `Unused`
+    :param integer refPulse [in]: `Unused`
     :param integer refRun [in]: `Unused`
     :param integer pulseCtx [out]: Opened data entry context
     :param character(*) user [in]: User name
