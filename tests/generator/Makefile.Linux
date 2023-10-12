@@ -4,7 +4,7 @@ FC ?= gfortran
 FCFLAGS ?= -g -fdefault-real-8 -fPIC -fno-second-underscore -ffree-line-length-none -I$(AL_BUILD)/fortraninterface/include -J$(BUILD_DIR)
 else ifeq ("yes","$(strip $(IMAS_IFORT))")
 FC ?= ifort
-FCFLAGS ?= -g -r8 -assume no2underscore  -fPIC -I$(AL_BUILD)/fortraninterface/include -shared-intel -module $(BUILD_DIR)
+FCFLAGS ?= -g -r8 -assume no2underscore -diag-disable:5462 -fPIC -I$(UAL_BUILD)/fortraninterface/include -shared-intel -module $(BUILD_DIR)
 else ifeq ("yes","$(strip $(IMAS_NVFORTRAN))")
 FC ?= nvfortran
 FCFLAGS ?= -g -r8 -Mnosecond_underscore -fPIC -module=$(AL_BUILD)/fortraninterface/include

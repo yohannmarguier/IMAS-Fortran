@@ -1,11 +1,12 @@
 MODULE test_defs
-    USE ids_routines
+    USE ids_utilities
+    USE al_defs
     IMPLICIT NONE
 
     LOGICAL, PARAMETER :: debugMode = .FALSE.
     INTEGER :: dim1, dim2, dim3, dim4, dim5, dim6
 
-    INTEGER, PARAMETER :: TEST_SHOT = 9998
+    INTEGER, PARAMETER :: TEST_PULSE = 9998
     INTEGER, PARAMETER :: TEST_RUN = 9998
     
     ! All backends (/MEMORY_BACKEND, ASCII_BACKEND, MDSPLUS_BACKEND, HDF5_BACKEND, UDA_BACKEND/)

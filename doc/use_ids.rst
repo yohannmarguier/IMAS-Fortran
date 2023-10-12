@@ -38,5 +38,5 @@
 .. |tm_heterogeneous| replace:: :f:var:`IDS_TIME_MODE_HETEROGENEOUS`
 .. |tm_independent| replace:: :f:var:`IDS_TIME_MODE_INDEPENDENT`
 
-.. |ids_validate| replace:: `not implemented yet for Fortran`
+.. |ids_validate| replace:: by calling :f:func:`ids_validate`
 .. |validate_error| replace:: returns a nonzero status and error message

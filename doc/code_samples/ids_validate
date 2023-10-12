@@ -1,2 +1,8 @@
-! IDS Validation is not yet implemented in Fortran.
-! See https://jira.iter.org/browse/IMAS-4730
+type(ids_pf_active) :: ids
+character(:), allocatable :: err_msg
+integer :: status
+
+// get or populate the IDS
+// ...
+
+ids_validate(ids, status, err_msg)

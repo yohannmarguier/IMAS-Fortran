@@ -146,8 +146,15 @@
   <xsl:result-document href="src/{@name}_init.f90">
         <xsl:text>module </xsl:text><xsl:value-of select="@name"/><xsl:text>_init_mod&#10;</xsl:text>
         <xsl:text>&#xA;</xsl:text>
-        <xsl:text>&#9;use ids_schemas&#10;</xsl:text>
-        <xsl:text>&#9;use ids_routines&#10;</xsl:text>
+        <xsl:text>&#9;use ids_schemas_</xsl:text><xsl:value-of select="@name"/><xsl:text>&#10;</xsl:text>
+        <xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_put_struct&#10;</xsl:text>
+        <xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_put_slice_struct&#10;</xsl:text>
+        <xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_get_struct&#10;</xsl:text>
+        <xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_get_slice_struct&#10;</xsl:text>
+        <xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_delete&#10;</xsl:text>
+        <xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_copy_struct&#10;</xsl:text>
+        <xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_deallocate_struct&#10;</xsl:text>
+        <xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_validate_struct&#10;</xsl:text>
         <xsl:text>&#9;!use generator&#10;</xsl:text>
          <xsl:text>&#9;use setter&#10;</xsl:text>
          <xsl:text>&#9;use helper&#10;</xsl:text>
@@ -229,8 +236,15 @@
         <xsl:text>&#xA;</xsl:text>
         <xsl:text>&#9;use generator&#10;</xsl:text>
         <xsl:text>&#9;use comparator &#10;</xsl:text>
-        <xsl:text>&#9;use ids_schemas&#10;</xsl:text>
-        <xsl:text>&#9;use ids_routines&#10;</xsl:text>
+        <xsl:text>&#9;use ids_schemas_</xsl:text><xsl:value-of select="@name"/><xsl:text>&#10;</xsl:text>
+        <xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_put_struct&#10;</xsl:text>
+        <xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_put_slice_struct&#10;</xsl:text>
+        <xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_get_struct&#10;</xsl:text>
+        <xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_get_slice_struct&#10;</xsl:text>
+        <xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_delete&#10;</xsl:text>
+        <xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_copy_struct&#10;</xsl:text>
+        <xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_deallocate_struct&#10;</xsl:text>
+        <xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_validate_struct&#10;</xsl:text>
          <xsl:text>&#9;use helper&#10;</xsl:text>
         <xsl:text>&#xA;</xsl:text> 
         <xsl:text>&#9;implicit none&#10;</xsl:text>
@@ -301,7 +315,15 @@
     <!-- ================================ MODULE TEST SUBROUTINES ================================= -->
     <xsl:text>MODULE </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_routines&#10;</xsl:text>
     <xsl:text>&#9;use helper &#10;</xsl:text>
-    <xsl:text>&#9;use ids_routines &#10;</xsl:text>
+    <xsl:text>&#9;use ids_schemas_</xsl:text><xsl:value-of select="@name"/><xsl:text>&#10;</xsl:text>
+    <xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_put_struct&#10;</xsl:text>
+    <xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_put_slice_struct&#10;</xsl:text>
+    <xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_get_struct&#10;</xsl:text>
+    <xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_get_slice_struct&#10;</xsl:text>
+    <xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_delete&#10;</xsl:text>
+    <xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_copy_struct&#10;</xsl:text>
+    <xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_deallocate_struct&#10;</xsl:text>
+    <xsl:text>&#9;use </xsl:text><xsl:value-of select="@name"/><xsl:text>_validate_struct&#10;</xsl:text>
     <xsl:text>&#xA;</xsl:text> 
     <xsl:text>&#9;IMPLICIT NONE&#10;</xsl:text>
     <xsl:text>&#xA;</xsl:text> 
@@ -315,6 +337,10 @@
 
     <xsl:apply-templates select=".[.//field[@type='dynamic']]" mode="putSlice"/>
         <xsl:apply-templates select="." mode="getSlice"/>
+
+        <xsl:apply-templates select="." mode="validate"/>
+
+
     <xsl:text>END MODULE </xsl:text><xsl:value-of select="@name"/><xsl:text>_test_routines&#10;</xsl:text>
       </xsl:result-document>
 
@@ -348,7 +374,7 @@
     <xsl:text>&#9;&#9;IF (backendID == NO_BACKEND) CYCLE&#10;</xsl:text>
     <xsl:text>&#9;&#9;WRITE(*,*) "=== BACKEND : ", backend2str(backendID), "=== === === === === === === ==="&#10;</xsl:text>
     <xsl:text>&#10;</xsl:text>
-    <xsl:text>&#9;&#9;call create_db(backendID, TEST_SHOT, TEST_RUN, idx);&#10;</xsl:text>
+    <xsl:text>&#9;&#9;call create_db(backendID, TEST_PULSE, TEST_RUN, idx);&#10;</xsl:text>
 	<xsl:text>&#10;</xsl:text>
     <xsl:text>&#9;&#9;DO sliceIdx = 1, SIZE(config%idsTimeModeArray)&#10;</xsl:text>
     <xsl:text>&#9;&#9;&#9;idsTimeMode = config%idsTimeModeArray(sliceIdx)&#10;</xsl:text>
@@ -367,6 +393,8 @@
    <xsl:text>&#9;&#9;&#9;END IF&#10;</xsl:text>
     <xsl:text>&#9;&#9;END DO  ! time mode  &#10;</xsl:text>
     <xsl:text>&#10;</xsl:text>
+    <xsl:text>&#9;&#9;</xsl:text>call <xsl:value-of select="@name"/>_validation_tests()<xsl:text>&#10;</xsl:text>
+    <xsl:text>&#10;</xsl:text>
     <xsl:text>&#9;&#9;call close_db(idx);&#10;</xsl:text>
     <xsl:text>&#9;END DO  ! backend  &#10;</xsl:text>
     <xsl:text>&#10;</xsl:text>
@@ -375,6 +403,35 @@
 	<!-- ================================ MAIN PROGRAM (end)================================= -->
 	
       </xsl:result-document>
+    </xsl:template>
+
+    <!-- IDS validate() -->
+    <xsl:template match="IDS" mode="validate">
+    <xsl:text>!==================================================================&#10;</xsl:text>
+    <xsl:text>!&#9;&#9; VALIDATE </xsl:text><xsl:value-of select="@name"/> <xsl:text> &#10;</xsl:text>
+    <xsl:text>!==================================================================&#10;</xsl:text>
+    <xsl:text>SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_validation_tests()&#10;</xsl:text>
+    <xsl:if test="@name='magnetics' or @name='distributions' or @name='waves'">
+    </xsl:if>
+    <xsl:text>&#9;IMPLICIT NONE&#10;</xsl:text> 
+    <xsl:text>&#9;TYPE (ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>) :: ids &#10;</xsl:text>
+    <xsl:text>&#9;CHARACTER(:) , ALLOCATABLE:: err_msg&#10;</xsl:text>
+    <xsl:text>&#9;INTEGER         :: status &#10;</xsl:text>
+    <xsl:text>&#10;</xsl:text>
+    <xsl:text>&#9;write(*,*) "--- </xsl:text><xsl:value-of select="@name"/><xsl:text>"&#10;</xsl:text>
+    <xsl:text>&#10;</xsl:text>
+    <xsl:text>&#9;write(*,*) "--- Testing empty ids"&#10;</xsl:text>
+    <xsl:text>&#9;call ids_validate(ids, status, err_msg) &#10;</xsl:text>
+    <xsl:text>&#9;if (status.ne.-1 .and. trim(err_msg) .ne. "ids_properties.homogeneous_time wrong value") STOP "Testing empty ids error" &#10;</xsl:text>
+    <xsl:text>&#10;</xsl:text>
+    <xsl:text>&#9;write(*,*) "--- Testing time mode"&#10;</xsl:text>
+    <xsl:text>&#9;ids%ids_properties%homogeneous_time = IDS_TIME_MODE_HOMOGENEOUS&#10;</xsl:text>
+    <xsl:text>&#10;</xsl:text>
+	<xsl:text>&#9;call ids_validate(ids, status, err_msg) &#10;</xsl:text>
+    <xsl:text>&#9;if (status.ne.-1 .and. trim(err_msg) .ne. "the time array must be associated") STOP "Testing time mode error" &#10;</xsl:text>
+    <xsl:text>&#10;</xsl:text>
+    <xsl:text>END SUBROUTINE </xsl:text> <xsl:value-of select="@name"/><xsl:text>_validation_tests &#10;</xsl:text>
+    <xsl:text>&#10;</xsl:text>
     </xsl:template>
 
     <!-- IDS put()-->

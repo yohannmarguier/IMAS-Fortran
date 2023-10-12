@@ -1209,7 +1209,6 @@ FUNCTION assertField_STR(observed, isSliceMode, fieldName) RESULT (outValue)
 END FUNCTION assertField_STR
 
 
-
 END MODULE comparator
 
 

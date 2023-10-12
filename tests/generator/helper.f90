@@ -1,7 +1,7 @@
 MODULE helper
   use test_defs
   use generator
-  use ids_routines
+  use al_defs
   use al_low_level_wrap
   implicit none
 
@@ -317,16 +317,16 @@ SUBROUTINE initEnv()
 
 END SUBROUTINE initEnv
 
-SUBROUTINE create_db(backendID, shot, run, idx)
+SUBROUTINE create_db(backendID, pulse, run, idx)
   INTEGER, INTENT(IN)   :: backendID
-  INTEGER, INTENT(IN)   :: shot
+  INTEGER, INTENT(IN)   :: pulse
   INTEGER, INTENT(IN)   :: run
   INTEGER, INTENT(OUT) :: idx
   INTEGER :: status, mode
   CHARACTER(STRMAXLEN) :: uri
 
-  !CALL imas_create_env('ids',TESTSHOT,TESTRUN, TESTSHOT,TESTRUN,idx, userName, 'test', dataVersion)
-  CALL al_build_uri_from_legacy_parameters(backendID, shot, run, userName, 'test', dataVersion, '', uri, status)
+  !CALL imas_create_env('ids',TESTPULSE,TESTRUN, TESTPULSE,TESTRUN,idx, userName, 'test', dataVersion)
+  CALL al_build_uri_from_legacy_parameters(backendID, pulse, run, userName, 'test', dataVersion, '', uri, status)
 
   mode = FORCE_CREATE_PULSE
 
@@ -341,16 +341,16 @@ END SUBROUTINE create_db
 
 
 
-SUBROUTINE open_db(backendID, shot, run, idx)
+SUBROUTINE open_db(backendID, pulse, run, idx)
   INTEGER, INTENT(IN)   :: backendID
-  INTEGER, INTENT(IN)   :: shot
+  INTEGER, INTENT(IN)   :: pulse
   INTEGER, INTENT(IN)   :: run
   INTEGER, INTENT(OUT)  :: idx
   INTEGER :: status
   CHARACTER(STRMAXLEN) :: uri
 
-  !CALL imas_open_env('ids',TESTSHOT,TESTRUN, idx, userName, 'test', dataVersion)
-  CALL al_build_uri_from_legacy_parameters(backendID, shot, run, userName, 'test', dataVersion, '', uri, status)
+  !CALL imas_open_env('ids',TESTPULSE,TESTRUN, idx, userName, 'test', dataVersion)
+  CALL al_build_uri_from_legacy_parameters(backendID, pulse, run, userName, 'test', dataVersion, '', uri, status)
 
   if (idx .ge. 0) then
      CALL al_begin_dataentry_action(uri, OPEN_PULSE, idx, status)
