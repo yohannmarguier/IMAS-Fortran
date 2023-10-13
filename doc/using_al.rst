@@ -12,6 +12,7 @@ to print the version of the access layer and data dictionary.
 .. literalinclude:: code_samples/imas_hello_world.f90
     :caption: ``imas_hello_world.f90``
 
+.. seealso:: :ref:`Version constants`
 
 If you save this as a file ``imas_hello_world.f90``, you can compile it as
 follows:
@@ -19,9 +20,9 @@ follows:
 .. code-block:: bash
 
     # gfortran compiler
-    gfortran `pkg-config --libs --cflags al-fortran` imas_hello_world.f90 -o imas_hello_world
+    gfortran imas_hello_world.f90 `pkg-config --libs --cflags al-fortran` -o imas_hello_world
     # ifort compiler
-    ifort `pkg-config --libs --cflags al-fortran` imas_hello_world.f90 -o imas_hello_world
+    ifort imas_hello_world.f90 `pkg-config --libs --cflags al-fortran` -o imas_hello_world
 
 
 We use ``pkg-config`` to output the required libraries and compiler flags to use
@@ -38,7 +39,10 @@ was compiled for you. When you execute it, the result is:
 
     $ ./imas_hello_world
      Hello world!
-     Using access layer version: 5rc
+     Access Layer version info:
+       Low level version: 5.0.0
+       Data Dictionary version: 3.39.0
+       Fortran HLI version: 5.0.0
 
 
 Congratulations if this runs successfully! You have included the Fortran Access

@@ -143,3 +143,51 @@ Data entry open/create modes
     opens it at the same time.
 
 
+Version constants
+-----------------
+
+.. f:subroutine:: al_get_version(version)
+
+    Get the Access Layer low-level version.
+
+    Returns the version string of the low-level component of the Access
+    Layer, for example ``"5.1.0"``.
+
+    :param character version [pointer,dimension(:),in]: Low level version
+
+.. f:variable:: al_fortran_version
+
+    Get the version string of the Fortran Access Layer library, for
+    example ``'5.1.0'``.
+
+.. f:variable:: al_fortran_major_version
+    
+    Get the major version of the Fortran Access Layer library, for example ``5``.
+
+.. f:variable:: al_fortran_minor_version
+    
+    Get the minor version of the Fortran Access Layer library, for example ``1``.
+    
+.. f:variable:: al_fortran_patch_version
+
+    Get the patch version of the Fortran Access Layer library, for example ``0``.
+
+.. f:variable:: al_dd_version
+
+    Get the version string of the Data Dictionary definitions that are used, for
+    example ``'3.39.0'``.
+
+.. f:variable:: al_dd_major_version
+
+    Get the major version of the Data Dictionary definitions that are used, for
+    example ``3``.
+
+.. f:variable:: al_dd_minor_version
+
+    Get the minor version of the Data Dictionary definitions that are used, for
+    example ``39``.
+
+.. f:variable:: al_dd_patch_version
+
+    Get the patch version of the Data Dictionary definitions that are used, for
+    example ``0``.

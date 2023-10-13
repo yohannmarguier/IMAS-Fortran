@@ -3,11 +3,14 @@ program imas_hello_world
     use ids_routines
     implicit none
 
-    CHARACTER(len=255) :: al_version
+    character, pointer, dimension(:) :: al_version
 
-    call get_environment_variable("AL_VERSION", al_version)
+    call al_get_version(al_version)
 
-    write(*,*) "Hello world!"
-    write(*,*) "Using access layer version: ", al_version
+    write(*,*) 'Hello world!'
+    write(*,*) 'Access Layer version info:'
+    write(*,*) '  Low level version: ', al_version
+    write(*,*) '  Data Dictionary version: ', al_dd_version
+    write(*,*) '  Fortran HLI version: ', al_fortran_version
 
 end program imas_hello_world
