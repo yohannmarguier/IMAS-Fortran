@@ -824,9 +824,9 @@ contains
     integer, intent(out) :: retstatus
     type(C_PTR) :: pdata
     type(al_status) :: status
-	pdata = C_LOC(data)
-	call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-	status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, pdata, CHAR_DATA, 0, C_NULL_PTR))
+    pdata = C_LOC(data)
+    call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+    status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, pdata, CHAR_DATA, 0, C_NULL_PTR))
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
   end subroutine put_char
@@ -965,14 +965,14 @@ contains
         end if
     else 
         dim1 = size(data, 1)   
-		dsize = (/ dim1 /)
-		cptr = C_LOC(data(1))    
-		csize = C_LOC(dsize)
-		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-		status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, rank, csize))
+        dsize = (/ dim1 /)
+        cptr = C_LOC(data(1))    
+        csize = C_LOC(dsize)
+        call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+        status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, rank, csize))
     end if
     if (status%code.ne.0) write(*,*) TRIM(status%message)
-	 retstatus = status%code
+     retstatus = status%code
   end subroutine put_vect1d_int
 
   subroutine put_vect1d_double(opCtx, idsName, fieldPath, timebasePath, data, rank, lifeCycleStatus, retstatus)
@@ -991,16 +991,16 @@ contains
     if (associated(data) .eqv. .false.) then
       call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
       if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
-		   status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, DOUBLE_DATA, rank, C_NULL_PTR))
+           status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, DOUBLE_DATA, rank, C_NULL_PTR))
       end if
     else
         dim1 = size(data, 1)
-		dsize = (/ dim1 /)
-		cptr = C_LOC(data(1))
-		csize = C_LOC(dsize(1))
-		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-		status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, rank, csize))
-	end if
+        dsize = (/ dim1 /)
+        cptr = C_LOC(data(1))
+        csize = C_LOC(dsize(1))
+        call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+        status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, rank, csize))
+    end if
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
   end subroutine put_vect1d_double
@@ -1025,12 +1025,12 @@ contains
         end if
     else
         dim1 = size(data, 1)
-		dsize = (/ dim1 /)
-		cptr = C_LOC(data(1))
-		csize = C_LOC(dsize(1))
-		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-		status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, rank, csize))
-	end if
+        dsize = (/ dim1 /)
+        cptr = C_LOC(data(1))
+        csize = C_LOC(dsize(1))
+        call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+        status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, rank, csize))
+    end if
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
   end subroutine put_vect1d_complex
@@ -1058,23 +1058,23 @@ contains
         end if
     else
         dim1 = size(data, 1)
-		csize1 = dim1
-		csize2 = MAXVAL(len_trim(data(1:dim1)))
-		dsize = (/ csize1, csize2 /)
-		allocate(cdata(csize1, csize2))
-		do i=1,csize1
-		   do j=1,csize2
-			  cdata(i,j) = data(i)(j:j)
-		   end do
-		end do
-		cptr = C_LOC(cdata(1,1))
-		csize = C_LOC(dsize(1))
-		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-		status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, CHAR_DATA, rank + 1, csize))
-		deallocate(cdata)
+        csize1 = dim1
+        csize2 = MAXVAL(len_trim(data(1:dim1)))
+        dsize = (/ csize1, csize2 /)
+        allocate(cdata(csize1, csize2))
+        do i=1,csize1
+           do j=1,csize2
+              cdata(i,j) = data(i)(j:j)
+           end do
+        end do
+        cptr = C_LOC(cdata(1,1))
+        csize = C_LOC(dsize(1))
+        call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+        status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, CHAR_DATA, rank + 1, csize))
+        deallocate(cdata)
    end if
    if (status%code.ne.0) write(*,*) TRIM(status%message)
-	retstatus = status%code
+    retstatus = status%code
   end subroutine put_vect1d_string
 
   subroutine put_vect2d_int(opCtx, idsName, fieldPath, timebasePath, data, rank, lifeCycleStatus, retstatus)
@@ -1096,14 +1096,14 @@ contains
          status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, INTEGER_DATA, rank, C_NULL_PTR))
         end if
     else
-		dim1 = size(data, 1)
-		dim2 = size(data, 2)
-		dsize = (/ dim1, dim2 /)
-		cptr = C_LOC(data(1,1))
-		csize = C_LOC(dsize(1))
-		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-		status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, rank, csize))
-	end if
+        dim1 = size(data, 1)
+        dim2 = size(data, 2)
+        dsize = (/ dim1, dim2 /)
+        cptr = C_LOC(data(1,1))
+        csize = C_LOC(dsize(1))
+        call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+        status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, rank, csize))
+    end if
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
   end subroutine put_vect2d_int
@@ -1127,14 +1127,14 @@ contains
            status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, DOUBLE_DATA, rank, C_NULL_PTR))
         end if
     else
-		dim1 = size(data, 1)
-		dim2 = size(data, 2)
-		dsize = (/ dim1, dim2 /)
-		cptr = C_LOC(data(1,1))
-		csize = C_LOC(dsize(1))
-		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-		status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, rank, csize))
-	end if
+        dim1 = size(data, 1)
+        dim2 = size(data, 2)
+        dsize = (/ dim1, dim2 /)
+        cptr = C_LOC(data(1,1))
+        csize = C_LOC(dsize(1))
+        call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+        status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, rank, csize))
+    end if
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
   end subroutine put_vect2d_double
@@ -1158,13 +1158,13 @@ contains
          status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, COMPLEX_DATA, rank, C_NULL_PTR))
         end if
     else
-		dim1 = size(data, 1)
-		dim2 = size(data, 2)
-		dsize = (/ dim1, dim2 /)
-		cptr = C_LOC(data(1,1))
-		csize = C_LOC(dsize(1))
-		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-		status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, rank, csize))
+        dim1 = size(data, 1)
+        dim2 = size(data, 2)
+        dsize = (/ dim1, dim2 /)
+        cptr = C_LOC(data(1,1))
+        csize = C_LOC(dsize(1))
+        call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+        status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, rank, csize))
     end if
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
@@ -1186,17 +1186,17 @@ contains
     if (associated(data) .eqv. .false.) then
       call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
       if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
-		   status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, INTEGER_DATA, rank, C_NULL_PTR))
+           status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, INTEGER_DATA, rank, C_NULL_PTR))
       end if
     else
-		dim1 = size(data, 1)
-		dim2 = size(data, 2)
-		dim3 = size(data, 3)
-		dsize = (/ dim1, dim2, dim3 /)
-		cptr = C_LOC(data(1,1,1))
-		csize = C_LOC(dsize(1))
-		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-		status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, rank, csize))
+        dim1 = size(data, 1)
+        dim2 = size(data, 2)
+        dim3 = size(data, 3)
+        dsize = (/ dim1, dim2, dim3 /)
+        cptr = C_LOC(data(1,1,1))
+        csize = C_LOC(dsize(1))
+        call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+        status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, rank, csize))
     end if
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
@@ -1221,15 +1221,15 @@ contains
          status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, DOUBLE_DATA, rank, C_NULL_PTR))
         end if
     else
-		dim1 = size(data, 1)
-		dim2 = size(data, 2)
-		dim3 = size(data, 3)
-		dsize = (/ dim1, dim2, dim3 /)
-		cptr = C_LOC(data(1,1,1))
-		csize = C_LOC(dsize(1))
-		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-		status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, rank, csize))
-	end if
+        dim1 = size(data, 1)
+        dim2 = size(data, 2)
+        dim3 = size(data, 3)
+        dsize = (/ dim1, dim2, dim3 /)
+        cptr = C_LOC(data(1,1,1))
+        csize = C_LOC(dsize(1))
+        call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+        status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, rank, csize))
+    end if
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
   end subroutine put_vect3d_double
@@ -1253,15 +1253,15 @@ contains
          status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, COMPLEX_DATA, rank, C_NULL_PTR))
         end if
     else
-		dim1 = size(data, 1)
-		dim2 = size(data, 2)
-		dim3 = size(data, 3)
-		dsize = (/ dim1, dim2, dim3 /)
-		cptr = C_LOC(data(1,1,1))
-		csize = C_LOC(dsize(1))
-		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-		status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, rank, csize))
-	end if
+        dim1 = size(data, 1)
+        dim2 = size(data, 2)
+        dim3 = size(data, 3)
+        dsize = (/ dim1, dim2, dim3 /)
+        cptr = C_LOC(data(1,1,1))
+        csize = C_LOC(dsize(1))
+        call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+        status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, rank, csize))
+    end if
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
   end subroutine put_vect3d_complex
@@ -1285,16 +1285,16 @@ contains
          status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, INTEGER_DATA, rank, C_NULL_PTR))
         end if
     else
-		dim1 = size(data, 1)
-		dim2 = size(data, 2)
-		dim3 = size(data, 3)
-		dim4 = size(data, 4)
-		dsize = (/ dim1, dim2, dim3, dim4 /)
-		cptr = C_LOC(data(1,1,1,1))
-		csize = C_LOC(dsize(1))
-		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-		status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, rank, csize))
-	end if
+        dim1 = size(data, 1)
+        dim2 = size(data, 2)
+        dim3 = size(data, 3)
+        dim4 = size(data, 4)
+        dsize = (/ dim1, dim2, dim3, dim4 /)
+        cptr = C_LOC(data(1,1,1,1))
+        csize = C_LOC(dsize(1))
+        call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+        status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, rank, csize))
+    end if
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
   end subroutine put_vect4d_int
@@ -1315,18 +1315,18 @@ contains
     if (associated(data) .eqv. .false.) then
       call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
       if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
-		   status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, DOUBLE_DATA, rank, C_NULL_PTR))
+           status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, DOUBLE_DATA, rank, C_NULL_PTR))
       end if
     else
-		dim1 = size(data, 1)
-		dim2 = size(data, 2)
-		dim3 = size(data, 3)
-		dim4 = size(data, 4)
-		dsize = (/ dim1, dim2, dim3, dim4 /)
-		cptr = C_LOC(data(1,1,1,1))
-		csize = C_LOC(dsize(1))
-		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-		status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, rank, csize))
+        dim1 = size(data, 1)
+        dim2 = size(data, 2)
+        dim3 = size(data, 3)
+        dim4 = size(data, 4)
+        dsize = (/ dim1, dim2, dim3, dim4 /)
+        cptr = C_LOC(data(1,1,1,1))
+        csize = C_LOC(dsize(1))
+        call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+        status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, rank, csize))
     end if
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
@@ -1348,19 +1348,19 @@ contains
     if (associated(data) .eqv. .false.) then
       call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
       if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
-		   status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, COMPLEX_DATA, rank, C_NULL_PTR))
+           status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, COMPLEX_DATA, rank, C_NULL_PTR))
       end if
     else
-		dim1 = size(data, 1)
-		dim2 = size(data, 2)
-		dim3 = size(data, 3)
-		dim4 = size(data, 4)
-		dsize = (/ dim1, dim2, dim3, dim4 /)
-		cptr = C_LOC(data(1,1,1,1))
-		csize = C_LOC(dsize(1))
-		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-		status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, rank, csize))
-	end if
+        dim1 = size(data, 1)
+        dim2 = size(data, 2)
+        dim3 = size(data, 3)
+        dim4 = size(data, 4)
+        dsize = (/ dim1, dim2, dim3, dim4 /)
+        cptr = C_LOC(data(1,1,1,1))
+        csize = C_LOC(dsize(1))
+        call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+        status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, rank, csize))
+    end if
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
   end subroutine put_vect4d_complex
@@ -1381,20 +1381,20 @@ contains
     if (associated(data) .eqv. .false.) then
       call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
       if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
-		   status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, INTEGER_DATA, rank, C_NULL_PTR))
+           status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, INTEGER_DATA, rank, C_NULL_PTR))
       end if
     else
-		dim1 = size(data, 1)
-		dim2 = size(data, 2)
-		dim3 = size(data, 3)
-		dim4 = size(data, 4)
-		dim5 = size(data, 5)
-		dsize = (/ dim1, dim2, dim3, dim4, dim5 /)
-		cptr = C_LOC(data(1,1,1,1,1))
-		csize = C_LOC(dsize(1))
-		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-		status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, rank, csize))
-	end if
+        dim1 = size(data, 1)
+        dim2 = size(data, 2)
+        dim3 = size(data, 3)
+        dim4 = size(data, 4)
+        dim5 = size(data, 5)
+        dsize = (/ dim1, dim2, dim3, dim4, dim5 /)
+        cptr = C_LOC(data(1,1,1,1,1))
+        csize = C_LOC(dsize(1))
+        call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+        status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, rank, csize))
+    end if
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
   end subroutine put_vect5d_int
@@ -1415,20 +1415,20 @@ contains
     if (associated(data) .eqv. .false.) then
       call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
       if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
-		   status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, DOUBLE_DATA, rank, C_NULL_PTR))
+           status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, DOUBLE_DATA, rank, C_NULL_PTR))
       end if
     else
-		dim1 = size(data, 1)
-		dim2 = size(data, 2)
-		dim3 = size(data, 3)
-		dim4 = size(data, 4)
-		dim5 = size(data, 5)
-		dsize = (/ dim1, dim2, dim3, dim4, dim5 /)
-		cptr = C_LOC(data(1,1,1,1,1))
-		csize = C_LOC(dsize(1))
-		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-		status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, rank, csize))
-	end if
+        dim1 = size(data, 1)
+        dim2 = size(data, 2)
+        dim3 = size(data, 3)
+        dim4 = size(data, 4)
+        dim5 = size(data, 5)
+        dsize = (/ dim1, dim2, dim3, dim4, dim5 /)
+        cptr = C_LOC(data(1,1,1,1,1))
+        csize = C_LOC(dsize(1))
+        call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+        status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, rank, csize))
+    end if
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
   end subroutine put_vect5d_double
@@ -1449,19 +1449,19 @@ contains
     if (associated(data) .eqv. .false.) then
       call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
       if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
-		   status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, COMPLEX_DATA, rank, C_NULL_PTR))
+           status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, COMPLEX_DATA, rank, C_NULL_PTR))
       end if
     else
-		dim1 = size(data, 1)
-		dim2 = size(data, 2)
-		dim3 = size(data, 3)
-		dim4 = size(data, 4)
-		dim5 = size(data, 5)
-		dsize = (/ dim1, dim2, dim3, dim4, dim5 /)
-		cptr = C_LOC(data(1,1,1,1,1))
-		csize = C_LOC(dsize(1))
-		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-		status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, rank, csize))
+        dim1 = size(data, 1)
+        dim2 = size(data, 2)
+        dim3 = size(data, 3)
+        dim4 = size(data, 4)
+        dim5 = size(data, 5)
+        dsize = (/ dim1, dim2, dim3, dim4, dim5 /)
+        cptr = C_LOC(data(1,1,1,1,1))
+        csize = C_LOC(dsize(1))
+        call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+        status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, rank, csize))
     end if
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
@@ -1483,21 +1483,21 @@ contains
     if (associated(data) .eqv. .false.) then
       call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
       if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
-		   status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, INTEGER_DATA, rank, C_NULL_PTR))
+           status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, INTEGER_DATA, rank, C_NULL_PTR))
       end if
     else
-		dim1 = size(data, 1)
-		dim2 = size(data, 2)
-		dim3 = size(data, 3)
-		dim4 = size(data, 4)
-		dim5 = size(data, 5)
-		dim6 = size(data, 6)
-		dsize = (/ dim1, dim2, dim3, dim4, dim5, dim6 /)
-		cptr = C_LOC(data(1,1,1,1,1,1))
-		csize = C_LOC(dsize(1))
-		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-		status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, rank, csize))
-	end if
+        dim1 = size(data, 1)
+        dim2 = size(data, 2)
+        dim3 = size(data, 3)
+        dim4 = size(data, 4)
+        dim5 = size(data, 5)
+        dim6 = size(data, 6)
+        dsize = (/ dim1, dim2, dim3, dim4, dim5, dim6 /)
+        cptr = C_LOC(data(1,1,1,1,1,1))
+        csize = C_LOC(dsize(1))
+        call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+        status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, rank, csize))
+    end if
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
   end subroutine put_vect6d_int
@@ -1521,18 +1521,18 @@ contains
          status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, DOUBLE_DATA, rank, C_NULL_PTR))
         end if
     else
-		dim1 = size(data, 1)
-		dim2 = size(data, 2)
-		dim3 = size(data, 3)
-		dim4 = size(data, 4)
-		dim5 = size(data, 5)
-		dim6 = size(data, 6)
-		dsize = (/ dim1, dim2, dim3, dim4, dim5, dim6 /)
-		cptr = C_LOC(data(1,1,1,1,1,1))
-		csize = C_LOC(dsize(1))
-		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-		status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, rank, csize))
-	end if
+        dim1 = size(data, 1)
+        dim2 = size(data, 2)
+        dim3 = size(data, 3)
+        dim4 = size(data, 4)
+        dim5 = size(data, 5)
+        dim6 = size(data, 6)
+        dsize = (/ dim1, dim2, dim3, dim4, dim5, dim6 /)
+        cptr = C_LOC(data(1,1,1,1,1,1))
+        csize = C_LOC(dsize(1))
+        call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+        status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, rank, csize))
+    end if
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
   end subroutine put_vect6d_double
@@ -1553,21 +1553,21 @@ contains
     if (associated(data) .eqv. .false.) then
       call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
       if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
-		   status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, rank, csize))
+           status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, rank, csize))
       end if
     else
-		dim1 = size(data, 1)
-		dim2 = size(data, 2)
-		dim3 = size(data, 3)
-		dim4 = size(data, 4)
-		dim5 = size(data, 5)
-		dim6 = size(data, 6)
-		dsize = (/ dim1, dim2, dim3, dim4, dim5, dim6 /)
-		cptr = C_LOC(data(1,1,1,1,1,1))
-		csize = C_LOC(dsize(1))
-		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-		status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, COMPLEX_DATA, rank, C_NULL_PTR))
-	end if
+        dim1 = size(data, 1)
+        dim2 = size(data, 2)
+        dim3 = size(data, 3)
+        dim4 = size(data, 4)
+        dim5 = size(data, 5)
+        dim6 = size(data, 6)
+        dsize = (/ dim1, dim2, dim3, dim4, dim5, dim6 /)
+        cptr = C_LOC(data(1,1,1,1,1,1))
+        csize = C_LOC(dsize(1))
+        call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+        status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, COMPLEX_DATA, rank, C_NULL_PTR))
+    end if
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
   end subroutine put_vect6d_complex
@@ -1588,22 +1588,22 @@ contains
     if (associated(data) .eqv. .false.) then
       call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
       if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
-		   status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, INTEGER_DATA, rank, C_NULL_PTR))
+           status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, INTEGER_DATA, rank, C_NULL_PTR))
       end if
     else
-		dim1 = size(data, 1)
-		dim2 = size(data, 2)
-		dim3 = size(data, 3)
-		dim4 = size(data, 4)
-		dim5 = size(data, 5)
-		dim6 = size(data, 6)
-		dim7 = size(data, 7)
-		dsize = (/ dim1, dim2, dim3, dim4, dim5, dim6, dim7 /)
-		cptr = C_LOC(data(1,1,1,1,1,1,1))
-		csize = C_LOC(dsize(1))
-		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-		status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, rank, csize))
-	end if
+        dim1 = size(data, 1)
+        dim2 = size(data, 2)
+        dim3 = size(data, 3)
+        dim4 = size(data, 4)
+        dim5 = size(data, 5)
+        dim6 = size(data, 6)
+        dim7 = size(data, 7)
+        dsize = (/ dim1, dim2, dim3, dim4, dim5, dim6, dim7 /)
+        cptr = C_LOC(data(1,1,1,1,1,1,1))
+        csize = C_LOC(dsize(1))
+        call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+        status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, rank, csize))
+    end if
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
   end subroutine put_vect7d_int
@@ -1624,22 +1624,22 @@ contains
     if (associated(data) .eqv. .false.) then
       call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
       if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
-		   status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, DOUBLE_DATA, rank, C_NULL_PTR))
+           status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, DOUBLE_DATA, rank, C_NULL_PTR))
       end if
     else
-		dim1 = size(data, 1)
-		dim2 = size(data, 2)
-		dim3 = size(data, 3)
-		dim4 = size(data, 4)
-		dim5 = size(data, 5)
-		dim6 = size(data, 6)
-		dim7 = size(data, 7)
-		dsize = (/ dim1, dim2, dim3, dim4, dim5, dim6, dim7 /)
-		cptr = C_LOC(data(1,1,1,1,1,1,1))
-		csize = C_LOC(dsize(1))
-		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-		status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, rank, csize))
-	end if
+        dim1 = size(data, 1)
+        dim2 = size(data, 2)
+        dim3 = size(data, 3)
+        dim4 = size(data, 4)
+        dim5 = size(data, 5)
+        dim6 = size(data, 6)
+        dim7 = size(data, 7)
+        dsize = (/ dim1, dim2, dim3, dim4, dim5, dim6, dim7 /)
+        cptr = C_LOC(data(1,1,1,1,1,1,1))
+        csize = C_LOC(dsize(1))
+        call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+        status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, rank, csize))
+    end if
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
   end subroutine put_vect7d_double
@@ -1660,22 +1660,22 @@ contains
     if (associated(data) .eqv. .false.) then
       call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
       if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
-		   status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, COMPLEX_DATA, rank, C_NULL_PTR))
+           status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, COMPLEX_DATA, rank, C_NULL_PTR))
       end if
     else
-		dim1 = size(data, 1)
-		dim2 = size(data, 2)
-		dim3 = size(data, 3)
-		dim4 = size(data, 4)
-		dim5 = size(data, 5)
-		dim6 = size(data, 6)
-		dim7 = size(data, 7)
-		dsize = (/ dim1, dim2, dim3, dim4, dim5, dim6, dim7 /)
-		cptr = C_LOC(data(1,1,1,1,1,1,1))
-		csize = C_LOC(dsize(1))
-		call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-		status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, rank, csize))
-	end if
+        dim1 = size(data, 1)
+        dim2 = size(data, 2)
+        dim3 = size(data, 3)
+        dim4 = size(data, 4)
+        dim5 = size(data, 5)
+        dim6 = size(data, 6)
+        dim7 = size(data, 7)
+        dsize = (/ dim1, dim2, dim3, dim4, dim5, dim6, dim7 /)
+        cptr = C_LOC(data(1,1,1,1,1,1,1))
+        csize = C_LOC(dsize(1))
+        call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+        status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, rank, csize))
+    end if
     if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
   end subroutine put_vect7d_complex
