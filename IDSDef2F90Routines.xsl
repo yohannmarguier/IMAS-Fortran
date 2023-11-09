@@ -1391,11 +1391,14 @@ subroutine validate_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
   integer(ids_int), intent(out), optional :: status
   character(:), allocatable, intent(out) :: err_msg
 
+  character(len=:), allocatable :: ids_name
+
   integer(ids_int) :: array_size, i, itime, i1, i2, i3
   integer(ids_int) :: ids_time_mode
   integer(ids_int) :: ids_time_size
   logical :: check, error
 
+  ids_name = "<xsl:value-of select="@name"/>"
 
   ids_time_mode = ids%ids_properties%homogeneous_time;
   if (ids_time_mode .ne. IDS_TIME_MODE_HOMOGENEOUS .and. \
@@ -1615,7 +1618,7 @@ end module
       or @data_type='cpx_1d_type' or @data_type='CPX_1D']"> -->
         if (ids_time_mode .eq. IDS_TIME_MODE_HETEROGENEOUS ) then
           if (.not.associated(ids%<xsl:value-of select="$targetcoord"/>)) then 
-            err_msg = "<xsl:value-of select="../@name"/>/<xsl:value-of select="$targetcoord"/> must be allocated."
+            err_msg = ids_name//"/<xsl:value-of select="$targetcoord"/> must be allocated."
             status = -1 
             return
           end if
@@ -1629,7 +1632,7 @@ end module
       </xsl:if>
       <xsl:if test="not(ends-with($targetcoord,'time'))">
         if (.not.associated(ids%<xsl:value-of select="$targetcoord"/>)) then 
-          err_msg = "<xsl:value-of select="../@name"/>/<xsl:value-of select="$targetcoord"/> must be allocated."
+          err_msg = ids_name//"/<xsl:value-of select="$targetcoord"/> must be allocated."
           status = -1 
           return
         end if
@@ -1771,11 +1774,12 @@ contains
   !----------------------------------------------------------------------- 
   !--- validation of <xsl:value-of select="$this-type"/>
   !-----------------------------------------------------------------------
-  subroutine ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(ids, status, err_msg, ids_time_mode, ids_time_size)
+  subroutine ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(ids, ids_name, status, err_msg, ids_time_mode, ids_time_size)
     use ids_utilities, only: ids_<xsl:value-of select="$this-type"/>
     use al_low_level_wrap, only: IDS_TIME_MODE_HOMOGENEOUS, IDS_TIME_MODE_HETEROGENEOUS, IDS_TIME_MODE_INDEPENDENT
     implicit none
     type(ids_<xsl:value-of select="$this-type"/>), intent(in) :: ids
+    character(len=*),  intent(in) :: ids_name
     integer(ids_int), intent(out), optional :: status
     character(:), allocatable, intent(out) :: err_msg
     integer(ids_int), intent(in) :: ids_time_mode
@@ -1868,9 +1872,9 @@ end module
 <xsl:choose>
 <xsl:when test="@data_type='structure'">
   ! Validation of <xsl:value-of select = "@path"/>
-  call ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(ids%<xsl:value-of select = "@name"/>, status, err_msg, ids_time_mode, ids_time_size)
+  call ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(ids%<xsl:value-of select = "@name"/>, ids_name//"/<xsl:value-of select = "@name"/>", status, err_msg, ids_time_mode, ids_time_size)
   if (status.eq.-1) then
-    err_msg = "Error in <xsl:value-of select = "@path"/>."//achar(13)//achar(10)//err_msg
+    err_msg = "Error in "//ids_name//"/<xsl:value-of select = "@name"/>."//achar(13)//achar(10)//err_msg
     return 
   end if
 </xsl:when>
@@ -1879,9 +1883,9 @@ end module
   array_size = size(ids%<xsl:value-of select = "@name"/>)
   do i = 1, array_size
     ! Validation of <xsl:value-of select = "@path"/>
-    call ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(ids%<xsl:value-of select = "@name"/>(i), status, err_msg, ids_time_mode, ids_time_size) 
+    call ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(ids%<xsl:value-of select = "@name"/>(i), ids_name//"/<xsl:value-of select = "@name"/>", status, err_msg, ids_time_mode, ids_time_size) 
     if (status.eq.-1) then
-      err_msg = "Error in <xsl:value-of select = "@path"/>."//achar(13)//achar(10)//err_msg
+      err_msg = "Error in "//ids_name//"/<xsl:value-of select = "@name"/>."//achar(13)//achar(10)//err_msg
       return 
     end if
   end do
@@ -2025,11 +2029,12 @@ end if
   !----------------------------------------------------------------------- 
   !--- validation of <xsl:value-of select="$this-type"/>
   !-----------------------------------------------------------------------
-  subroutine ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(ids, status, err_msg, ids_time_mode, ids_time_size)
+  subroutine ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(ids, ids_name, status, err_msg, ids_time_mode, ids_time_size)
     use ids_schemas_<xsl:value-of select="ancestor::IDS/@name"/>
     use al_low_level_wrap, only: IDS_TIME_MODE_HOMOGENEOUS, IDS_TIME_MODE_HETEROGENEOUS, IDS_TIME_MODE_INDEPENDENT
     implicit none
     type(ids_<xsl:value-of select="$this-type"/>), intent(in) :: ids
+    character(len=*),  intent(in) :: ids_name
     integer(ids_int), intent(out), optional :: status
     character(:), allocatable, intent(out) :: err_msg
     integer(ids_int), intent(in) :: ids_time_mode
@@ -2502,8 +2507,11 @@ end if
       </xsl:apply-templates>
     </xsl:variable>
     <xsl:variable name="resolved_indexstr">
-    <xsl:if test="matches($indexstr, '^[0-9]+$') or matches($indexstr, '^itime|i[1-9]$')">
-      <xsl:value-of select="$indexstr"/>
+    <xsl:if test="matches($indexstr, '^[0-9]+$')">
+      <xsl:value-of select="number($indexstr)-1"/>
+    </xsl:if>
+    <xsl:if test="matches($indexstr, '^itime|i[1-9]$')">
+      <xsl:value-of select="concat($indexstr,'-1')"/>
     </xsl:if>
     <xsl:if test="not(matches($indexstr, '^[0-9]+$') or matches($indexstr, '^itime|i[1-9]$'))">
       <xsl:value-of select="concat('ids%',$indexstr)"/>
