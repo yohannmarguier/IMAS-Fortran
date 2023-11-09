@@ -98,8 +98,11 @@ subroutine ids_serialize(ids_in, buffer, protocol)
   integer(ids_int) :: unit
   integer(ids_int) :: file_size
   integer(ids_int) :: index
+  integer :: TMP_DIR_SIZE
   character(STRMAXLEN):: uri
   character(STRMAXLEN):: filename
+  CHARACTER(len=255) :: BUFFER_IMAS_AL_SERIALIZER_TMP_DIR
+  CHARACTER(len=:), ALLOCATABLE :: IMAS_AL_SERIALIZER_TMP_DIR
   
   my_protocol = DEFAULT_SERIALIZER_PROTOCOL
   if (present(protocol)) my_protocol = protocol
@@ -115,7 +118,15 @@ subroutine ids_serialize(ids_in, buffer, protocol)
     filename=fname(index+1:)
     ! Write to file
     !call al_build_uri_from_legacy_parameters(ASCII_BACKEND, 0, 0, 'serialize', 'serialize', '3','-fullpath '//fname, uri, status)
+    CALL get_environment_variable("IMAS_AL_SERIALIZER_TMP_DIR", BUFFER_IMAS_AL_SERIALIZER_TMP_DIR)
+    TMP_DIR_SIZE = LEN_TRIM(BUFFER_IMAS_AL_SERIALIZER_TMP_DIR)
+    if(TMP_DIR_SIZE > 0) then
+      allocate(character(TMP_DIR_SIZE):: IMAS_AL_SERIALIZER_TMP_DIR)
+      IMAS_AL_SERIALIZER_TMP_DIR = trim(BUFFER_IMAS_AL_SERIALIZER_TMP_DIR)
+      uri = "imas:ascii?path=" // IMAS_AL_SERIALIZER_TMP_DIR // ";filename="//filename
+    else
     uri = "imas:ascii?path=" // SERIALIZE_TEMPORARY_DIRECTORY // ";filename="//filename
+    endif
     call al_begin_dataentry_action(uri, FORCE_CREATE_PULSE, pulsectx, status)
     if (status .ne. 0) then
       write(*,*) "SERIALIZE: ERROR opening ASCII backend - al_open_pulse"
@@ -179,9 +190,11 @@ subroutine ids_deserialize(buffer, ids_out)
   integer(ids_int) :: unit
   integer(ids_int) :: file_size
   integer(ids_int) :: index
+  integer :: TMP_DIR_SIZE
   character(STRMAXLEN):: uri
   character(STRMAXLEN):: filename
-
+  CHARACTER(len=255) :: BUFFER_IMAS_AL_SERIALIZER_TMP_DIR
+  CHARACTER(len=:), ALLOCATABLE :: IMAS_AL_SERIALIZER_TMP_DIR
   protocol = ichar(buffer(1))
 
   if (protocol .eq. ASCII_SERIALIZER_PROTOCOL) then
@@ -202,7 +215,15 @@ subroutine ids_deserialize(buffer, ids_out)
     flush(unit)
 
     !call al_build_uri_from_legacy_parameters(ASCII_BACKEND, 0, 0, 'serialize', 'serialize', '3','-fullpath '//fname, uri, status)
+    CALL get_environment_variable("IMAS_AL_SERIALIZER_TMP_DIR", BUFFER_IMAS_AL_SERIALIZER_TMP_DIR)
+    TMP_DIR_SIZE = LEN_TRIM(BUFFER_IMAS_AL_SERIALIZER_TMP_DIR)
+    if(TMP_DIR_SIZE > 0) then
+      allocate(character(TMP_DIR_SIZE):: IMAS_AL_SERIALIZER_TMP_DIR)
+      IMAS_AL_SERIALIZER_TMP_DIR = trim(BUFFER_IMAS_AL_SERIALIZER_TMP_DIR)
+      uri = "imas:ascii?path=" // IMAS_AL_SERIALIZER_TMP_DIR // ";filename="//filename
+    else
     uri = "imas:ascii?path=" // SERIALIZE_TEMPORARY_DIRECTORY // ";filename="//filename
+    endif
     call al_begin_dataentry_action(uri, FORCE_CREATE_PULSE, pulsectx, status)
     if (status .ne. 0) then
       write(*,*) "SERIALIZE: ERROR opening ASCII backend - al_open_pulse"
@@ -263,16 +284,27 @@ function generate_tmp_file() result(fname)
   integer :: unit ! Unit number to open file with
   integer :: iostat
   integer :: ipid
+  integer :: TMP_DIR_SIZE
   character(10) :: cpid
+  CHARACTER(len=255) :: BUFFER_IMAS_AL_SERIALIZER_TMP_DIR
+  CHARACTER(len=:), ALLOCATABLE :: IMAS_AL_SERIALIZER_TMP_DIR
 
   ipid = getpid()
   ! Convert to characters, using I0 to left-justify without leading 0s
   write(cpid, '(I0)') ipid
 
   ! Setup the base of the filename
+  CALL get_environment_variable("IMAS_AL_SERIALIZER_TMP_DIR", BUFFER_IMAS_AL_SERIALIZER_TMP_DIR)
+  TMP_DIR_SIZE = LEN_TRIM(BUFFER_IMAS_AL_SERIALIZER_TMP_DIR)
+  if(TMP_DIR_SIZE > 0) then
+    allocate(character(TMP_DIR_SIZE):: IMAS_AL_SERIALIZER_TMP_DIR)
+    IMAS_AL_SERIALIZER_TMP_DIR = trim(BUFFER_IMAS_AL_SERIALIZER_TMP_DIR)
+    string_base_length = len(IMAS_AL_SERIALIZER_TMP_DIR) + len('al_serialize_') + len_trim(cpid) + 1
+    fname = IMAS_AL_SERIALIZER_TMP_DIR // 'al_serialize_' // trim(cpid) // "_"  // repeat(' ', n) ! implicitly allocates to the right size
+  else
   string_base_length = len(SERIALIZE_TEMPORARY_DIRECTORY) + len('al_serialize_') + len_trim(cpid) + 1
   fname = SERIALIZE_TEMPORARY_DIRECTORY // 'al_serialize_' // trim(cpid) // "_"  // repeat(' ', n) ! implicitly allocates to the right size
-
+  endif
   ! get a free unit number
   unit = get_file_unit()
 
