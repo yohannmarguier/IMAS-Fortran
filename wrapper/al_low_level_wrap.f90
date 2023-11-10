@@ -247,6 +247,17 @@ module al_low_level_wrap
        type(C_PTR), intent(in) :: parameter_data
      end function c_al_setvalue_parameter_plugin
 
+     function c_al_get_occurrences(idx, ids_name, al_occurrences_list, size) &
+          bind(C,name="al_get_occurrences")
+      use, intrinsic :: ISO_C_BINDING
+      import c_al_status_t
+      type(c_al_status_t) :: c_al_get_occurrences
+      integer(C_INT), value, intent(in) :: idx
+      character(C_CHAR), dimension(*), intent(in) :: ids_name
+      type(C_PTR), intent(out) :: al_occurrences_list
+      integer(C_INT), intent(out) :: size
+   end function c_al_get_occurrences
+
      function c_getalversion() &
           bind(C,name="getALVersion")
        use, intrinsic :: ISO_C_BINDING
@@ -2483,5 +2494,51 @@ contains
     end if
     retstatus = status%code
   end subroutine get_vect7d_complex
+
+  subroutine al_get_occurrences(idx, ids_name, al_occurrences_list, size, retstatus, retmesg)
+   use, intrinsic :: ISO_C_BINDING
+   implicit none
+   integer(C_INT), value, intent(in) :: idx
+   character(*), intent(in) :: ids_name
+   integer(C_INT), dimension(:), allocatable, intent(out) :: al_occurrences_list
+   integer(C_INT), intent(out) :: size
+   character(:), optional, allocatable, intent(out) :: retmesg
+   integer(C_INT), dimension(:), pointer :: tmp_occurrences_list
+   integer(C_INT)   :: tmp_size
+   character(len=:) ,allocatable :: ptrstr
+   integer, optional :: retstatus
+   integer :: i
+   type(al_status) :: status
+   type(C_PTR) ::  cptr
+   cptr = C_NULL_PTR
+   status = fstatus(c_al_get_occurrences(idx, TRIM(ids_name)//C_NULL_CHAR, cptr, tmp_size))
+   if (status%code.eq.0) then
+      size = tmp_size
+      if (C_ASSOCIATED(cptr)) then 
+         call C_F_POINTER(cptr, tmp_occurrences_list, [size])
+         if(allocated(al_occurrences_list)) deallocate(al_occurrences_list)
+         allocate(al_occurrences_list(size))
+         do i=1,size
+            al_occurrences_list(i) = tmp_occurrences_list(i)
+         end do
+         if (size.gt.0) then
+            call c_free(C_LOC(tmp_occurrences_list(1)))
+            nullify(tmp_occurrences_list)
+         endif
+      end if 
+   end if
+
+
+   if (status%code.ne.0) then
+      if (present(retmesg)) then
+         retmesg = status%message
+      else
+         write(*,*) TRIM(status%message)
+      end if
+   else
+   end if
+   if (present(retstatus)) retstatus = status%code
+ end subroutine al_get_occurrences
+
 
 end module al_low_level_wrap
