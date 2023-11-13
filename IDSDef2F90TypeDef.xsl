@@ -31,7 +31,7 @@ module ids_types    ! declare the size of real and integer variables to be used 
 
   use iso_c_binding, only: ids_real => c_double, &amp;
                            ids_int  => c_int32_t, &amp;
-			   ids_complex => c_double_complex
+                           ids_complex => c_double_complex
 <!--
 Possible way to extend the types to single precision floats, c_int, etc 
   !!use iso_c_binding, only:  &amp;
@@ -150,12 +150,12 @@ end module ! end of the utilities module
   <xsl:for-each select="./field[@data_type='structure' or @data_type='struct_array']">
     <xsl:variable name="this-type">
       <xsl:choose>
-	<xsl:when test="@structure_reference='self'">
-	  <xsl:value-of select="@name"/>
-	</xsl:when>
-	<xsl:otherwise>
-	  <xsl:value-of select="@structure_reference"/>
-	</xsl:otherwise>
+        <xsl:when test="@structure_reference='self'">
+          <xsl:value-of select="@name"/>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:value-of select="@structure_reference"/>
+        </xsl:otherwise>
       </xsl:choose>
     </xsl:variable>
     type ids_<xsl:value-of select="$this-type"/> !<xsl:value-of select="local:commentstring(@documentation)"/>
@@ -201,12 +201,12 @@ end module ! end of the utilities module
     <xsl:variable name="this-name" select="@name"/>
     <xsl:variable name="this-type">
       <xsl:choose>
-	<xsl:when test="@structure_reference='self'">
-	  <xsl:value-of select="@name"/>
-	</xsl:when>
-	<xsl:otherwise>
-	  <xsl:value-of select="@structure_reference"/>
-	</xsl:otherwise>
+        <xsl:when test="@structure_reference='self'">
+          <xsl:value-of select="@name"/>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:value-of select="@structure_reference"/>
+        </xsl:otherwise>
       </xsl:choose>
     </xsl:variable>
     <xsl:apply-templates select="." mode="declare_struct_recurse">
@@ -326,20 +326,20 @@ function ids_is_defined_<xsl:value-of select="@name"/>(ids) result(is_defined)
   <xsl:if test="descendant::field[(@data_type='structure' or @data_type='struct_array')]">
     <xsl:for-each select="./field[@data_type='structure' or @data_type='struct_array']">
       <xsl:variable name="this-type">
-	<xsl:choose>
-	  <xsl:when test="@structure_reference='self'">
-	    <xsl:value-of select="@name"/>
-	  </xsl:when>
-	  <xsl:otherwise>
-	    <xsl:value-of select="@structure_reference"/>
-	  </xsl:otherwise>
-	</xsl:choose>
+        <xsl:choose>
+          <xsl:when test="@structure_reference='self'">
+            <xsl:value-of select="@name"/>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:value-of select="@structure_reference"/>
+          </xsl:otherwise>
+        </xsl:choose>
       </xsl:variable>
       <xsl:variable name="this-name" select="@name"/>
       <xsl:apply-templates select="." mode="declare_struct_recurse">
-	<xsl:with-param name="this-type" select="$this-type"/>
-	<xsl:with-param name="this-ids" select="$this-ids"/>
-	<xsl:with-param name="this-name" select="$this-name"/>
+        <xsl:with-param name="this-type" select="$this-type"/>
+        <xsl:with-param name="this-ids" select="$this-ids"/>
+        <xsl:with-param name="this-name" select="$this-name"/>
       </xsl:apply-templates>
     </xsl:for-each>
   </xsl:if>  
