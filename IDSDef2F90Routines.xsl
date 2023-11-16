@@ -93,7 +93,6 @@ subroutine list_all_occurrences(idx, ids_name, node_path, node_content_list, occ
     allocate(occurrence_list(size))
     node_content_list(:) = " " 
   else 
-    write(*,'(A)') "IMAS:list_all_occurrences:No occurrences for the input ids name."
     return
   end if
 
@@ -120,11 +119,6 @@ subroutine list_all_occurrences(idx, ids_name, node_path, node_content_list, occ
               write(*,'(A)') "IMAS:list_all_occurrences:Failed. Error calling get_string "
               return
             end if
-
-            if (reply_dim == 0) then 
-              write(*,'(A)') "IMAS:list_all_occurrences:Failed. Error with request (check that the requested node exists): "//node_path
-              return
-            end if 
 
             call al_end_action(opctx, status, err_msg)
             if (status &lt; 0) then
