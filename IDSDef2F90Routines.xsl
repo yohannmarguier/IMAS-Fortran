@@ -1441,13 +1441,15 @@ subroutine validate_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
         return
   end if
 
+  <xsl:if test="not(@type='constant')">
   if (ids_time_mode .eq. IDS_TIME_MODE_HOMOGENEOUS .and. .not. associated(ids%time)) then 
         err_msg = "the time array must be associated"
         status = -1 
         return
   end if
-  
+
   ids_time_size = size(ids%time)
+  </xsl:if>
 
 <!-- call ids_validate for each field-->
 <xsl:apply-templates select="field" mode="VALIDATE_CHILD"/>
