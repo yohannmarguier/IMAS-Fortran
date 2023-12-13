@@ -38,7 +38,7 @@
 
     </xsl:template>
 
- <!-- ============================= END OF GENRATED FILE ============================== -->
+ <!-- ============================= END OF GENERATED FILE ============================== -->
 <xsl:template match="IDS" mode="print_stru">
   <xsl:result-document href="src/A_{@name}_stru.f90">
 
@@ -335,8 +335,10 @@
         <xsl:apply-templates select="." mode="put"/>
         <xsl:apply-templates select="." mode="get"/>
 
-    <xsl:apply-templates select=".[.//field[@type='dynamic']]" mode="putSlice"/>
+    <xsl:if test="not(@type='constant')">
+        <xsl:apply-templates select=".[.//field[@type='dynamic']]" mode="putSlice"/>
         <xsl:apply-templates select="." mode="getSlice"/>
+    </xsl:if>
 
         <xsl:apply-templates select="." mode="validate"/>
 
@@ -387,10 +389,12 @@
 	<xsl:text>                call </xsl:text><xsl:value-of select="@name"/><xsl:text>_get(idx, idsTimeMode, config%occToTest)&#10;</xsl:text>
     <xsl:text>            END IF&#10;</xsl:text>
     <xsl:text>&#10;</xsl:text>
+    <xsl:if test="not(@type='constant')">
     <xsl:text>            IF (backendID /= ASCII_BACKEND .AND. idsTimeMode /= IDS_TIME_MODE_INDEPENDENT .AND. (testMode == TEST_MODE_ALL .OR. testMode == TEST_MODE_SLICE)) THEN&#10;</xsl:text>
     <xsl:text>                call </xsl:text><xsl:value-of select="@name"/><xsl:text>_putSlice(idx, idsTimeMode, config%occToTest, config%timeSize)&#10;</xsl:text>
 	<xsl:text>                call </xsl:text><xsl:value-of select="@name"/><xsl:text>_getSlice(idx, idsTimeMode, config%occToTest, config%timeSize)&#10;</xsl:text>
    <xsl:text>            END IF&#10;</xsl:text>
+   </xsl:if>
     <xsl:text>        END DO  ! time mode  &#10;</xsl:text>
     <xsl:text>&#10;</xsl:text>
     <xsl:text>        </xsl:text>call <xsl:value-of select="@name"/>_validation_tests()<xsl:text>&#10;</xsl:text>
@@ -484,7 +488,9 @@
 
    <!-- IDS putSlice()-->
     <xsl:template match="IDS" mode="putSlice">
-        <xsl:text>!==================================================================&#10;</xsl:text>
+    <xsl:if test="not(@type='constant')">
+ 
+       <xsl:text>!==================================================================&#10;</xsl:text>
         <xsl:text>!         PUT SLICE </xsl:text><xsl:value-of select="@name"/> <xsl:text> &#10;</xsl:text>
         <xsl:text>!==================================================================&#10;</xsl:text>
         <xsl:text>SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_putSlice( pulseCtx, idsTimeMode, numOccurrences, numSlices  )&#10;</xsl:text>
@@ -530,6 +536,7 @@
         <xsl:text>&#10;</xsl:text>
         <xsl:text>END SUBROUTINE </xsl:text> <xsl:value-of select="@name"/><xsl:text>_putSlice &#10;</xsl:text>
         <xsl:text>&#10;</xsl:text>
+    </xsl:if>
     </xsl:template>
 
     
