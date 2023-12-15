@@ -766,11 +766,11 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>
 
   integer(ids_int), intent(in) :: ctx
   character*(*), intent(in) :: name, path
-  type(ids_<xsl:value-of select="$this-type"/>), intent(in) :: struct
+  type(ids_<xsl:value-of select="$this-type"/>), intent(inout) :: struct
   logical, intent(in) :: timedparent
   integer, intent(in) :: timemode
   integer(ids_int), intent(out) :: retstatus
-  integer(ids_int) :: i, aoslen, lenstring, aosctx, lastdimsize
+  integer(ids_int) :: i, aoslen, aos_hli_len, lenstring, aosctx, lastdimsize
   integer :: status
   character(len=100000) :: longstring
   character(len=300) :: timepath
@@ -863,7 +863,7 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   ! internal variables declaration
   logical :: timedparent
   integer :: timemode
-  integer(ids_int) :: aoslen, i, lenstring, lastdimsize
+  integer(ids_int) :: aoslen, aos_hli_len, i, lenstring, lastdimsize
   character(len=100000) :: longstring
   character(len=300) :: timepath
   character(*), parameter :: path = ''
@@ -970,11 +970,11 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>
 
   integer(ids_int), intent(in) :: ctx
   character*(*), intent(in) :: name, path
-  type(ids_<xsl:value-of select="$this-type"/>), intent(in) :: struct      
+  type(ids_<xsl:value-of select="$this-type"/>), intent(inout) :: struct      
   logical, intent(in) :: timedparent
   integer, intent(in) :: timemode 
   integer(ids_int), intent(out) :: retstatus
-  integer(ids_int) :: i, aoslen, lenstring, aosctx, lastdimsize
+  integer(ids_int) :: i, aoslen, aos_hli_len, lenstring, aosctx, lastdimsize
   integer :: status
   character(len=100000) :: longstring
   character(len=300) :: timepath
@@ -1046,11 +1046,11 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name($this-ty
 
   integer(ids_int), intent(in) :: ctx
   character*(*), intent(in) :: name, path
-  type(ids_<xsl:value-of select="$this-type"/>), intent(in) :: struct
+  type(ids_<xsl:value-of select="$this-type"/>), intent(inout) :: struct
   logical, intent(in) :: timedparent
   integer, intent(in) :: timemode
   integer(ids_int), intent(out) :: retstatus
-  integer(ids_int) :: i, aoslen, lenstring, aosctx, lastdimsize
+  integer(ids_int) :: i, aoslen, aos_hli_len, lenstring, aosctx, lastdimsize
   integer :: status
   character(len=100000) :: longstring
   character(len=300) :: timepath
@@ -1131,7 +1131,7 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   ! internal variables declaration
   logical :: timedparent
   integer :: timemode, storedtimemode
-  integer(ids_int) :: aoslen, i, lenstring, lastdimsize
+  integer(ids_int) :: aoslen, aos_hli_len, i, lenstring, lastdimsize
   character(len=100000) :: longstring
   character(len=300) :: timepath
   character(*), parameter :: path = ''
@@ -1281,11 +1281,11 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name($this-ty
 
   integer(ids_int), intent(in) :: ctx
   character*(*), intent(in) :: name, path
-  type(ids_<xsl:value-of select="$this-type"/>), intent(in) :: struct      
+  type(ids_<xsl:value-of select="$this-type"/>), intent(inout) :: struct      
   logical, intent(in) :: timedparent
   integer, intent(in) :: timemode
   integer(ids_int), intent(out) :: retstatus
-  integer(ids_int) :: i, aoslen, lenstring, aosctx, lastdimsize
+  integer(ids_int) :: i, aoslen, aos_hli_len, lenstring, aosctx, lastdimsize
   integer :: status
   character(len=100000) :: longstring
   character(len=300) :: timepath
@@ -3698,8 +3698,12 @@ end module
        timepath = ""
          </xsl:otherwise>
        </xsl:choose>
+       aos_hli_len = aoslen
        call al_begin_arraystruct_action(<xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>, timepath, aoslen, aosctx, status)
        if (status.eq.0) then
+          if ( (aos_hli_len.eq.0) .and. (aoslen.gt.0) ) then
+             allocate(<xsl:value-of select="$fieldvar"/>(aoslen))
+          endif
           do i = 1,aoslen
           <xsl:apply-templates select="." mode="PUT_FIELD">
             <xsl:with-param name="structvar" select="$structvar"/>
