@@ -377,7 +377,22 @@
     <xsl:text>        WRITE(*,*) "=== BACKEND : ", backend2str(backendID), "=== === === === === === === ==="&#10;</xsl:text>
     <xsl:text>&#10;</xsl:text>
     <xsl:text>        call create_db(backendID, TEST_PULSE, TEST_RUN, idx);&#10;</xsl:text>
-	<xsl:text>&#10;</xsl:text>
+    <xsl:text>&#10;</xsl:text>
+    <xsl:choose>
+      <xsl:when test="@type='constant'">
+    <xsl:text>            idsTimeMode = IDS_TIME_MODE_INDEPENDENT ! Test only the constant mode for constant IDSs &#10;</xsl:text>
+    <xsl:text>            IF (idsTimeMode == IDS_TIME_MODE_UNKNOWN) CYCLE&#10;</xsl:text>
+    <xsl:text>            WRITE(*,*) "--- --- TIME MODE ", timeMode2str(idsTimeMode), "--- --- --- --- --- ---" &#10;</xsl:text>
+    <xsl:text>&#10;</xsl:text>
+	<xsl:text>            ! --- IDS: </xsl:text><xsl:value-of select="@name"/><xsl:text> ---&#10;</xsl:text>
+    <xsl:text>            IF (testMode == TEST_MODE_ALL .OR. testMode == TEST_MODE_GLOBAL) THEN&#10;</xsl:text>
+	<xsl:text>                call </xsl:text><xsl:value-of select="@name"/><xsl:text>_put(idx, idsTimeMode, config%occToTest)&#10;</xsl:text>
+	<xsl:text>                call </xsl:text><xsl:value-of select="@name"/><xsl:text>_get(idx, idsTimeMode, config%occToTest)&#10;</xsl:text>
+    <xsl:text>            END IF&#10;</xsl:text>
+    <xsl:text>&#10;</xsl:text>
+      </xsl:when>
+      <xsl:otherwise>
+
     <xsl:text>        DO sliceIdx = 1, SIZE(config%idsTimeModeArray)&#10;</xsl:text>
     <xsl:text>            idsTimeMode = config%idsTimeModeArray(sliceIdx)&#10;</xsl:text>
     <xsl:text>            IF (idsTimeMode == IDS_TIME_MODE_UNKNOWN) CYCLE&#10;</xsl:text>
@@ -389,13 +404,15 @@
 	<xsl:text>                call </xsl:text><xsl:value-of select="@name"/><xsl:text>_get(idx, idsTimeMode, config%occToTest)&#10;</xsl:text>
     <xsl:text>            END IF&#10;</xsl:text>
     <xsl:text>&#10;</xsl:text>
-    <xsl:if test="not(@type='constant')">
+
     <xsl:text>            IF (backendID /= ASCII_BACKEND .AND. idsTimeMode /= IDS_TIME_MODE_INDEPENDENT .AND. (testMode == TEST_MODE_ALL .OR. testMode == TEST_MODE_SLICE)) THEN&#10;</xsl:text>
     <xsl:text>                call </xsl:text><xsl:value-of select="@name"/><xsl:text>_putSlice(idx, idsTimeMode, config%occToTest, config%timeSize)&#10;</xsl:text>
 	<xsl:text>                call </xsl:text><xsl:value-of select="@name"/><xsl:text>_getSlice(idx, idsTimeMode, config%occToTest, config%timeSize)&#10;</xsl:text>
    <xsl:text>            END IF&#10;</xsl:text>
-   </xsl:if>
     <xsl:text>        END DO  ! time mode  &#10;</xsl:text>
+      </xsl:otherwise>
+   </xsl:choose>
+
     <xsl:text>&#10;</xsl:text>
     <xsl:text>        </xsl:text>call <xsl:value-of select="@name"/>_validation_tests()<xsl:text>&#10;</xsl:text>
     <xsl:text>&#10;</xsl:text>
