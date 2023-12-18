@@ -26,3 +26,5 @@
 .. |dbentry_put| replace:: :f:func:`ids_put`
 .. |dbentry_put_slice| replace:: :f:func:`ids_put_slice`
 
+.. |list_all_occurrences| replace:: :f:func:`list_all_occurrences`
+

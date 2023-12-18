@@ -1,0 +1,25 @@
+program prog_list_all_occurrences
+    ! Make the Access Layer available
+    use ids_routines
+    implicit none
+
+    integer :: data_entry, status
+    character(len=:), allocatable :: node_content_list(:)
+    integer, allocatable          :: occurrence_list(:)
+    ! Open the database entry by providing an IMAS URI
+    call imas_open( &
+        "imas:mdsplus?user=public;pulse=131024;run=41;database=ITER?version=3", &
+        OPEN_PULSE, data_entry, status)
+
+    call list_all_occurrences(data_entry, "core_profiles", "ids_properties/comment", node_content_list, occurrence_list)
+
+    if(allocated(occurrence_list)) then 
+        write(*,*) "i     occurrence_list(i)      node_content_list(i)"
+            do i = 1, size(occurrence_list)
+                write(*,*) i,occurrence_list(i),"'"//node_content_list(i)//"'"
+            end do
+    else 
+        write(*,*) "node_content_list, occurrence_list are empty"
+    end if 
+
+end program prog_list_all_occurrences

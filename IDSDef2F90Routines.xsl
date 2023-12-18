@@ -59,6 +59,100 @@ use f90_unix, only : getpid  ! required for getpid() in nagfor
 
 contains
 
+subroutine list_all_occurrences(idx, ids_name, node_path, node_content_list, occurrence_list)
+  use al_low_level_wrap
+  use ids_types
+  implicit none
+  integer(ids_int), intent(in)  :: idx
+  character*(*), intent(in)  :: ids_name, node_path
+  character(len=:), allocatable, intent(inout) :: node_content_list(:)
+  integer, allocatable, intent(inout) :: occurrence_list(:)
+
+  integer(ids_int), allocatable :: al_occurrences_list(:)
+  character(len=:), allocatable :: replies(:)
+  character(len=:), allocatable :: temp_replies(:)
+  character(:), allocatable :: ids_full_name
+  integer(ids_int) :: size, reply_dim
+  character(STRMAXLEN) :: data
+  integer :: status, i, n_max
+  character(:), allocatable :: err_msg
+  integer(ids_int) :: opctx
+
+  call al_get_occurrences(idx, ids_name, al_occurrences_list, size, status, err_msg)
+
+  if (allocated(node_content_list)) deallocate(node_content_list)
+  if (allocated(occurrence_list)) deallocate(occurrence_list)
+
+  if (status &lt; 0) then
+    write(*,'(A,I0,A)') "IMAS:list_all_occurrences:Failed. Error calling al_get_occurrences for IDS name"//ids_name//"(idx=",idx,"):"//err_msg
+    return
+  end if
+
+  if (size&gt;0) then
+    allocate(character(len=1) :: node_content_list(size))
+    allocate(occurrence_list(size))
+    node_content_list(:) = " " 
+  else 
+    return
+  end if
+
+  do i = 1, size
+    occurrence_list(i) = al_occurrences_list(i)
+  end do
+  if (LEN(node_path) .ne. 0) then 
+      allocate(character(len=1) :: replies(size))
+      n_max = 0
+      do i = 1, size
+            ids_full_name = ids_name
+            if (al_occurrences_list(i)&gt;0) then
+              ids_full_name=ids_full_name//"/"//trim(str(al_occurrences_list(i))) 
+            end if
+
+            call al_begin_global_action(idx, ids_full_name, READ_OP, opctx, status, err_msg) 
+            if (status &lt; 0) then
+              write(*,'(A)') "IMAS:list_all_occurrences:Failed. Error calling al_begin_global_action "//err_msg
+              return
+            end if
+
+            call get_string(opCtx, node_path, "", data, reply_dim, status)
+            if (status &lt; 0) then
+              write(*,'(A)') "IMAS:list_all_occurrences:Failed. Error calling get_string "
+              return
+            end if
+
+            call al_end_action(opctx, status, err_msg)
+            if (status &lt; 0) then
+              write(*,'(A)') "IMAS:list_all_occurrences:Failed. Error calling al_end_action: "//err_msg
+              return
+            end if
+
+            if (reply_dim &gt; LEN(replies)) then
+              !-- we use a temp array of string to realloc the replies (increasing the length)
+              if(allocated(temp_replies)) deallocate(temp_replies)
+              allocate(character(len=LEN(replies)) :: temp_replies(size))
+              temp_replies = replies
+
+              if(allocated(replies)) deallocate(replies)
+              allocate(character(len=reply_dim) :: replies(size))
+              replies(:) = temp_replies(:)
+            end if
+
+            replies(i) = data
+        end do
+
+        if(allocated(node_content_list)) deallocate(node_content_list)
+        allocate(character(len=LEN(replies)) :: node_content_list(size))
+        do i = 1, size
+          node_content_list(i) = replies(i)
+        end do
+  else 
+    do i = 1, size
+      node_content_list(i) = "";
+    end do
+  end if 
+
+end subroutine
+
 subroutine ids_get_times(pulseCtx,path,time)
 use al_low_level_wrap
 use ids_types
