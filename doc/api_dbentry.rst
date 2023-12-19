@@ -44,3 +44,14 @@ Data entry API
     :param character(*) tokamak [in]: Tokamak name, also known as Database name
     :param character(*) version [in]: Major version of the data dictionary, e.g. ``"3"``
     :option integer retstatus [out]: Status code: ``0`` on success, ``<0`` on failure
+
+.. f:subroutine:: subroutine list_all_occurrences(idx, ids_name, node_path, node_content_list, occurrence_list)
+
+    Return the occurrence index list and the node content list of the IDS in the provided db entry.
+
+    :param integer idx [in]: Pulse number
+    :param character(*) ids_name [in]: IDS name
+    :param character(*) node_path [in]: Node path
+    :param character(len=:) node_content_list [out]: Occurrence node content array (must be allocatable)
+    :param integer(:) occurrence_list [out]: Occurrence index array (must be allocatable)
+    :example: .. literalinclude:: code_samples/dbentry_list_all_occurrences

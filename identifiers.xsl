@@ -172,7 +172,7 @@
     </xsl:if>
 
     <!-- Translation from VALUE to NAME -->
-    <xsl:if test="int!='' and */@unique='yes'">
+    <xsl:if test="int!=''">
       <xsl:text>  !&gt; Function returning the NAME of the type with index IND.&#xA;</xsl:text>
       <xsl:text>  character(132) function </xsl:text>
       <xsl:text>get_type_name(SELF,IND)&#xA;</xsl:text>
@@ -196,7 +196,7 @@
     </xsl:if>
 
     <!-- Translation from VALUE to DESCRIPTION -->
-    <xsl:if test="int!='' and */@unique='yes'">
+    <xsl:if test="int!=''">
       <xsl:text>  !&gt; Function returning the DESCRIPTION of the type with index IND.&#xA;</xsl:text>
       <xsl:text>  function </xsl:text>
       <xsl:text>get_type_description(SELF,IND)&#xA;</xsl:text>
