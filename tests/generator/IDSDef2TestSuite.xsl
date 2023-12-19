@@ -432,8 +432,7 @@
     <xsl:text>!         VALIDATE </xsl:text><xsl:value-of select="@name"/> <xsl:text> &#10;</xsl:text>
     <xsl:text>!==================================================================&#10;</xsl:text>
     <xsl:text>SUBROUTINE </xsl:text><xsl:value-of select="@name"/><xsl:text>_validation_tests()&#10;</xsl:text>
-    <xsl:if test="@name='magnetics' or @name='distributions' or @name='waves'">
-    </xsl:if>
+
     <xsl:text>    IMPLICIT NONE&#10;</xsl:text> 
     <xsl:text>    TYPE (ids_</xsl:text><xsl:value-of select="@name"/><xsl:text>) :: ids &#10;</xsl:text>
     <xsl:text>    CHARACTER(:) , ALLOCATABLE:: err_msg&#10;</xsl:text>
@@ -445,13 +444,15 @@
     <xsl:text>    call ids_validate(ids, status, err_msg) &#10;</xsl:text>
     <xsl:text>    if (status.ne.-1 .and. trim(err_msg) .ne. "ids_properties.homogeneous_time wrong value") STOP "Testing empty ids error" &#10;</xsl:text>
     <xsl:text>&#10;</xsl:text>
+<xsl:if test="not(@type='constant')">
     <xsl:text>    write(*,*) "--- Testing time mode"&#10;</xsl:text>
     <xsl:text>    ids%ids_properties%homogeneous_time = IDS_TIME_MODE_HOMOGENEOUS&#10;</xsl:text>
     <xsl:text>&#10;</xsl:text>
 	<xsl:text>    call ids_validate(ids, status, err_msg) &#10;</xsl:text>
     <xsl:text>    if (status.ne.-1 .and. trim(err_msg) .ne. "the time array must be associated") STOP "Testing time mode error" &#10;</xsl:text>
     <xsl:text>&#10;</xsl:text>
-    <xsl:text>END SUBROUTINE </xsl:text> <xsl:value-of select="@name"/><xsl:text>_validation_tests &#10;</xsl:text>
+</xsl:if> 
+   <xsl:text>END SUBROUTINE </xsl:text> <xsl:value-of select="@name"/><xsl:text>_validation_tests &#10;</xsl:text>
     <xsl:text>&#10;</xsl:text>
     </xsl:template>
 
