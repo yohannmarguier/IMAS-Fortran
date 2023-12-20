@@ -129,7 +129,7 @@ module al_low_level_wrap
        integer(C_INT), value, intent(in) :: aosctx, step
      end function c_al_iterate_over_arraystruct
      
-     function c_al_read_data(ctx, fieldname, timebase, data, datatype, dim, size) &
+     function c_al_read_data(ctx, fieldname, timebase, data, datatype, dim, size_array) &
           bind(C,name="al_read_data")
        use, intrinsic :: ISO_C_BINDING
        import c_al_status_t
@@ -137,10 +137,10 @@ module al_low_level_wrap
        integer(C_INT), value, intent(in) :: ctx, datatype, dim
        character(C_CHAR), dimension(*), intent(in) :: fieldname, timebase
        type(C_PTR), intent(out) :: data
-       type(C_PTR), value, intent(in) :: size
+       type(C_PTR), value, intent(in) :: size_array
      end function c_al_read_data
      
-     function c_al_write_data(ctx, fieldname, timebasename, data, datatype, dim, size) &
+     function c_al_write_data(ctx, fieldname, timebasename, data, datatype, dim, size_array) &
           bind(C,name="al_write_data")
        use, intrinsic :: ISO_C_BINDING
        import c_al_status_t
@@ -148,16 +148,16 @@ module al_low_level_wrap
        integer(C_INT), value, intent(in) :: ctx, datatype, dim
        character(C_CHAR), dimension(*), intent(in) :: fieldname, timebasename
        type(C_PTR), value, intent(in) :: data
-       type(C_PTR), value, intent(in) :: size
+       type(C_PTR), value, intent(in) :: size_array
      end function c_al_write_data
      
-     function c_al_begin_arraystruct_action(ctx, path, timebase, size, aosctx) &
+     function c_al_begin_arraystruct_action(ctx, path, timebase, aos_size, aosctx) &
           bind(C,name="al_begin_arraystruct_action")
        use, intrinsic :: ISO_C_BINDING
        import c_al_status_t
        type(c_al_status_t) :: c_al_begin_arraystruct_action
        integer(C_INT), value, intent(in) :: ctx
-       integer(C_INT), intent(inout) :: size
+       integer(C_INT), intent(inout) :: aos_size
        character(C_CHAR), dimension(*), intent(in) :: path, timebase
        integer(C_INT), intent(out) :: aosctx
      end function c_al_begin_arraystruct_action
@@ -236,18 +236,18 @@ module al_low_level_wrap
        character(C_CHAR), dimension(*), intent(in) :: parameter_name, plugin_name
      end function c_al_setvalue_double_scalar_parameter_plugin
      
-     function c_al_setvalue_parameter_plugin(parameter_name, datatype, dim, size, parameter_data, plugin_name) &
+     function c_al_setvalue_parameter_plugin(parameter_name, datatype, dim, size_array, parameter_data, plugin_name) &
           bind(C,name="al_setvalue_parameter_plugin")
        use, intrinsic :: ISO_C_BINDING
        import c_al_status_t
        type(c_al_status_t) :: c_al_setvalue_parameter_plugin
        character(C_CHAR), dimension(*), intent(in) :: parameter_name, plugin_name
        integer(C_INT), value, intent(in) :: datatype, dim
-       type(C_PTR), value, intent(in) :: size
+       type(C_PTR), value, intent(in) :: size_array
        type(C_PTR), intent(in) :: parameter_data
      end function c_al_setvalue_parameter_plugin
 
-     function c_al_get_occurrences(idx, ids_name, al_occurrences_list, size) &
+     function c_al_get_occurrences(idx, ids_name, al_occurrences_list, list_size) &
           bind(C,name="al_get_occurrences")
       use, intrinsic :: ISO_C_BINDING
       import c_al_status_t
@@ -255,7 +255,7 @@ module al_low_level_wrap
       integer(C_INT), value, intent(in) :: idx
       character(C_CHAR), dimension(*), intent(in) :: ids_name
       type(C_PTR), intent(out) :: al_occurrences_list
-      integer(C_INT), intent(out) :: size
+      integer(C_INT), intent(out) :: list_size
    end function c_al_get_occurrences
 
      function c_getalversion() &
@@ -547,17 +547,17 @@ contains
     retstatus = status%code
   end subroutine al_delete_data
 
-  subroutine al_begin_arraystruct_action(ctx, path, timebase, size, aosctx, retstatus, retmesg)
+  subroutine al_begin_arraystruct_action(ctx, path, timebase, aos_size, aosctx, retstatus, retmesg)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(in) :: ctx
     integer(C_INT) :: csize
-    integer, intent(inout) :: size
+    integer, intent(inout) :: aos_size
     character(*), intent(in) :: path, timebase
     integer, intent(out) :: aosctx, retstatus
     character(:), optional, allocatable, intent(out) :: retmesg
     type(al_status) :: status
-    csize = size
+    csize = aos_size
     status = fstatus(c_al_begin_arraystruct_action(ctx, trim(path)//C_NULL_CHAR, trim(timebase)//C_NULL_CHAR, csize, aosctx))
     if (status%code.ne.0) then
        if (present(retmesg)) then
@@ -566,7 +566,7 @@ contains
           write(*,*) TRIM(status%message)
        end if
     else
-       size = csize
+       aos_size = csize
     end if
     retstatus = status%code
   end subroutine al_begin_arraystruct_action
@@ -708,16 +708,16 @@ contains
     retstatus = status%code
   end subroutine al_setvalue_double_scalar_parameter_plugin
   
-  subroutine al_setvalue_parameter_plugin(parameter_name, datatype, dim, size, parameter_data, plugin_name, retstatus)
+  subroutine al_setvalue_parameter_plugin(parameter_name, datatype, dim, size_array, parameter_data, plugin_name, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     integer, intent(out) :: retstatus
     character(*), intent(in) :: parameter_name, plugin_name
     integer(C_INT), value, intent(in) :: datatype, dim
-    type(C_PTR), value, intent(in) :: size
+    type(C_PTR), value, intent(in) :: size_array
     type(C_PTR), intent(in) :: parameter_data
     type(al_status) :: status
-    status = fstatus(c_al_setvalue_parameter_plugin(trim(parameter_name)//C_NULL_CHAR, datatype, dim, size, parameter_data, trim(plugin_name)//C_NULL_CHAR))
+    status = fstatus(c_al_setvalue_parameter_plugin(trim(parameter_name)//C_NULL_CHAR, datatype, dim, size_array, parameter_data, trim(plugin_name)//C_NULL_CHAR))
     if (status%code.ne.0) then
        write(*,*) TRIM(status%message)
     end if
@@ -2495,13 +2495,13 @@ contains
     retstatus = status%code
   end subroutine get_vect7d_complex
 
-  subroutine al_get_occurrences(idx, ids_name, al_occurrences_list, size, retstatus, retmesg)
+  subroutine al_get_occurrences(idx, ids_name, al_occurrences_list, list_size, retstatus, retmesg)
    use, intrinsic :: ISO_C_BINDING
    implicit none
    integer(C_INT), value, intent(in) :: idx
    character(*), intent(in) :: ids_name
    integer(C_INT), dimension(:), allocatable, intent(out) :: al_occurrences_list
-   integer(C_INT), intent(out) :: size
+   integer(C_INT), intent(out) :: list_size
    character(:), optional, allocatable, intent(out) :: retmesg
    integer(C_INT), dimension(:), pointer :: tmp_occurrences_list
    integer(C_INT)   :: tmp_size
@@ -2513,15 +2513,15 @@ contains
    cptr = C_NULL_PTR
    status = fstatus(c_al_get_occurrences(idx, TRIM(ids_name)//C_NULL_CHAR, cptr, tmp_size))
    if (status%code.eq.0) then
-      size = tmp_size
+      list_size = tmp_size
       if (C_ASSOCIATED(cptr)) then 
-         call C_F_POINTER(cptr, tmp_occurrences_list, [size])
+         call C_F_POINTER(cptr, tmp_occurrences_list, [list_size])
          if(allocated(al_occurrences_list)) deallocate(al_occurrences_list)
-         allocate(al_occurrences_list(size))
-         do i=1,size
+         allocate(al_occurrences_list(list_size))
+         do i=1,list_size
             al_occurrences_list(i) = tmp_occurrences_list(i)
          end do
-         if (size.gt.0) then
+         if (list_size.gt.0) then
             call c_free(C_LOC(tmp_occurrences_list(1)))
             nullify(tmp_occurrences_list)
          endif
