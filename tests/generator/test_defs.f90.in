@@ -10,7 +10,7 @@ MODULE test_defs
     INTEGER, PARAMETER :: TEST_RUN = 9998
     
     ! All backends (/MEMORY_BACKEND, ASCII_BACKEND, MDSPLUS_BACKEND, HDF5_BACKEND, UDA_BACKEND/)
-    INTEGER, dimension(__TEST_ARRAY_ALL_BACKENDS_LENGTH__), PARAMETER   :: ARRAY_ALL_BACKENDS = (/__TEST_ARRAY_ALL_BACKENDS__/)
+    INTEGER, dimension(${TEST_ARRAY_ALL_BACKENDS_LENGTH}), PARAMETER   :: ARRAY_ALL_BACKENDS = (/${TEST_ARRAY_ALL_BACKENDS}/)
     INTEGER, dimension(3), PARAMETER   :: ARRAY_ALL_TIME_MODES = (/IDS_TIME_MODE_HOMOGENEOUS, IDS_TIME_MODE_HETEROGENEOUS, IDS_TIME_MODE_INDEPENDENT/)
     
     INTEGER, PARAMETER   :: TEST_MODE_ALL    = 1
@@ -22,7 +22,7 @@ MODULE test_defs
     !CHARACTER(LEN=*), PARAMETER :: PRINTABLE = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!\\"#$%&amp;\'()*+,-./:;&lt;=&gt;?@[\\]^_`{|}~\t\n\r"
     
     TYPE settings_type
-        INTEGER, dimension(__TEST_ARRAY_ALL_BACKENDS_LENGTH__) :: backendIDArray = ARRAY_ALL_BACKENDS
+        INTEGER, dimension(${TEST_ARRAY_ALL_BACKENDS_LENGTH}) :: backendIDArray = ARRAY_ALL_BACKENDS
         INTEGER, dimension(3) :: idsTimeModeArray = ARRAY_ALL_TIME_MODES
         INTEGER               :: testMode = TEST_MODE_ALL
         INTEGER               :: timeSize = 3  !number of slices to be tested
@@ -31,6 +31,6 @@ MODULE test_defs
         LOGICAL :: useExistingPulseFile = .FALSE.
     END TYPE settings_type
 
-	type (settings_type) :: config
+    type (settings_type) :: config
 
 END MODULE test_defs
