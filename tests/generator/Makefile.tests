@@ -89,8 +89,8 @@ sources_: IDSDef2TestSuite.xsl $(IDSDEF) | saxonicajar $(TEST_SRC_DIR)
 # .PHONY: test_defs.f90
 comma := ,
 test_defs.f90: %:%.in
-	sed -e "s;__TEST_ARRAY_ALL_BACKENDS__;$(TEST_ARRAY_ALL_BACKENDS);g" \
-		-e "s;__TEST_ARRAY_ALL_BACKENDS_LENGTH__;$(words $(subst $(comma),,$(TEST_ARRAY_ALL_BACKENDS)));g" \
+	sed -e "s;\$${TEST_ARRAY_ALL_BACKENDS};$(TEST_ARRAY_ALL_BACKENDS);g" \
+		-e "s;\$${TEST_ARRAY_ALL_BACKENDS_LENGTH};$(words $(subst $(comma),,$(TEST_ARRAY_ALL_BACKENDS)));g" \
 	    $< > $@
 
 #################################################

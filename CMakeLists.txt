@@ -182,9 +182,9 @@ install( TARGETS al-fortran al-identifiers-fortran )
 install( DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/ DESTINATION include/fortran )
 
 # Generate and install .pc files
-configure_file( al-fortran.pc.in al-fortran.pc @ONLY )
-configure_file( al-fortran-DD_VERSION.pc.in al-fortran-${DD_VERSION}.pc @ONLY )
-configure_file( al-identifiers-fortran.pc.in al-identifiers-fortran.pc @ONLY )
+configure_file( pkgconfig/al-fortran.pc.in al-fortran.pc @ONLY )
+configure_file( pkgconfig/al-fortran-DD_VERSION.pc.in al-fortran-${DD_VERSION}.pc @ONLY )
+configure_file( pkgconfig/al-identifiers-fortran.pc.in al-identifiers-fortran.pc @ONLY )
 install( FILES
     ${CMAKE_CURRENT_BINARY_DIR}/al-fortran.pc
     ${CMAKE_CURRENT_BINARY_DIR}/al-fortran-${DD_VERSION}.pc
