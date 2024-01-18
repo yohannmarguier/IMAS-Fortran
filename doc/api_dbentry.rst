@@ -17,6 +17,13 @@ Data entry API
     :option character(:) retmesg [out]: Status message
     :example: See :ref:`Open an existing IMAS Database Entry`.
 
+.. f:subroutine:: imas_close(pulseCtx, retstatus)
+   
+   Close the Data Entry at the provided content.
+
+   :param integer pulseCtx [in] : Closed data entry context
+   :option integer retstatus [out]: Status code: ``0`` on success, ``<0`` on failure
+   
 .. f:subroutine:: imas_open_env(name, pulse, run, pulseCtx, user, tokamak, version, retstatus)
 
     Open the Data Entry defined by the provided parameters.
@@ -55,3 +62,18 @@ Data entry API
     :param character(len=:) node_content_list [out]: Occurrence node content array (must be allocatable)
     :param integer(:) occurrence_list [out]: Occurrence index array (must be allocatable)
     :example: .. literalinclude:: code_samples/dbentry_list_all_occurrences
+
+.. f:subroutine:: subroutine al_build_uri_from_legacy_parameters(beid, pulse, run, usr, tok, ver, opt, uri, retstatus, retmesg)
+
+    Returns the URI built based on legacy parameters
+
+    :param integer beid [in]: backend ids_name
+    :param integer pulse [in]: Pulse number
+    :param integer run [in]: Run number
+    :param character(*) usr [in]: User name
+    :param character(*) tok [in]: Tokamak name, also known as Database name
+    :param character(*) ver [in]: Major version of the data dictionary, e.g. ``"3"``
+    :param character(*) opt [in]: Options
+    :param character(STRMAXLEN) uri [out]: Data entry URI
+    :option integer retstatus [out]: Status code: ``0`` on success, ``<0`` on failure
+    :option character(:) retmesg [out]: Status message
