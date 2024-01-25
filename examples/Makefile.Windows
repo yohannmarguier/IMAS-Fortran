@@ -1,0 +1,38 @@
+
+LIBS    = -L$(AL_BUILD)/fortraninterface
+LIBS   += -L$(AL_BUILD)/lowlevel
+LIBS   += $(AL_BUILD)/fortraninterface/libal-fortran.lib
+LIBS   += $(AL_BUILD)/lowlevel/libal.lib
+LIBS   += -lm -lstdc++
+
+ifeq ("yes","$(strip $(IMAS_MDSPLUS))")
+LIBS   += $(MDSPLUS_DIR)/lib/XTreeShr.a
+LIBS   += $(MDSPLUS_DIR)/lib/MdsObjectsCppShr.a
+LIBS   += $(MDSPLUS_DIR)/lib/TdiShr.a
+LIBS   += $(MDSPLUS_DIR)/lib/TreeShr.a
+LIBS   += $(MDSPLUS_DIR)/lib/MdsIpShr.a
+LIBS   += $(MDSPLUS_DIR)/lib/MdsShr.a
+LIBS   += -lxml2 -lws2_32 -ldl -liphlpapi -lstdc++
+LIBS   += -lboost_filesystem-mt -lboost_system-mt
+endif
+
+ifeq ("yes","$(strip $(IMAS_UDA))")
+ifeq ("yes","$(strip $(IMAS_UDAFAT))")
+LIBS   += -L$(UDA_HOME)/lib
+LIBS   += $(UDA_HOME)/lib/libfatuda_cpp.a
+LIBS   += $(UDA_HOME)/lib/libportablexdr.a
+LIBS   += $(PostgresSQL_ROOT)/lib/libpq.a
+LIBS   += -lws2_32 -lssl -lcrypto -lxml2 -lstdc++
+else
+LIBS	+= -L$(UDA_HOME)/lib
+LIBS	+= $(UDA_HOME)/lib/libuda_cpp.a
+LIBS	+= $(UDA_HOME)/lib/libportablexdr.a
+LIBS	+= -lws2_32 -lssl -lcrypto -lstdc++
+endif
+endif
+
+ifeq ("yes","$(strip $(IMAS_HDF5))")
+LIBS    += -L$(HDF5_HOME)/lib
+LIBS	+= $(HDF5_HOME)/lib/libhdf5.a -ldl -lz -lstdc++ -lboost_filesystem-mt -lboost_system-mt
+endif
+
