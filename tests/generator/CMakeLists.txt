@@ -40,11 +40,11 @@ add_custom_command(
     java -cp ${SaxonHE_CLASSPATH}
       net.sf.saxon.Transform -t -warnings:fatal
       "-xsl:${CMAKE_CURRENT_SOURCE_DIR}/IDSDef2TestSuite.xsl"
-      "-s:${CMAKE_CURRENT_SOURCE_DIR}/../../../xml/IDSDef.xml"
+      "-s:${IDSDEF}"
       newLowLevel=yes
   # Create/update our dummy file
   COMMAND ${CMAKE_COMMAND} -E touch ${GENERATED_SRC_DIR}/dummy.txt
-  DEPENDS IDSDef2TestSuite.xsl ../../../xml/IDSDef.xml
+  DEPENDS IDSDef2TestSuite.xsl ${IDSDEF}
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 add_custom_target( al-fortran-test-sources
