@@ -1,4 +1,0 @@
-LIBS		= -L../lowlevel -lal -lm
-TARGETS         = libal-fortran.so libal-fortran.a id_fortran_all
-INSTALL_TARGETS = fortran_install id_fortran_install
-
