@@ -1,6 +1,6 @@
 .. highlight:: fortran
 
-.. include:: ../../doc_common/identifiers.rst
+.. include:: ./doc_common/identifiers.rst
 
 .. |lang| replace:: Fortran
 .. |identifiers_link_instructions| replace:: \
