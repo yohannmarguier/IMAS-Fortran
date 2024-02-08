@@ -179,7 +179,15 @@ endforeach()
 
 add_library( al-fortran ${SOURCES} )
 add_dependencies( al-fortran al-fortran-sources )
-target_link_libraries( al-fortran al )
+
+if( CMAKE_Fortran_COMPILER_ID STREQUAL "NAG" )
+  # Work around NAG compiler not wanting to link against libal.so.x.y.z
+  add_dependencies( al-fortran al )
+  get_target_property( AL_BINARY_DIR al BINARY_DIR )
+  target_link_options( al-fortran PRIVATE -lal -L${AL_BINARY_DIR} "-Wl,-Xlinker,-rpath,-Xlinker,${AL_BINARY_DIR}" )
+else()
+  target_link_libraries( al-fortran al )
+endif()
 # Set target output library name to include the DD version
 set_target_properties( al-fortran PROPERTIES LIBRARY_OUTPUT_NAME "al-fortran-${DD_VERSION}" )
 
