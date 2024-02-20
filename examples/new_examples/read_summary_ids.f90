@@ -20,16 +20,16 @@ program read_summary_ids
   character(len=5)    :: treeName      = 'ids'  ! name of the MDS+ tree structure 
 
 ! ╔══════════════════════════════════════════════════════════════════════════════╗
-! ║                          Open existing pulse file                            ║
+! ║                          open existing pulse file                            ║
 ! ╚══════════════════════════════════════════════════════════════════════════════╝
 
-! get users name so we can access their personal database
+! Get users name so we can access their personal database.
 
   call get_environment_variable( "USER" , userName)
 
-! please note that legacy open function allows to open MDS+ files only
-! for HDF5 files you have to either call low_level functions or use
-! URI based open functions - URI based open is shown in other samples
+! Please note that legacy open function allows to open MDS+ files only.
+! For HDF5 files you have to either call low level functions or use
+! URI based open functions - URI based open is shown in other samples.
 
   call imas_open_env( treeName,          &
                       pulse,             &
@@ -40,7 +40,7 @@ program read_summary_ids
                       '3' )
 
 ! ╔══════════════════════════════════════════════════════════════════════════════╗
-! ║                                Get Summary IDS                               ║
+! ║                                get Summary IDS                               ║
 ! ╚══════════════════════════════════════════════════════════════════════════════╝
 
   call ids_get( idxIn, "summary", summaryIDSin )
@@ -57,10 +57,10 @@ program read_summary_ids
   enddo
 
 ! ╔══════════════════════════════════════════════════════════════════════════════╗
-! ║                          Create new data entry (new pulse file)              ║
+! ║                      create new data entry (new pulse file)                  ║
 ! ╚══════════════════════════════════════════════════════════════════════════════╝
 
-! We are stroring new entry with a run number of input increased by 1
+! We are stroring new entry with a run number of input increased by 1.
 
   call imas_create_env( treeName,          &
                         pulse,             &
@@ -73,18 +73,18 @@ program read_summary_ids
                         '3' )
 
 ! ╔══════════════════════════════════════════════════════════════════════════════╗
-! ║                          Copy data into new Summary IDS                      ║
+! ║                          copy data into new Summary IDS                      ║
 ! ╚══════════════════════════════════════════════════════════════════════════════╝
 
-! copy time vector from input IDS to output IDS; at firs, we have to allocate
-! memory for the time vector
+! Copy time vector from input IDS to output IDS; at first, we have to allocate
+! memory for the time vector.
 
   allocate(summaryIDSout%time( size( summaryIDSin%time ) ) )
   do i=1, size( summaryIDSin%time )
     summaryIDSout%time( i ) = summaryIDSin%time( i )
   enddo
 
-! set time mode to homogenous time; note that field
+! Set time mode to homogenous time; note that field
 !
 !          ids_properties%homogeneous_time
 !
@@ -94,8 +94,8 @@ program read_summary_ids
   summaryIDSout%ids_properties%comment                  = summaryIDSin%ids_properties%comment
   summaryIDSout%ids_properties%version_put%access_layer = summaryIDSin%ids_properties%version_put%access_layer
   
-! copy global_quantties%ip%value field; at first, we have to allocate
-! memory for the ip vector
+! Copy global_quantties%ip%value field; at first, we have to allocate
+! memory for the ip vector.
 
   allocate( summaryIDSout%global_quantities%ip%value(       &
               size( summaryIDSin%global_quantities%ip%value ) &
@@ -107,13 +107,13 @@ program read_summary_ids
   enddo
 
 ! ╔══════════════════════════════════════════════════════════════════════════════╗
-! ║                          Save data into new pulse file                       ║
+! ║                          save data into new pulse file                       ║
 ! ╚══════════════════════════════════════════════════════════════════════════════╝
 
   call ids_put( idxOut, "summary", summaryIDSout )
 
 ! ╔══════════════════════════════════════════════════════════════════════════════╗
-! ║                             Clean up and close files                         ║
+! ║                             clean up and close files                         ║
 ! ╚══════════════════════════════════════════════════════════════════════════════╝
 
   call ids_deallocate( summaryIDSin  )
