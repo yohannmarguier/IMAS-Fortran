@@ -3854,10 +3854,10 @@ end module
        longstring = "<xsl:value-of select="$DD_GIT_DESCRIBE"/>"
           </xsl:when>
           <xsl:when test="@name='access_layer'">
-       longstring = "<xsl:value-of select="$AL_GIT_DESCRIBE"/>"
+       call al_get_version_for_put(longstring)
           </xsl:when>
           <xsl:when test="@name='access_layer_language'">
-       longstring = "fortran"
+       longstring = "fortran-<xsl:value-of select="$AL_GIT_DESCRIBE"/>"
           </xsl:when>
           <xsl:otherwise>
           </xsl:otherwise>

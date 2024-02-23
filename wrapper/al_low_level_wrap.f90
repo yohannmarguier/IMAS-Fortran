@@ -333,6 +333,18 @@ contains
     call c_f_pointer(c_string, version, (/ c_len /))
   end subroutine al_get_version
 
+  subroutine al_get_version_for_put(version_for_put)
+   implicit none
+   character,pointer,dimension(:) :: version
+   character(len=*), intent(out) :: version_for_put
+   integer :: i
+
+   call al_get_version(version)
+   do i=1,min(len(version_for_put), size(version))
+      version_for_put(i:i) = version(i)
+   end do
+end subroutine al_get_version_for_put
+
   subroutine al_context_info(ctx, info, retstatus, retmesg)
     use, intrinsic :: ISO_C_BINDING
     implicit none
