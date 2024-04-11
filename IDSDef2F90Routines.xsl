@@ -20,7 +20,7 @@
       </xsl:otherwise>
     </xsl:choose>
 <!--  </xsl:variable>
-  <xsl:value-of select="$result"/>-->
+        <xsl:value-of select="$result"/>-->
 </xsl:function>
 
 <xsl:template match="/IDSs">
@@ -941,7 +941,7 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   use al_low_level_wrap
   use <xsl:value-of select="@name"/>_delete
   <!--<xsl:if test="@specific_validation_rules='yes'">
-  use specific_validate_struct
+         use specific_validate_struct
   </xsl:if>-->
   implicit none
 
@@ -949,7 +949,7 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   logical, optional, intent(in) :: verbose
   integer(ids_int) :: status = 0
   <!--<xsl:if test="@specific_validation_rules='yes'">
-  integer(ids_int) :: validationstatus = 0
+         integer(ids_int) :: validationstatus = 0
   </xsl:if>-->
   character*(*), intent(in) :: name
   integer(ids_int) :: pulsectx, opctx, aosctx
@@ -1007,7 +1007,7 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   timemode = IDS%ids_properties%homogeneous_time
 
   <!--<xsl:if test="@specific_validation_rules='yes'">
-  call ids_validate(IDS, validationstatus)
+         call ids_validate(IDS, validationstatus)
   if (validationstatus.EQ.-1) then
      write(*,*) "PUT operation stopped"
      return
@@ -1208,7 +1208,7 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   use al_low_level_wrap
   use <xsl:value-of select="@name"/>_put_struct
   <!--<xsl:if test="@specific_validation_rules='yes'">
-  use specific_validate_struct
+         use specific_validate_struct
   </xsl:if>-->
 
   implicit none
@@ -1217,7 +1217,7 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   logical, optional, intent(in) :: verbose
   integer(ids_int) :: status = 0
   <!--<xsl:if test="@specific_validation_rules='yes'">
-  integer(ids_int) :: validationstatus = 0
+         integer(ids_int) :: validationstatus = 0
   </xsl:if>-->
   character*(*) :: name
   integer(ids_int) :: pulsectx, opctx, aosctx
@@ -1329,7 +1329,7 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   end if
 
   <!--<xsl:if test="@specific_validation_rules='yes'">
-  call ids_validate(IDS,validationstatus)
+         call ids_validate(IDS,validationstatus)
   if (validationstatus.EQ.-1) return
   </xsl:if>-->
 
@@ -1502,7 +1502,12 @@ interface ids_validate
     </xsl:choose>
   </xsl:variable>
   <xsl:if test="not (preceding::field[@structure_reference=$this-type] or /IDSs/utilities/field/@name=$this-type)">
-  module procedure ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>
+   <xsl:variable name="procedure-content">
+  <xsl:apply-templates select="." mode="VALIDATE_DEFINITIONS"/>
+  </xsl:variable>
+  <xsl:if test="normalize-space($procedure-content)">
+          module procedure ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>
+  </xsl:if>
    </xsl:if>
   </xsl:for-each>
 end interface 
@@ -1526,6 +1531,7 @@ subroutine validate_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
   integer, allocatable :: shape_array(:)
 
   ids_name = "<xsl:value-of select="@name"/>"
+  status = 0
 
   ids_time_mode = ids%ids_properties%homogeneous_time;
   if (ids_time_mode .ne. IDS_TIME_MODE_HOMOGENEOUS .and. \
@@ -1738,7 +1744,7 @@ end module
             endif
         endif
       <!-- <xsl:if test="field[@name='time' and @data_type='flt_1d_type' or @data_type='FLT_1D'
-      or @data_type='int_1d_type' or @data_type='INT_1D'
+                 or @data_type='int_1d_type' or @data_type='INT_1D'
       or @data_type='cpx_1d_type' or @data_type='CPX_1D']"> -->
         if (ids_time_mode .eq. IDS_TIME_MODE_HETEROGENEOUS ) then
           if (.not.associated(ids%<xsl:value-of select="$targetcoord"/>)) then 
@@ -1875,7 +1881,7 @@ interface ids_validate
     </xsl:choose>
   </xsl:variable>
   <xsl:if test="not (preceding::field[@structure_reference=$this-type or @name=$this-type])">
-  module procedure ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>
+    module procedure ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>
    </xsl:if>
   </xsl:for-each>
 end interface 
@@ -2132,7 +2138,7 @@ end module
 <xsl:param name="currpath"/>
 <xsl:param name="containing"/>
 <!-- <xsl:for-each select="descendant-or-self::field[(@data_type='struct_array' or  @data_type='flt_1d_type' or @data_type='FLT_1D'
-or @data_type='int_1d_type' or @data_type='INT_1D'
+     or @data_type='int_1d_type' or @data_type='INT_1D'
 or @data_type='cpx_1d_type' or @data_type='CPX_1D')]">
 !(from '<xsl:value-of select="$currpath"/>') <xsl:value-of select="@name"/><xsl:text>:= </xsl:text><xsl:value-of select="$containing"/><xsl:text>: </xsl:text><xsl:value-of select="contains(@path_doc,$containing)"/> <xsl:text> </xsl:text><xsl:value-of select="substring-before(substring-after(@path_doc,$containing),concat(@name,'('))"/><xsl:text> </xsl:text><xsl:value-of select="substring-before(substring-after(@path_doc,$containing),concat(@name,'('))='/'"/> 
 </xsl:for-each> -->
@@ -2148,7 +2154,7 @@ or @data_type='cpx_1d_type' or @data_type='CPX_1D') and contains(@path_doc,$cont
 <xsl:param name="currpath"/>
 <xsl:param name="containing"/>
 <!-- <xsl:for-each select="descendant-or-self::field[(@data_type='FLT_2D' or @data_type='INT_2D' or @data_type='CPX_2D')]">
-!<xsl:value-of select="$currpath"/><xsl:text> </xsl:text><xsl:value-of select="@path_doc"/><xsl:text> </xsl:text><xsl:value-of select="$containing"/><xsl:text> </xsl:text><xsl:value-of select="contains(@path_doc,$containing)"/> <xsl:text> </xsl:text><xsl:value-of select="substring-before(substring-after(@path_doc,$containing),concat(@name,'('))"/><xsl:text> </xsl:text><xsl:value-of select="substring-before(substring-after(@path_doc,$containing),concat(@name,'('))='/'"/> 
+     !<xsl:value-of select="$currpath"/><xsl:text> </xsl:text><xsl:value-of select="@path_doc"/><xsl:text> </xsl:text><xsl:value-of select="$containing"/><xsl:text> </xsl:text><xsl:value-of select="contains(@path_doc,$containing)"/> <xsl:text> </xsl:text><xsl:value-of select="substring-before(substring-after(@path_doc,$containing),concat(@name,'('))"/><xsl:text> </xsl:text><xsl:value-of select="substring-before(substring-after(@path_doc,$containing),concat(@name,'('))='/'"/> 
 </xsl:for-each> -->
 <xsl:apply-templates select="descendant-or-self::field[(@data_type='FLT_2D' or @data_type='INT_2D' or @data_type='CPX_2D') and contains(@path_doc,$containing) and substring-before(substring-after(@path_doc,$containing),concat(@name,'('))='/']" mode="VALIDATE_DESCENDANT_SINGLE_2D">
 <xsl:with-param name="currpath" select="$currpath"/>
@@ -2200,7 +2206,7 @@ or @data_type='cpx_1d_type' or @data_type='CPX_1D') and contains(@path_doc,$cont
   </xsl:variable>
 <xsl:choose>
 <xsl:when test="@data_type='structure'">
-  ! Validation of <xsl:value-of select = "@path"/>
+  ! Validation of <xsl:value-of select = "@path"/>  ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>
   call ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(ids%<xsl:value-of select = "@name"/>, ids_name//"/<xsl:value-of select = "@name"/>", status, err_msg, ids_time_mode, ids_time_size)
   if (status.eq.-1) then
     return 
@@ -2210,8 +2216,8 @@ or @data_type='cpx_1d_type' or @data_type='CPX_1D') and contains(@path_doc,$cont
   if (associated(ids%<xsl:value-of select = "@name"/>)) then
   array_size = size(ids%<xsl:value-of select = "@name"/>)
   do i = 1, array_size
-    ! Validation of <xsl:value-of select = "@path"/>
-    call ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(ids%<xsl:value-of select = "@name"/>(i), ids_name//"/<xsl:value-of select = "@name"/>", status, err_msg, ids_time_mode, ids_time_size) 
+    ! Validation of <xsl:value-of select = "@path"/>   ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>
+    call ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(ids%<xsl:value-of select = "@name"/>(i), ids_name//"/<xsl:value-of select = "@name"/>", status, err_msg, ids_time_mode, ids_time_size)
     if (status.eq.-1) then
       call str_replace(err_msg,"<xsl:value-of select="substring-before(substring-after(@path_doc,concat(@name,'(')),')')"/>",trim(str(i)))
       return 
@@ -2339,11 +2345,21 @@ or @data_type='cpx_1d_type' or @data_type='CPX_1D') and contains(@path_doc,$cont
       </xsl:otherwise>
     </xsl:choose>
   </xsl:variable>
-<xsl:choose>
-<xsl:when test="@data_type='structure'">
-  ! Validation of <xsl:value-of select = "@path"/>
-  call ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(ids%<xsl:value-of select = "@name"/>, ids_name//"/<xsl:value-of select = "@name"/>", status, err_msg, ids_time_mode, ids_time_size)
-  <xsl:apply-templates select="." mode="VALIDATE_2_DESCENDANT_1D"> <xsl:with-param name="currpath" select="normalize-space(../@path_doc)"/> <xsl:with-param name="containing" select="@name"/> </xsl:apply-templates>
+  <xsl:variable name= "ids-validate-struct-definition-content">
+   <xsl:if test="/IDSs/utilities/field/@name=$this-type">
+   	yes
+   </xsl:if>
+   <xsl:if test="not(IDSs/utilities/field/@name=$this-type)">
+   <xsl:if test="preceding::field[@structure_reference=$this-type]">
+   	<xsl:apply-templates select="preceding::field[@structure_reference=$this-type][1]" mode="VALIDATE_DEFINITIONS"/>	
+   </xsl:if>
+	   <xsl:if test="not(preceding::field[@structure_reference=$this-type])">
+	   	<xsl:apply-templates select="." mode="VALIDATE_DEFINITIONS"/>	
+	   </xsl:if>
+   </xsl:if>
+   </xsl:variable>
+  <xsl:variable name = "validate_descendents_content">
+   	<xsl:apply-templates select="." mode="VALIDATE_2_DESCENDANT_1D"> <xsl:with-param name="currpath" select="normalize-space(../@path_doc)"/> <xsl:with-param name="containing" select="@name"/> </xsl:apply-templates>
   <xsl:apply-templates select="." mode="VALIDATE_2_DESCENDANT_2D"> <xsl:with-param name="currpath" select="normalize-space(../@path_doc)"/> <xsl:with-param name="containing" select="@name"/> </xsl:apply-templates>
   <xsl:apply-templates select="." mode="VALIDATE_2_DESCENDANT_3D"> <xsl:with-param name="currpath" select="normalize-space(../@path_doc)"/> <xsl:with-param name="containing" select="@name"/> </xsl:apply-templates>
   <xsl:apply-templates select="." mode="VALIDATE_2_DESCENDANT_4D"> <xsl:with-param name="currpath" select="normalize-space(../@path_doc)"/> <xsl:with-param name="containing" select="@name"/> </xsl:apply-templates>
@@ -2353,9 +2369,18 @@ or @data_type='cpx_1d_type' or @data_type='CPX_1D') and contains(@path_doc,$cont
     <xsl:with-param name="currpath" select="normalize-space(../@path_doc)"/>
     <xsl:with-param name="containing" select="@name"/>
   </xsl:apply-templates>
-  if (status.eq.-1) then
-    return 
-  end if
+  </xsl:variable>
+<xsl:choose>
+<xsl:when test="@data_type='structure'">
+  <xsl:if test="normalize-space($ids-validate-struct-definition-content)">
+  ! Validation of <xsl:value-of select = "@path"/> !ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>
+  call ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(ids%<xsl:value-of select = "@name"/>, ids_name//"/<xsl:value-of select = "@name"/>", status, err_msg, ids_time_mode, ids_time_size)
+  if (status.eq.-1) return
+  </xsl:if>
+  <xsl:if test="normalize-space($validate_descendents_content)">
+  <xsl:value-of select="$validate_descendents_content"/>
+  if (status.eq.-1) return
+  </xsl:if>
 </xsl:when>
 <xsl:when test="@data_type='struct_array'">
 <xsl:variable name="act_index">
@@ -2370,8 +2395,10 @@ or @data_type='cpx_1d_type' or @data_type='CPX_1D') and contains(@path_doc,$cont
   </xsl:variable>
   if (associated(ids%<xsl:value-of select = "@name"/>)) then
   do <xsl:value-of select = "$act_index"/> = 1, size(ids%<xsl:value-of select = "@name"/>)
-    ! Validation of <xsl:value-of select = "@path"/> <xsl:value-of select="../@path_doc"/>
-    call ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(ids%<xsl:value-of select = "@name"/>(<xsl:value-of select = "$act_index"/>), ids_name//"/<xsl:value-of select = "@name"/>", status, err_msg, ids_time_mode, ids_time_size) 
+    ! Validation of <xsl:value-of select = "@path"/> <xsl:value-of select="../@path_doc"/>  !ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>
+    <xsl:if test="normalize-space($ids-validate-struct-definition-content)">
+    call ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(ids%<xsl:value-of select = "@name"/>(<xsl:value-of select = "$act_index"/>), ids_name//"/<xsl:value-of select = "@name"/>", status, err_msg, ids_time_mode, ids_time_size)
+    </xsl:if>
       <xsl:apply-templates select="." mode="VALIDATE_2_DESCENDANT_1D"> <xsl:with-param name="currpath" select="normalize-space(../@path_doc)"/> <xsl:with-param name="containing" select="concat(@name,'(',$act_index,')')"/> </xsl:apply-templates>
       <xsl:apply-templates select="." mode="VALIDATE_2_DESCENDANT_2D"> <xsl:with-param name="currpath" select="normalize-space(../@path_doc)"/> <xsl:with-param name="containing" select="concat(@name,'(',$act_index,')')"/> </xsl:apply-templates>
       <xsl:apply-templates select="." mode="VALIDATE_2_DESCENDANT_3D"> <xsl:with-param name="currpath" select="normalize-space(../@path_doc)"/> <xsl:with-param name="containing" select="concat(@name,'(',$act_index,')')"/> </xsl:apply-templates>
@@ -2392,7 +2419,6 @@ or @data_type='cpx_1d_type' or @data_type='CPX_1D') and contains(@path_doc,$cont
   <xsl:when test="@data_type='struct_array' or @data_type='flt_1d_type' or @data_type='FLT_1D'
       or @data_type='int_1d_type' or @data_type='INT_1D'
       or @data_type='cpx_1d_type' or @data_type='CPX_1D'">
-
       <xsl:apply-templates select="." mode="VALIDATE_FIXED_SIZE_COORDINATES">
         <xsl:with-param name="coord" select="@coordinate1"/>
         <xsl:with-param name="dimension" select="'0'"/>
@@ -2523,6 +2549,18 @@ end if
       </xsl:otherwise>
     </xsl:choose>
   </xsl:variable>
+  <xsl:variable name="ids-validate-struct-content">
+    <xsl:apply-templates select="." mode="VALIDATE_2_DESCENDANT_1D"> <xsl:with-param name="currpath" select="normalize-space(@path_doc)"/> <xsl:with-param name="containing" select="@path_doc"/> </xsl:apply-templates>
+    <xsl:apply-templates select="." mode="VALIDATE_2_DESCENDANT_2D"> <xsl:with-param name="currpath" select="normalize-space(@path_doc)"/> <xsl:with-param name="containing" select="@path_doc"/> </xsl:apply-templates>
+    <xsl:apply-templates select="." mode="VALIDATE_2_DESCENDANT_3D"> <xsl:with-param name="currpath" select="normalize-space(@path_doc)"/> <xsl:with-param name="containing" select="@path_doc"/> </xsl:apply-templates>
+    <xsl:apply-templates select="." mode="VALIDATE_2_DESCENDANT_4D"> <xsl:with-param name="currpath" select="normalize-space(@path_doc)"/> <xsl:with-param name="containing" select="@path_doc"/> </xsl:apply-templates>
+    <xsl:apply-templates select="." mode="VALIDATE_2_DESCENDANT_5D"> <xsl:with-param name="currpath" select="normalize-space(@path_doc)"/> <xsl:with-param name="containing" select="@path_doc"/> </xsl:apply-templates>
+    <xsl:apply-templates select="." mode="VALIDATE_2_DESCENDANT_6D"> <xsl:with-param name="currpath" select="normalize-space(@path_doc)"/> <xsl:with-param name="containing" select="@path_doc"/> </xsl:apply-templates>
+  </xsl:variable>
+  <xsl:variable name="validate-child-content">
+  <xsl:apply-templates select="field" mode="VALIDATE_CHILD"/>
+  </xsl:variable>
+  <xsl:if test="normalize-space(concat($ids-validate-struct-content,$validate-child-content))">
   <xsl:if test="not (preceding::field[@structure_reference=$this-type] or /IDSs/utilities/field/@name=$this-type)">
   !----------------------------------------------------------------------- 
   !--- validation of <xsl:value-of select="$this-type"/>
@@ -2541,19 +2579,15 @@ end if
     logical :: check, error
     integer, allocatable :: shape_array(:)
 
-    <xsl:apply-templates select="." mode="VALIDATE_2_DESCENDANT_1D"> <xsl:with-param name="currpath" select="normalize-space(@path_doc)"/> <xsl:with-param name="containing" select="@path_doc"/> </xsl:apply-templates>
-    <xsl:apply-templates select="." mode="VALIDATE_2_DESCENDANT_2D"> <xsl:with-param name="currpath" select="normalize-space(@path_doc)"/> <xsl:with-param name="containing" select="@path_doc"/> </xsl:apply-templates>
-    <xsl:apply-templates select="." mode="VALIDATE_2_DESCENDANT_3D"> <xsl:with-param name="currpath" select="normalize-space(@path_doc)"/> <xsl:with-param name="containing" select="@path_doc"/> </xsl:apply-templates>
-    <xsl:apply-templates select="." mode="VALIDATE_2_DESCENDANT_4D"> <xsl:with-param name="currpath" select="normalize-space(@path_doc)"/> <xsl:with-param name="containing" select="@path_doc"/> </xsl:apply-templates>
-    <xsl:apply-templates select="." mode="VALIDATE_2_DESCENDANT_5D"> <xsl:with-param name="currpath" select="normalize-space(@path_doc)"/> <xsl:with-param name="containing" select="@path_doc"/> </xsl:apply-templates>
-    <xsl:apply-templates select="." mode="VALIDATE_2_DESCENDANT_6D"> <xsl:with-param name="currpath" select="normalize-space(@path_doc)"/> <xsl:with-param name="containing" select="@path_doc"/> </xsl:apply-templates>
+    <xsl:value-of select="$ids-validate-struct-content"/>
     <!-- call ids_validate for each field of this structure-->
     if (status .ne. 0) return
-    <xsl:apply-templates select="field" mode="VALIDATE_CHILD"/>
+    <xsl:value-of select="$validate-child-content"/>
     <!-- check the array shapes of the field that have this structure as deeper common ancestor with the coordinateX reference field-->
     status = 0
     return
   end subroutine
+  </xsl:if>
   </xsl:if>
 </xsl:template>
 
@@ -2707,7 +2741,7 @@ end if
         </xsl:apply-templates>
         </xsl:variable >
   <!-- variable to check if the specified coordinate is present or not. 
-  this variable is a safeguard that prevents wrong code generation-->
+         this variable is a safeguard that prevents wrong code generation-->
         <xsl:variable name="ispresent">
     <xsl:choose>
     <xsl:when test="$currpath='' and not($coord='') and not(contains($coord, '1...'))">
@@ -2868,7 +2902,7 @@ end if
                 </xsl:if>
                 </xsl:variable>
                 <!-- !if (associated(ids%<xsl:value-of select="$string"/><xsl:value-of select="$act_struct"/>)) then
-    !do <xsl:value-of select="$act_index"/>=1, size(ids%<xsl:value-of select="$string"/><xsl:value-of select="$act_struct"/>,1) -->
+                         !do <xsl:value-of select="$act_index"/>=1, size(ids%<xsl:value-of select="$string"/><xsl:value-of select="$act_struct"/>,1) -->
                         <xsl:apply-templates select="." mode="VALIDATE_PATH_SINGLE">
                         <xsl:with-param name="newpath" select="substring-after($newpath,'/')"/>
                         <xsl:with-param name="root" select="$root"/>
@@ -2878,7 +2912,7 @@ end if
       <xsl:with-param name="targetdim" select="$targetdim"/>
                 </xsl:apply-templates>
               <!-- !  end do
-    !end if -->
+                       !end if -->
                 </xsl:when>
         </xsl:choose>
         </xsl:if>
@@ -3033,7 +3067,7 @@ end if
   </xsl:template>
 
   <!-- the get_indices function return the sub-string between parenthesis
-        process(i1)/coordinate_index ===> i1
+               process(i1)/coordinate_index ===> i1
         struct(process(i1)/coordinate_index)/substruc ===> process(i1)/coordinate_index
   -->
   <xsl:template match='field' mode="get_indices">
@@ -3992,7 +4026,7 @@ end module
     </xsl:variable>
     <xsl:variable name="fieldpath">path//"<xsl:value-of select="@name"/>"</xsl:variable>
     <!--<xsl:choose>
-        <xsl:when test="$contextvar='aosctx' or $contextvar='opctx'">"<xsl:value-of select="@name"/>"</xsl:when>
+                 <xsl:when test="$contextvar='aosctx' or $contextvar='opctx'">"<xsl:value-of select="@name"/>"</xsl:when>
         <xsl:otherwise>path//"<xsl:value-of select="@name"/>"</xsl:otherwise>
         </xsl:choose>-->
 
@@ -4534,7 +4568,7 @@ end module
     </xsl:variable>
     <xsl:variable name="fieldpath">path//"<xsl:value-of select="@name"/>"</xsl:variable>
     <!--<xsl:choose>
-        <xsl:when test="$contextvar='aosctx' or $contextvar='opctx'">"<xsl:value-of select="@name"/>"</xsl:when>
+                 <xsl:when test="$contextvar='aosctx' or $contextvar='opctx'">"<xsl:value-of select="@name"/>"</xsl:when>
         <xsl:otherwise>path//"<xsl:value-of select="@name"/>"</xsl:otherwise>
         </xsl:choose>-->
 
