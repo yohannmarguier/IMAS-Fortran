@@ -1484,6 +1484,10 @@ end module
 <!--+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
 <xsl:template match="IDS" mode="validate_struct">
   <xsl:result-document href="{@name}_validate.f90">
+<xsl:variable name="descendent-definitions">
+  <xsl:apply-templates select="field[@data_type='structure' or @data_type='struct_array']" mode="VALIDATE_DEFINITIONS"/>
+</xsl:variable>
+
 module <xsl:value-of select="@name"/>_validate_struct
 
 use utilities_validate_struct
@@ -1501,13 +1505,10 @@ interface ids_validate
       </xsl:otherwise>
     </xsl:choose>
   </xsl:variable>
+  <xsl:if test="contains($descendent-definitions,concat('subroutine ids_validate_struct_',local:unique_name($this-type),'('))">
   <xsl:if test="not (preceding::field[@structure_reference=$this-type] or /IDSs/utilities/field/@name=$this-type)">
-   <xsl:variable name="procedure-content">
-  <xsl:apply-templates select="." mode="VALIDATE_DEFINITIONS"/>
-  </xsl:variable>
-  <xsl:if test="normalize-space($procedure-content)">
           module procedure ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>
-  </xsl:if>
+   </xsl:if>
    </xsl:if>
   </xsl:for-each>
 end interface 
@@ -1551,9 +1552,12 @@ subroutine validate_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
 
   ids_time_size = size(ids%time)
   </xsl:if>
-
+  
+  
 <!-- call ids_validate for each field-->
-<xsl:apply-templates select="field" mode="VALIDATE_CHILD"/>
+<xsl:apply-templates select="field" mode="VALIDATE_CHILD">
+  <xsl:with-param name="descendent-definitions" select="$descendent-definitions"/>
+  </xsl:apply-templates>
 <!-- check the array shapes of the field of this ids-->
         <xsl:apply-templates select="field[@data_type='struct_array']" mode="VALIDATE_CHILD_1D"/>
   status = 0
@@ -1562,7 +1566,7 @@ subroutine validate_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
 end subroutine
 
 <!-- subroutine definition for each field for all depth-->
-<xsl:apply-templates select=".//field[@data_type='structure' or @data_type='struct_array']" mode="VALIDATE_DEFINITIONS"/>
+<xsl:value-of select="$descendent-definitions"/>
 end module    
   </xsl:result-document>
 </xsl:template>
@@ -1880,9 +1884,14 @@ interface ids_validate
       </xsl:otherwise>
     </xsl:choose>
   </xsl:variable>
-  <xsl:if test="not (preceding::field[@structure_reference=$this-type or @name=$this-type])">
+  <xsl:variable name="procedure-content">
+  <xsl:apply-templates select="." mode="VALIDATE_UTILITIES_DEFINITION"/>
+  </xsl:variable>
+  <xsl:if test="normalize-space($procedure-content)">
+   <xsl:if test="not (preceding::field[@structure_reference=$this-type or @name=$this-type])">
     module procedure ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>
-   </xsl:if>
+  </xsl:if>
+  </xsl:if>
   </xsl:for-each>
 end interface 
 
@@ -1941,48 +1950,7 @@ subroutine check_coordinate_size(array_size,coordsize,error,status, stringmsg, e
 end subroutine
 
 <xsl:for-each select=".//field[@data_type='structure' or @data_type='struct_array']">
-  <xsl:variable name="this-name" select="@name"/>
-  <xsl:variable name="this-type">
-    <xsl:choose>
-      <xsl:when test="@structure_reference='self'">
-        <xsl:value-of select="@name"/>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:value-of select="@structure_reference"/>
-      </xsl:otherwise>
-    </xsl:choose>
-  </xsl:variable>
-  <xsl:if test="not (preceding::field[@structure_reference=$this-type or @name=$this-type])">
-  !----------------------------------------------------------------------- 
-  !--- validation of <xsl:value-of select="$this-type"/>
-  !-----------------------------------------------------------------------
-  subroutine ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(ids, ids_name, status, err_msg, ids_time_mode, ids_time_size)
-    use ids_utilities, only: ids_<xsl:value-of select="$this-type"/>
-    use al_low_level_wrap, only: IDS_TIME_MODE_HOMOGENEOUS, IDS_TIME_MODE_HETEROGENEOUS, IDS_TIME_MODE_INDEPENDENT
-    implicit none
-    type(ids_<xsl:value-of select="$this-type"/>), intent(in) :: ids
-    character(len=*),  intent(in) :: ids_name
-    integer(ids_int), intent(out), optional :: status
-    character(:), allocatable, intent(out) :: err_msg
-    integer(ids_int), intent(in) :: ids_time_mode
-    integer(ids_int), intent(in) :: ids_time_size
-    integer(ids_int) :: array_size, i, itime, i1, i2, i3, i4, i5
-    logical :: check, error
-    integer, allocatable :: shape_array(:)
-    <!-- call ids_validate for each field of this structure-->
-    <xsl:apply-templates select="field" mode="VALIDATE_CHILD_UTILITIES"/>
-     <!-- check the arrays-->
-    <xsl:apply-templates select="." mode="VALIDATE_UTILITIES_CHILD_1D"/>
-    <xsl:apply-templates select="." mode="VALIDATE_UTILITIES_CHILD_2D"/>
-    <xsl:apply-templates select="." mode="VALIDATE_UTILITIES_CHILD_3D"/>
-    <xsl:apply-templates select="." mode="VALIDATE_UTILITIES_CHILD_4D"/>
-    <xsl:apply-templates select="." mode="VALIDATE_UTILITIES_CHILD_5D"/>
-    <xsl:apply-templates select="." mode="VALIDATE_UTILITIES_CHILD_6D"/>
-    status = 0
-    return
-  end subroutine
-
-  </xsl:if>
+  <xsl:apply-templates select="." mode="VALIDATE_UTILITIES_DEFINITION"/>
 </xsl:for-each>
 
 character(len=20) function arrstr(karray)
@@ -2030,6 +1998,56 @@ subroutine str_replace(str, old, new)
 
 end module 
 </xsl:result-document>
+</xsl:template>
+
+<xsl:template match="field" mode="VALIDATE_UTILITIES_DEFINITION">
+<xsl:variable name="this-name" select="@name"/>
+  <xsl:variable name="this-type">
+    <xsl:choose>
+      <xsl:when test="@structure_reference='self'">
+        <xsl:value-of select="@name"/>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:value-of select="@structure_reference"/>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:variable>
+  <xsl:variable name ="utilities_definition_content"> 
+    <!-- call ids_validate for each field of this structure-->
+    <xsl:apply-templates select="field" mode="VALIDATE_CHILD_UTILITIES"/>
+    <!-- check the arrays-->
+    <xsl:apply-templates select="." mode="VALIDATE_UTILITIES_CHILD_1D"/>
+    <xsl:apply-templates select="." mode="VALIDATE_UTILITIES_CHILD_2D"/>
+    <xsl:apply-templates select="." mode="VALIDATE_UTILITIES_CHILD_3D"/>
+    <xsl:apply-templates select="." mode="VALIDATE_UTILITIES_CHILD_4D"/>
+    <xsl:apply-templates select="." mode="VALIDATE_UTILITIES_CHILD_5D"/>
+    <xsl:apply-templates select="." mode="VALIDATE_UTILITIES_CHILD_6D"/>
+  </xsl:variable> 
+  
+  <xsl:if test="not (preceding::field[@structure_reference=$this-type or @name=$this-type])">
+  <xsl:if test="normalize-space($utilities_definition_content)">
+  !----------------------------------------------------------------------- 
+  !--- validation of <xsl:value-of select="$this-type"/>
+  !-----------------------------------------------------------------------
+  subroutine ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(ids, ids_name, status, err_msg, ids_time_mode, ids_time_size)
+    use ids_utilities, only: ids_<xsl:value-of select="$this-type"/>
+    use al_low_level_wrap, only: IDS_TIME_MODE_HOMOGENEOUS, IDS_TIME_MODE_HETEROGENEOUS, IDS_TIME_MODE_INDEPENDENT
+    implicit none
+    type(ids_<xsl:value-of select="$this-type"/>), intent(in) :: ids
+    character(len=*),  intent(in) :: ids_name
+    integer(ids_int), intent(out), optional :: status
+    character(:), allocatable, intent(out) :: err_msg
+    integer(ids_int), intent(in) :: ids_time_mode
+    integer(ids_int), intent(in) :: ids_time_size
+    integer(ids_int) :: array_size, i, itime, i1, i2, i3, i4, i5
+    logical :: check, error
+    integer, allocatable :: shape_array(:)
+    <xsl:value-of select="$utilities_definition_content" />
+    status = 0
+    return
+  end subroutine
+    </xsl:if>
+  </xsl:if>
 </xsl:template>
 
 <xsl:template match="field[@data_type='struct_array']" mode="VALIDATE_CHILD_1D">
@@ -2204,15 +2222,24 @@ or @data_type='cpx_1d_type' or @data_type='CPX_1D') and contains(@path_doc,$cont
       </xsl:otherwise>
     </xsl:choose>
   </xsl:variable>
+<xsl:variable name="definition_content">
+  <xsl:if test="preceding::field[@structure_reference=$this-type or @name=$this-type]">
+  <xsl:apply-templates select="preceding::field[@structure_reference=$this-type or @name=$this-type]" mode="VALIDATE_UTILITIES_DEFINITION"/>
+  </xsl:if>
+<xsl:if test="not(preceding::field[@structure_reference=$this-type or @name=$this-type])">
+<xsl:apply-templates select="." mode="VALIDATE_UTILITIES_DEFINITION"/>
+</xsl:if>
+</xsl:variable>
 <xsl:choose>
-<xsl:when test="@data_type='structure'">
+<xsl:when test="@data_type='structure'"> 
+ <xsl:if test="normalize-space($definition_content)">
   ! Validation of <xsl:value-of select = "@path"/>  ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>
   call ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(ids%<xsl:value-of select = "@name"/>, ids_name//"/<xsl:value-of select = "@name"/>", status, err_msg, ids_time_mode, ids_time_size)
-  if (status.eq.-1) then
-    return 
-  end if
+  if (status.eq.-1) return 
+ </xsl:if>
 </xsl:when>
 <xsl:when test="@data_type='struct_array'">
+  <xsl:if test="normalize-space($definition_content)">	
   if (associated(ids%<xsl:value-of select = "@name"/>)) then
   array_size = size(ids%<xsl:value-of select = "@name"/>)
   do i = 1, array_size
@@ -2224,6 +2251,7 @@ or @data_type='cpx_1d_type' or @data_type='CPX_1D') and contains(@path_doc,$cont
     end if
   end do
   end if 
+  </xsl:if>
   </xsl:when>
   <xsl:when test="@data_type='struct_array' or @data_type='flt_1d_type' or @data_type='FLT_1D'
       or @data_type='int_1d_type' or @data_type='INT_1D'
@@ -2332,9 +2360,9 @@ or @data_type='cpx_1d_type' or @data_type='CPX_1D') and contains(@path_doc,$cont
 </xsl:choose>
 </xsl:template>
 
-
 <!-- call validate routines for strucure and struct-array children -->
 <xsl:template match="field" mode="VALIDATE_CHILD">
+<xsl:param name="descendent-definitions"/>
 <xsl:variable name="this-type">
     <xsl:choose>
       <xsl:when test="@structure_reference='self'">
@@ -2345,17 +2373,15 @@ or @data_type='cpx_1d_type' or @data_type='CPX_1D') and contains(@path_doc,$cont
       </xsl:otherwise>
     </xsl:choose>
   </xsl:variable>
+  <xsl:variable name="text-uri" as="xs:string" select="unparsed-text('file:utilities_validate_struct.f90')"/>
   <xsl:variable name= "ids-validate-struct-definition-content">
-   <xsl:if test="/IDSs/utilities/field/@name=$this-type">
-   	yes
+   <xsl:if test="/IDSs/utilities/field/@name=$this-type and contains($text-uri,concat('subroutine ids_validate_struct_',local:unique_name($this-type),'('))">
+   	print
    </xsl:if>
-   <xsl:if test="not(IDSs/utilities/field/@name=$this-type)">
-   <xsl:if test="preceding::field[@structure_reference=$this-type]">
-   	<xsl:apply-templates select="preceding::field[@structure_reference=$this-type][1]" mode="VALIDATE_DEFINITIONS"/>	
+   <xsl:if test="not(/IDSs/utilities/field/@name=$this-type)">
+   <xsl:if test="contains($descendent-definitions,concat('subroutine ids_validate_struct_',local:unique_name($this-type),'('))">
+   	print
    </xsl:if>
-	   <xsl:if test="not(preceding::field[@structure_reference=$this-type])">
-	   	<xsl:apply-templates select="." mode="VALIDATE_DEFINITIONS"/>	
-	   </xsl:if>
    </xsl:if>
    </xsl:variable>
   <xsl:variable name = "validate_descendents_content">
@@ -2373,7 +2399,7 @@ or @data_type='cpx_1d_type' or @data_type='CPX_1D') and contains(@path_doc,$cont
 <xsl:choose>
 <xsl:when test="@data_type='structure'">
   <xsl:if test="normalize-space($ids-validate-struct-definition-content)">
-  ! Validation of <xsl:value-of select = "@path"/> !ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>
+  ! Validation of <xsl:value-of select = "@path"/>
   call ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(ids%<xsl:value-of select = "@name"/>, ids_name//"/<xsl:value-of select = "@name"/>", status, err_msg, ids_time_mode, ids_time_size)
   if (status.eq.-1) return
   </xsl:if>
@@ -2395,7 +2421,7 @@ or @data_type='cpx_1d_type' or @data_type='CPX_1D') and contains(@path_doc,$cont
   </xsl:variable>
   if (associated(ids%<xsl:value-of select = "@name"/>)) then
   do <xsl:value-of select = "$act_index"/> = 1, size(ids%<xsl:value-of select = "@name"/>)
-    ! Validation of <xsl:value-of select = "@path"/> <xsl:value-of select="../@path_doc"/>  !ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>
+    ! Validation of <xsl:value-of select = "@path"/>
     <xsl:if test="normalize-space($ids-validate-struct-definition-content)">
     call ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(ids%<xsl:value-of select = "@name"/>(<xsl:value-of select = "$act_index"/>), ids_name//"/<xsl:value-of select = "@name"/>", status, err_msg, ids_time_mode, ids_time_size)
     </xsl:if>
@@ -2549,6 +2575,9 @@ end if
       </xsl:otherwise>
     </xsl:choose>
   </xsl:variable>
+  <xsl:variable name="descendent-definitions">
+  <xsl:apply-templates select="field[@data_type='structure' or @data_type='struct_array']" mode="VALIDATE_DEFINITIONS"/>
+  </xsl:variable>
   <xsl:variable name="ids-validate-struct-content">
     <xsl:apply-templates select="." mode="VALIDATE_2_DESCENDANT_1D"> <xsl:with-param name="currpath" select="normalize-space(@path_doc)"/> <xsl:with-param name="containing" select="@path_doc"/> </xsl:apply-templates>
     <xsl:apply-templates select="." mode="VALIDATE_2_DESCENDANT_2D"> <xsl:with-param name="currpath" select="normalize-space(@path_doc)"/> <xsl:with-param name="containing" select="@path_doc"/> </xsl:apply-templates>
@@ -2558,7 +2587,9 @@ end if
     <xsl:apply-templates select="." mode="VALIDATE_2_DESCENDANT_6D"> <xsl:with-param name="currpath" select="normalize-space(@path_doc)"/> <xsl:with-param name="containing" select="@path_doc"/> </xsl:apply-templates>
   </xsl:variable>
   <xsl:variable name="validate-child-content">
-  <xsl:apply-templates select="field" mode="VALIDATE_CHILD"/>
+  <xsl:apply-templates select="field" mode="VALIDATE_CHILD">
+  <xsl:with-param name="descendent-definitions" select="$descendent-definitions"/>
+  </xsl:apply-templates>
   </xsl:variable>
   <xsl:if test="normalize-space(concat($ids-validate-struct-content,$validate-child-content))">
   <xsl:if test="not (preceding::field[@structure_reference=$this-type] or /IDSs/utilities/field/@name=$this-type)">
@@ -2589,6 +2620,7 @@ end if
   end subroutine
   </xsl:if>
   </xsl:if>
+  <xsl:value-of select="$descendent-definitions"/>
 </xsl:template>
 
 <!-- return yes if some field exist like @path_doc equals to the parameter path_doc_to_check -->
