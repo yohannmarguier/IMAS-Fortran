@@ -2384,8 +2384,10 @@ or @data_type='cpx_1d_type' or @data_type='CPX_1D') and contains(@path_doc,$cont
    </xsl:if>
    </xsl:if>
    </xsl:variable>
-  <xsl:variable name = "validate_descendents_content">
-   	<xsl:apply-templates select="." mode="VALIDATE_2_DESCENDANT_1D"> <xsl:with-param name="currpath" select="normalize-space(../@path_doc)"/> <xsl:with-param name="containing" select="@name"/> </xsl:apply-templates>
+<xsl:choose>
+   <xsl:when test="@data_type='structure'">
+<xsl:variable name = "validate_descendents_content">
+        <xsl:apply-templates select="." mode="VALIDATE_2_DESCENDANT_1D"> <xsl:with-param name="currpath" select="normalize-space(../@path_doc)"/> <xsl:with-param name="containing" select="@name"/> </xsl:apply-templates>
   <xsl:apply-templates select="." mode="VALIDATE_2_DESCENDANT_2D"> <xsl:with-param name="currpath" select="normalize-space(../@path_doc)"/> <xsl:with-param name="containing" select="@name"/> </xsl:apply-templates>
   <xsl:apply-templates select="." mode="VALIDATE_2_DESCENDANT_3D"> <xsl:with-param name="currpath" select="normalize-space(../@path_doc)"/> <xsl:with-param name="containing" select="@name"/> </xsl:apply-templates>
   <xsl:apply-templates select="." mode="VALIDATE_2_DESCENDANT_4D"> <xsl:with-param name="currpath" select="normalize-space(../@path_doc)"/> <xsl:with-param name="containing" select="@name"/> </xsl:apply-templates>
@@ -2396,8 +2398,7 @@ or @data_type='cpx_1d_type' or @data_type='CPX_1D') and contains(@path_doc,$cont
     <xsl:with-param name="containing" select="@name"/>
   </xsl:apply-templates>
   </xsl:variable>
-<xsl:choose>
-<xsl:when test="@data_type='structure'">
+
   <xsl:if test="normalize-space($ids-validate-struct-definition-content)">
   ! Validation of <xsl:value-of select = "@path"/>
   call ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(ids%<xsl:value-of select = "@name"/>, ids_name//"/<xsl:value-of select = "@name"/>", status, err_msg, ids_time_mode, ids_time_size)
@@ -2419,13 +2420,8 @@ or @data_type='cpx_1d_type' or @data_type='CPX_1D') and contains(@path_doc,$cont
       </xsl:otherwise>
     </xsl:choose>
   </xsl:variable>
-  if (associated(ids%<xsl:value-of select = "@name"/>)) then
-  do <xsl:value-of select = "$act_index"/> = 1, size(ids%<xsl:value-of select = "@name"/>)
-    ! Validation of <xsl:value-of select = "@path"/>
-    <xsl:if test="normalize-space($ids-validate-struct-definition-content)">
-    call ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(ids%<xsl:value-of select = "@name"/>(<xsl:value-of select = "$act_index"/>), ids_name//"/<xsl:value-of select = "@name"/>", status, err_msg, ids_time_mode, ids_time_size)
-    </xsl:if>
-      <xsl:apply-templates select="." mode="VALIDATE_2_DESCENDANT_1D"> <xsl:with-param name="currpath" select="normalize-space(../@path_doc)"/> <xsl:with-param name="containing" select="concat(@name,'(',$act_index,')')"/> </xsl:apply-templates>
+  <xsl:variable name = "validate_descendents_content">
+  <xsl:apply-templates select="." mode="VALIDATE_2_DESCENDANT_1D"> <xsl:with-param name="currpath" select="normalize-space(../@path_doc)"/> <xsl:with-param name="containing" select="concat(@name,'(',$act_index,')')"/> </xsl:apply-templates>
       <xsl:apply-templates select="." mode="VALIDATE_2_DESCENDANT_2D"> <xsl:with-param name="currpath" select="normalize-space(../@path_doc)"/> <xsl:with-param name="containing" select="concat(@name,'(',$act_index,')')"/> </xsl:apply-templates>
       <xsl:apply-templates select="." mode="VALIDATE_2_DESCENDANT_3D"> <xsl:with-param name="currpath" select="normalize-space(../@path_doc)"/> <xsl:with-param name="containing" select="concat(@name,'(',$act_index,')')"/> </xsl:apply-templates>
       <xsl:apply-templates select="." mode="VALIDATE_2_DESCENDANT_4D"> <xsl:with-param name="currpath" select="normalize-space(../@path_doc)"/> <xsl:with-param name="containing" select="concat(@name,'(',$act_index,')')"/> </xsl:apply-templates>
@@ -2435,12 +2431,28 @@ or @data_type='cpx_1d_type' or @data_type='CPX_1D') and contains(@path_doc,$cont
         <xsl:with-param name="currpath" select="normalize-space(../@path_doc)"/>
         <xsl:with-param name="containing" select="concat(@name,'(',$act_index,')')"/>
       </xsl:apply-templates>
+  </xsl:variable>
+  <xsl:if test="normalize-space($ids-validate-struct-definition-content) or normalize-space($validate_descendents_content)">
+  if (associated(ids%<xsl:value-of select = "@name"/>)) then
+  do <xsl:value-of select = "$act_index"/> = 1, size(ids%<xsl:value-of select = "@name"/>)
+    ! Validation of <xsl:value-of select = "@path"/>
+    <xsl:if test="normalize-space($ids-validate-struct-definition-content)">
+    call ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(ids%<xsl:value-of select = "@name"/>(<xsl:value-of select = "$act_index"/>), ids_name//"/<xsl:value-of select = "@name"/>", status, err_msg, ids_time_mode, ids_time_size)
     if (status.eq.-1) then
       call str_replace(err_msg,"<xsl:value-of select = "$act_index"/>",trim(str(<xsl:value-of select = "$act_index"/>)))
-      return 
+      return
     end if
+    </xsl:if>
+    <xsl:if test="normalize-space($validate_descendents_content)">
+      <xsl:value-of select="$validate_descendents_content"/>
+    if (status.eq.-1) then
+      call str_replace(err_msg,"<xsl:value-of select = "$act_index"/>",trim(str(<xsl:value-of select = "$act_index"/>)))
+      return
+    end if  
+    </xsl:if>
   end do
   end if 
+  </xsl:if>
   </xsl:when>
   <xsl:when test="@data_type='struct_array' or @data_type='flt_1d_type' or @data_type='FLT_1D'
       or @data_type='int_1d_type' or @data_type='INT_1D'
