@@ -4,3 +4,4 @@ fortran/
 makefile-gen
 idsroutines
 /build
+CMakeUserPresets.json
