@@ -9,7 +9,7 @@ program test_empty_static_aos
   character(len=132) :: usr
 
   call get_environment_variable("USER",usr)
-  call imas_create_env('ids',1,2,0,0,idx,TRIM(usr),'test','3')
+  call imas_open('imas:mdsplus?path=./test_db', FORCE_CREATE_PULSE, idx)
 
   cores%ids_properties%homogeneous_time = 1
   allocate(cores%time(1))
