@@ -25,7 +25,7 @@ program test
   call get_environment_variable("USER",usr)
 
   ! write(*,*) 'Open pulse in MDS !'
-  call imas_open('imas:mdsplus?path=./test_db', FORCE_CREATE_PULSE, idx)
+  call imas_open('imas:mdsplus?path=./test_db_test_core_sources_put', FORCE_CREATE_PULSE, idx)
 
   write(*,*) 'Created MDS pulse file, idx = ', idx
 

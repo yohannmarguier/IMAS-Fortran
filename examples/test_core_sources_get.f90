@@ -24,7 +24,7 @@ program test
 
   call get_environment_variable("USER",usr)
 
-  call imas_open('imas:mdsplus?path=./test_db', OPEN_PULSE, idx)
+  call imas_open('imas:mdsplus?path=./test_db_test_core_sources_get', OPEN_PULSE, idx)
 
   ! call imas_open_env(treename,pulse,run,idx,trim(usr),'test','3')
   ! call imas_open_env(treename,10,63,idx,'huynhp','test','3')
