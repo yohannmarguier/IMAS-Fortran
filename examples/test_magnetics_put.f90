@@ -4,24 +4,18 @@ program test_magnetics_put
 
   real(ids_real) :: time = 0.2
   integer(ids_int) :: interp = 2
-  integer :: pulse = 54
-  integer :: run = 1
   integer :: dynamicsize = 10
   integer :: staticsize = 3
-  integer :: pulsectx, status, i, j, b
+  integer :: idx, i, j, b
   type(ids_magnetics) :: magnetics
-  character(256) :: userName 
-  character(STRMAXLEN) :: uri 
-  integer, dimension(2) :: BACKEND = (/MDSPLUS_BACKEND, HDF5_BACKEND/)
-
-  call get_environment_variable("USER",userName)
+    character(len=7), dimension(2) :: BACKEND = ['mdsplus','hdf5   ']
 
   do b=1,size(BACKEND)
      print *,"Test with backend ",BACKEND(b)
 
-     call al_build_uri_from_legacy_parameters(BACKEND(b), pulse, run, userName, "test", "3", "", uri, status)
-     call al_begin_dataentry_action(uri, FORCE_CREATE_PULSE, pulsectx, status);
-     write(*,*) 'Created pulse file, pulsectx = ', pulsectx
+     call imas_open('imas:'//trim(BACKEND(b))//'?path=./test_db_test_core_profiles', FORCE_CREATE_PULSE, idx)
+
+     write(*,*) 'Created pulse file, idx = ', idx
   
      ! set static data
      magnetics%ids_properties%homogeneous_time = 1
@@ -41,9 +35,9 @@ program test_magnetics_put
      end do
      
      print *,"putting magnetics"
-     call ids_put(pulsectx,"magnetics",magnetics)
+     call ids_put(idx,"magnetics",magnetics)
      
-     call imas_close(pulsectx)
+     call imas_close(idx)
 
   end do
   

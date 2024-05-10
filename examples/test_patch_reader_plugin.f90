@@ -3,15 +3,9 @@ program test_patch_reader_plugin
   use ids_routines
   implicit none
 
-  integer :: i, j, k, idx, mode, status, nx, ny
+  integer :: i, j, k, idx, status, nx, ny
    
   type (ids_camera_ir) :: cir  ! Declaration of the empty ids to be filled
-  character(STRMAXLEN) :: uri
-  character(len=132):: usr
-
-  integer :: pulse = 500
-  integer :: run = 1
-  call get_environment_variable("USER",usr)
 
   cir%ids_properties%homogeneous_time = 1 ! Mandatory to define this property
   allocate(cir%time(2))
@@ -36,9 +30,8 @@ program test_patch_reader_plugin
   ! Creating the pulse file
  
  write(*,*) 'Creating pulse file, idx = ', idx
- call al_build_uri_from_legacy_parameters(MDSPLUS_BACKEND, pulse, run, usr, "test", "3", "", uri, status)
- call al_begin_dataentry_action(uri, FORCE_CREATE_PULSE, idx, status)
-  
+ call imas_open('imas:mdsplus?path=./test_db_test_patch_reader_plugin', FORCE_CREATE_PULSE, idx)
+
   call ids_put(idx,"camera_ir",cir)
   
   write(*,*) 'displaying frame 1', cir%frame(1)%surface_temperature
@@ -57,7 +50,7 @@ program test_patch_reader_plugin
   
   ! Opening the pulse file
   write(*,*) 'Opening pulse file, idx = ', idx
-  call al_begin_dataentry_action(uri, OPEN_PULSE, idx, status)
+  call imas_open('imas:mdsplus?path=./test_db_test_patch_reader_plugin', OPEN_PULSE, idx)
   
   call ids_get(idx,"camera_ir",cir)
   

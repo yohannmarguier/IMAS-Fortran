@@ -6,9 +6,6 @@ program test_empty_static_aos
   integer :: idx, s
   integer, parameter :: nsources = 3
 
-  character(len=132) :: usr
-
-  call get_environment_variable("USER",usr)
   call imas_open('imas:mdsplus?path=./test_db_test_empty_static_aos', FORCE_CREATE_PULSE, idx)
 
   cores%ids_properties%homogeneous_time = 1

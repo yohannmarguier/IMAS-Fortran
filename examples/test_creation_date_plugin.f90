@@ -6,19 +6,11 @@ program test
   integer :: idx, mode, status
    
   type (ids_magnetics) :: mag  ! Declaration of the empty ids to be filled
-  character(STRMAXLEN) :: uri
-  character(len=132):: usr
-  integer :: pulse = 54
-  integer :: run = 1
 
-  call get_environment_variable("USER",usr)
-
-  call al_build_uri_from_legacy_parameters(MDSPLUS_BACKEND, pulse, run, usr, "test", "3", "", uri, status)
   mag%ids_properties%homogeneous_time = 1 ! Mandatory to define this property
   allocate(mag%time(1))
   mag%time = 0.0
-  
- 
+   
   ! Registering the 'creation_date' plugin
   call al_register_plugin ('creation_date', status)
   
@@ -29,7 +21,8 @@ program test
   
   ! Creating the pulse file
   
-  call al_begin_dataentry_action(uri, FORCE_CREATE_PULSE, idx, status)
+  call imas_open('imas:mdsplus?path=./test_db_test_core_sources', FORCE_CREATE_PULSE, idx)
+
   write(*,*) 'Creating pulse file, idx = ', idx
   call ids_put(idx,"magnetics",mag)
 
@@ -41,7 +34,7 @@ program test
   
   ! Opening the pulse file to check the value of 'creation_date'
   
-  call al_begin_dataentry_action(uri, OPEN_PULSE, idx, status)
+  call imas_open('imas:mdsplus?path=./test_db_test_core_sources', OPEN_PULSE, idx)
   write(*,*) 'Opening pulse file, idx = ', idx
   
   write(*,*) 'Reading pulse file, idx = ', idx
