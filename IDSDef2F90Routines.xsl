@@ -2570,7 +2570,7 @@ end if
       if (associated(ids%<xsl:value-of select="@name"/>)) then
       shape_array = SHAPE(ids%<xsl:value-of select="@name"/>)
       array_size = size(ids%<xsl:value-of select="@name"/>,<xsl:value-of select="number($dimension)+1"/>)
-      if (ids_time_mode .eq. IDS_TIME_MODE_HOMOGENEOUS ) then
+      if (ids_time_mode .eq. IDS_TIME_MODE_HOMOGENEOUS .or. ids_time_mode .eq. IDS_TIME_MODE_HETEROGENEOUS) then
           if(array_size .ne. ids_time_size) then
             err_msg = "Element '<xsl:value-of select="@path_doc"/>' has incorrect shape ("//trim(arrstr(shape_array))//"): its coordinate in dimension 1 ('time') has size "//trim(str(ids_time_size))//"."
             status = -1 
