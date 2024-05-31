@@ -6,26 +6,15 @@ program test
   real(ids_real) :: vect1DDouble_1(10), time_1(10), vect1DDouble_2(12), time_2(12)
   type (ids_pf_active) :: pf, pf2, pf3  ! Declaration of the empty ids to be filled
 
-  integer :: idx, pulse, run, refpulse, refrun, status, i, lentime_1, dum1, lentime_2
+  integer :: idx, i, lentime_1, lentime_2
   integer :: interpol
   real(ids_real) :: temps, temps_ret, twant
   real(ids_real) :: double_3
 
-  character(len=132):: longstring, usr
   logical :: first_slice
-  character(len=5)::treename
-  pulse =10
-  run = 1
-  refpulse = 10
-  refrun =0
-  treename = 'ids'
 
-
-  call get_environment_variable("USER",usr)
-
-  call imas_create_env(treename,pulse,run,refpulse,refrun,idx,usr,'test','3')
+  call imas_open('imas:mdsplus?path=./test_db_test_pf', FORCE_CREATE_PULSE, idx)
   write(*,*) 'Created MDS pulse file, idx = ', idx
-
 
   ! Allocate a first generic vector and its time base
   lentime_1 = 10
@@ -36,7 +25,6 @@ program test
   lentime_2 = 12
   time_2 = (/11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0, 20.0, 21.0, 22.0/)
   vect1DDouble_2 = time_2*2.+10.
-
 
   ! allocate the ids fields
   allocate(pf%coil(2))
@@ -49,11 +37,6 @@ program test
   pf%coil(1)%name(1) = 'VS 1'
   allocate(pf%coil(2)%name(1))
   pf%coil(2)%name(1) = 'VS 2'
-
-  ! call ids_put(idx,"pf_active",pf)
-  ! write(*,*) 'Start Put non-timed'
-  ! call ids_put_non_timed(idx,"pf_active",pf)
-  ! write(*,*) 'Completed Put non-timed'
 
   ! start filling the time-dependent part of the ids and put_slice it progressively within a time loop
   allocate(pf%coil(1)%current%data(1))    ! One time slice only in signals

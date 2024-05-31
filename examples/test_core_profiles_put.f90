@@ -8,30 +8,18 @@ program test
   real(ids_real) :: time_1(10), vect1DDouble_1(10), time_2(12), vect1DDouble_2(12)
   type (ids_core_profiles) :: cp, cp2, cp3  ! Declaration of the empty ids to be filled
 
-  integer :: pulse, run, refpulse, refrun, status, i, j, k, dum1, b
+  integer :: idx, status, i, j, k, b
   real(ids_real) :: temps, temps_ret, twant
   real(ids_real) :: double_3
-  integer :: interpol, pulsectx
+  integer :: interpol
 
-  character(len=132):: longstring
-  character(len=5)::treename, version
-  character(len=132)::user, tokamak
-  character(STRMAXLEN):: uri
-  integer, dimension(2) :: BACKEND = (/MDSPLUS_BACKEND, HDF5_BACKEND/)
-  pulse = 400
-  run = 3
-
-
-  call get_environment_variable('USER',user)
-  tokamak = 'test'
-  version = '3'
+  character(len=7), dimension(2) :: BACKEND = ['mdsplus','hdf5   ']
 
    do b=1,size(BACKEND)
      print *,"Test with backend ",BACKEND(b)
 
-     call al_build_uri_from_legacy_parameters(BACKEND(b), pulse, run, user, tokamak, version, "", uri, status)
-     call al_begin_dataentry_action(uri, FORCE_CREATE_PULSE, pulsectx, status)
-     write(*,*) 'Created pulse file, status = ', status
+     call imas_open('imas:'//trim(BACKEND(b))//'?path=./test_db_test_core_profiles', FORCE_CREATE_PULSE, idx)
+     write(*,*) 'Created file, status = ', status
 
      ! Define a first generic vector and its time base
      time_1 = (/1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0/)
@@ -77,13 +65,13 @@ program test
      
      write(*,*) 'Start Putting the core_profiles IDS'
      
-     call ids_put(pulsectx,"core_profiles",cp)
+     call ids_put(idx,"core_profiles",cp)
      write(*,*) "========END of PUT Part======================"
      
      
      
 !!!! TEST OF THE GET FULL ids
-     call ids_get(pulsectx,"core_profiles",cp2)
+     call ids_get(idx,"core_profiles",cp2)
      write(*,*) "ids_Properties homogeneous : ", cp2%ids_Properties%homogeneous_time
      write(*,*) "ids_Properties comment : ", cp2%ids_Properties%comment(1)
      write(*,*) "Size of the profiles_1d array : ", size(cp2%profiles_1d)
@@ -112,7 +100,7 @@ program test
 !!!! TEST OF THE GET SLICE ids
      interpol = 2 ! Interpolation mode = Previous neighbour
      twant = 2.5
-     call ids_get_slice(pulsectx,"core_profiles",cp3, twant, interpol)
+     call ids_get_slice(idx,"core_profiles",cp3, twant, interpol)
      write(*,*) "========GET SLICE RESULTS AT TIME ", twant
      
      write(*,*) "ids_Properties homogeneous : ", cp3%ids_Properties%homogeneous_time
@@ -139,9 +127,7 @@ program test
      
      call ids_deallocate(cp)
      
-     call al_close_pulse(pulsectx, CLOSE_PULSE, status)
-     ! OR
-     ! call imas_close(pulsectx)
+     call imas_close(idx)
 
   end do
   

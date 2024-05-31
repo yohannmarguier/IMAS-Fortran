@@ -5,10 +5,7 @@ program test_empty_dynamic_aos
   type(ids_core_profiles) :: corep, corep2
   integer :: idx, s
 
-  character(len=132) :: usr
-
-  call get_environment_variable("USER",usr)
-  call imas_create_env('ids',1,2,0,0,idx,TRIM(usr),'test','3')
+  call imas_open('imas:mdsplus?path=./test_db_test_empty_dynamic_aos', FORCE_CREATE_PULSE, idx)
 
   corep%ids_properties%homogeneous_time = 1
   allocate(corep%time(1))

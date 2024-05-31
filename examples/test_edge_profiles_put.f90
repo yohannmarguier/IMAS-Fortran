@@ -10,33 +10,22 @@ program test
   real(ids_real) :: time_1(10), vect1DDouble_1(10), time_2(12), vect1DDouble_2(12)
   type (ids_edge_profiles) :: cp, cp2, cp3  ! Declaration of the empty ids to be filled
 
-  integer :: pulse, run, refpulse, refrun, status, i, j, k, dum1, nfast, nprofiles, nggd, b
-  integer :: interpol, pulsectx
+  integer :: status, i, j, k, nfast, nprofiles, nggd, b
+  integer :: interpol, idx
   real(ids_real) :: temps, temps_ret, twant
   real(ids_real) :: double_3
-  
-  character(len=132):: longstring
-  character(len=132)::user, tokamak, version
-  character(STRMAXLEN):: uri
-  integer, dimension(2) :: BACKEND = (/MDSPLUS_BACKEND, HDF5_BACKEND/)
-  
-  pulse =100
-  run = 3
-  
+
+  character(len=7), dimension(2) :: BACKEND = ['mdsplus','hdf5   ']
+
   ! length of each GGD AoS
   nfast = 100 ! total number of fast steps
   nprofiles = 10 ! save every 10 fast steps
   nggd = 50  ! save every 50 fast steps
-  
-  call get_environment_variable('USER',user)
-  tokamak = 'test'
-  version = '3'
 
   do b=1,size(BACKEND)
      print *,"Test with backend ",BACKEND(b)
-     call al_build_uri_from_legacy_parameters(BACKEND(b), pulse, run, user, tokamak, version, "", uri, status)
-     call al_begin_dataentry_action(uri, FORCE_CREATE_PULSE, pulsectx, status)
-     write(*,*) 'Created pulse file, pulsectx = ', pulsectx
+     call imas_open('imas:'//trim(BACKEND(b))//'?path=./test_db_test_core_profiles', FORCE_CREATE_PULSE, idx)
+     write(*,*) 'Created pulse file, idx = ', idx
 
      ! Define a first generic vector and its time base
      time_1 = (/1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0/)
@@ -51,7 +40,7 @@ program test
      allocate(cp%ids_properties%comment(1))
      cp%ids_properties%comment(1) = 'This is a test ids'
      
-     ! call ids_put_non_timed(pulsectx,"edge_profiles",cp)  ! OLD LL
+     ! call ids_put_non_timed(idx,"edge_profiles",cp)  ! OLD LL
      ! write(*,*) 'Completed put_non_timed'
      
      allocate(cp%ggd_fast(nfast))
@@ -86,11 +75,11 @@ program test
      !  cp%time(i) = cp%ggd_fast(i)%time
      !enddo
 
-     call ids_put(pulsectx,"edge_profiles",cp)  ! First PUT must be called with dynamic fields to be used by subsequent put_slice calls already ALLOCATED and FILLED 
+     call ids_put(idx,"edge_profiles",cp)  ! First PUT must be called with dynamic fields to be used by subsequent put_slice calls already ALLOCATED and FILLED 
      call ids_deallocate(cp)  ! reinitialize the IDS variable after each put/put_slice to loop again
      write(*,*) "Put completed"
 
-     call al_close_pulse(pulsectx, FORCE_CREATE_PULSE, status)
+     call imas_close(idx)
   end do
   
 end program test

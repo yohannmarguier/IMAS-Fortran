@@ -4,23 +4,16 @@ program test_multi_put_slice_dynamic
 
   type(ids_equilibrium) :: equil, equil_check
   integer :: status, pctx, i, j
-  character(len=132):: usr
-  character(STRMAXLEN):: uri
-  integer :: pulse, run, s, r, b
-  integer, dimension(2) :: BACKEND = (/MDSPLUS_BACKEND, HDF5_BACKEND/)
-
-  pulse = 1
-  run  = 1234
+  integer :: s, r, b
+  character(len=7), dimension(2) :: BACKEND = ['mdsplus','hdf5   ']
   s    = 2
   r    = 2
-  call get_environment_variable("USER",usr)
 
   do b=1,size(BACKEND)
      print *,"Test with backend ",BACKEND(b)
 
-     call al_build_uri_from_legacy_parameters(BACKEND(b),pulse,run,usr,"test","3", "", uri, status)
-     call al_begin_dataentry_action(uri, FORCE_CREATE_PULSE, pctx, status)
-     ! if (status.ne.0) ERROR STOP 'Error setting up the pulse'
+     call imas_open('imas:'//trim(BACKEND(b))//'?path=./test_db_test_core_profiles', FORCE_CREATE_PULSE, pctx)
+
      if (status.ne.0) ERROR STOP 'Error creating the pulse'
   
      equil%ids_properties%homogeneous_time = 1

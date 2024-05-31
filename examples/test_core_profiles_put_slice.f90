@@ -8,27 +8,13 @@ program test
   real(ids_real) :: time_1(10), vect1DDouble_1(10), time_2(12), vect1DDouble_2(12)
   type (ids_core_profiles) :: cp, cp2, cp3  ! Declaration of the empty ids to be filled
 
-  integer :: idx, pulse, run, refpulse, refrun, status, i, j, k, dum1
-  integer :: interpol
+  integer :: idx, i, j, k
   real(ids_real) :: temps, temps_ret, twant
   real(ids_real) :: double_3
   logical :: first_slice
 
-  character(len=132):: longstring, usr
-
-  character(len=5)::treename
-  pulse =400
-  run = 3
-  refpulse = 10
-  refrun =0
-  treename = 'ids'
-
-  call get_environment_variable("USER",usr)
-
-  ! write(*,*) 'Open pulse in MDS !'
-  call imas_create_env(treename,pulse,run,refpulse,refrun,idx,usr,'test','3')
-  write(*,*) 'Created MDS pulse file, idx = ', idx
-
+  call imas_open('imas:mdsplus?path=./test_db_test_core_profiles', FORCE_CREATE_PULSE, idx)
+  write(*,*) 'Created MDS file, idx = ', idx
 
   ! Define a first generic vector and its time base
   time_1 = (/1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0/)

@@ -31,12 +31,10 @@ PROGRAM initpulse
    dataVersion = trim(buffer)
 
    print *,"CREATE PULSEFILE ",TESTPULSE,TESTRUN," FOR FULL OPERATIONS"
-   CALL imas_create_env('ids',TESTPULSE,TESTRUN,0,0,idx,&
-      userName,'test',dataVersion)
+   call imas_open('imas:mdsplus?path=./test_db_initpulse', FORCE_CREATE_PULSE, idx)
 
    print *,"CREATE PULSEFILE ",TESTPULSE+1,TESTRUN+1," FOR SLICE OPERATIONS"
-   CALL imas_create_env('ids',TESTPULSE+1,TESTRUN+1,0,0,&
-      idxslice,userName,'test',dataVersion)
+   call imas_open('imas:mdsplus?path=./test_db_initpulse', FORCE_CREATE_PULSE, idxslice)
 
    call imas_close(idx)
    call imas_close(idxslice)

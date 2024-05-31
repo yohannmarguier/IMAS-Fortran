@@ -4,40 +4,18 @@ program test
   use ids_routines
   implicit none
 
-  !integer,parameter :: ids_real=kind(1.0D0)
   real(ids_real) :: time_1(10), vect1DDouble_1(10), time_2(12), vect1DDouble_2(12)
   type (ids_core_profiles) :: cp, cp2, cp3  ! Declaration of the empty ids to be filled
 
-  integer :: idx, pulse, run, refpulse, refrun, status, i, j, dum1
+  integer :: idx, i, j
   integer :: interpol
   real(ids_real) :: temps, temps_ret, twant
   real(ids_real) :: double_3
 
-  character(len=132):: longstring, usr
-
-  character(len=5)::treename
-  character(STRMAXLEN):: uri
   character(:), allocatable :: errmsg
-
-  pulse =400
-  run = 3
-  refpulse = 10
-  refrun =0
-  treename = 'ids'
-
-  !call imas_connect('ssh://hpc-login4.iter.org') ! Use to connect a remote IMAS database / account
-
-  call get_environment_variable("USER",usr)
-
-  call al_build_uri_from_legacy_parameters(MDSPLUS_BACKEND, pulse, run, usr, "test", "3", "", uri, status)
-  !print *,TRIM(uri)
-  call al_begin_dataentry_action(uri,OPEN_PULSE,idx,status,errmsg)
-  if (status.ne.0) then
-     print *,"errmsg=",errmsg
-     STOP
-  end if
-  write(*,*) 'Opened MDS pulse file, idx = ', idx
-
+  call imas_open('imas:mdsplus?path=./test_db_test_core_profiles', OPEN_PULSE, idx)
+    
+  write(*,*) 'Opened MDS file, idx = ', idx
 
 !!!! TEST OF THE GET FULL IDS
   if (.TRUE.) THEN

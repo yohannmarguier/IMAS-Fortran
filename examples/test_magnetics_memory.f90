@@ -4,21 +4,14 @@ program test_magnetics_memory
 
   real(ids_real) :: time = 0.21
   integer(ids_int) :: interp = 2
-  integer :: pulse = 54
-  integer :: run = 1
   integer :: dynamicsize = 10
   integer :: staticsize = 3
-  integer :: pulsectx, status, i, j
+  integer :: idx, i, j
   type(ids_magnetics) :: magnetics, magnetics2, magnetics3
-  character(256) :: userName 
-  character(STRMAXLEN) :: uri
   integer :: slices, fl, d
 
-  call get_environment_variable("USER",userName)
-
-  call al_build_uri_from_legacy_parameters(MEMORY_BACKEND, pulse, run, userName, "test", "3", "", uri)
-  call al_begin_dataentry_action(uri, FORCE_CREATE_PULSE, pulsectx, status)
-  write(*,*) 'Created MDS pulse file, pulsectx = ', pulsectx
+  call imas_open('imas:memory?path=./test_db_test_magnetics', FORCE_CREATE_PULSE, idx)
+  write(*,*) 'Created MDS pulse file, idx = ', idx
   
   ! set static data
   magnetics%ids_properties%homogeneous_time = 1
@@ -38,10 +31,10 @@ program test_magnetics_memory
   end do
   
   print *,"putting magnetics"
-  call ids_put(pulsectx,"magnetics",magnetics)
+  call ids_put(idx,"magnetics",magnetics)
 
   print *,"getting full magnetics"
-  call ids_get(pulsectx,"magnetics",magnetics2)
+  call ids_get(idx,"magnetics",magnetics2)
 
   slices = SIZE(magnetics2%time)
   fl = SIZE(magnetics2%flux_loop)
@@ -57,11 +50,11 @@ program test_magnetics_memory
   end do
 
   print *,"get single slice of magnetics"
-  call ids_get_slice(pulsectx,"magnetics",magnetics3,time,interp)
+  call ids_get_slice(idx,"magnetics",magnetics3,time,interp)
 
   print *,"time(0) = ",magnetics3%time(1)
   print *,"flux_loop(0).flux.data(0) = ",magnetics3%flux_loop(1)%flux%data(1)
 
-  call imas_close(pulsectx)
+  call imas_close(idx)
 
 end program test_magnetics_memory

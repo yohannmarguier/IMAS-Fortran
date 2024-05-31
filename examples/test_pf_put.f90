@@ -6,32 +6,17 @@ program test
   real(ids_real) :: time_1(10), vect1DDouble_1(10), time_2(12), vect1DDouble_2(12)
   type (ids_pf_active) :: pf, pf2, pf3  ! Declaration of the empty ids to be filled
 
-  integer :: idx, pulse, run, refpulse, refrun, status, i, dum1, b
+  integer :: idx, i, b
   integer :: interpol
   real(ids_real) :: temps, temps_ret, twant
   real(ids_real) :: double_3
 
-  character(len=132) :: longstring, usr
-  character(STRMAXLEN) :: uri
-  integer, dimension(2) :: BACKEND = (/MDSPLUS_BACKEND, HDF5_BACKEND/)
-
-  character(len=5)::treename
-  pulse =20
-  run = 2
-  refpulse = 10
-  refrun =0
-  treename = 'ids'
-
-  call get_environment_variable("USER",usr)
+  character(len=7), dimension(2) :: BACKEND = ['mdsplus','hdf5   ']
 
   do b=1,size(BACKEND)
      print *,"Test with backend ",BACKEND(b)
 
-     ! write(*,*) 'Open pulse in MDS !'
-     call al_build_uri_from_legacy_parameters(BACKEND(b), pulse, run, usr, "test", "3", "", uri, status)
-     call al_begin_dataentry_action(uri, FORCE_CREATE_PULSE, idx, status)
-
-     !call imas_create_env(treename,pulse,run,refpulse,refrun,idx,usr,'test','3')
+     call imas_open('imas:'//trim(BACKEND(b))//'?path=./test_db_test_core_profiles', FORCE_CREATE_PULSE, idx)
      write(*,*) 'Created pulse file, idx = ', idx
 
      ! Define a first generic vector and its time base
@@ -48,7 +33,6 @@ program test
      allocate(pf%coil(1)%current%time(size(vect1DDouble_1)))
      allocate(pf%coil(2)%current%data(size(vect1DDouble_2)))
      allocate(pf%coil(2)%current%time(size(vect1DDouble_2)))
-     ! write(*,*) 'Passed pf allocation'
      ! Fill the ids fields with data
      pf%ids_properties%homogeneous_time = 0 ! Mandatory to define this property
      allocate(pf%ids_properties%comment(1))

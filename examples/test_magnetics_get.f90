@@ -4,28 +4,20 @@ program test_magnetics_get
 
   real(ids_real) :: time = 0.21
   integer(ids_int) :: interp = 2
-  integer :: pulse = 54
-  integer :: run = 1
-  integer :: dynamicsize = 10
-  integer :: staticsize = 3
-  integer :: pulsectx, status, i, j, b
+  integer :: i, j, b
   type(ids_magnetics) :: magnetics,magnetics_slice
-  character(256) :: userName 
-  character(STRMAXLEN) :: uri
-  integer :: slices, fl, d
-  integer, dimension(2) :: BACKEND = (/MDSPLUS_BACKEND, HDF5_BACKEND/)
+  integer :: idx, slices, fl, d
 
-  call get_environment_variable("USER",userName)
+  character(len=7), dimension(2) :: BACKEND = ['mdsplus','hdf5   ']
 
   do b=1,size(BACKEND)
      print *,"Test with backend ",BACKEND(b)
 
-     call al_build_uri_from_legacy_parameters(BACKEND(b), pulse, run, userName, "test", "3", "", uri, status)
-     call al_begin_dataentry_action(uri, OPEN_PULSE, pulsectx, status);
-     write(*,*) 'Opened pulse file, pulsectx = ', pulsectx
+     call imas_open('imas:'//trim(BACKEND(b))//'?path=./test_db_test_core_profiles', OPEN_PULSE, idx)     
+     write(*,*) 'Opened pulse file, idx = ', idx
 
      print *,"getting full magnetics"
-     call ids_get(pulsectx,"magnetics",magnetics)
+     call ids_get(idx,"magnetics",magnetics)
 
      slices = SIZE(magnetics%time)
      fl = SIZE(magnetics%flux_loop)
@@ -41,12 +33,12 @@ program test_magnetics_get
      end do
      
      print *,"get single slice of magnetics"
-     call ids_get_slice(pulsectx,"magnetics",magnetics_slice,time,interp)
+     call ids_get_slice(idx,"magnetics",magnetics_slice,time,interp)
      
      print *,"time(0) = ",magnetics%time(1)
      print *,"flux_loop(0).flux.data(0) = ",magnetics%flux_loop(1)%flux%data(1)
      
-     call imas_close(pulsectx)
+     call imas_close(idx)
 
   end do
   

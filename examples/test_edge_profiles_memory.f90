@@ -8,30 +8,18 @@ program test
   real(ids_real) :: time_1(10), vect1DDouble_1(10), time_2(12), vect1DDouble_2(12)
   type (ids_edge_profiles) :: ep, ep2, ep3 
 
-  integer :: idx, pulse, run, refpulse, refrun, status, i, j, k, dum1, nfast, nprofiles, nggd
-  integer :: interpol, pulsectx
+  integer :: i, j, k, dum1, nfast, nprofiles, nggd
+  integer :: interpol, idx
   real(ids_real) :: temps, temps_ret, twant
   real(ids_real) :: double_3
-
-  character(len=132):: longstring
-  character(len=132)::user, tokamak, version
-  character(STRMAXLEN):: uri
-
-  pulse =100
-  run = 3
 
   ! length of each GGD AoS
   nfast = 100 ! total number of fast steps
   nprofiles = 10 ! save every 10 fast steps
   nggd = 50  ! save every 50 fast steps
 
-  call get_environment_variable('USER',user)
-  tokamak = 'test'
-  version = '3'
-
-  call al_build_uri_from_legacy_parameters(MEMORY_BACKEND, pulse, run, user, tokamak, version, "", uri, status)
-  call al_begin_dataentry_action(uri, FORCE_CREATE_PULSE, pulsectx, status)
-  write(*,*) 'Created in-memory pulse, idx = ', pulsectx
+  call imas_open('imas:memory?path=./test_db_test_edge_profiles', FORCE_CREATE_PULSE, idx)
+  write(*,*) 'Created in-memory pulse, idx = ', idx
 
   ! Define a first generic vector and its time base
   time_1 = (/1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0/)
@@ -71,13 +59,13 @@ program test
      ep%grid_ggd(i)%space(1)%geometry_type%index = floor(real(i/2)) ! Let's assume the coordinate type is changing (quite unrealistic but we will see a variation of the grid !)
   enddo
 
-  call ids_put(pulsectx,"edge_profiles",ep)  ! First PUT must be called with dynamic fields to be used by subsequent put_slice calls already ALLOCATED and FILLED 
+  call ids_put(idx,"edge_profiles",ep)  ! First PUT must be called with dynamic fields to be used by subsequent put_slice calls already ALLOCATED and FILLED 
   call ids_deallocate(ep)  ! reinitialize the IDS variable after each put/put_slice to loop again
   write(*,*) "Put completed"
 
 
   if (.TRUE.) THEN
-     call ids_get(pulsectx,"edge_profiles",ep2)
+     call ids_get(idx,"edge_profiles",ep2)
      write(*,*) "IDS_Properties homogeneous : ", ep2%IDS_Properties%homogeneous_time
      write(*,*) "IDS_Properties comment : ", ep2%IDS_Properties%comment(1)
      write(*,*) "Size of ggd_fast : ", size(ep2%ggd_fast)
@@ -100,7 +88,7 @@ program test
   write(*,*) "Test of the GET_SLICE function"
   interpol = 1 ! Interpolation mode = closest neighbour
   twant = 4.06
-  call ids_get_slice(pulsectx,"edge_profiles",ep3,twant,interpol)
+  call ids_get_slice(idx,"edge_profiles",ep3,twant,interpol)
   write(*,*) "IDS_Properties homogeneous : ", ep3%IDS_Properties%homogeneous_time
   write(*,*) "IDS_Properties comment : ", ep3%IDS_Properties%comment(1)
   write(*,*) "Size of ggd_fast : ", size(ep3%ggd_fast)
@@ -118,5 +106,5 @@ program test
   call ids_deallocate(ep2)
   call ids_deallocate(ep3)
 
-  call imas_close(pulsectx)
+  call imas_close(idx)
 end program test

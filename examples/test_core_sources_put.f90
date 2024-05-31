@@ -8,24 +8,13 @@ program test
   real(ids_real) :: time_1(1), vect1DDouble_1(1), time_2(12), vect1DDouble_2(12)
   type (ids_core_sources) :: cs  ! Declaration of the empty ids to be filled
 
-  integer :: idx, pulse, run, refpulse, refrun, status, i, j, k, dum1
-  integer :: interpol
+  integer :: idx, i, j, k
   real(ids_real) :: temps, temps_ret, twant
   real(ids_real) :: double_3
 
-  character(len=132):: longstring, usr
+  ! write(*,*) 'Open pulse file in MDS !'
+  call imas_open('imas:mdsplus?path=./test_db_test_core_sources', FORCE_CREATE_PULSE, idx)
 
-  character(len=5)::treename
-  pulse =40
-  run = 4
-  refpulse = 10
-  refrun =0
-  treename = 'ids'
-
-  call get_environment_variable("USER",usr)
-
-  ! write(*,*) 'Open pulse in MDS !'
-  call imas_create_env(treename,pulse,run,refpulse,refrun,idx,usr,'test','3')
   write(*,*) 'Created MDS pulse file, idx = ', idx
 
   ! Define a first generic vector and its time base
@@ -61,26 +50,7 @@ program test
      enddo
   enddo
 
-  !do i=1,size(time_2)
-  !   allocate(cs%source(2)%profiles_1d(i)%grid%rho_tor_norm(i))        ! Varies the size of the array of structure children with time index
-  !   cs%source(2)%profiles_1d(i)%grid%rho_tor_norm = vect1DDouble_2(1:i)
-  !   cs%source(2)%profiles_1d(i)%time = time_2(i)
-  !   allocate(cs%source(2)%profiles_1d(i)%ion(i))  ! Test nested arrays of structure (type 2 AoS below a type 3), varying also the size of the nested AoS
-  !   do j=1,i
-  !      cs%source(2)%profiles_1d(i)%ion(j)%z_ion = time_2(j)
-  !      allocate(cs%source(2)%profiles_1d(i)%ion(j)%particles(3))    ! Fixed radial grid size = 3, for ion #j of time slice #i (already quite complicated)
-  !      cs%source(2)%profiles_1d(i)%ion(j)%particles = vect1DDouble_2(1:3) + j
-
-  !      allocate(cs%source(2)%profiles_1d(i)%ion(j)%state(10))  ! Test 3rd level of nested arrays of structure (type 2 AoS below a type 2 AoS below a type 3)
-  !      do k=1,10
-  !          cs%source(2)%profiles_1d(i)%ion(j)%state(k)%z_min = k
-  !      enddo
-  !   enddo
-  !enddo
-
-
   ! Fill the ids fields with data
-  ! cs%ids_properties%homogeneous_time = 0 ! Mandatory to define this property
   cs%ids_properties%homogeneous_time = 1 ! Mandatory to define this property
 
   allocate(cs%ids_properties%comment(1))

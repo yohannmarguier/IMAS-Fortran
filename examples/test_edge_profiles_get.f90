@@ -8,29 +8,16 @@ program test
   real(ids_real) :: time_1(10), vect1DDouble_1(10), time_2(12), vect1DDouble_2(12)
   type (ids_edge_profiles) :: cp, cp2, cp3  ! Declaration of the empty ids to be filled
 
-  integer :: idx, pulse, run, refpulse, refrun, status, i, j, dum1, b
+  integer :: idx, i, j, b
   integer :: interpol
   real(ids_real) :: temps, temps_ret, twant
   real(ids_real) :: double_3
-  integer, dimension(2) :: BACKEND = (/MDSPLUS_BACKEND, HDF5_BACKEND/)
-
-  character(len=132):: longstring
-  character(STRMAXLEN):: uri
-
-  character(len=132)::tokamak, user, version
-  pulse =100
-  run = 3
-
-  call get_environment_variable('USER',user)
-  tokamak = 'test'
-  version = '3'
-
+  character(len=7), dimension(2) :: BACKEND = ['mdsplus','hdf5   ']
 
   do b=1,size(BACKEND)
      print *,"Test with backend ",BACKEND(b)
 
-     call al_build_uri_from_legacy_parameters(BACKEND(b), pulse, run, user, tokamak, version, "", uri, status)
-     call al_begin_dataentry_action(uri, OPEN_PULSE, idx, status);
+     call imas_open('imas:'//trim(BACKEND(b))//'?path=./test_db_test_core_profiles', OPEN_PULSE, idx)
      write(*,*) 'Opened pulse file, idx = ', idx
 
 
@@ -78,7 +65,7 @@ program test
      call ids_deallocate(cp)
      call ids_deallocate(cp2)
      
-     call al_close_pulse(idx, OPEN_PULSE, status)
+     call imas_close(idx)
      write(*,*) "Program completed"
 
   end do
