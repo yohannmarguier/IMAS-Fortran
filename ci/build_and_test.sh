@@ -8,25 +8,94 @@ set -e -o pipefail
 echo "Loading modules..."
 
 # Set up environment such that module files can be loaded
+if test -f /etc/profile.d/modules.sh ;then
+. /etc/profile.d/modules.sh
+else
 . /usr/share/Modules/init/sh
+fi
 module purge
-# Load modules:
+
+# Check for TOOLCHAIN
+TOOLCHAIN=${TOOLCHAIN:-foss-2023b}
+# Load modules that correspond to toolchain
+case "$TOOLCHAIN" in
+  *-2020b)
+echo "... 2020b"
 MODULES=(
-    CMake/3.27.6-GCCcore-13.2.0
-    # Required for building the lowlevel and backends
-    Boost/1.83.0-GCC-13.2.0
-    HDF5/1.14.3-gompi-2023b
-    MDSplus/7.132.0-GCCcore-13.2.0
-    UDA/2.7.4-GCC-13.2.0
-    # Required for building MDSplus models
-    Saxon-HE/12.4-Java-21
-    # Python for documentation
-    Python/3.11.5-GCCcore-13.2.0
-    # Fortran compilers
+    CMake/3.24.3-GCCcore-10.2.0
+    Boost/1.74.0-GCC-10.2.0
+    Saxon-HE/10.3-Java-11
+    Blitz++/1.0.2-GCCcore-10.2.0
+    Python/3.8.6-GCCcore-10.2.0  # for docs
+    MDSplus/7.131.6-GCCcore-10.2.0
+    MDSplus-Java/7.131.6-GCCcore-10.2.0-Java-11
+    UDA/2.7.5-GCC-10.2.0
     NAGfor/6.2.14
     NVHPC/21.2
-    intel/2023b
 )
+  ;;&
+  *foss-2020b)
+echo "... foss-2020b"
+MODULES=(${MODULES[@]}
+    SciPy-bundle/2020.11-foss-2020b
+    HDF5/1.10.7-gompi-2020b
+)
+CMAKE_ARGS=(${CMAKE_ARGS[@]}
+    -DCMAKE_C_COMPILER=${CC:-gcc}
+    -DCMAKE_CXX_COMPILER=${CXX:-g++}
+    -DCMAKE_Fortran_COMPILER=${FC:-gfortran}
+)
+  ;;&
+  *intel-2020b)
+echo "... intel-2020b"
+MODULES=(${MODULES[@]}
+    iccifort/2020.4.304
+    HDF5/1.10.7-iimpi-2020b
+)
+CMAKE_ARGS=(${CMAKE_ARGS[@]}
+    -DCMAKE_C_COMPILER=${CC:-icc}
+    -DCMAKE_CXX_COMPILER=${CXX:-icpc}
+    -DCMAKE_Fortran_COMPILER=${FC:-ifort}
+)
+  ;;
+  *-2023b)
+echo "... 2023b"
+MODULES=(
+    CMake/3.27.6-GCCcore-13.2.0
+    Boost/1.83.0-GCC-13.2.0
+    UDA/2.7.5-GCC-13.2.0
+    Saxon-HE/12.4-Java-21
+    Blitz++/1.0.2-GCCcore-13.2.0
+    MDSplus/7.132.0-GCCcore-13.2.0
+    Python/3.11.5-GCCcore-13.2.0  # for docs
+)
+  ;;&
+  *foss-2023b)
+echo "... foss-2023b"
+MODULES=(${MODULES[@]}
+    HDF5/1.14.3-gompi-2023b
+)
+CMAKE_ARGS=(${CMAKE_ARGS[@]}
+    -DCMAKE_C_COMPILER=${CC:-gcc}
+    -DCMAKE_CXX_COMPILER=${CXX:-g++}
+    -DCMAKE_Fortran_COMPILER=${FC:-gfortran}
+)
+  ;;&
+  *intel-2023b)
+echo "... intel-2023b"
+MODULES=(${MODULES[@]}
+    intel/2023b
+    HDF5/1.14.3-iimpi-2023b
+)
+CMAKE_ARGS=(${CMAKE_ARGS[@]}
+    -DCMAKE_C_COMPILER=${CC:-icx}
+    -DCMAKE_CXX_COMPILER=${CXX:-icpx}
+    -DCMAKE_Fortran_COMPILER=${FC:-ifx}
+)
+  ;;
+esac
+echo "${MODULES[@]}" | tr " " "\n"
+
 module load "${MODULES[@]}"
 
 # Debuggging:
@@ -46,7 +115,7 @@ fi
 rm -rf build
 
 # CMake configuration:
-CMAKE_ARGS=(
+CMAKE_ARGS=(${CMAKE_ARGS[@]}
     -D "CMAKE_INSTALL_PREFIX=$(pwd)/test-install/"
     # Enable all backends
     -D AL_BACKEND_HDF5=ON
