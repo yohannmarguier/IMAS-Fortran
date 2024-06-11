@@ -8,7 +8,7 @@ program prog_list_all_occurrences
     integer, allocatable          :: occurrence_list(:)
     ! Open the database entry by providing an IMAS URI
     call imas_open( &
-        "imas:mdsplus?user=public;pulse=131024;run=41;database=ITER?version=3", &
+        "imas:mdsplus?user=public;pulse=131024;run=41;database=ITER;version=3", &
         OPEN_PULSE, data_entry, status)
 
     call list_all_occurrences(data_entry, "core_profiles", "ids_properties/comment", node_content_list, occurrence_list)

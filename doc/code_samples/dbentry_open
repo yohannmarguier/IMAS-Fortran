@@ -7,7 +7,7 @@ program open_data_entry
 
     ! Open the database entry by providing an IMAS URI
     call imas_open( &
-        "imas:mdsplus?user=public;pulse=131024;run=41;database=ITER?version=3", &
+        "imas:mdsplus?user=public;pulse=131024;run=41;database=ITER;version=3", &
         OPEN_PULSE, data_entry, status)
 
     ! Alternatively, we can open an IDS providing legacy arguments
