@@ -46,7 +46,7 @@ Possible way to extend the types to single precision floats, c_int, etc
 
   integer(ids_int),  parameter :: ids_int_invalid     = -999999999_ids_int
   real(ids_real),    parameter :: ids_real_invalid    = -9.0E40_ids_real
-  complex(ids_real), parameter :: ids_complex_invalid = CMPLX(-9.0E40_ids_real,-9.0E40_ids_real)
+  complex(ids_real), parameter :: ids_complex_invalid = CMPLX(-9.0E40_ids_real,-9.0E40_ids_real,8)
 
   integer(ids_int), parameter :: ids_data_dictionary_version(3) = (/ ids_int_invalid , ids_int_invalid , ids_int_invalid /)  !! NOTE: to be filled with e.g. (/3,7,4/).
 
