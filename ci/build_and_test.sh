@@ -116,30 +116,33 @@ rm -rf build
 
 # CMake configuration:
 CMAKE_ARGS=(${CMAKE_ARGS[@]}
-    -D "CMAKE_INSTALL_PREFIX=$(pwd)/test-install/"
+    -D"CMAKE_INSTALL_PREFIX=$(pwd)/test-install/"
     # Enable all backends
-    -D AL_BACKEND_HDF5=ON
-    -D AL_BACKEND_MDSPLUS=ON
-    -D AL_BACKEND_UDA=ON
+    -DAL_BACKEND_HDF5=ON
+    -DAL_BACKEND_MDSPLUS=ON
+    -DAL_BACKEND_UDA=ON
     # Build MDSplus models
-    -D AL_BUILD_MDSPLUS_MODELS=ON
+    -DAL_BUILD_MDSPLUS_MODELS=ON
     # Download dependencies from HTTPS (using an access token):
-    -D AL_DOWNLOAD_DEPENDENCIES=ON
-    -D AL_COMMON_GIT_REPOSITORY=https://git.iter.org/scm/imas/al-common.git
-    -D AL_CORE_GIT_REPOSITORY=https://git.iter.org/scm/imas/al-core.git
-    -D AL_PLUGINS_GIT_REPOSITORY=https://git.iter.org/scm/imas/al-plugins.git
-    -D DD_GIT_REPOSITORY=https://git.iter.org/scm/imas/data-dictionary.git
+    -DAL_DOWNLOAD_DEPENDENCIES=ON
+    -DAL_COMMON_GIT_REPOSITORY=https://git.iter.org/scm/imas/al-common.git
+    -DAL_CORE_GIT_REPOSITORY=https://git.iter.org/scm/imas/al-core.git
+    -DAL_PLUGINS_GIT_REPOSITORY=https://git.iter.org/scm/imas/al-plugins.git
+    -DDD_GIT_REPOSITORY=https://git.iter.org/scm/imas/data-dictionary.git
     # DD version: can be set with DD_VERSION env variable, otherwise use latest master/3
-    -D DD_VERSION=${DD_VERSION:-master/3}
+    -DDD_VERSION=${DD_VERSION:-master/3}
     # HLI options
-    -D AL_EXAMPLES=ON
-    -D AL_TESTS=ON
-    -D AL_PLUGINS=ON
+    -DAL_EXAMPLES=ON
+    -DAL_TESTS=ON
+    -DAL_PLUGINS=ON
     # Build documentation
-    -D AL_HLI_DOCS=ON
+    -DAL_HLI_DOCS=ON
     # Work around Boost linker issues on 2020b toolchain
-    -D Boost_NO_BOOST_CMAKE=ON
+    -DBoost_NO_BOOST_CMAKE=ON
 )
+echo "CMake args:"
+echo ${CMAKE_ARGS[@]} | tr ' ' '\n'
+
 # Note: compilers are set as environment variables in the Bamboo config
 cmake -B build "${CMAKE_ARGS[@]}"
 
