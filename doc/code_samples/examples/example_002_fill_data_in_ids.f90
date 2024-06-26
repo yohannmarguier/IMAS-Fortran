@@ -32,12 +32,15 @@ subroutine creating_completly_new_ids()
 
     ! IDSs fields can br printed using write or print statement
     write(*,*) 'printing empty_core_profiles%time from creating_completly_new_ids() function'
-    write(*,'(5(F0.3,TR1))') empty_core_profiles%time
+    write(*,'(F5.2)') empty_core_profiles%time
 
     ! some fields are automatically written by AL during 'put' procedure
     ! AL adds some information behind your back. This is particularly important
     ! in case you want later on find out what particular version of AL was used when data were stored.
     ! examples of this type of fields are <ids>/ids_properties/version_put and <ids>/ids_properties/plugins
+
+    ! free memory
+    call ids_deallocate(empty_core_profiles)
 
 end subroutine creating_completly_new_ids
 
@@ -68,14 +71,16 @@ subroutine default_values_and_aos_operations()
     allocate(tmp_grid_ggd(1))
     call ids_copy(edge_profiles%grid_ggd(1), tmp_grid_ggd(1)) 
 
-    ! actual resize and AoS repopulation
+    ! first, deallocate structure contents and AoS itself
     call ids_deallocate_struct(edge_profiles%grid_ggd(1), .false.)
+    deallocate(edge_profiles%grid_ggd)
+
+    ! actual resize and AoS repopulation
     allocate(edge_profiles%grid_ggd(3))
     call ids_copy(tmp_grid_ggd(1), edge_profiles%grid_ggd(1))
 
     ! single element can be added to AoS the following way
     ! tmp_grid_ggd will be reused in this example
-    allocate(tmp_grid_ggd(1)%identifier%name(1))
     tmp_grid_ggd(1)%identifier%name(1) = 'Second test struct'
 
     ! append aos_element to edge_profiles.grid_ggd AoS
@@ -147,7 +152,7 @@ subroutine copying_and_validating_ids()
                  [3, 3])
 
     write(*,*) 'Filled 2D array (gyrokinetics_local/non_linear/fields_zonal_2d/phi_potential_perturbed_norm):'
-    write(*,'(3(F0.1,"+",F0.1,"i",TR1))') gyrokinetics_local%non_linear%fields_zonal_2d%phi_potential_perturbed_norm
+    write(*,'(3(f0.1,"+",f0.1,"i",TR1))') gyrokinetics_local%non_linear%fields_zonal_2d%phi_potential_perturbed_norm
 
     ! some fields have coordinates consistency. <isd>.validate() method checks for this consistency.
     ! example of field of this type is gyrokinetics_local/non_linear/fields_zonal_2d/phi_potential_perturbed_norm
