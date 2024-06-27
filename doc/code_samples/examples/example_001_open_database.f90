@@ -95,5 +95,37 @@ end subroutine create_db_entry_legacy
 
 
 subroutine create_db_entry_uri_with_path
+  !! Routine illustrating how to create database (various backends) using Fortran.
+  !! For a simplicity we use hardcoded locations for all files.
+
+  character (len=*) :: uriHDF5  = 'imas:hdf5?path=./testdb_hdf5'
+  character (len=*) :: uriMDS   = 'imas:mdsplus?path=./testdb_mdsplus'
+  character (len=*) :: uriASCII = 'imas:ascii?path=./testdb_ascii'
+  integer           :: idx        ! index of opened input file
+  integer           :: status     ! error code of the operation 
+
+  call imas_open(trim(uriMDS), FORCE_CREATE_PULSE, idx, status)
+
+  if (status.ne.0) then
+    WRITE(*,*)  'Error! Issue while creating MDS+ file.'
+  end if
+  ! Content of ./testdb_mdsplus directory: ['ids_001.characteristics', 'ids_001.datafile', 'ids_001.tree']
+  ! Structure of this directory does not depends on entry content. All IDS data are stored in printed files
+
+  call imas_open(trim(uriHDF5), FORCE_CREATE_PULSE, idx, status)
+
+  if (status.ne.0) then
+    WRITE(*,*)  'Error! Issue while creating HDF5 file.'
+  end if
+  ! Content of ./testdb_hdf5 directory: ['master.h5']
+  ! Structure of this directory depends on entry content. Every IDS with data will be stored in <ids_name>.h5 file
+
+  call imas_open(trim(uriASCII), FORCE_CREATE_PULSE, idx, status)
+
+  if (status.ne.0) then
+    WRITE(*,*)  'Error! Issue while creating ASCII file.'
+  end if
+  ! Content of ./testdb_ascii directory: []
+  ! Structure of this directory depends on entry content. Every IDS with data will be stored in <ids_name>.ids file
 
 end subroutine create_db_entry_uri_with_path
