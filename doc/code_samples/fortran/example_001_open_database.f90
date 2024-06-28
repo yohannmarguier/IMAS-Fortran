@@ -58,7 +58,7 @@ end subroutine open_db_entry_uri
 subroutine create_db_entry_legacy
   !! Routine illustrating how to open pulse file (using Fortran) with
   !! a legacy based approach.
-
+  use ids_routines
   use ids_routines
   implicit none
 
@@ -82,10 +82,12 @@ subroutine create_db_entry_legacy
   call imas_create_env( treeName,          &
                         pulse,             &
                         run,               &
+                        0,                 &
+                        0,                 &
                         idx,               &
                         trim( userName ),  &
                         dbName,            &
-                        '3',
+                        '3',               &
                         status)
   if (status.ne.0) then
     WRITE(*,*)  'Error! Issue while creating MDS+ file.'
@@ -97,10 +99,12 @@ end subroutine create_db_entry_legacy
 subroutine create_db_entry_uri_with_path
   !! Routine illustrating how to create database (various backends) using Fortran.
   !! For a simplicity we use hardcoded locations for all files.
+  use ids_routines
+  use al_low_level_wrap
 
-  character (len=*) :: uriHDF5  = 'imas:hdf5?path=./testdb_hdf5'
-  character (len=*) :: uriMDS   = 'imas:mdsplus?path=./testdb_mdsplus'
-  character (len=*) :: uriASCII = 'imas:ascii?path=./testdb_ascii'
+  character (len=*), parameter :: uriHDF5  = 'imas:hdf5?path=./testdb_hdf5'
+  character (len=*), parameter :: uriMDS   = 'imas:mdsplus?path=./testdb_mdsplus'
+  character (len=*), parameter :: uriASCII = 'imas:ascii?path=./testdb_ascii'
   integer           :: idx        ! index of opened input file
   integer           :: status     ! error code of the operation 
 
