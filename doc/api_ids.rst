@@ -167,7 +167,7 @@ IDS API
         Access Layer, and :code:`.false.` if it was allocated directly in
         Fortran.
 
-.. f:subroutine:: ids_is_valid(in)
+.. f:function:: ids_is_valid(in)
 
     Verify if a data node is not empty.
 
