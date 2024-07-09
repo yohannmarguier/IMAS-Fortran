@@ -25,7 +25,6 @@ subroutine read_entire_ids()
     ! NOTE: this block of code uses OPEN_PULSE mode in order to read example data
     call imas_open('imas:mdsplus?path=./testdb_mdsplus', OPEN_PULSE, data_entry, status)
 
-    ! Load the equilibrium IDS, occurrence 0
     call ids_get(data_entry, "equilibrium", equilibrium)
 
     ! here you can access content of the IDS equilibrium
@@ -33,7 +32,7 @@ subroutine read_entire_ids()
     ! equilibrium.some_element = ...
     ! etc.
 
-    ! one may check if IDS was filled with data using <ids>.isDefined() method
+    ! one may check if IDS was filled with data using ids_ids_defined(<ids>) subroutine
     write(*,*) 'is equilibrium defined?: ', ids_is_defined(equilibrium)
     call ids_deallocate(equilibrium)
 
