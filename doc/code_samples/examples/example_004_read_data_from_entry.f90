@@ -25,7 +25,7 @@ subroutine read_entire_ids()
     ! NOTE: this block of code uses OPEN_PULSE mode in order to read example data
     call imas_open('imas:mdsplus?path=./testdb_mdsplus', OPEN_PULSE, data_entry, status)
 
-    call ids_get(data_entry, "equilibrium", equilibrium)
+    call ids_get(data_entry, 'equilibrium', equilibrium)
 
     ! here you can access content of the IDS equilibrium
     ! some_variable = equilibrium.some_element
