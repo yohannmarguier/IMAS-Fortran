@@ -95,7 +95,7 @@ subroutine read_slice()
     call ids_get_slice(data_entry, 'summary', summary, twant, CLOSEST_INTERP)
     ! closest time value to 1.75 is 2.0
     ! value for summary/global_quantities/ip/value and time=2 is 11.0
-    write(*,*) 'summary/global_quantities/ip/value for time=1: ', summary%global_quantities%ip%value ,'(Should be 11.0)'
+    write(*,*) 'summary/global_quantities/ip/value for time=2: ', summary%global_quantities%ip%value ,'(Should be 11.0)'
     call ids_deallocate(summary)
 
     ! this part of code presents LINEAR_INTERP. It is interpolation method that returns a linear interpolation between the existing slices before and after the requested time.
@@ -106,11 +106,7 @@ subroutine read_slice()
     ! NOTE: If time requested is smaller than <ids>.time[0], first slice will be returned. If requested time exceeds highest time, last slice will be returned.
     call ids_get_slice(data_entry, 'summary', summary, twant, LINEAR_INTERP)
     ! interpolated value for summary/global_quantities/ip/value and time=1.75 is 10.75
-    write(*,*) 'summary/global_quantities/ip/value for time=1: ', summary%global_quantities%ip%value , &
+    write(*,*) 'summary/global_quantities/ip/value for time=1.75: ', summary%global_quantities%ip%value , &
     '(Should be 10.75)'
     call ids_deallocate(summary)
 end subroutine read_slice
-
-subroutine partial_get()
-    ! The Fortran interface does not support partial_get
-end subroutine partial_get
