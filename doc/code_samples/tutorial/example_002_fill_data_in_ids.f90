@@ -212,9 +212,3 @@ subroutine copying_and_validating_ids()
     
 end subroutine copying_and_validating_ids
 
-
-program main
-    call creating_completly_new_ids()
-    call default_values_and_aos_operations()
-    call copying_and_validating_ids()
-end program main
