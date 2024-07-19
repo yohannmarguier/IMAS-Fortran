@@ -178,8 +178,3 @@ subroutine put_into_non_default_occurrence()
     end if 
 end subroutine put_into_non_default_occurrence
 
-program main
-    call put_entire_ids()
-    call put_slice()
-    call put_into_non_default_occurrence()
-end program main
