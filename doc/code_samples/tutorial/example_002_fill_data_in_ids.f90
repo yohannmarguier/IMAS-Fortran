@@ -112,8 +112,9 @@ subroutine default_values_and_aos_operations()
         edge_profiles%vacuum_toroidal_field%r0
     write(*,*) 'Default value for COMPLEX data                                                                 :', &
         IDS_COMPLEX_INVALID
-    write(*,*) 'Default value for 1+ dimensional data                                                          :', &
-        edge_profiles%vacuum_toroidal_field%b0
+    write(*,*) 'Default value for 1+ dimensional data is unassociated.'
+    write(*,*) 'Is edge_profiles/vacuum_toroidal_field/b0 associated?: ', &
+        associated(edge_profiles%vacuum_toroidal_field%b0)
 
     ! clear memory
     call ids_deallocate(edge_profiles)
@@ -211,4 +212,3 @@ subroutine copying_and_validating_ids()
     call ids_deallocate(gyrokinetics_local_copy)
     
 end subroutine copying_and_validating_ids
-
