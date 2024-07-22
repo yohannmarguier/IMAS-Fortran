@@ -3547,6 +3547,10 @@ interface ids_get
   module procedure get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/> <!-- subroutine for the whole IDS -->
 end interface 
 
+interface ids_getSample
+  module procedure getsample_struct_ids_<xsl:value-of select="local:unique_name(@name)"/> <!-- subroutine for the whole IDS -->
+end interface 
+
 interface ids_get_struct
   <xsl:for-each select=".//field[@data_type='structure' or @data_type='struct_array']">
     <xsl:variable name="this-type">
@@ -3643,6 +3647,133 @@ subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   return
 end subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
 
+
+subroutine getsample_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS,  tmin, tmax, dtime, interp, retstatus)
+use ids_schemas_<xsl:value-of select="@name"/>
+  use al_low_level_wrap
+  implicit none
+  integer(ids_int), intent(out), optional :: retstatus
+  character*(*) :: name
+  integer(ids_int) :: pulsectx, opctx, aosctx
+  integer(ids_int), intent(in) :: interp
+  real(ids_real), intent(in) ::  tmin, tmax
+  real(ids_real) , intent(in), dimension(:) :: dtime
+  type(ids_<xsl:value-of select="@name"/>) :: IDS
+  !--- local variables ---
+  integer(ids_int) :: status = 0
+  integer :: storedtimemode = IDS_TIME_MODE_UNKNOWN
+  real(ids_real), dimension(:), pointer :: cdtime
+  logical :: timedparent
+  integer(ids_int) :: aoslen, i, lenstring
+  integer(ids_int) :: size1, size2, size3, size4, size5, size6, size7
+  character(len=100000) :: longstring
+  character(len=300) :: timepath
+  character(*), parameter :: path = ''
+
+  if (tmax &lt; tmin) then
+    status = -1
+    write(*,*) 'GET_SAMPLE: error, tmax should be greater or equals to tmin'
+    if (present(retstatus)) retstatus = status
+    return
+  end if
+
+  if ((interp .ne. 0) .and. (size(dtime) == 0)) then
+    status = -1
+    write(*,*) 'GET_SAMPLE: error, interpolation mode should be 0 with no resampling (size(dtime) == 0)'
+    if (present(retstatus)) retstatus = status
+    return
+  end if
+
+  if ((interp == 0) .and. (size(dtime) &gt;= 1)) then
+    status = -1
+    write(*,*) 'GET_SAMPLE: error, interpolation mode should be specified (non zero) with resampling (size(dtime) &gt;= 1)'
+    if (present(retstatus)) retstatus = status
+    return
+  end if
+
+
+  <!-- storedtimemode = IDS_TIME_MODE_UNKNOWN
+  call al_begin_global_action(pulsectx, name, READ_OP, opctx, status) 
+  if (status.ne.0) then
+     !! error when trying to get new ctx => stop!
+     write(*,*) 'Error in al_begin_slice_action (from getsample for IDS <xsl:value-of select="@name"/>)'     
+     if (present(retstatus)) then
+      retstatus = status
+     end if
+     return
+  endif
+     ! Get homogeneous_time
+     write(*,*) "storedtimemode = ", storedtimemode
+     call get_int(opctx, "ids_properties/homogeneous_time",'', storedtimemode, status)
+     write(*,*) "storedtimemode = ", storedtimemode
+     if(isErrorCritical(status, opctx, "ids_properties/homogeneous_time")) then
+        if (present(retstatus)) then
+           retstatus = status
+        endif
+        return
+     endif
+     if (status.ne.0) then
+        write(*,*) 'Error in get_int "ids_properties/homogeneous_time" (from getsample for IDS <xsl:value-of select="@name"/>)'  
+        if (present(retstatus)) then
+           retstatus = status
+        endif
+        return
+     end if
+  call al_end_action(opctx, status)
+
+  if(storedtimemode == IDS_TIME_MODE_UNKNOWN) then
+        write(*,*) 'GET_SAMPLE: error reading homogeneous time for <xsl:value-of select="@name"/> IDS'
+        return
+  end if -->
+
+  allocate(cdtime(size(dtime)))
+  cdtime = dtime(:)
+  call al_begin_timerange_action(pulseCtx, name, READ_OP, tmin, tmax, cdtime, size(dtime), interp, opctx, status)
+  deallocate(cdtime)
+	if (status.ne.0) then
+    write(*,*) 'GET_SAMPLE: error calling al_begin_timerange_action for <xsl:value-of select="@name"/> IDS'
+    if (present(retstatus)) retstatus = status
+		return
+  end if
+
+  call al_bind_readback_plugins(opctx, status)
+  if (status.ne.0) then
+     write(*,*) 'GET_SAMPLE: Error in al_bind_readback_plugins (from ids_get for IDS <xsl:value-of select="@name"/>)'
+     if (present(retstatus)) then
+        retstatus = opctx
+     else
+        STOP 
+     end if
+  end if
+
+  timedparent = .false.
+ 	call set_c_data(IDS,.true.)
+
+  <xsl:apply-templates select="./field" mode="GET_FIELD">
+    <xsl:with-param name="structvar" select="'IDS'"/>
+    <xsl:with-param name="contextvar" select="'opctx'"/>
+    <xsl:with-param name="timedparentexpr" select="''"/>
+    <xsl:with-param name="root" select="'yes'"/>
+  </xsl:apply-templates>
+
+
+	call al_unbind_readback_plugins(opctx, status)
+  if (status.ne.0) then
+     write(*,*) 'Error in al_unbind_readback_plugins (from ids_get for IDS <xsl:value-of select="@name"/>)'
+     if (present(retstatus)) then
+        retstatus = opctx
+     else
+        STOP 
+     end if
+  end if
+
+  call al_end_action(opctx, status)
+
+  if (present(retstatus)) retstatus = status
+  return
+
+
+end subroutine getsample_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
 
 <xsl:for-each select=".//field[@data_type='structure' or @data_type='struct_array']">
   <xsl:variable name="this-type">
