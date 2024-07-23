@@ -13,7 +13,7 @@ program test_magnetics_getsample
    type(ids_magnetics) :: magnetics
    integer(ids_int) :: status
 
-   character(len=7), dimension(2) :: BACKEND = ['mdsplus','hdf5   ']
+   character(len=7), dimension(1) :: BACKEND = ['hdf5   ']
 
    tmin = 0.3
    tmax = 0.8
