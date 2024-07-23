@@ -128,6 +128,7 @@ CMAKE_ARGS=(${CMAKE_ARGS[@]}
     -DAL_DOWNLOAD_DEPENDENCIES=ON
     -DAL_COMMON_GIT_REPOSITORY=https://git.iter.org/scm/imas/al-common.git
     -DAL_CORE_GIT_REPOSITORY=https://git.iter.org/scm/imas/al-core.git
+    -DAL_CORE_VERSION=IMAS-3885_v2
     -DAL_PLUGINS_GIT_REPOSITORY=https://git.iter.org/scm/imas/al-plugins.git
     -DDD_GIT_REPOSITORY=https://git.iter.org/scm/imas/data-dictionary.git
     # DD version: can be set with DD_VERSION env variable, otherwise use latest master/3
