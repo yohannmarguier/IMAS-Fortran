@@ -560,7 +560,6 @@ contains
          csize = C_LOC(dsize(1))
          status = fstatus(c_al_begin_timerange_action(pctx, trim(cponame)//C_NULL_CHAR, rwmode, t1, t2, C_NULL_PTR, csize, interpmode, cctx))
       else
-         write(*,*) "data associated in al_begin_timerange_action "
          cptr = C_LOC(timedata(1))
          dsize = (/sizetime/)
          csize = C_LOC(dsize(1))

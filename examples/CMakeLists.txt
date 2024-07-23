@@ -27,6 +27,7 @@ set( TESTS
     test_magnetics_get
     test_magnetics_memory
     test_magnetics_put
+    test_magnetics_getsample
     test_magnetics_validate
     test_multi_put_slice_dynamic
     test_multi_put_slice_static

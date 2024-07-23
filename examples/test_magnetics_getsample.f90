@@ -6,12 +6,17 @@ program test_magnetics_getsample
    integer :: dynamicsize = 10
    integer :: staticsize = 3
    integer :: idx, i, j, b
+   real(ids_real) ::  tmin, tmax
+   integer(ids_int) :: valid_nb_time_slice
    real(ids_real), dimension(0) :: dtime
+   real(ids_real), dimension(1) :: dtime_1
    type(ids_magnetics) :: magnetics
    integer(ids_int) :: status
 
-   character(len=7), dimension(1) :: BACKEND = ['hdf5   ']
-   !character(len=7), dimension(2) :: BACKEND = ['mdsplus','hdf5   ']
+   character(len=7), dimension(2) :: BACKEND = ['mdsplus','hdf5   ']
+
+   tmin = 0.3
+   tmax = 0.8
 
    do b=1,size(BACKEND)
       print *,"Test with backend ",BACKEND(b)
@@ -47,22 +52,35 @@ program test_magnetics_getsample
       call imas_open('imas:'//trim(BACKEND(b))//'?path=./test_db_magnetics', OPEN_PULSE, idx)
       print *,"Reading sample "
 
-      !!dtime = (/0.3, 0.4, 0.5, 0.6, 0.7, 0.8/)
       status = 0
-      call ids_getSample(idx, "magnetics", magnetics,  0.3, 0.8, dtime, 0, status)
-      !!call ids_get(idx,"magnetics",magnetics)
+      call ids_getSample(idx, "magnetics", magnetics,  tmin, tmax, dtime, 0, status)
 
       if (status.ne.0) write(*,*) "Error in getSample example: ", "error in ids_getSample"
 
     
       if (ASSOCIATED(magnetics%time)) then
          write(*,*) "magnetics%time: ", size(magnetics%time)
-         if (size(magnetics%time) .ne. 6 .and. size(magnetics%flux_loop(0)%flux%data) .ne. 6) then
-            write(*,*) "Error in getSample example", "must have 6 time slice"
+         valid_nb_time_slice = int((tmax-tmin)/0.1+1)
+         if (size(magnetics%time) .ne. valid_nb_time_slice .and. size(magnetics%flux_loop(0)%flux%data) .ne. valid_nb_time_slice) then
+            write(*,*) "Error in getSample example", "must have ",valid_nb_time_slice," time slice"
          end if
       else
         write(*,*) "Error in getSample example", " magnetics%time is null"
       end if
+
+      dtime_1 =  (/0.02/) ! step
+
+      call ids_getSample(idx, "magnetics", magnetics,  tmin ,tmax, dtime_1, 1, status)
+
+      if (status.ne.0) write(*,*) "Error in getSample example: ", "error in ids_getSample"
+      if (ASSOCIATED(magnetics%time)) then
+         write(*,*) "magnetics%time: ", size(magnetics%time), " "
+         valid_nb_time_slice = int((tmax-tmin)/dtime_1(1)+1)
+         if (size(magnetics%time) .ne. valid_nb_time_slice .and. size(magnetics%flux_loop(0)%flux%data) .ne. valid_nb_time_slice) then
+            write(*,*) "Error in getSample example", "must have ",valid_nb_time_slice," time slice"
+         end if
+      end if
+
       call imas_close(idx)
 
    end do

@@ -3692,7 +3692,7 @@ use ids_schemas_<xsl:value-of select="@name"/>
   end if
 
 
-  <!-- storedtimemode = IDS_TIME_MODE_UNKNOWN
+  storedtimemode = IDS_TIME_MODE_UNKNOWN
   call al_begin_global_action(pulsectx, name, READ_OP, opctx, status) 
   if (status.ne.0) then
      !! error when trying to get new ctx => stop!
@@ -3703,9 +3703,7 @@ use ids_schemas_<xsl:value-of select="@name"/>
      return
   endif
      ! Get homogeneous_time
-     write(*,*) "storedtimemode = ", storedtimemode
      call get_int(opctx, "ids_properties/homogeneous_time",'', storedtimemode, status)
-     write(*,*) "storedtimemode = ", storedtimemode
      if(isErrorCritical(status, opctx, "ids_properties/homogeneous_time")) then
         if (present(retstatus)) then
            retstatus = status
@@ -3724,7 +3722,7 @@ use ids_schemas_<xsl:value-of select="@name"/>
   if(storedtimemode == IDS_TIME_MODE_UNKNOWN) then
         write(*,*) 'GET_SAMPLE: error reading homogeneous time for <xsl:value-of select="@name"/> IDS'
         return
-  end if -->
+  end if
 
   allocate(cdtime(size(dtime)))
   cdtime = dtime(:)
