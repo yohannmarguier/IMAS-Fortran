@@ -60,7 +60,7 @@ program test_magnetics_getsample
     
       if (ASSOCIATED(magnetics%time)) then
          write(*,*) "magnetics%time: ", size(magnetics%time)
-         valid_nb_time_slice = int((tmax-tmin)/0.1+1)
+         valid_nb_time_slice = nint((tmax-tmin)/0.1+1)
          if (size(magnetics%time) .ne. valid_nb_time_slice .and. size(magnetics%flux_loop(0)%flux%data) .ne. valid_nb_time_slice) then
             write(*,*) "Error in getSample example", "must have ",valid_nb_time_slice," time slice"
          end if
@@ -75,7 +75,7 @@ program test_magnetics_getsample
       if (status.ne.0) write(*,*) "Error in getSample example: ", "error in ids_getSample"
       if (ASSOCIATED(magnetics%time)) then
          write(*,*) "magnetics%time: ", size(magnetics%time), " "
-         valid_nb_time_slice = int((tmax-tmin)/dtime_1(1)+1)
+         valid_nb_time_slice = nint((tmax-tmin)/dtime_1(1)+1)
          if (size(magnetics%time) .ne. valid_nb_time_slice .and. size(magnetics%flux_loop(0)%flux%data) .ne. valid_nb_time_slice) then
             write(*,*) "Error in getSample example", "must have ",valid_nb_time_slice," time slice"
          end if
