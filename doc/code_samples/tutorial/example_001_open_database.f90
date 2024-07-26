@@ -110,40 +110,27 @@ subroutine create_db_entry_uri_with_path
   character (len=1024), parameter :: uriASCII = 'imas:ascii?path=./testdb_ascii'
   integer                      :: idx                                   ! index of opened input file
   integer                      :: status                                ! error code of the operation
-  character(:), allocatable    :: retmsg_mds, retmsg_hdf5, retmsg_ascii ! message returned by imas_open subroutine
 
-  call imas_open(uriMDS, FORCE_CREATE_PULSE, idx, status, retmsg_mds)
+  call imas_open(uriMDS, FORCE_CREATE_PULSE, idx, status)
 
   if (status.ne.0) then
     write(*,*)  'Error! Issue while creating MDS+ file.'
-
-    if (allocated(retmsg_mds)) then
-      write(*,*) 'error message was: ', retmsg_mds
-    end if
   end if
   ! Content of ./testdb_mdsplus directory: ['ids_001.characteristics', 'ids_001.datafile', 'ids_001.tree']
   ! Structure of this directory does not depends on entry content. All IDS data are stored in printed files
 
-  call imas_open(uriHDF5, FORCE_CREATE_PULSE, idx, status, retmsg_hdf5)
+  call imas_open(uriHDF5, FORCE_CREATE_PULSE, idx, status)
 
   if (status.ne.0) then
     write(*,*)  'Error! Issue while creating HDF5 file.'
-
-    if (allocated(retmsg_hdf5)) then
-      write(*,*) 'error message was: ', retmsg_hdf5
-    end if
   end if
   ! Content of ./testdb_hdf5 directory: ['master.h5']
   ! Structure of this directory depends on entry content. Every IDS with data will be stored in <ids_name>.h5 file
 
-  call imas_open(uriASCII, FORCE_CREATE_PULSE, idx, status, retmsg_ascii)
+  call imas_open(uriASCII, FORCE_CREATE_PULSE, idx, status)
 
   if (status.ne.0) then
     write(*,*)  'Error! Issue while creating ASCII file.'
-
-    if (allocated(retmsg_ascii)) then
-      write(*,*) 'error message was: ', retmsg_ascii
-    end if
   end if
   ! Content of ./testdb_ascii directory: []
   ! Structure of this directory depends on entry content. Every IDS with data will be stored in <ids_name>.ids file
