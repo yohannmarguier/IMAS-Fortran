@@ -12,5 +12,5 @@ all: $(OBJS)
 	$(FC) $(INCLUDE) -c $<
 
 clean:
-	rm *.o
-	rm test_new_examples
+	rm -f *.o
+	rm -f test_new_examples
