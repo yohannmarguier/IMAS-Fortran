@@ -1,5 +1,6 @@
+
+!!! This example focuses on putting IDS into entry and passing IDS validation
 subroutine put_entire_ids()
-    !! This example focuses on putting IDS into entry and passing IDS validation
     use ids_routines
     implicit none
 
@@ -39,8 +40,10 @@ subroutine put_entire_ids()
 
 end subroutine put_entire_ids
 
+
+
+!!! This example focuses on putting multiple slices of IDS into entry
 subroutine put_slice()
-    !! This example focuses on putting multiple slices of IDS into entry
     use ids_routines
     implicit none
 
@@ -122,8 +125,10 @@ subroutine put_slice()
     
 end subroutine put_slice
 
+
+
+!!! This example focuses on putting IDS into another occurrence
 subroutine put_into_non_default_occurrence()
-    !! This example focuses on putting IDS into another occurrence
     use ids_routines
     implicit none
 

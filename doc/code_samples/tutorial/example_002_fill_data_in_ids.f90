@@ -1,5 +1,7 @@
+!!! This example focuses on creating empty IDS and allocating arrays inside IDS structure
+
 subroutine creating_completly_new_ids()
-    ! This example focuses on creating empty IDS and allocating arrays inside IDS structure
+
     use ids_routines
     implicit none
 
@@ -44,9 +46,9 @@ subroutine creating_completly_new_ids()
 
 end subroutine creating_completly_new_ids
 
-
+!!! This example focuses on handling arrays of structures and default values
 subroutine default_values_and_aos_operations()
-    ! This example focuses on handling arrays of structures and default values
+
     use ids_routines
     implicit none
 
@@ -127,8 +129,8 @@ subroutine default_values_and_aos_operations()
 end subroutine default_values_and_aos_operations
 
 
+!!! This example focuses on creating multi-dimensional arrays, using copmlex type and copying IDS structures
 subroutine copying_and_validating_ids()
-    ! This example focuses on creating multi-dimensional arrays, using copmlex type and copying IDS structures
     use ids_routines
     implicit none
 
