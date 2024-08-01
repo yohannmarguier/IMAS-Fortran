@@ -6,7 +6,9 @@ This example focuses on creating DBEntry using **legacy** mode method.
 
 .. seealso::
 
-    API documentation for :f:func:`imas_create_env`, :f:func:`imas_open_env`
+    API documentation for:
+        - :f:func:`al_build_uri_from_legacy_parameters`
+        - :f:func:`imas_open`
     
 .. warning::
 
@@ -15,7 +17,7 @@ This example focuses on creating DBEntry using **legacy** mode method.
     It is recommended to use the **URI** approach instead.
 
 .. literalinclude:: ../code_samples/tutorial/example_001_open_database.f90
-    :start-after: % This example focuses on creating DBEntry using legacy mode method
-    :end-before:  imas_close(ctx);
+    :start-after: !!! Routine illustrating how to open pulse file in Fortran using
+    :end-before:  !!! Routine illustrating how to open pulse file (using Fortran) with
     :language: fortran
 

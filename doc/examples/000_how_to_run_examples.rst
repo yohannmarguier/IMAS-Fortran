@@ -13,11 +13,12 @@ This code examples can be run using already prepared tests in
     cd al-fortran/doc/code_samples/tutorial
 
 
-2. Tu start the fortranIDE just simply execute this command
+2. To compile the Fortran code execute those commands:
 
 .. code-block:: bash
 
-   fortran
+    export FC=gfortran
+    make
 
 
 
@@ -25,7 +26,4 @@ This code examples can be run using already prepared tests in
 
 .. code-block:: bash
 
-    test_new_examples
-
-
-.. todo:: zmienic
+    ./test_new_examples

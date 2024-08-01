@@ -18,9 +18,7 @@ This example focuses on creating empty IDS and allocating arrays inside IDS stru
 
     .. code-block:: bash    
             
-        Dumping empty_core_profiles:
-            empty_core_profiles.ids_properties.homogeneous_time: 1
-            empty_core_profiles.time:                            1 2 3
-            empty_core_profiles.global_quantities.ip:            1 2 3
-
-    .. todo :: zmienic
+        printing empty_core_profiles%time from creating_completly_new_ids() function
+        1.00
+        2.00
+        3.00
