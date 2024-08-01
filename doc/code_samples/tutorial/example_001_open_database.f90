@@ -1,6 +1,6 @@
+!!! Routine illustrating how to open pulse file in Fortran using
+!!! URI based approach.
 subroutine open_db_entry_uri
-    !! Routine illustrating how to open pulse file in Fortran using
-    !! URI based approach.
 
     use ids_routines
     implicit none
@@ -50,9 +50,11 @@ subroutine open_db_entry_uri
 end subroutine open_db_entry_uri
 
 
+
+
+!!! Routine illustrating how to open pulse file (using Fortran) with
+!!! a legacy based approach.
 subroutine create_db_entry_legacy
-    !! Routine illustrating how to open pulse file (using Fortran) with
-    !! a legacy based approach.
     use ids_routines
     implicit none
 
@@ -92,9 +94,11 @@ subroutine create_db_entry_legacy
 end subroutine create_db_entry_legacy
 
 
+
+
+!!! Routine illustrating how to create database (various backends) using Fortran.
+!!! For a simplicity we use hardcoded locations for all files.
 subroutine create_db_entry_uri_with_path
-    !! Routine illustrating how to create database (various backends) using Fortran.
-    !! For a simplicity we use hardcoded locations for all files.
     use ids_routines
     implicit none
 
