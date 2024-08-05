@@ -126,7 +126,6 @@ CMAKE_ARGS=(${CMAKE_ARGS[@]}
     -DAL_BUILD_MDSPLUS_MODELS=ON
     # Download dependencies from HTTPS (using an access token):
     -DAL_DOWNLOAD_DEPENDENCIES=ON
-    -DAL_COMMON_GIT_REPOSITORY=https://git.iter.org/scm/imas/al-common.git
     -DAL_CORE_GIT_REPOSITORY=https://git.iter.org/scm/imas/al-core.git
     -DAL_PLUGINS_GIT_REPOSITORY=https://git.iter.org/scm/imas/al-plugins.git
     -DDD_GIT_REPOSITORY=https://git.iter.org/scm/imas/data-dictionary.git
