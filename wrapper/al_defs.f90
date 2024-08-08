@@ -48,7 +48,8 @@ module al_defs
   integer, parameter :: COMPLEX_DATA       = DATA_TYPE_0+3
 
   integer, parameter :: ASCII_SERIALIZER_PROTOCOL = SERIALIZER_PROTOCOL_0
-  integer, parameter :: DEFAULT_SERIALIZER_PROTOCOL = ASCII_SERIALIZER_PROTOCOL
+  integer, parameter :: FLEXBUFFERS_SERIALIZER_PROTOCOL = SERIALIZER_PROTOCOL_0+1
+  integer, parameter :: DEFAULT_SERIALIZER_PROTOCOL = FLEXBUFFERS_SERIALIZER_PROTOCOL
 
   integer, parameter :: UNKNOWN_ERR        = ERR_0
   integer, parameter :: CONTEXT_ERR        = ERR_0-1
