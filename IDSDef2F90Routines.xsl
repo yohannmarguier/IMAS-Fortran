@@ -235,7 +235,7 @@ subroutine ids_serialize(ids_in, buffer, protocol)
       return
     end if
   else if (my_protocol .eq. FLEXBUFFERS_SERIALIZER_PROTOCOL) then
-    call al_begin_dataentry_action("imas:serialize?path=/", FORCE_CREATE_PULSE, pulsectx, status)
+    call al_begin_dataentry_action("imas:flexbuffers?path=/", FORCE_CREATE_PULSE, pulsectx, status)
     if (status .ne. 0) then
       write(*,*) "SERIALIZE: ERROR opening Serialize backend - al_open_pulse"
       buffer = ''
@@ -351,7 +351,7 @@ subroutine ids_deserialize(buffer, ids_out)
       return
     end if
   else if (protocol .eq. FLEXBUFFERS_SERIALIZER_PROTOCOL) then
-    call al_begin_dataentry_action("imas:serialize?path=/", OPEN_PULSE, pulsectx, status)
+    call al_begin_dataentry_action("imas:flexbuffers?path=/", OPEN_PULSE, pulsectx, status)
     if (status .ne. 0) then
       write(*,*) "SERIALIZE: ERROR opening Serialize backend - al_open_pulse"
       return
