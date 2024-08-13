@@ -201,12 +201,13 @@ IDS API
 
     Serialize the contents of this IDS into binary data.
 
-    While it is by design allowed to specify various serialization
-    protocols, it currently implements only a serialization through usage of
-    the ASCII backend (simpler but less efficient) which is de-facto the
-    default serializer protocol. The ID of the used serializer protocol is
-    kept in the serialized buffer, such that specifying the protocol is not
-    necessary when deserializing.
+    There are currently two different serialization protocols. The ASCII protocol
+    serializes the data though the ASCII backend. This is a simpler human readable
+    protocol, but it's also less efficient than the (newer) Flexbuffers protocol.
+    The latter is the default and should be preferred.
+
+    The ID of the used serializer protocol is kept in the header of the serialized
+    buffer, such that specifying the protocol is not necessary when deserializing.
 
     :param ids_in: IDS to serialize.
     :param character(len=1) buffer [dimension(:), allocatable]: Binary
@@ -215,6 +216,7 @@ IDS API
         options are: 
 
         - :f:var:`ASCII_SERIALIZER_PROTOCOL`
+        - :f:var:`FLEXBUFFERS_SERIALIZER_PROTOCOL`
         - :f:var:`DEFAULT_SERIALIZER_PROTOCOL`
     :example:
         .. code-block:: fortran
