@@ -1,20 +1,21 @@
 PROGRAM test_magnetics_validate
     USE al_defs 
     USE ids_schemas_magnetics
-	USE magnetics_put_struct
-	USE magnetics_put_slice_struct
-	USE magnetics_get_struct
-	USE magnetics_get_slice_struct
-	USE magnetics_delete
-	USE magnetics_copy_struct
-	USE magnetics_deallocate_struct
-	USE magnetics_validate_struct
-	IMPLICIT NONE
-	TYPE (ids_magnetics) :: ids  
+    USE magnetics_put_struct
+    USE magnetics_put_slice_struct
+    USE magnetics_get_struct
+    USE magnetics_get_slice_struct
+    USE magnetics_delete
+    USE magnetics_copy_struct
+    USE magnetics_deallocate_struct
+    USE magnetics_validate_struct
+    IMPLICIT NONE
+
+    TYPE (ids_magnetics) :: ids  
     CHARACTER(:), allocatable :: err_msg
-	INTEGER         :: status 
+    INTEGER         :: status 
     INTEGER         :: static_size = 3
-	INTEGER :: i1, i2, i3
+    INTEGER :: i1, i2, i3
 
     !---- Testing HOMOGENEOUS simplest case
     WRITE(*,*) "--- --- Testing HOMOGENEOUS simplest case"
@@ -22,7 +23,7 @@ PROGRAM test_magnetics_validate
     ALLOCATE(ids%time(static_size)) 
 
     CALL ids_validate(ids, status, err_msg)
-	IF (status .ne. 0) THEN
+    IF (status .ne. 0) THEN
         WRITE(*,*) "--- --- ---Testing HOMOGENEOUS simplest case Failed (error)"
         WRITE(*,*) err_msg
         STOP
@@ -36,7 +37,7 @@ PROGRAM test_magnetics_validate
     END DO
 
     CALL ids_validate(ids, status, err_msg)
-	IF (status==0) STOP "Error expected"
+    IF (status==0) STOP "Error expected"
     
     !---- Testing HOMOGENEOUS with wrong data size
     WRITE(*,*) "--- --- Testing HOMOGENEOUS with wrong data size"
@@ -47,7 +48,7 @@ PROGRAM test_magnetics_validate
     END DO
 
     CALL ids_validate(ids, status, err_msg)
-	IF (status==0) STOP "Error expected"
+    IF (status==0) STOP "Error expected"
 
 
     !---- Testing HETEROGENEOUS with missing time coordinate
@@ -82,16 +83,13 @@ PROGRAM test_magnetics_validate
         ALLOCATE(ids%diamagnetic_flux(i1)%data(5))
         ALLOCATE(ids%diamagnetic_flux(i1)%time(5))
     END DO
-    ALLOCATE(ids%b_field_tor_probe(13))
     ALLOCATE(ids%b_field_pol_probe(13))
     DO i1=1,13
-        ALLOCATE(ids%b_field_tor_probe(i1)%field%data(9))
-        ALLOCATE(ids%b_field_tor_probe(i1)%field%time(9))
         ALLOCATE(ids%b_field_pol_probe(i1)%field%data(6))
         ALLOCATE(ids%b_field_pol_probe(i1)%field%time(6))
     END DO
     CALL ids_validate(ids, status, err_msg)
-	IF (status .ne. 0) THEN
+    IF (status .ne. 0) THEN
         WRITE(*,*) "--- --- ---Testing HETEROGENEOUS advanced usage (error)"
         WRITE(*,*) err_msg
         STOP
@@ -105,35 +103,35 @@ PROGRAM test_magnetics_validate
     END DO
     CALL ids_validate(ids, status, err_msg)
 
-	IF (status==0) STOP "Error expected"
+    IF (status==0) STOP "Error expected"
 
     !---- Garbage collection
     call ids_deallocate(ids)
     
-    CONTAINS 
+  CONTAINS 
 
     ! =================================================================
     ! 		VALIDATION MESSAGE
     ! =================================================================
     FUNCTION assertField_validate(observed, idsName, expected) RESULT (outValue)
-    IMPLICIT NONE
+      IMPLICIT NONE
+      
+      CHARACTER(:), ALLOCATABLE, INTENT(IN) :: observed
+      CHARACTER(999) ,INTENT(IN) :: expected
+      CHARACTER(*) ,INTENT(IN) :: idsName
+      LOGICAL    :: outValue
+      INTEGER     :: lastDim
 
-    CHARACTER(:), ALLOCATABLE, INTENT(IN) :: observed
-    CHARACTER(999) ,INTENT(IN) :: expected
-    CHARACTER(*) ,INTENT(IN) :: idsName
-    LOGICAL    :: outValue
-    INTEGER     :: lastDim
+      outValue = .TRUE.
 
-    outValue = .TRUE.
-
-    if(observed == expected) then
-    else
-    write(*,*) idsName, " : ERROR:"
-    write(*,*) "observed=", observed
-    write(*,*) "expected=", trim(expected)
-                outValue = .FALSE.
-                return
-    end if
+      if(observed == expected) then
+      else
+         write(*,*) idsName, " : ERROR:"
+         write(*,*) "observed=", observed
+         write(*,*) "expected=", trim(expected)
+         outValue = .FALSE.
+         return
+      end if
     END FUNCTION assertField_validate
 
 END PROGRAM test_magnetics_validate
