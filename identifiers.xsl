@@ -207,23 +207,21 @@
       <xsl:text>    </xsl:text>
       <xsl:text>get_type_description=''&#xA;</xsl:text>
       <xsl:text>    select case (IND)&#xA;</xsl:text>
-      <xsl:for-each select="*[@unique]">
-        <xsl:if test="@unique='yes'">
-          <xsl:text>      case (</xsl:text>
-          <xsl:value-of select="."/>    
-          <xsl:text>)&#xA;</xsl:text>
-          <xsl:text>        </xsl:text>
-          <xsl:text>get_type_description=&amp; &#xA;'</xsl:text>
-	  <xsl:choose>
-	    <xsl:when test="string-length(@description) &gt; 132">
-	      <xsl:value-of select="concat(substring(@description,1,129),'...')"/>
-	    </xsl:when>
-	    <xsl:otherwise>
-	      <xsl:value-of select="@description"/>
-	    </xsl:otherwise>
-	  </xsl:choose>
-          <xsl:text>'&#xA;</xsl:text>
-        </xsl:if>
+      <xsl:for-each select="int[@name]">
+        <xsl:text>      case (</xsl:text>
+        <xsl:value-of select="."/>
+        <xsl:text>)&#xA;</xsl:text>
+        <xsl:text>        </xsl:text>
+        <xsl:text>get_type_description=&amp; &#xA;'</xsl:text>
+	<xsl:choose>
+	  <xsl:when test="string-length(@description) &gt; 132">
+	    <xsl:value-of select="concat(substring(@description,1,129),'...')"/>
+	  </xsl:when>
+	  <xsl:otherwise>
+	    <xsl:value-of select="@description"/>
+	  </xsl:otherwise>
+	</xsl:choose>
+        <xsl:text>'&#xA;</xsl:text>
       </xsl:for-each>
       <xsl:text>    end select&#xA;</xsl:text>
       <xsl:text>  end function </xsl:text>
