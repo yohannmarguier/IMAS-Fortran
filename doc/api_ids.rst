@@ -255,51 +255,46 @@ IDS API
 
 .. f:subroutine:: ids_getSample(pulsectx, name, IDS, tmin, tmax, dtime, interpolMode, status)
         
-        Read a range of time slices from an IDS in this Database Entry.
+    Read a range of time slices from an IDS in this Database Entry.
 
-        This method has three different modes, depending on the provided arguments:
+    This method has three different modes, depending on the provided arguments:
 
-        1.  No interpolation. This method is selected when :param:`dtime` is an empty 
-            vector (size(dtime) == 0) and:param:`interpolMode` is 0.
+    1.  No interpolation. This method is selected when :param:`dtime` is an empty 
+        vector (size(dtime) == 0) and:param:`interpolMode` is 0.
 
-            This mode returns an IDS object with all constant/static data filled. The
-            dynamic data is retrieved for the provided time range [tmin, tmax].
+        This mode returns an IDS object with all constant/static data filled. The
+        dynamic data is retrieved for the provided time range [tmin, tmax].
 
-        2.  Interpolate dynamic data on a uniform time base. This method is selected
-            when :param:`dtime` and :param:`interpolMode` are provided.
-            :param:`dtime` must be a real(ids_real), dimension(1) of size 1.
+    2.  Interpolate dynamic data on a uniform time base. This method is selected
+        when :param:`dtime` and :param:`interpolMode` are provided.
+        :param:`dtime` must be a real(ids_real), dimension(1) of size 1.
 
-            This mode will generate an IDS with a homogeneous time vector ``[tmin, tmin
-            + dtime, tmin + 2*dtime, ...`` up to ``tmax``. The chosen interpolation
-            method will have no effect on the time vector, but may have an impact on the
-            other dynamic values. The returned IDS always has
-            ``ids_properties.homogeneous_time = 1``.
+        This mode will generate an IDS with a homogeneous time vector ``[tmin, tmin
+        + dtime, tmin + 2*dtime, ...`` up to ``tmax``. The chosen interpolation
+        method will have no effect on the time vector, but may have an impact on the
+        other dynamic values. The returned IDS always has ``ids_properties.homogeneous_time = 1``.
 
-        3.  Interpolate dynamic data on an explicit time base. This method is selected
-            when :param:`dtime` and :param:`interpolMode` are provided.
-            :param:`dtime` must be a real(ids_real), dimension(:) of size larger than 1.
+    3.  Interpolate dynamic data on an explicit time base. This method is selected
+        when :param:`dtime` and :param:`interpolMode` are provided.
+        :param:`dtime` must be a real(ids_real), dimension(:) of size larger than 1.
 
-            This mode will generate an IDS with a homogeneous time vector equal to
-            :param:`dtime`. :param:`tmin` and :param:`tmax` are ignored in this mode.
-            The chosen interpolation method will have no effect on the time vector, but
-            may have an impact on the other dynamic values. The returned IDS always has
-            ``ids_properties.homogeneous_time = 1``.
+        This mode will generate an IDS with a homogeneous time vector equal to
+        :param:`dtime`. :param:`tmin` and :param:`tmax` are ignored in this mode.
+        The chosen interpolation method will have no effect on the time vector, but
+        may have an impact on the other dynamic values. The returned IDS always has ``ids_properties.homogeneous_time = 1``.
 
-            :param integer pulsectx [in]: Data entry context created with
-                :f:func:`imas_open`, :f:func:`imas_open_env` or
-                :f:func:`imas_create_env`
-            :param character(*) name [in]: name of the ids with optional occurrence
-                number, e.g. ``"core_profiles"`` (for occurrence 0),
-                ``"core_profiles/1"`` (for occurrence 1)
-            :param IDS [out]: IDS object to put
-            :param tmin [in]: Lower bound of the requested time range
-            :param tmax [in]: Upper bound of the requested time range, must be larger than or
-                equal to :param:`tmin`
-            :param dtime [in]: Interval to use when interpolating, must be a real(ids_real), dimension(:)
-                containing an explicit time base to interpolate.
-            :param interpolMode [in]: Interpolation method to use. Available options:
+        :param integer pulsectx [in]: Data entry context created with
+        :f:func:`imas_open`, :f:func:`imas_open_env` or :f:func:`imas_create_env`
+        :param character(*) name [in]: name of the ids with optional occurrence
+            number, e.g. ``"core_profiles"`` (for occurrence 0), ``"core_profiles/1"`` (for occurrence 1)
+        :param IDS [out]: IDS object to put
+        :param tmin [in]: Lower bound of the requested time range
+        :param tmax [in]: Upper bound of the requested time range, must be larger than or equal to :param:`tmin`
+        :param dtime [in]: Interval to use when interpolating, must be a real(ids_real), dimension(:)
+            containing an explicit time base to interpolate.
+        :param interpolMode [in]: Interpolation method to use. Available options:
 
-                - :const: CLOSEST_INTERP
-                - :const: PREVIOUS_INTERP
-                - :const: LINEAR_INTERP
-            :option integer status [out]: Status code: ``0`` on success, ``<0`` on failure
+            - :const: CLOSEST_INTERP
+            - :const: PREVIOUS_INTERP
+            - :const: LINEAR_INTERP
+        :option integer status [out]: Status code: ``0`` on success, ``<0`` on failure
