@@ -43,6 +43,11 @@ programming language.
    plugins
 
 .. toctree::
+   :caption: Examples 
+
+   examples/examples_ToC
+
+.. toctree::
    :maxdepth: 3
    :caption: API documentation
 

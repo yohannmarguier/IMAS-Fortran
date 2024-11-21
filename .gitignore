@@ -5,3 +5,5 @@ makefile-gen
 idsroutines
 /build
 CMakeUserPresets.json
+doc/code_samples/tutorial/testdb*
+doc/code_samples/tutorial/*.o

@@ -57,6 +57,13 @@ Serializer protocols
 
     Identifier for the ASCII serialization protocol.
 
+.. f:variable:: FLEXBUFFERS_SERIALIZER_PROTOCOL
+    :attrs: parameter=61
+    
+    Identifier for the Flexbuffers serialization protocol. This protocol is more
+    performant and results in a smaller buffer size than the
+    :f:var:`ASCII_SERIALIZER_PROTOCOL`.
+
 .. f:variable:: DEFAULT_SERIALIZER_PROTOCOL
 
     Identifier for the default serialization protocol.

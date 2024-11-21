@@ -977,6 +977,35 @@ end subroutine al_get_version_for_put
     end if
   end subroutine put_complex
 
+  subroutine put_vect1D_char(opCtx, idsName, fieldPath, timebasePath, data, lifeCycleStatus, retstatus)
+    use, intrinsic :: ISO_C_BINDING
+    implicit none
+    integer, intent(in) :: opCtx
+    character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
+    character(len=1), dimension(:), pointer :: data
+    integer, intent(out) :: retstatus
+    integer :: IMAS_AL_ENABLE_PLUGINS
+    type(C_PTR) :: cptr, csize
+    character(C_CHAR), dimension(:), pointer :: cdata
+    integer(C_INT), target :: dsize(1)
+    integer :: i
+    type(al_status) :: status
+    if (associated(data) .eqv. .false.) then
+      call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
+      if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
+       status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, CHAR_DATA, 1, C_NULL_PTR))
+      end if
+    else 
+      dsize = (/ size(data, 1) /)
+      cptr = C_LOC(data(1))    
+      csize = C_LOC(dsize)
+      call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
+      status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, CHAR_DATA, 1, csize))
+    end if
+    if (status%code.ne.0) write(*,*) TRIM(status%message)
+    retstatus = status%code
+  end subroutine put_vect1D_char
+
   subroutine put_string(opCtx, idsName, fieldPath, timebasePath, data, lifeCycleStatus, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none

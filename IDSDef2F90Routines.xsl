@@ -181,10 +181,12 @@ subroutine ids_serialize(ids_in, buffer, protocol)
 #else
 #  define SERIALIZE_TEMPORARY_DIRECTORY ''
 #endif
+  use, intrinsic :: ISO_C_BINDING, only: C_LOC
   class(IDS_base) :: ids_in ! no intent(in) because ids_put also does not have that
   integer(ids_int), intent(in), optional :: protocol
   character(len=1), dimension(:), allocatable :: buffer
 
+  character(len=1), dimension(:), pointer :: pbuffer
   character(len=:), allocatable :: fname
   integer(ids_int) :: my_protocol
   integer(ids_int) :: pulsectx
@@ -192,6 +194,7 @@ subroutine ids_serialize(ids_in, buffer, protocol)
   integer(ids_int) :: unit
   integer(ids_int) :: file_size
   integer(ids_int) :: index
+  integer(ids_int) :: dim1
   integer :: TMP_DIR_SIZE
   character(STRMAXLEN):: uri
   character(STRMAXLEN):: filename
@@ -201,6 +204,7 @@ subroutine ids_serialize(ids_in, buffer, protocol)
   my_protocol = DEFAULT_SERIALIZER_PROTOCOL
   if (present(protocol)) my_protocol = protocol
 
+  ! Prepare data entry based on the chosen serializer protocol:
   if (my_protocol .eq. ASCII_SERIALIZER_PROTOCOL) then
     fname = generate_tmp_file()
     if (len_trim(fname) .eq. 0) then
@@ -215,6 +219,9 @@ subroutine ids_serialize(ids_in, buffer, protocol)
     CALL get_environment_variable("IMAS_AL_SERIALIZER_TMP_DIR", BUFFER_IMAS_AL_SERIALIZER_TMP_DIR)
     TMP_DIR_SIZE = LEN_TRIM(BUFFER_IMAS_AL_SERIALIZER_TMP_DIR)
     if(TMP_DIR_SIZE > 0) then
+      if(BUFFER_IMAS_AL_SERIALIZER_TMP_DIR(LEN_TRIM(BUFFER_IMAS_AL_SERIALIZER_TMP_DIR):LEN_TRIM(BUFFER_IMAS_AL_SERIALIZER_TMP_DIR)) /= "/") then
+        BUFFER_IMAS_AL_SERIALIZER_TMP_DIR = TRIM(BUFFER_IMAS_AL_SERIALIZER_TMP_DIR) // "/"
+      end if
       allocate(character(TMP_DIR_SIZE):: IMAS_AL_SERIALIZER_TMP_DIR)
       IMAS_AL_SERIALIZER_TMP_DIR = trim(BUFFER_IMAS_AL_SERIALIZER_TMP_DIR)
       uri = "imas:ascii?path=" // IMAS_AL_SERIALIZER_TMP_DIR // ";filename="//filename
@@ -227,33 +234,31 @@ subroutine ids_serialize(ids_in, buffer, protocol)
       buffer = ''
       return
     end if
+  else if (my_protocol .eq. FLEXBUFFERS_SERIALIZER_PROTOCOL) then
+    call al_begin_dataentry_action("imas:flexbuffers?path=/", FORCE_CREATE_PULSE, pulsectx, status)
+    if (status .ne. 0) then
+      write(*,*) "SERIALIZE: ERROR opening Serialize backend - al_open_pulse"
+      buffer = ''
+      return
+    end if
+  else
+    write(*,*) 'SERIALIZE: ERROR, unrecognized serialization protocol'
+    return
+  end if
 
-    ! I think if we implement an object-oriented ids_in->put the select type here becomes unnecessary
-    select type (ids_in)
-    <xsl:for-each select="IDS">
-    class is (ids_<xsl:value-of select="@name"/>)
-      call ids_put(pulsectx, '<xsl:value-of select="@name"/>', ids_in)
-    </xsl:for-each>
-    class default
-      write(*,*) "SERIALIZE: ERROR selecting IDS type"
-    end select
+  ! Put IDS to serialization backend
+  ! I think if we implement an object-oriented ids_in->put the select type here becomes unnecessary
+  select type (ids_in)
+  <xsl:for-each select="IDS">
+  class is (ids_<xsl:value-of select="@name"/>)
+    call ids_put(pulsectx, '<xsl:value-of select="@name"/>', ids_in)
+  </xsl:for-each>
+  class default
+    write(*,*) "SERIALIZE: ERROR selecting IDS type"
+  end select
     
-
-    call al_close_pulse(pulsectx, CLOSE_PULSE, status)
-    if (status .ne. 0) then
-      write(*,*) "SERIALIZE: ERROR closing ASCII backend - al_close_pulse"
-      buffer = ''
-      call al_end_action(pulsectx, status)
-      return
-    end if
-    call al_end_action(pulsectx, status)
-    if (status .ne. 0) then
-      write(*,*) "SERIALIZE: ERROR closing ASCII backend - al_end_action"
-      buffer = ''
-      return
-    end if
-
-
+  ! Retrieve serialized IDS from the backend
+  if (my_protocol .eq. ASCII_SERIALIZER_PROTOCOL) then
     ! Read from file
     unit = get_file_unit()
     open(unit=unit, file=fname, action='read', status='old', form='unformatted', access='stream')
@@ -262,8 +267,28 @@ subroutine ids_serialize(ids_in, buffer, protocol)
     buffer(1) = char(ASCII_SERIALIZER_PROTOCOL)
     read(unit) buffer(2:)
     close(unit, status='delete')
-  else
-    write(*,*) 'SERIALIZE: ERROR, unrecognized serialization protocol'
+  else if (my_protocol .eq. FLEXBUFFERS_SERIALIZER_PROTOCOL) then
+    call get_vect1D_char(pulsectx, "&lt;buffer&gt;", "", pbuffer, dim1, status)
+    if (status .ne. 0) then
+      write(*,*) "SERIALIZE: ERROR reading buffer from serialize backend"
+      buffer = ''
+    end if
+    allocate(buffer(size(pbuffer)))
+    buffer = pbuffer
+    call c_free(C_LOC(pbuffer))
+    nullify(pbuffer)
+  end if
+
+  ! Close and clean up the data entry
+  call al_close_pulse(pulsectx, CLOSE_PULSE, status)
+  if (status .ne. 0) then
+    write(*,*) "SERIALIZE: ERROR closing backend - al_close_pulse"
+    buffer = ''
+  end if
+  call al_end_action(pulsectx, status)
+  if (status .ne. 0) then
+    write(*,*) "SERIALIZE: ERROR closing backend - al_end_action"
+    buffer = ''
   end if
 end subroutine ids_serialize
 
@@ -277,6 +302,7 @@ subroutine ids_deserialize(buffer, ids_out)
   class(IDS_base) :: ids_out ! it is up to you to pass the correct buffer and ids type
   character(len=1), dimension(:), allocatable, intent(in) :: buffer
 
+  character(len=1), dimension(:), pointer :: pbuffer
   integer(ids_int) :: protocol
   character(len=:), allocatable :: fname
   integer(ids_int) :: pulsectx
@@ -291,6 +317,7 @@ subroutine ids_deserialize(buffer, ids_out)
   CHARACTER(len=:), ALLOCATABLE :: IMAS_AL_SERIALIZER_TMP_DIR
   protocol = ichar(buffer(1))
 
+  ! Prepare data entry based on the chosen serializer protocol:
   if (protocol .eq. ASCII_SERIALIZER_PROTOCOL) then
     fname = generate_tmp_file()
     
@@ -323,34 +350,54 @@ subroutine ids_deserialize(buffer, ids_out)
       write(*,*) "SERIALIZE: ERROR opening ASCII backend - al_open_pulse"
       return
     end if
-
-    ! I think if we implement an object-oriented ids_in->put the select type here becomes unnecessary
-    select type (ids_out)
-    <xsl:for-each select="IDS">
-    class is (ids_<xsl:value-of select="@name"/>)
-      call ids_get(pulsectx, '<xsl:value-of select="@name"/>', ids_out)
-    </xsl:for-each>
-    class default
-      write(*,*) "SERIALIZE: ERROR selecting IDS type"
-    end select
-    
-
-    call al_close_pulse(pulsectx, CLOSE_PULSE, status)
+  else if (protocol .eq. FLEXBUFFERS_SERIALIZER_PROTOCOL) then
+    call al_begin_dataentry_action("imas:flexbuffers?path=/", OPEN_PULSE, pulsectx, status)
     if (status .ne. 0) then
-      write(*,*) "SERIALIZE: ERROR closing ASCII backend - al_close_pulse"
-      call al_end_action(pulsectx, status)
+      write(*,*) "SERIALIZE: ERROR opening Serialize backend - al_open_pulse"
       return
     end if
+    ! Write buffer to the backend
+    allocate(pbuffer(size(buffer)))
+    pbuffer = buffer
+    call put_vect1D_char(pulsectx, "", "&lt;buffer&gt;", "", pbuffer, "", status)
+    deallocate(pbuffer)
+    if (status .ne. 0) then
+      write(*,*) "SERIALIZE: ERROR writing buffer to Serialize backend"
+      return
+    end if
+  else
+    write(*,*) 'SERIALIZE: ERROR, unrecognized serialization protocol', protocol
+    return
+  end if
+
+  ! Get IDS from the backend
+  ! I think if we implement an object-oriented ids_in->put the select type here becomes unnecessary
+  select type (ids_out)
+  <xsl:for-each select="IDS">
+  class is (ids_<xsl:value-of select="@name"/>)
+    call ids_get(pulsectx, '<xsl:value-of select="@name"/>', ids_out)
+  </xsl:for-each>
+  class default
+    write(*,*) "SERIALIZE: ERROR selecting IDS type"
+  end select
+
+  ! Close and clean up the data entry
+  call al_close_pulse(pulsectx, CLOSE_PULSE, status)
+  if (status .ne. 0) then
+    write(*,*) "SERIALIZE: ERROR closing ASCII backend - al_close_pulse"
     call al_end_action(pulsectx, status)
-    if (status .ne. 0) then
-      write(*,*) "SERIALIZE: ERROR closing ASCII backend - al_end_action"
-      return
-    end if
+    return
+  end if
+  call al_end_action(pulsectx, status)
+  if (status .ne. 0) then
+    write(*,*) "SERIALIZE: ERROR closing ASCII backend - al_end_action"
+    return
+  end if
 
+  ! Serializer specific cleanup
+  if (protocol .eq. ASCII_SERIALIZER_PROTOCOL) then
     ! delete file
     close(unit, status='delete')
-  else
-    write(*,*) 'SERIALIZE: ERROR, unrecognized serialization protocol'
   end if
 end subroutine ids_deserialize
 
@@ -391,6 +438,9 @@ function generate_tmp_file() result(fname)
   CALL get_environment_variable("IMAS_AL_SERIALIZER_TMP_DIR", BUFFER_IMAS_AL_SERIALIZER_TMP_DIR)
   TMP_DIR_SIZE = LEN_TRIM(BUFFER_IMAS_AL_SERIALIZER_TMP_DIR)
   if(TMP_DIR_SIZE > 0) then
+    if(BUFFER_IMAS_AL_SERIALIZER_TMP_DIR(LEN_TRIM(BUFFER_IMAS_AL_SERIALIZER_TMP_DIR):LEN_TRIM(BUFFER_IMAS_AL_SERIALIZER_TMP_DIR)) /= "/") then
+      BUFFER_IMAS_AL_SERIALIZER_TMP_DIR = TRIM(BUFFER_IMAS_AL_SERIALIZER_TMP_DIR) // "/"
+    end if
     allocate(character(TMP_DIR_SIZE):: IMAS_AL_SERIALIZER_TMP_DIR)
     IMAS_AL_SERIALIZER_TMP_DIR = trim(BUFFER_IMAS_AL_SERIALIZER_TMP_DIR)
     string_base_length = len(IMAS_AL_SERIALIZER_TMP_DIR) + len('al_serialize_') + len_trim(cpid) + 1

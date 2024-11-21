@@ -1,5 +1,5 @@
+!!! This example focuses on reading whole IDS from entry.
 subroutine read_entire_ids()
-    !! This example focuses on reading whole IDS from entry.
     !! We are storing and reading back an IDS - equilibrium. Data are stored inside MDS+ file.
     use ids_routines
     implicit none
@@ -38,8 +38,10 @@ subroutine read_entire_ids()
 
 end subroutine read_entire_ids
 
+
+
+!!! This example focuses on reading IDS slices from entry
 subroutine read_slice()
-    !! This example focuses on reading IDS slices from entry
     !! We are storing and reading back an IDS - summary. Data are stored inside MDS+ file.
     use ids_routines
     implicit none

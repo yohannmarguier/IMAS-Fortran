@@ -1,20 +1,21 @@
 PROGRAM test_waves_validate
     USE al_defs 
     USE ids_schemas_waves
-	USE waves_put_struct
-	USE waves_put_slice_struct
-	USE waves_get_struct
-	USE waves_get_slice_struct
-	USE waves_delete
-	USE waves_copy_struct
-	USE waves_deallocate_struct
-	USE waves_validate_struct
-	IMPLICIT NONE
-	TYPE (ids_waves) :: ids 
+    USE waves_put_struct
+    USE waves_put_slice_struct
+    USE waves_get_struct
+    USE waves_get_slice_struct
+    USE waves_delete
+    USE waves_copy_struct
+    USE waves_deallocate_struct
+    USE waves_validate_struct
+    IMPLICIT NONE
+
+    TYPE (ids_waves) :: ids 
     CHARACTER(:), allocatable :: err_msg
-	INTEGER         :: status 
+    INTEGER         :: status 
     INTEGER         :: static_size = 3
-	INTEGER :: i1, i2, i3, itime
+    INTEGER :: i1, i2, i3, itime
     INTEGER :: max1 = 5
     INTEGER :: max2 = 4
     INTEGER :: max3 = 3
@@ -26,7 +27,7 @@ PROGRAM test_waves_validate
     ALLOCATE(ids%time(static_size)) 
 
     CALL ids_validate(ids, status, err_msg) 
-	IF (status .ne. 0) THEN
+    IF (status .ne. 0) THEN
         WRITE(*,*) "--- --- ---Testing HOMOGENEOUS simplest case Failed (error)"
         WRITE(*,*) err_msg
         STOP
@@ -40,12 +41,12 @@ PROGRAM test_waves_validate
         DO itime=1, max_dim
             ALLOCATE(ids%coherent_wave(i1)%beam_tracing(itime)%beam(max2))
             DO i2=1, max2 
-                ALLOCATE(ids%coherent_wave(i1)%beam_tracing(itime)%beam(i2)%wave_vector%n_tor(5))
+                ALLOCATE(ids%coherent_wave(i1)%beam_tracing(itime)%beam(i2)%wave_vector%n_parallel(5))
             END DO
         END DO
     END DO
     CALL ids_validate(ids, status, err_msg)
-	IF (status==0) STOP "Error expected"
+    IF (status==0) STOP "Error expected"
 
 
     !---- Garbage collection
