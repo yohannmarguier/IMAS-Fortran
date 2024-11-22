@@ -55,7 +55,7 @@ program test_magnetics_get_sample
       status = 0
       call ids_get_sample(idx, "magnetics", magnetics,  tmin, tmax, dtime, 0, status)
 
-      if (status.ne.0) write(*,*) "Error in get_sample example: ", "error in ids_getSample"
+      if (status.ne.0) write(*,*) "Error in get_sample example: ", "error in ids_get_sample"
 
     
       if (ASSOCIATED(magnetics%time)) then
@@ -70,14 +70,14 @@ program test_magnetics_get_sample
 
       dtime_1 =  (/0.02/) ! step
 
-      call ids_getSample(idx, "magnetics", magnetics,  tmin ,tmax, dtime_1, 1, status)
+      call ids_get_sample(idx, "magnetics", magnetics,  tmin ,tmax, dtime_1, 1, status)
 
-      if (status.ne.0) write(*,*) "Error in getSample example: ", "error in ids_getSample"
+      if (status.ne.0) write(*,*) "Error in ids_get_sample example"
       if (ASSOCIATED(magnetics%time)) then
          write(*,*) "magnetics%time: ", size(magnetics%time), " "
          valid_nb_time_slice = nint((tmax-tmin)/dtime_1(1)+1)
          if (size(magnetics%time) .ne. valid_nb_time_slice .and. size(magnetics%flux_loop(0)%flux%data) .ne. valid_nb_time_slice) then
-            write(*,*) "Error in getSample example", "must have ",valid_nb_time_slice," time slice"
+            write(*,*) "Error in get_sample example", "must have ",valid_nb_time_slice," time slice"
          end if
       end if
 
@@ -85,4 +85,4 @@ program test_magnetics_get_sample
 
    end do
 
-end program test_magnetics_getsample
+ end program test_magnetics_get_sample
