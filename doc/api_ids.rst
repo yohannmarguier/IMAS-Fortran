@@ -253,7 +253,7 @@ IDS API
 
     :example: .. literalinclude:: code_samples/ids_validate
 
-.. f:subroutine:: ids_getSample(pulsectx, name, IDS, tmin, tmax, dtime, interpolMode, status)
+.. f:subroutine:: ids_get_sample(pulsectx, name, IDS, tmin, tmax, dtime, interpolMode, status)
         
     Read a range of time slices from an IDS in this Database Entry.
 

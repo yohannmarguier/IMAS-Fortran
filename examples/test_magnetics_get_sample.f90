@@ -1,4 +1,4 @@
-program test_magnetics_getsample
+program test_magnetics_get_sample
    use ids_routines
    implicit none
    real(ids_real) :: time = 0.2
@@ -53,19 +53,19 @@ program test_magnetics_getsample
       print *,"Reading sample "
 
       status = 0
-      call ids_getSample(idx, "magnetics", magnetics,  tmin, tmax, dtime, 0, status)
+      call ids_get_sample(idx, "magnetics", magnetics,  tmin, tmax, dtime, 0, status)
 
-      if (status.ne.0) write(*,*) "Error in getSample example: ", "error in ids_getSample"
+      if (status.ne.0) write(*,*) "Error in get_sample example: ", "error in ids_getSample"
 
     
       if (ASSOCIATED(magnetics%time)) then
          write(*,*) "magnetics%time: ", size(magnetics%time)
          valid_nb_time_slice = nint((tmax-tmin)/0.1+1)
          if (size(magnetics%time) .ne. valid_nb_time_slice .and. size(magnetics%flux_loop(0)%flux%data) .ne. valid_nb_time_slice) then
-            write(*,*) "Error in getSample example", "must have ",valid_nb_time_slice," time slice"
+            write(*,*) "Error in get_sample example", "must have ",valid_nb_time_slice," time slice"
          end if
       else
-        write(*,*) "Error in getSample example", " magnetics%time is null"
+        write(*,*) "Error in get_sample example", " magnetics%time is null"
       end if
 
       dtime_1 =  (/0.02/) ! step

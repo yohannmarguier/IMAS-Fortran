@@ -3597,8 +3597,8 @@ interface ids_get
   module procedure get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/> <!-- subroutine for the whole IDS -->
 end interface 
 
-interface ids_getSample
-  module procedure getsample_struct_ids_<xsl:value-of select="local:unique_name(@name)"/> <!-- subroutine for the whole IDS -->
+interface ids_get_sample
+  module procedure get_sample_struct_ids_<xsl:value-of select="local:unique_name(@name)"/> <!-- subroutine for the whole IDS -->
 end interface 
 
 interface ids_get_struct
@@ -3698,7 +3698,7 @@ subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
 end subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
 
 
-subroutine getsample_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS,  tmin, tmax, dtime, interp, retstatus)
+subroutine get_sample_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS,  tmin, tmax, dtime, interp, retstatus)
 use ids_schemas_<xsl:value-of select="@name"/>
   use al_low_level_wrap
   implicit none
@@ -3746,7 +3746,7 @@ use ids_schemas_<xsl:value-of select="@name"/>
   call al_begin_global_action(pulsectx, name, READ_OP, opctx, status) 
   if (status.ne.0) then
      !! error when trying to get new ctx => stop!
-     write(*,*) 'Error in al_begin_slice_action (from getsample for IDS <xsl:value-of select="@name"/>)'     
+     write(*,*) 'Error in al_begin_slice_action (from get_sample for IDS <xsl:value-of select="@name"/>)'     
      if (present(retstatus)) then
       retstatus = status
      end if
@@ -3761,7 +3761,7 @@ use ids_schemas_<xsl:value-of select="@name"/>
         return
      endif
      if (status.ne.0) then
-        write(*,*) 'Error in get_int "ids_properties/homogeneous_time" (from getsample for IDS <xsl:value-of select="@name"/>)'  
+        write(*,*) 'Error in get_int "ids_properties/homogeneous_time" (from get_sample for IDS <xsl:value-of select="@name"/>)'  
         if (present(retstatus)) then
            retstatus = status
         endif
@@ -3821,7 +3821,7 @@ use ids_schemas_<xsl:value-of select="@name"/>
   return
 
 
-end subroutine getsample_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
+end subroutine get_sample_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
 
 <xsl:for-each select=".//field[@data_type='structure' or @data_type='struct_array']">
   <xsl:variable name="this-type">
