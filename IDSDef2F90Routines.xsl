@@ -1031,7 +1031,7 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
 
   call IDS%check_name_<xsl:value-of select="@name"/>(name, status)
   if(status.ne.0) then
-    write(*,*) 'Error in put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>: the IDS name ',name,' is invalid, it expects ',<xsl:value-of select="@name"/>
+    write(*,*) 'Error in put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>: the IDS name ',name,' is invalid, it expects <xsl:value-of select="@name"/>'
     if(present(retstatus)) retstatus = status
     return
   end if 
