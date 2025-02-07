@@ -10,6 +10,7 @@ subroutine open_db_entry_uri
     character(len=5)          :: version       = '3'    ! DD major version schema
     integer                   :: idx                    ! index of opened input file
     integer                   :: status                 ! error code of the operation
+    character(:), allocatable :: errmsg                 ! optional returned error message 
     integer                   :: i                      ! used for loops over timed values
     integer                   :: backendId              ! identification number of backend used in this example
     character(len=256)        :: userName               ! name of the user running the code
@@ -17,7 +18,7 @@ subroutine open_db_entry_uri
     character(len=5)          :: treeName      = 'ids'  ! name of the MDS+ tree structure
     character(strmaxlen)      :: uri                    ! uri containes location of the data
     character(len=1024)       :: options       = ''     ! options to be passed to backend
-
+    
     !   Available backends are:
     !     ascii   | 11 - only for debugging purposes
     !     mdsplus | 12
@@ -38,10 +39,9 @@ subroutine open_db_entry_uri
 
     ! Create the database entry by providing an IMAS URI
     ! Make sure to trim uri - we want to avoid any leading and trailing spaces.
-    call imas_open(trim(uri), FORCE_CREATE_PULSE, idx, status)
-
+    call imas_open(trim(uri), FORCE_CREATE_PULSE, idx, status, errmsg)
     if (status.ne.0) then
-        write(*,*)  'Error! Issue while creating MDS+ file.'
+        write(*,*)  'Error! Issue while creating MDS+ file: '//errmsg
     end if
 
     ! Remember to close entry when you are done with it
@@ -107,29 +107,27 @@ subroutine create_db_entry_uri_with_path
     character (len=1024), parameter :: uriASCII = 'imas:ascii?path=./testdb_ascii'
     integer                      :: idx                                   ! index of opened input file
     integer                      :: status                                ! error code of the operation
+    character(:), allocatable    :: errmsg                                ! optional returned error message 
 
-    call imas_open(trim(uriMDS), FORCE_CREATE_PULSE, idx, status)
-
+    call imas_open(trim(uriMDS), FORCE_CREATE_PULSE, idx, status, errmsg)
     if (status.ne.0) then
-        write(*,*)  'Error! Issue while creating MDS+ file.'
+        write(*,*)  'Error! Issue while creating MDS+ file: '//errmsg
     end if
     ! Content of ./testdb_mdsplus directory: ['ids_001.characteristics', 'ids_001.datafile', 'ids_001.tree']
     ! Structure of this directory does not depends on entry content. All IDS data are stored in printed files
     call imas_close(idx, status)
 
-    call imas_open(trim(uriHDF5), FORCE_CREATE_PULSE, idx, status)
-
+    call imas_open(trim(uriHDF5), FORCE_CREATE_PULSE, idx, status, errmsg)
     if (status.ne.0) then
-        write(*,*)  'Error! Issue while creating MDS+ file.'
+        write(*,*)  'Error! Issue while creating HDF5 file: '//errmsg
     end if
     ! Content of ./testdb_hdf5 directory: ['master.h5']
     ! Structure of this directory depends on entry content. Every IDS with data will be stored in <ids_name>.h5 file
     call imas_close(idx, status)
 
-    call imas_open(trim(uriASCII), FORCE_CREATE_PULSE, idx, status)
-
+    call imas_open(trim(uriASCII), FORCE_CREATE_PULSE, idx, status, errmsg)
     if (status.ne.0) then
-        write(*,*)  'Error! Issue while creating MDS+ file.'
+        write(*,*)  'Error! Issue while creating ASCII file: '//errmsg
     end if
     ! Content of ./testdb_ascii directory: []
     ! Structure of this directory depends on entry content. Every IDS with data will be stored in <ids_name>.ids file
