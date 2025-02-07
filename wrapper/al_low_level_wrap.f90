@@ -802,7 +802,9 @@ end subroutine al_get_version_for_put
     integer :: status
     call al_begin_dataentry_action(uri, mode, pulseCtx, status, mesg)
     if (present(retstatus)) retstatus = status
-    if (present(retmesg)) retmesg = mesg
+    if (status .ne. 0) then
+       if (present(retmesg)) retmesg = mesg
+    endif
   end subroutine imas_open
 
   subroutine imas_create_env(name, pulse, run, refPulse, refRun, pulseCtx, user, tokamak, version, retstatus)
