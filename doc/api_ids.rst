@@ -259,15 +259,15 @@ IDS API
 
     This method has three different modes, depending on the provided arguments:
 
-    1.  No interpolation. This method is selected when :param:`dtime` is an empty 
-        vector (size(dtime) == 0) and:param:`interpolMode` is 0.
+    1.  No interpolation. This method is selected when ``dtime`` is an empty 
+        vector (``size(dtime) == 0``) and ``interpolMode`` is 0.
 
         This mode returns an IDS object with all constant/static data filled. The
         dynamic data is retrieved for the provided time range [tmin, tmax].
 
     2.  Interpolate dynamic data on a uniform time base. This method is selected
-        when :param:`dtime` and :param:`interpolMode` are provided.
-        :param:`dtime` must be a real(ids_real), dimension(1) of size 1.
+        when ``dtime`` and ``interpolMode`` are provided.
+        ``dtime`` must be of size 1 (``real(ids_real), dimension(1)``).
 
         This mode will generate an IDS with a homogeneous time vector ``[tmin, tmin
         + dtime, tmin + 2*dtime, ...`` up to ``tmax``. The chosen interpolation
@@ -275,11 +275,11 @@ IDS API
         other dynamic values. The returned IDS always has ``ids_properties.homogeneous_time = 1``.
 
     3.  Interpolate dynamic data on an explicit time base. This method is selected
-        when :param:`dtime` and :param:`interpolMode` are provided.
-        :param:`dtime` must be a real(ids_real), dimension(:) of size larger than 1.
+        when ``dtime`` and ``interpolMode`` are provided.
+        ``dtime`` must be a ``real(ids_real), dimension(:)`` of size larger than 1.
 
         This mode will generate an IDS with a homogeneous time vector equal to
-        :param:`dtime`. :param:`tmin` and :param:`tmax` are ignored in this mode.
+        ``dtime``. ``tmin`` and ``tmax`` are ignored in this mode.
         The chosen interpolation method will have no effect on the time vector, but
         may have an impact on the other dynamic values. The returned IDS always has ``ids_properties.homogeneous_time = 1``.
 
