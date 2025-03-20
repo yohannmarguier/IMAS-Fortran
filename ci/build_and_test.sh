@@ -117,30 +117,30 @@ rm -rf build
 
 # CMake configuration:
 CMAKE_ARGS=(${CMAKE_ARGS[@]}
-    -D"CMAKE_INSTALL_PREFIX=$(pwd)/test-install/"
-    # Enable all backends
-    -DAL_BACKEND_HDF5=ON
-    -DAL_BACKEND_MDSPLUS=ON
-    -DAL_BACKEND_UDA=ON
-    # Build MDSplus models
-    -DAL_BUILD_MDSPLUS_MODELS=ON
-    # Download dependencies from HTTPS (using an access token):
-    -DAL_DOWNLOAD_DEPENDENCIES=ON
-    -DAL_CORE_GIT_REPOSITORY=https://git.iter.org/scm/imas/al-core.git
-    -DAL_PLUGINS_GIT_REPOSITORY=https://git.iter.org/scm/imas/al-plugins.git
-    -DDD_GIT_REPOSITORY=https://git.iter.org/scm/imas/data-dictionary.git
-    # DD version: can be set with DD_VERSION env variable, otherwise use latest main
-    -DDD_VERSION=${DD_VERSION:-main}
-    # AL Core version: can be set with AL_CORE_VERSION env variable, otherwise use latest main
-    -DAL_CORE_VERSION=${AL_CORE_VERSION:-main}
-    # HLI options
-    -DAL_EXAMPLES=ON
-    -DAL_TESTS=ON
-    -DAL_PLUGINS=ON
-    # Build documentation
-    -DAL_HLI_DOCS=ON
-    # Work around Boost linker issues on 2020b toolchain
-    -DBoost_NO_BOOST_CMAKE=ON
+  -D"CMAKE_INSTALL_PREFIX=$(pwd)/test-install/"
+  # Enable all backends
+  -DAL_BACKEND_HDF5=${AL_BACKEND_HDF5:-ON}
+  -DAL_BACKEND_MDSPLUS=${AL_BACKEND_MDSPLUS:-ON}
+  -DAL_BACKEND_UDA=${AL_BACKEND_UDA:-ON}
+  # Build MDSplus models
+  -DAL_BUILD_MDSPLUS_MODELS=${AL_BUILD_MDSPLUS_MODELS:-ON}
+  # Download dependencies from HTTPS (using an access token):
+  -DAL_DOWNLOAD_DEPENDENCIES=${AL_DOWNLOAD_DEPENDENCIES:-ON}
+  -DAL_CORE_GIT_REPOSITORY=${AL_CORE_GIT_REPOSITORY:-https://git.iter.org/scm/imas/al-core.git}
+  -DAL_PLUGINS_GIT_REPOSITORY=${AL_PLUGINS_GIT_REPOSITORY:-https://git.iter.org/scm/imas/al-plugins.git}
+  -DDD_GIT_REPOSITORY=${DDD_GIT_REPOSITORY:-https://git.iter.org/scm/imas/data-dictionary.git}
+  # DD version: can be set with DD_VERSION env variable, otherwise use latest main
+  -DDD_VERSION=${DD_VERSION:-main}
+  # AL Core version: can be set with AL_CORE_VERSION env variable, otherwise use latest main
+  -DAL_CORE_VERSION=${AL_CORE_VERSION:-main}
+  # HLI options
+  -DAL_EXAMPLES=${AL_EXAMPLES:-ON}
+  -DAL_TESTS=${AL_TESTS:-ON}
+  -DAL_PLUGINS=${AL_PLUGINS:-ON}
+  # Build documentation
+  -DAL_HLI_DOCS=${AL_HLI_DOCS:-ON}
+  # Work around Boost linker issues on 2020b toolchain
+  -DBoost_NO_BOOST_CMAKE=${Boost_NO_BOOST_CMAKE:-ON}
 )
 echo "CMake args:"
 echo ${CMAKE_ARGS[@]} | tr ' ' '\n'
