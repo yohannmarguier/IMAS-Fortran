@@ -4,10 +4,10 @@ program test_multi_put_slice_static
 
   type(ids_camera_visible) :: camera, camera_check
   integer :: status, pctx, i, j
-  integer :: s, r, b
+  integer :: s, length, b
   character(len=7), dimension(2) :: BACKEND = ['mdsplus','hdf5   ']
   s    = 2
-  r    = 2
+  length    = 2
 
   do b=1,size(BACKEND)
      print *,"Test with backend ",BACKEND(b)
@@ -21,10 +21,11 @@ program test_multi_put_slice_static
      allocate(camera%channel(1)%viewing_angle_beta_bounds(s))
      allocate(camera%code%output_flag(s))
      
-     do j=1,r
-        do i=1,s
+     camera%channel(1)%viewing_angle_beta_bounds(1) = 45.23
+     camera%channel(1)%viewing_angle_beta_bounds(2) = 37.89
+     do j=1,s
+        do i=1,length
            camera%time(i)                  = 0.1_ids_real*i+j
-           camera%channel(1)%viewing_angle_beta_bounds(i) = 1000.0_ids_real*j+i*10
            camera%code%output_flag(i)      = 0
         end do
         print *,"put_slice #",j
@@ -34,10 +35,10 @@ program test_multi_put_slice_static
      call ids_get(pctx,"camera_visible",camera_check)
      
      print *,camera_check%time
-     if (SIZE(camera_check%time).ne.(s*r)) ERROR STOP 'Error: wrong size for time'
+     if (SIZE(camera_check%time).ne.(s*length)) ERROR STOP 'Error: wrong size for time'
      
      print *,camera_check%code%output_flag
-     if (SIZE(camera_check%code%output_flag).ne.(s*r)) ERROR STOP 'Error: wrong size for code%output_flag'
+     if (SIZE(camera_check%code%output_flag).ne.(s*length)) ERROR STOP 'Error: wrong size for code%output_flag'
      
      do i=1,SIZE(camera_check%channel(1)%viewing_angle_beta_bounds)
         print *,camera_check%channel(1)%viewing_angle_beta_bounds(i)
