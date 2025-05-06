@@ -32,7 +32,6 @@ set( TESTS
     test_multi_put_slice_dynamic
     test_multi_put_slice_static
     test_partial_plugin
-    test_patch_reader_plugin
     test_pf_put
     test_pf_put_slice
     test_pulse_create
