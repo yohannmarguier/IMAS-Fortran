@@ -63,7 +63,7 @@ echo "... 2023b"
 MODULES=(
     CMake/3.27.6-GCCcore-13.2.0
     Boost/1.83.0-GCC-13.2.0
-    UDA/2.7.5-GCC-13.2.0
+    UDA/2.8.1-GCC-13.2.0
     Saxon-HE/12.4-Java-21
     Blitz++/1.0.2-GCCcore-13.2.0
     MDSplus/7.132.0-GCCcore-13.2.0
@@ -141,6 +141,7 @@ CMAKE_ARGS=(${CMAKE_ARGS[@]}
   -DAL_HLI_DOCS=${AL_HLI_DOCS:-ON}
   # Work around Boost linker issues on 2020b toolchain
   -DBoost_NO_BOOST_CMAKE=${Boost_NO_BOOST_CMAKE:-ON}
+  -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD:-17}
 )
 echo "CMake args:"
 echo ${CMAKE_ARGS[@]} | tr ' ' '\n'
