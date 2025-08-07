@@ -803,8 +803,8 @@ end subroutine al_get_version_for_put
     call al_begin_dataentry_action(uri, mode, pulseCtx, status, mesg)
     if (present(retstatus)) retstatus = status
     if (status .ne. 0) then
-        if (present(retmesg)) retmesg = mesg
-   endif
+       if (present(retmesg)) retmesg = mesg
+    endif
   end subroutine imas_open
 
   subroutine imas_create_env(name, pulse, run, refPulse, refRun, pulseCtx, user, tokamak, version, retstatus)
@@ -1143,78 +1143,39 @@ end subroutine al_get_version_for_put
   subroutine put_vect1d_string(opCtx, idsName, fieldPath, timebasePath, data, rank, lifeCycleStatus, retstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none 
-
-    ! Arguments
     integer, intent(in) :: opCtx, rank
+    integer :: IMAS_AL_ENABLE_PLUGINS
     character(*), intent(in) :: idsName, fieldPath, timebasePath, lifeCycleStatus
-    character(132), dimension(:), pointer :: data
-    integer, intent(out) :: retstatus
 
-    ! Locals
-    integer :: dim1, i, j
+    character(132), dimension(:), intent(in), target, optional :: data
+    integer, intent(out) :: retstatus
+    integer :: dim1, dim2
     type(C_PTR) :: cptr, csize
-    character(C_CHAR), dimension(:,:), allocatable, target :: cdata, cdata_trans
+    character(C_CHAR), dimension(:,:), pointer :: cdata
     integer(C_INT) :: csize1, csize2
+    integer :: i,j
     integer(C_INT), target :: dsize(2)
     type(al_status) :: status
-    integer :: IMAS_AL_ENABLE_PLUGINS
-
-    ! Initialize status
     status%code = 0
-
-    ! Check for unassociated data
-    if (.not. associated(data)) then
+    if (.not. present(data)) then
         call is_al_plugins_enabled(IMAS_AL_ENABLE_PLUGINS)
-        if (IMAS_AL_ENABLE_PLUGINS == 1) then
-            status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, &
-                                             trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, CHAR_DATA, rank + 1, C_NULL_PTR))
+        if (IMAS_AL_ENABLE_PLUGINS.eq.1) then
+         status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, C_NULL_PTR, CHAR_DATA, rank + 1, C_NULL_PTR))
         end if
     else
-        dim1 = size(data, 1)
+        dim1   = size(data, 1)
         csize1 = dim1
-        csize2 = MAXVAL(len_trim(data(1:dim1)))
-        dsize = (/ csize1, csize2 /)
+        csize2 = len(data(1))            
+        dsize  = (/ csize1, csize2 /)
 
-        ! Allocate the Fortran column-major character matrix
-        allocate(cdata(csize1, csize2))
-
-        ! Fill with characters from each string, padding with spaces if needed
-        do i = 1, csize1
-            do j = 1, csize2
-                if (j <= len_trim(data(i))) then
-                    cdata(i,j) = data(i)(j:j)
-                else
-                    cdata(i,j) = ' '  ! Padding with space (or use C_NULL_CHAR if preferred)
-                end if
-            end do
-        end do
-
-        ! Transpose the matrix to row-major layout for C/Python compatibility
-        allocate(cdata_trans(csize2, csize1))
-        do i = 1, csize1
-            do j = 1, csize2
-                cdata_trans(j,i) = cdata(i,j)
-            end do
-        end do
-
-        ! Prepare C pointers
-        cptr  = C_LOC(cdata_trans(1,1))
+        !— point straight at your existing array in memory —
+        cptr  = C_LOC(data(1))            
         csize = C_LOC(dsize(1))
-
-        ! Write the transposed data
         call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
-        status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, &
-                                         trim(timebasePath)//C_NULL_CHAR, cptr, CHAR_DATA, rank + 1, csize))
-
-        ! Clean up
-        deallocate(cdata)
-        deallocate(cdata_trans)
-    end if
-
-    ! Output status and return code
-    if (status%code /= 0) write(*,*) trim(status%message)
+        status = fstatus(c_al_write_data(opCtx, trim(fieldPath)//C_NULL_CHAR, trim(timebasePath)//C_NULL_CHAR, cptr, CHAR_DATA, rank + 1, csize))
+   end if
+   if (status%code.ne.0) write(*,*) TRIM(status%message)
     retstatus = status%code
-
   end subroutine put_vect1d_string
 
   subroutine put_vect2d_int(opCtx, idsName, fieldPath, timebasePath, data, rank, lifeCycleStatus, retstatus)
@@ -2064,78 +2025,43 @@ end subroutine al_get_version_for_put
     retstatus = status%code
   end subroutine get_vect2D_char
 
-subroutine get_vect1D_string(opCtx, fieldPath, timebasePath, data, dim1, retstatus)
-   use, intrinsic :: ISO_C_BINDING
-   implicit none
+  subroutine get_vect1D_string(opCtx, fieldPath, timebasePath, data, dim1, retstatus)
+    use, intrinsic :: ISO_C_BINDING, only: C_NULL_CHAR, c_loc
+    implicit none
 
-   integer, intent(in) :: opCtx
-   character(*), intent(in) :: fieldPath, timebasePath
-   integer, intent(out) :: dim1, retstatus
-   character(132), dimension(:), pointer :: data
-   character(len=1), allocatable :: transdata(:,:)
-   character, dimension(:,:), pointer :: tmpdata
-   character(len=:), allocatable :: tempstr
-   character(132) :: tmpstr
-   integer :: size1, size2
-   integer :: i, j
-    
+    integer, intent(in)        :: opCtx
+    character(*), intent(in)   :: fieldPath, timebasePath
+    character(132), dimension(:), pointer :: data
+    integer, intent(out)       :: dim1, retstatus
+    character(len=1), dimension(:,:), pointer :: tmpdata
+    character(len=1), dimension(:),   pointer :: cbuf     
+    character(132)  :: tmpstr
+    integer :: size1, size2, i, j
+    type(C_PTR) :: cptr                           
 
-   ! Read the 2D character array
-   call get_vect2D_char(opCtx, fieldPath, timebasePath, tmpdata, size1, size2, retstatus)
-
-   if (retstatus.eq.0) then
+    call get_vect2D_char(                                  &
+         opCtx,                                           &
+         trim(fieldPath)//C_NULL_CHAR,                    &
+         trim(timebasePath)//C_NULL_CHAR,                 &
+         tmpdata, size1, size2, retstatus )
+    if (retstatus.eq.0) then
        if (size1.gt.0) then
-
-         ! Allocate the 1D string array with one string per row
-         allocate(transdata(size2, size1))  ! Transpose dimensions
-
-         ! Reconstruct each row string from column-major character matrix
-         do i = 1, size1
-               do j = 1, size2
-                     transdata(j,i) = tmpdata(i, j)
-               end do
-         end do
-
-         ! Combine all rows into a single string
-         allocate(character(len=size1*size2) :: tempstr)
-         tempstr = ''
-         do i = 1, size2
-            do j = 1, size1
-               tempstr((i-1)*size1 + j:(i-1)*size1 + j) = transdata(i,j)
+            cptr = C_LOC( tmpdata(1,1) )
+            call C_F_POINTER( cptr, cbuf, [size1*size2] )
+            allocate(data(size1))
+            do i = 1, size1
+                tmpstr = ' '       ! start with all blanks
+                do j = 1, size2
+                    tmpstr(j:j) =  cbuf( (i-1)*size2 + j ) 
+                end do
+                data(i) = trim(tmpstr)
             end do
-         end do
-
-         ! Split line into size2 columns and make size1, store in data array
-         allocate(data(size1))
-         do i = 1, size1
-            tmpstr = ''
-            do j = 1, size2
-               tmpstr(j:j) = tempstr((i-1)*size2 + j:(i-1)*size2 + j)
-            end do
-            data(i) = trim(tmpstr)
-         end do
-
-         ! Update dim1 to reflect the actual number of strings we're creating
-         dim1 = size1
-         ! Output data array and copy transdata
-         write(*,*) 'DEBUG: Show output data array'
-         do i = 1, dim1
-               write(*,*) 'DEBUG: data(', i, ') = "', trim(data(i)), '"'
-         end do
-         ! Clean up tempstr and tmpstr if allocated
-         if (allocated(tempstr)) deallocate(tempstr)
-         ! Clean up transdata
-         deallocate(transdata)
-
-         ! Cleanup
-           if (associated(tmpdata)) then
-               call c_free(C_LOC(tmpdata(1,1)))
-               nullify(tmpdata)
-           end if
-      end if         
-   end if
+            dim1 = size1
+            call c_free( cptr )
+            nullify(tmpdata, cbuf)
+        end if
+    end if
 end subroutine get_vect1D_string
-
 
   subroutine get_vect2d_int(opCtx, fieldPath, timebasePath, data, &
        dim1, dim2, retstatus)
