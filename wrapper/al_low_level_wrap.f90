@@ -1165,10 +1165,9 @@ end subroutine al_get_version_for_put
     else
         dim1   = size(data, 1)
         csize1 = dim1
-        csize2 = len(data(1))            
+        csize2 = len(data)            
         dsize  = (/ csize1, csize2 /)
 
-        !— point straight at your existing array in memory —
         cptr  = C_LOC(data(1))            
         csize = C_LOC(dsize(1))
         call warningWritingObsolescentNode(idsName, fieldPath, lifeCycleStatus)
