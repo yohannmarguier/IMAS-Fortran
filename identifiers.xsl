@@ -17,6 +17,18 @@
    
 <xsl:output method="text" version="1.0" encoding="UTF-8" indent="yes"/>
 
+<!-- GET VALID FORTRAN IDENTIFIER -->
+<xsl:template name="get-valid-fortran-identifier">
+  <xsl:param name="name"/>
+  <xsl:choose>
+    <xsl:when test="contains('0123456789', substring($name,1,1))">
+      <xsl:text>x</xsl:text><xsl:value-of select="$name"/>
+    </xsl:when>
+    <xsl:otherwise>
+      <xsl:value-of select="$name"/>
+    </xsl:otherwise>
+  </xsl:choose>
+</xsl:template>
 
 <!-- MAIN, FILE GENERATION -->
 <xsl:template match="/constants">
@@ -77,7 +89,9 @@
   
 <xsl:template match="int" mode="Fortran">
   <xsl:text>  integer, parameter :: </xsl:text>
-  <xsl:value-of select="@name"/>
+  <xsl:call-template name="get-valid-fortran-identifier">
+    <xsl:with-param name="name" select="@name"/>
+  </xsl:call-template>
   <xsl:text> = </xsl:text>
   <xsl:value-of select="."/>
   <xsl:value-of select="my:desc('!&lt;')"/>
@@ -85,7 +99,9 @@
 
 <xsl:template match="float" mode="Fortran">
   <xsl:text>  real(kind=c_double), parameter :: </xsl:text>
-  <xsl:value-of select="@name"/>
+  <xsl:call-template name="get-valid-fortran-identifier">
+    <xsl:with-param name="name" select="@name"/>
+  </xsl:call-template>
   <xsl:text> = </xsl:text>
   <xsl:choose>
     <xsl:when test="@alias!='' or @alias='true'">
@@ -104,7 +120,9 @@
 
 <xsl:template match="string" mode="Fortran">
   <xsl:text>  character(len=*), parameter :: </xsl:text>
-  <xsl:value-of select="@name"/>
+  <xsl:call-template name="get-valid-fortran-identifier">
+    <xsl:with-param name="name" select="@name"/>
+  </xsl:call-template>
   <xsl:text> = "</xsl:text>
   <xsl:value-of select="."/><xsl:text>"</xsl:text>
   <xsl:value-of select="my:desc('!&lt;')"/>
@@ -122,10 +140,10 @@
 <!-- Declare fortran variables -->
 <xsl:template name="declareFortranIntegers">
     <xsl:for-each select="//constants/int[@name]">
-      <xsl:text>    integer :: </xsl:text><xsl:value-of select="@name"/><xsl:text>&#xA;</xsl:text>
+      <xsl:text>    integer :: </xsl:text><xsl:call-template name="get-valid-fortran-identifier"><xsl:with-param name="name" select="@name"/></xsl:call-template><xsl:text>&#xA;</xsl:text>
     </xsl:for-each>
     <xsl:for-each select="//constants/float[@name]">
-      <xsl:text>    real(c_double) :: </xsl:text><xsl:value-of select="@name"/><xsl:text>&#xA;</xsl:text>
+      <xsl:text>    real(c_double) :: </xsl:text><xsl:call-template name="get-valid-fortran-identifier"><xsl:with-param name="name" select="@name"/></xsl:call-template><xsl:text>&#xA;</xsl:text>
     </xsl:for-each>
     <xsl:text>    integer :: version&#xA;</xsl:text>
 </xsl:template>
@@ -133,10 +151,10 @@
 <!-- Assign Fortran variables -->
 <xsl:template name="assignFortran">
   <xsl:for-each select="//constants/int[@name]">
-    <xsl:text>    </xsl:text><xsl:value-of select="@name"/><xsl:text> = </xsl:text><xsl:value-of select="."/><xsl:text>, &amp;&#xA;</xsl:text>
+    <xsl:text>    </xsl:text><xsl:call-template name="get-valid-fortran-identifier"><xsl:with-param name="name" select="@name"/></xsl:call-template><xsl:text> = </xsl:text><xsl:value-of select="."/><xsl:text>, &amp;&#xA;</xsl:text>
   </xsl:for-each>
   <xsl:for-each select="//constants/float[@name]">
-    <xsl:text>    </xsl:text><xsl:value-of select="@name"/><xsl:text> = </xsl:text><xsl:value-of select="."/><xsl:text>, &amp;&#xA;</xsl:text>
+    <xsl:text>    </xsl:text><xsl:call-template name="get-valid-fortran-identifier"><xsl:with-param name="name" select="@name"/></xsl:call-template><xsl:text> = </xsl:text><xsl:value-of select="."/><xsl:text>, &amp;&#xA;</xsl:text>
   </xsl:for-each>
   <xsl:text>    version=-999999999)&#xA;</xsl:text>
 </xsl:template>
@@ -160,7 +178,7 @@
       <xsl:text>    select case (trim(NAME))&#xA;</xsl:text>
       <xsl:for-each select="int[@name]">
         <xsl:text>      case ('</xsl:text>
-        <xsl:value-of select="@name"/>    
+        <xsl:value-of select="@name"/>
         <xsl:text>')&#xA;</xsl:text>
         <xsl:text>        get_type_index=</xsl:text>
         <xsl:value-of select="."/>
@@ -187,7 +205,7 @@
         <xsl:text>)&#xA;</xsl:text>
         <xsl:text>        </xsl:text>
         <xsl:text>get_type_name='</xsl:text>
-        <xsl:value-of select="@name"/>    
+        <xsl:value-of select="@name"/>  
         <xsl:text>'&#xA;</xsl:text>
       </xsl:for-each>
       <xsl:text>    end select&#xA;</xsl:text>
