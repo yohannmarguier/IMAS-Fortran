@@ -2038,7 +2038,7 @@ end subroutine al_get_version_for_put
     integer :: size1, size2, i, j
     type(C_PTR) :: cptr                           
 
-    call get_vect2D_char(                                  &
+    call get_vect2D_char(                                 &
          opCtx,                                           &
          trim(fieldPath)//C_NULL_CHAR,                    &
          trim(timebasePath)//C_NULL_CHAR,                 &
