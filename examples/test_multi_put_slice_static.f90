@@ -37,7 +37,7 @@ program test_multi_put_slice_static
      do j=1,s
         do i=1,length
            gas_inj%time(i)                   = 0.1_ids_real*i+j
-           gas_inj%pipe(1)%flow_rate%data(1) = .33*j
+           gas_inj%pipe(1)%flow_rate%data(j) = .33*j
            gas_inj%code%output_flag(i)       = 0
         end do
         print *,"put_slice #",j
