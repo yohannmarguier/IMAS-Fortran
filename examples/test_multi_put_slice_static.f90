@@ -4,7 +4,7 @@ program test_multi_put_slice_static
 
   type(ids_gas_injection) :: gas_inj, gas_check
   integer :: status, pctx, i, j
-  integer :: s, length, b
+  integer :: s, ntimes, ibackend
   character(len=7), dimension(2) :: BACKEND = ['mdsplus','hdf5   ']
   s      = 2
   length = 2
