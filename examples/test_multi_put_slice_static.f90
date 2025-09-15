@@ -7,12 +7,12 @@ program test_multi_put_slice_static
   integer :: s, ntimes, ibackend
   character(len=7), dimension(2) :: BACKEND = ['mdsplus','hdf5   ']
   s      = 2
-  length = 2
+  ntimes = 2
 
-  do b=1,size(BACKEND)
-     print *,"Test with backend ",BACKEND(b)
+  do ibackend=1,size(BACKEND)
+     print *,"Test with backend ",BACKEND(ibackend)
 
-     call imas_open('imas:'//trim(BACKEND(b))//'?path=./test_db_test_gas_injection', FORCE_CREATE_PULSE, pctx)
+     call imas_open('imas:'//trim(BACKEND(ibackend))//'?path=./test_db_test_gas_injection', FORCE_CREATE_PULSE, pctx)
 
      gas_inj%ids_properties%homogeneous_time = 1
      allocate(gas_inj%pipe(1))
@@ -35,9 +35,9 @@ program test_multi_put_slice_static
      gas_inj%pipe(1)%valve_indices(2) = 2
      gas_inj%pipe(1)%valve_indices(3) = 1
      do j=1,s
-        do i=1,length
+        do i=1,ntimes
            gas_inj%time(i)                   = 0.1_ids_real*i+j
-           gas_inj%pipe(1)%flow_rate%data(j) = .33*j
+           gas_inj%pipe(i)%flow_rate%data(j) = .33*j
            gas_inj%code%output_flag(i)       = 0
         end do
         print *,"put_slice #",j
@@ -47,10 +47,10 @@ program test_multi_put_slice_static
      call ids_get(pctx,"gas_injection",gas_check)
      
      print *,gas_check%time
-     if (SIZE(gas_check%time).ne.(s*length)) ERROR STOP 'Error: wrong size for time'
+     if (SIZE(gas_check%time).ne.(s*ntimes)) ERROR STOP 'Error: wrong size for time'
      
      print *,gas_check%code%output_flag
-     if (SIZE(gas_check%code%output_flag).ne.(s*length)) ERROR STOP 'Error: wrong size for code%output_flag'
+     if (SIZE(gas_check%code%output_flag).ne.(s*ntimes)) ERROR STOP 'Error: wrong size for code%output_flag'
      
      do i=1,SIZE(gas_check%pipe(1)%valve_indices)
         print *,gas_check%valve(gas_check%pipe(1)%valve_indices(i))%name

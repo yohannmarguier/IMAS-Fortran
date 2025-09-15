@@ -6,7 +6,7 @@ program test
   character(:), allocatable :: retmsg
 
   write(*,*) 'Calling imas_create pulse file'
-  call imas_open('imas:mdsplus?path=./test_db_test_pulse_create', FORCE_CREATE_PULSE, idx, status, retmsg)
+  call imas_open('imas:hdf5?path=./test_db_test_pulse_create', FORCE_CREATE_PULSE, idx, status, retmsg)
 
   if (status.ne.0) then
      print *,retmsg
