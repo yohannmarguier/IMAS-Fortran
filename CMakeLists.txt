@@ -206,8 +206,10 @@ target_include_directories( al-fortran PUBLIC
 )
 
 add_library( al-identifiers-fortran ${IDENTIFIER_SOURCES} )
+add_dependencies( al-identifiers-fortran al-fortran )
 target_include_directories( al-identifiers-fortran PUBLIC
   $<BUILD_INTERFACE:${IDENTIFIER_SRC_DIR}>
+  $<BUILD_INTERFACE:${GENERATED_SRC_DIR}>
   $<INSTALL_INTERFACE:include/fortran>  # <prefix>/include/fortran
 )
 
