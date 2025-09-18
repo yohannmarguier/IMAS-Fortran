@@ -23,6 +23,7 @@ set( TESTS
     test_empty_aos
     test_empty_dynamic_aos
     test_empty_static_aos
+    test_identifiers
     test_ids_serialize
     test_magnetics_get
     test_magnetics_memory
