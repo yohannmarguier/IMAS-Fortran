@@ -27,42 +27,30 @@
 
       <xsl:text>&#xA;&#xA;module al_</xsl:text><xsl:value-of select="$name"/><xsl:text>&#xA;</xsl:text>
 
-    <xsl:apply-templates select="include[@name='Fortran']"/><xsl:text>&#xA;</xsl:text>
-    <xsl:text>  use ids_schemas, only: &amp;&#xA;</xsl:text>
-    <xsl:text>       ids_identifier&#xA;&#xA;</xsl:text>
+    <xsl:apply-templates select="include[@name='Fortran']"/><xsl:text>&#xA;&#xA;</xsl:text>
+    <xsl:text>  use ids_utilities&#xA;</xsl:text>
     <xsl:text>  implicit none&#xA;</xsl:text>
     <xsl:text>  private&#xA;</xsl:text>
+    <xsl:text>  &#xA;</xsl:text>
 
-      <xsl:if test="//constants[not(@create_mapping_function)]">
-	<xsl:apply-templates select="*[name()!='header' and name()!='include' and @used_internally]" mode="Fortran"/>
-      </xsl:if>
-
-      <xsl:text>&#xA;  !--- A record for one entry (code, string name, string description)&#xA;</xsl:text>
-      <xsl:text>  type :: EnumStruct&#xA;</xsl:text>
-      <xsl:text>    integer :: code&#xA;</xsl:text>
-      <xsl:text>    character(len=132) :: name&#xA;</xsl:text>
-      <xsl:text>    character(len=512) :: description&#xA;</xsl:text>
-      <xsl:text>  end type EnumStruct&#xA;&#xA;</xsl:text>
-
-      <xsl:text>  !--- Constant table of all sources (no identifier components needed)&#xA;</xsl:text>
-      <xsl:text>  integer, parameter :: n_sources = </xsl:text>
-      <xsl:value-of select="count(//constants/int[@name])"/>
-      <xsl:text>&#xA;</xsl:text>
-      <xsl:text>  type(EnumStruct), parameter :: SOURCES(n_sources) = [ &amp;&#xA;</xsl:text>
-      <xsl:call-template name="createSourcesArray"/>
-      <xsl:text>&#xA;  !--- An empty type whose methods give you the same API as before&#xA;</xsl:text>
+    <xsl:if test="//constants[not(@create_mapping_function)]">
+      <xsl:apply-templates select="*[name()!='header' and name()!='include' and @used_internally]" mode="Fortran"/>
+    </xsl:if>
       <xsl:text>  type :: type_</xsl:text><xsl:value-of select="$name"/><xsl:text>&#xA;</xsl:text>
       <xsl:if test="//constants[@create_mapping_function]">
 	<xsl:text>  contains&#xA;</xsl:text>
 	<xsl:text>    procedure :: index => get_type_index&#xA;</xsl:text>
 	<xsl:text>    procedure :: name => get_type_name&#xA;</xsl:text>
 	<xsl:text>    procedure :: description => get_type_description&#xA;</xsl:text>
-	<xsl:text>    procedure :: set_identifier => set_</xsl:text><xsl:value-of select="$name"/><xsl:text>&#xA;</xsl:text>
+	<xsl:text>    procedure :: set_ids_identifier => set_</xsl:text><xsl:value-of select="$name"/><xsl:text>&#xA;</xsl:text>
+	<xsl:text>    procedure :: set_ids_identifier_static => set_</xsl:text><xsl:value-of select="$name"/><xsl:text>_static&#xA;</xsl:text>
+	<xsl:text>    procedure :: set_ids_identifier_static_1d => set_</xsl:text><xsl:value-of select="$name"/><xsl:text>_static_1d&#xA;</xsl:text>
+	<xsl:text>    procedure :: set_ids_identifier_dynamic_aos3 => set_</xsl:text><xsl:value-of select="$name"/><xsl:text>_dynamic_aos3&#xA;</xsl:text>
+	<xsl:text>    procedure :: set_ids_identifier_dynamic_aos3_1d => set_</xsl:text><xsl:value-of select="$name"/><xsl:text>_dynamic_aos3_1d&#xA;</xsl:text>
       </xsl:if>
       <xsl:text>  end type type_</xsl:text><xsl:value-of select="$name"/><xsl:text>&#xA;</xsl:text>
 
-	<xsl:text>&#xA;  !--- Public singleton (no per-reaction variables inside!)&#xA;</xsl:text>
-	<xsl:text>  type(type_</xsl:text><xsl:value-of select="$name"/><xsl:text>), public, parameter :: </xsl:text><xsl:value-of select="$name"/><xsl:text> = &amp;&#xA;</xsl:text>
+	<xsl:text>&#xA;  type(type_</xsl:text><xsl:value-of select="$name"/><xsl:text>), public,parameter :: </xsl:text><xsl:value-of select="$name"/><xsl:text> = &amp;&#xA;</xsl:text>
 	<xsl:text>       type_</xsl:text><xsl:value-of select="$name"/><xsl:text>()&#xA;</xsl:text>
 
       <xsl:if test="//constants[@create_mapping_function]">
@@ -96,34 +84,30 @@
   <xsl:value-of select="@name"/>
   <xsl:text> = </xsl:text>
   <xsl:value-of select="."/>
-  <xsl:value-of select="my:desc('!&lt;')"/>
+  <xsl:text>&#xA;</xsl:text>
 </xsl:template>
 
 <xsl:template match="float" mode="Fortran">
   <xsl:text>  real(kind=c_double), parameter :: </xsl:text>
   <xsl:value-of select="@name"/>
   <xsl:text> = </xsl:text>
-  <xsl:choose>
-    <xsl:when test="@alias!='' or @alias='true'">
-      <xsl:call-template name="alias">
-        <xsl:with-param name="text" select="."/>
-        <xsl:with-param name="symb" select="'_c_double'"/>
-      </xsl:call-template>
-    </xsl:when>
-    <xsl:otherwise>
-      <xsl:value-of select="."/>
-      <xsl:text>_c_double</xsl:text>
-    </xsl:otherwise>
-  </xsl:choose>
-  <xsl:value-of select="my:desc('!&lt;')"/>
+  <xsl:value-of select="."/>
+  <xsl:text>_c_double&#xA;</xsl:text>
 </xsl:template>
 
 <xsl:template match="string" mode="Fortran">
   <xsl:text>  character(len=*), parameter :: </xsl:text>
   <xsl:value-of select="@name"/>
   <xsl:text> = "</xsl:text>
-  <xsl:value-of select="."/><xsl:text>"</xsl:text>
-  <xsl:value-of select="my:desc('!&lt;')"/>
+  <xsl:choose>
+    <xsl:when test="string-length(.) > 132">
+      <xsl:value-of select="substring(., 1, 132)"/>
+    </xsl:when>
+    <xsl:otherwise>
+      <xsl:value-of select="."/>
+    </xsl:otherwise>
+  </xsl:choose>
+  <xsl:text>"&#xA;</xsl:text>
 </xsl:template>
 
 <xsl:template match="comment" mode="Fortran">
@@ -133,31 +117,6 @@
     <xsl:with-param name="with" select="'&#xA;  !> '"/>
   </xsl:call-template>
   <xsl:text>&#xA;</xsl:text>
-</xsl:template>
-
-<!-- Create sources array -->
-<xsl:template name="createSourcesArray">
-  <xsl:for-each select="//constants/int[@name]">
-    <xsl:text>    EnumStruct(</xsl:text>
-    <xsl:choose>
-      <xsl:when test="string-length(.) &lt; 4">
-        <xsl:text>  </xsl:text><xsl:value-of select="."/>
-      </xsl:when>
-      <xsl:when test="string-length(.) = 4">
-        <xsl:text> </xsl:text><xsl:value-of select="."/>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:value-of select="."/>
-      </xsl:otherwise>
-    </xsl:choose>
-    <xsl:text>, '</xsl:text><xsl:value-of select="@name"/><xsl:text>', '</xsl:text>
-    <xsl:value-of select="@description"/>
-    <xsl:text>')</xsl:text>
-    <xsl:if test="position() != last()">
-      <xsl:text>, &amp;&#xA;</xsl:text>
-    </xsl:if>
-  </xsl:for-each>
-  <xsl:text> ]&#xA;</xsl:text>
 </xsl:template>
 
 <!-- Declare fortran variables -->
@@ -189,86 +148,211 @@
     <!-- Contains -->
     <xsl:text>contains&#xA;&#xA;</xsl:text>
 
+    <!-- Private helper subroutine -->
+    <xsl:text>  ! helper to get </xsl:text><xsl:value-of select="$name"/><xsl:text> data by name&#xA;</xsl:text>
+    <xsl:text>  subroutine get_type_data_by_name(name, coord_index, coord_name, coord_description)&#xA;</xsl:text>
+    <xsl:text>    character(*), intent(in) :: name&#xA;</xsl:text>
+    <xsl:text>    integer, intent(out) :: coord_index&#xA;</xsl:text>
+    <xsl:text>    character(len=ids_string_length), intent(out) :: coord_name&#xA;</xsl:text>
+    <xsl:text>    character(len=ids_string_length), intent(out) :: coord_description&#xA;</xsl:text>
+    <xsl:text>    character(len=:), allocatable :: key&#xA;</xsl:text>
+    <xsl:text>    &#xA;</xsl:text>
+    <xsl:text>    key = trim(name)&#xA;</xsl:text>
+    <xsl:text>    coord_index = ids_int_invalid&#xA;</xsl:text>
+    <xsl:text>    coord_name = ''&#xA;</xsl:text>
+    <xsl:text>    coord_description = ''&#xA;</xsl:text>
+    <xsl:text>    &#xA;</xsl:text>
+    <xsl:text>    select case (key)&#xA;</xsl:text>
+    <xsl:for-each select="//constants/int[@name]">
+      <xsl:text>      case ('</xsl:text><xsl:value-of select="@name"/><xsl:text>')&#xA;</xsl:text>
+      <xsl:text>        coord_index = </xsl:text><xsl:value-of select="."/><xsl:text>&#xA;</xsl:text>
+      <xsl:text>        coord_name = '</xsl:text><xsl:value-of select="@name"/><xsl:text>'&#xA;</xsl:text>
+      <xsl:text>        coord_description = '</xsl:text>
+      <xsl:choose>
+        <xsl:when test="string-length(@description) > 132">
+          <xsl:value-of select="substring(@description, 1, 132)"/>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:value-of select="@description"/>
+        </xsl:otherwise>
+      </xsl:choose>
+      <xsl:text>'&#xA;</xsl:text>
+    </xsl:for-each>
+    <xsl:text>      case default&#xA;</xsl:text>
+    <xsl:text>        ! Keep the default invalid values&#xA;</xsl:text>
+    <xsl:text>    end select&#xA;</xsl:text>
+    <xsl:text>  end subroutine get_type_data_by_name&#xA;&#xA;</xsl:text>
+
     <!-- Translation from NAME to VALUE -->
     <xsl:if test="int!='' and */@name!=''">
-      <xsl:text>  ! Return the code for a given (string) name; -999999999 if not found&#xA;</xsl:text>
-      <xsl:text>  integer function </xsl:text>
-      <xsl:text>get_type_index(self, NAME)&#xA;</xsl:text>
+      <xsl:text>  ! Get </xsl:text><xsl:value-of select="$name"/><xsl:text> index from string name&#xA;</xsl:text>
+      <xsl:text>  integer function get_type_index(self, NAME)&#xA;</xsl:text>
       <xsl:text>    class(type_</xsl:text><xsl:value-of select="$name"/><xsl:text>), intent(in) :: self&#xA;</xsl:text>
       <xsl:text>    character(*), intent(in) :: NAME&#xA;</xsl:text>
-      <xsl:text>    integer :: i&#xA;</xsl:text>
       <xsl:text>    character(len=:), allocatable :: key&#xA;</xsl:text>
+      <xsl:text>    &#xA;</xsl:text>
       <xsl:text>    key = trim(NAME)&#xA;</xsl:text>
-      <xsl:text>    get_type_index = -999999999&#xA;</xsl:text>
-      <xsl:text>    do i = 1, n_sources&#xA;</xsl:text>
-      <xsl:text>      if (trim(SOURCES(i)%name) == key) then&#xA;</xsl:text>
-      <xsl:text>        get_type_index = SOURCES(i)%code&#xA;</xsl:text>
-      <xsl:text>        return&#xA;</xsl:text>
-      <xsl:text>      end if&#xA;</xsl:text>
-      <xsl:text>    end do&#xA;</xsl:text>
-      <xsl:text>  end function </xsl:text>
-      <xsl:text>get_type_index&#xA;&#xA;</xsl:text>
+      <xsl:text>    &#xA;</xsl:text>
+      <xsl:text>    select case (key)&#xA;</xsl:text>
+      <xsl:for-each select="//constants/int[@name]">
+        <xsl:text>      case ('</xsl:text><xsl:value-of select="@name"/><xsl:text>')&#xA;</xsl:text>
+        <xsl:text>        get_type_index = </xsl:text><xsl:value-of select="."/><xsl:text>&#xA;</xsl:text>
+      </xsl:for-each>
+      <xsl:text>      case default&#xA;</xsl:text>
+      <xsl:text>        get_type_index = ids_int_invalid&#xA;</xsl:text>
+      <xsl:text>    end select&#xA;</xsl:text>
+      <xsl:text>  end function get_type_index&#xA;&#xA;</xsl:text>
     </xsl:if>
 
     <!-- Translation from VALUE to NAME -->
     <xsl:if test="int!=''">
-      <xsl:text>  ! Return the name for a given code; empty string if not found&#xA;</xsl:text>
+      <xsl:text>  ! Get </xsl:text><xsl:value-of select="$name"/><xsl:text> name from index&#xA;</xsl:text>
       <xsl:text>  function get_type_name(self, IND) result(name)&#xA;</xsl:text>
       <xsl:text>    class(type_</xsl:text><xsl:value-of select="$name"/><xsl:text>), intent(in) :: self&#xA;</xsl:text>
       <xsl:text>    integer, intent(in) :: IND&#xA;</xsl:text>
       <xsl:text>    character(len=:), allocatable :: name&#xA;</xsl:text>
-      <xsl:text>    integer :: i&#xA;</xsl:text>
+      <xsl:text>    &#xA;</xsl:text>
       <xsl:text>    name = ''&#xA;</xsl:text>
-      <xsl:text>    do i = 1, n_sources&#xA;</xsl:text>
-      <xsl:text>      if (SOURCES(i)%code == IND) then&#xA;</xsl:text>
-      <xsl:text>        name = trim(SOURCES(i)%name)&#xA;</xsl:text>
-      <xsl:text>        return&#xA;</xsl:text>
-      <xsl:text>      end if&#xA;</xsl:text>
-      <xsl:text>    end do&#xA;</xsl:text>
+      <xsl:text>    select case (IND)&#xA;</xsl:text>
+      <xsl:for-each select="//constants/int[@name]">
+        <xsl:text>      case (</xsl:text><xsl:value-of select="."/><xsl:text>)&#xA;</xsl:text>
+        <xsl:text>        name = '</xsl:text><xsl:value-of select="@name"/><xsl:text>'&#xA;</xsl:text>
+      </xsl:for-each>
+      <xsl:text>      case default&#xA;</xsl:text>
+      <xsl:text>        name = ''&#xA;</xsl:text>
+      <xsl:text>    end select&#xA;</xsl:text>
       <xsl:text>  end function get_type_name&#xA;&#xA;</xsl:text>
     </xsl:if>
 
     <!-- Translation from VALUE to DESCRIPTION -->
     <xsl:if test="int!=''">
-      <xsl:text>  ! Return the description for a given code; empty string if not found&#xA;</xsl:text>
+      <xsl:text>  ! Get </xsl:text><xsl:value-of select="$name"/><xsl:text> description from index&#xA;</xsl:text>
       <xsl:text>  function get_type_description(self, IND) result(description)&#xA;</xsl:text>
       <xsl:text>    class(type_</xsl:text><xsl:value-of select="$name"/><xsl:text>), intent(in) :: self&#xA;</xsl:text>
       <xsl:text>    integer, intent(in) :: IND&#xA;</xsl:text>
       <xsl:text>    character(len=:), allocatable :: description&#xA;</xsl:text>
-      <xsl:text>    integer :: i&#xA;</xsl:text>
+      <xsl:text>    &#xA;</xsl:text>
       <xsl:text>    description = ''&#xA;</xsl:text>
-      <xsl:text>    do i = 1, n_sources&#xA;</xsl:text>
-      <xsl:text>      if (SOURCES(i)%code == IND) then&#xA;</xsl:text>
-      <xsl:text>        description = trim(SOURCES(i)%description)&#xA;</xsl:text>
-      <xsl:text>        return&#xA;</xsl:text>
-      <xsl:text>      end if&#xA;</xsl:text>
-      <xsl:text>    end do&#xA;</xsl:text>
+      <xsl:text>    select case (IND)&#xA;</xsl:text>
+      <xsl:for-each select="//constants/int[@name]">
+        <xsl:text>      case (</xsl:text><xsl:value-of select="."/><xsl:text>)&#xA;</xsl:text>
+        <xsl:text>        description = '</xsl:text>
+        <xsl:choose>
+          <xsl:when test="string-length(@description) > 132">
+            <xsl:value-of select="substring(@description, 1, 132)"/>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:value-of select="@description"/>
+          </xsl:otherwise>
+        </xsl:choose>
+        <xsl:text>'&#xA;</xsl:text>
+      </xsl:for-each>
+      <xsl:text>      case default&#xA;</xsl:text>
+      <xsl:text>        description = ''&#xA;</xsl:text>
+      <xsl:text>    end select&#xA;</xsl:text>
       <xsl:text>  end function get_type_description&#xA;&#xA;</xsl:text>
     </xsl:if>
 
-    <!-- Set complete ids_identifier struct -->
+    <!-- Set complete ids_identifier structure -->
     <xsl:if test="int!=''">
-      <xsl:text>  ! Set complete ids_identifier struct for a given code&#xA;</xsl:text>
-      <xsl:text>  subroutine set_</xsl:text><xsl:value-of select="$name"/><xsl:text>(self, identifier, index)&#xA;</xsl:text>
+      <xsl:text>  ! Set complete ids_identifier structure&#xA;</xsl:text>
+      <xsl:text>  subroutine set_</xsl:text><xsl:value-of select="$name"/><xsl:text>(self, identifier, name)&#xA;</xsl:text>
       <xsl:text>    class(type_</xsl:text><xsl:value-of select="$name"/><xsl:text>), intent(in) :: self&#xA;</xsl:text>
       <xsl:text>    type(ids_identifier), intent(out) :: identifier&#xA;</xsl:text>
-      <xsl:text>    integer, intent(in) :: index&#xA;</xsl:text>
-      <xsl:text>    integer :: i&#xA;</xsl:text>
+      <xsl:text>    character(*), intent(in) :: name&#xA;</xsl:text>
+      <xsl:text>    integer :: coord_index&#xA;</xsl:text>
+      <xsl:text>    character(len=ids_string_length) :: coord_name, coord_description&#xA;</xsl:text>
       <xsl:text>    &#xA;</xsl:text>
-      <xsl:text>    identifier%index = index&#xA;</xsl:text>
+      <xsl:text>    call get_type_data_by_name(name, coord_index, coord_name, coord_description)&#xA;</xsl:text>
+      <xsl:text>    &#xA;</xsl:text>
+      <xsl:text>    identifier%index = coord_index&#xA;</xsl:text>
       <xsl:text>    allocate(identifier%name(1))&#xA;</xsl:text>
       <xsl:text>    allocate(identifier%description(1))&#xA;</xsl:text>
-      <xsl:text>    identifier%name = ''&#xA;</xsl:text>
-      <xsl:text>    identifier%description = ''&#xA;</xsl:text>
-      <xsl:text>    &#xA;</xsl:text>
-      <xsl:text>    do i = 1, n_sources&#xA;</xsl:text>
-      <xsl:text>      if (SOURCES(i)%code == index) then&#xA;</xsl:text>
-      <xsl:text>        identifier%name = trim(SOURCES(i)%name)&#xA;</xsl:text>
-      <xsl:text>        identifier%description = trim(SOURCES(i)%description)&#xA;</xsl:text>
-      <xsl:text>        return&#xA;</xsl:text>
-      <xsl:text>      end if&#xA;</xsl:text>
-      <xsl:text>    end do&#xA;</xsl:text>
+      <xsl:text>    identifier%name(1) = coord_name&#xA;</xsl:text>
+      <xsl:text>    identifier%description(1) = coord_description&#xA;</xsl:text>
       <xsl:text>  end subroutine set_</xsl:text><xsl:value-of select="$name"/><xsl:text>&#xA;&#xA;</xsl:text>
+    </xsl:if>
+
+    <!-- Set complete ids_identifier_static structure -->
+    <xsl:if test="int!=''">
+      <xsl:text>  ! Set complete ids_identifier_static structure&#xA;</xsl:text>
+      <xsl:text>  subroutine set_</xsl:text><xsl:value-of select="$name"/><xsl:text>_static(self, identifier, name)&#xA;</xsl:text>
+      <xsl:text>    class(type_</xsl:text><xsl:value-of select="$name"/><xsl:text>), intent(in) :: self&#xA;</xsl:text>
+      <xsl:text>    type(ids_identifier_static), intent(out) :: identifier&#xA;</xsl:text>
+      <xsl:text>    character(*), intent(in) :: name&#xA;</xsl:text>
+      <xsl:text>    integer :: coord_index&#xA;</xsl:text>
+      <xsl:text>    character(len=ids_string_length) :: coord_name, coord_description&#xA;</xsl:text>
+      <xsl:text>    &#xA;</xsl:text>
+      <xsl:text>    call get_type_data_by_name(name, coord_index, coord_name, coord_description)&#xA;</xsl:text>
+      <xsl:text>    &#xA;</xsl:text>
+      <xsl:text>    identifier%index = coord_index&#xA;</xsl:text>
+      <xsl:text>    allocate(identifier%name(1))&#xA;</xsl:text>
+      <xsl:text>    allocate(identifier%description(1))&#xA;</xsl:text>
+      <xsl:text>    identifier%name(1) = coord_name&#xA;</xsl:text>
+      <xsl:text>    identifier%description(1) = coord_description&#xA;</xsl:text>
+      <xsl:text>  end subroutine set_</xsl:text><xsl:value-of select="$name"/><xsl:text>_static&#xA;&#xA;</xsl:text>
+    </xsl:if>
+
+    <!-- Set complete ids_identifier_static_1d structure -->
+    <xsl:if test="int!=''">
+      <xsl:text>  ! Set complete ids_identifier_static_1d structure&#xA;</xsl:text>
+      <xsl:text>  subroutine set_</xsl:text><xsl:value-of select="$name"/><xsl:text>_static_1d(self, identifier, name)&#xA;</xsl:text>
+      <xsl:text>    class(type_</xsl:text><xsl:value-of select="$name"/><xsl:text>), intent(in) :: self&#xA;</xsl:text>
+      <xsl:text>    type(ids_identifier_static_1d), intent(out) :: identifier&#xA;</xsl:text>
+      <xsl:text>    character(*), intent(in) :: name&#xA;</xsl:text>
+      <xsl:text>    integer :: coord_index&#xA;</xsl:text>
+      <xsl:text>    character(len=ids_string_length) :: coord_name, coord_description&#xA;</xsl:text>
+      <xsl:text>    &#xA;</xsl:text>
+      <xsl:text>    call get_type_data_by_name(name, coord_index, coord_name, coord_description)&#xA;</xsl:text>
+      <xsl:text>    &#xA;</xsl:text>
+      <xsl:text>    allocate(identifier%indices(1))&#xA;</xsl:text>
+      <xsl:text>    allocate(identifier%names(1))&#xA;</xsl:text>
+      <xsl:text>    allocate(identifier%descriptions(1))&#xA;</xsl:text>
+      <xsl:text>    identifier%indices(1) = coord_index&#xA;</xsl:text>
+      <xsl:text>    identifier%names(1) = coord_name&#xA;</xsl:text>
+      <xsl:text>    identifier%descriptions(1) = coord_description&#xA;</xsl:text>
+      <xsl:text>  end subroutine set_</xsl:text><xsl:value-of select="$name"/><xsl:text>_static_1d&#xA;&#xA;</xsl:text>
+    </xsl:if>
+
+    <!-- Set complete ids_identifier_dynamic_aos3 structure -->
+    <xsl:if test="int!=''">
+      <xsl:text>  ! Set complete ids_identifier_dynamic_aos3 structure&#xA;</xsl:text>
+      <xsl:text>  subroutine set_</xsl:text><xsl:value-of select="$name"/><xsl:text>_dynamic_aos3(self, identifier, name)&#xA;</xsl:text>
+      <xsl:text>    class(type_</xsl:text><xsl:value-of select="$name"/><xsl:text>), intent(in) :: self&#xA;</xsl:text>
+      <xsl:text>    type(ids_identifier_dynamic_aos3), intent(out) :: identifier&#xA;</xsl:text>
+      <xsl:text>    character(*), intent(in) :: name&#xA;</xsl:text>
+      <xsl:text>    integer :: coord_index&#xA;</xsl:text>
+      <xsl:text>    character(len=ids_string_length) :: coord_name, coord_description&#xA;</xsl:text>
+      <xsl:text>    &#xA;</xsl:text>
+      <xsl:text>    call get_type_data_by_name(name, coord_index, coord_name, coord_description)&#xA;</xsl:text>
+      <xsl:text>    &#xA;</xsl:text>
+      <xsl:text>    identifier%index = coord_index&#xA;</xsl:text>
+      <xsl:text>    allocate(identifier%name(1))&#xA;</xsl:text>
+      <xsl:text>    allocate(identifier%description(1))&#xA;</xsl:text>
+      <xsl:text>    identifier%name(1) = coord_name&#xA;</xsl:text>
+      <xsl:text>    identifier%description(1) = coord_description&#xA;</xsl:text>
+      <xsl:text>  end subroutine set_</xsl:text><xsl:value-of select="$name"/><xsl:text>_dynamic_aos3&#xA;&#xA;</xsl:text>
+    </xsl:if>
+
+    <!-- Set complete ids_identifier_dynamic_aos3_1d structure -->
+    <xsl:if test="int!=''">
+      <xsl:text>  ! Set complete ids_identifier_dynamic_aos3_1d structure&#xA;</xsl:text>
+      <xsl:text>  subroutine set_</xsl:text><xsl:value-of select="$name"/><xsl:text>_dynamic_aos3_1d(self, identifier, name)&#xA;</xsl:text>
+      <xsl:text>    class(type_</xsl:text><xsl:value-of select="$name"/><xsl:text>), intent(in) :: self&#xA;</xsl:text>
+      <xsl:text>    type(ids_identifier_dynamic_aos3_1d), intent(out) :: identifier&#xA;</xsl:text>
+      <xsl:text>    character(*), intent(in) :: name&#xA;</xsl:text>
+      <xsl:text>    integer :: coord_index&#xA;</xsl:text>
+      <xsl:text>    character(len=ids_string_length) :: coord_name, coord_description&#xA;</xsl:text>
+      <xsl:text>    &#xA;</xsl:text>
+      <xsl:text>    call get_type_data_by_name(name, coord_index, coord_name, coord_description)&#xA;</xsl:text>
+      <xsl:text>    &#xA;</xsl:text>
+      <xsl:text>    allocate(identifier%indices(1))&#xA;</xsl:text>
+      <xsl:text>    allocate(identifier%names(1))&#xA;</xsl:text>
+      <xsl:text>    allocate(identifier%descriptions(1))&#xA;</xsl:text>
+      <xsl:text>    identifier%indices(1) = coord_index&#xA;</xsl:text>
+      <xsl:text>    identifier%names(1) = coord_name&#xA;</xsl:text>
+      <xsl:text>    identifier%descriptions(1) = coord_description&#xA;</xsl:text>
+      <xsl:text>  end subroutine set_</xsl:text><xsl:value-of select="$name"/><xsl:text>_dynamic_aos3_1d&#xA;</xsl:text>
     </xsl:if>
 
 </xsl:template>
