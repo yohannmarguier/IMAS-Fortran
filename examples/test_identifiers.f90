@@ -31,6 +31,7 @@ program test_coordinate_identifier
   fail_count = 0
 
   ! Test 1: Basic index() method functionality
+  print *, 'Testing index() method...'
   do i = 1, size(test_coordinates)
     test_count = test_count + 1
     idx = coordinate_identifier%index(trim(test_coordinates(i)))
@@ -38,19 +39,23 @@ program test_coordinate_identifier
       pass_count = pass_count + 1
     else
       fail_count = fail_count + 1
+      print *, 'FAIL: ', trim(test_coordinates(i)), ' returned ', idx, ', expected ', expected_indices(i)
     end if
   end do
 
   ! Test 2: Testing invalid coordinate names
+  print *, 'Testing invalid coordinate names...'
   test_count = test_count + 1
   idx = coordinate_identifier%index('invalid_coordinate')
   if (idx == ids_int_invalid) then
     pass_count = pass_count + 1
   else
     fail_count = fail_count + 1
+    print *, 'FAIL: Invalid coordinate returned ', idx, ', expected ', ids_int_invalid
   end if
 
   ! Test 3: Testing name() method (reverse lookup)
+  print *, 'Testing name() method (reverse lookup)...'
   do i = 1, 5  ! Test first 5 coordinates
     test_count = test_count + 1
     nm = coordinate_identifier%name(expected_indices(i))
@@ -58,6 +63,7 @@ program test_coordinate_identifier
       pass_count = pass_count + 1
     else
       fail_count = fail_count + 1
+      print *, 'FAIL: Index ', expected_indices(i), ' returned "', trim(nm), '", expected "', trim(test_coordinates(i)), '"'
     end if
   end do
 
@@ -71,6 +77,7 @@ program test_coordinate_identifier
   end if
 
   ! Test 5: Testing set_ids_identifier() method
+  print *, 'Testing set_ids_identifier() method...'
   test_count = test_count + 1
   call coordinate_identifier%set_ids_identifier(my_identifier, 'phi')
   if (my_identifier%index == 5 .and. &
@@ -78,11 +85,14 @@ program test_coordinate_identifier
       associated(my_identifier%description)) then
     if (trim(my_identifier%name(1)) == 'phi') then
       pass_count = pass_count + 1
+      print *, 'PASS: set_ids_identifier for phi - Index:', my_identifier%index, ', Name: "', trim(my_identifier%name(1)), '"'
     else
       fail_count = fail_count + 1
+      print *, 'FAIL: set_ids_identifier name mismatch'
     end if
   else
     fail_count = fail_count + 1
+    print *, 'FAIL: set_ids_identifier structure not properly set'
   end if
 
   ! Test 6: Testing set_ids_identifier_static_1d() method
@@ -96,9 +106,11 @@ program test_coordinate_identifier
       pass_count = pass_count + 1
     else
       fail_count = fail_count + 1
+      print *, 'FAIL: set_ids_identifier names mismatch'
     end if
   else
     fail_count = fail_count + 1
+    print *, 'FAIL: set_ids_identifier structure not properly set'
   end if
 
   ! Test 7: Round-trip consistency test
@@ -110,10 +122,16 @@ program test_coordinate_identifier
       pass_count = pass_count + 1
     else
       fail_count = fail_count + 1
+      print *, 'FAIL: set_ids_identifier structure not properly set'
     end if
   end do
 
-  ! Summary
+  if (fail_count == 0) then
+    print *, 'ALL TESTS PASSED!'
+  else
+    print *, 'SOME TESTS FAILED!'
+    stop 1  ! Exit with error code if tests failed
+  end if
 
   ! Clean up allocated memory
   if (associated(my_identifier%name)) deallocate(my_identifier%name)

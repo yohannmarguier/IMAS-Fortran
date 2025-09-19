@@ -1,14 +1,12 @@
 program testindentifiers
-    use ids_schemas, only: ids_core_sources
-    use al_core_source_identifier, only: core_source_identifier
+    use ids_schemas, only: ids_distribution_sources
+    use al_distribution_source_identifier, only: distribution_source_identifier
     implicit none
-    type(ids_core_sources) :: core_sources
-    allocate(core_sources%source(1))
-    core_sources%source(1)%identifier%index = core_source_identifier%NBI
-    allocate( core_sources%source(1)%identifier%name(1) )
-    core_sources%source(1)%identifier%name(1) = &
-        core_source_identifier%name( core_source_identifier%NBI )
-    allocate( core_sources%source(1)%identifier%description(1) )
-    core_sources%source(1)%identifier%description(1) = &
-        core_source_identifier%description( core_source_identifier%NBI )
+
+    type(ids_distribution_sources) :: distribution_sources
+
+    allocate(distribution_sources%source(1))
+    allocate(distribution_sources%source(1)%process(1))
+
+    call distribution_source_identifier%set_ids_identifier( distribution_sources%source(1)%process(1)%type, 'phi')
 end program

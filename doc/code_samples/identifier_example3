@@ -3,14 +3,10 @@ program testindentifiers
     use al_poloidal_plane_coordinates_identifier, &
         only: IDENT=>poloidal_plane_coordinates_identifier
     implicit none
+
     type(ids_equilibrium) :: equilibrium
     allocate( equilibrium%time_slice(1) )
     allocate( equilibrium%time_slice(1)%profiles_2d(1) )
-    equilibrium%time_slice(1)%profiles_2d(1)%grid_type%index = IDENT%rectangular
-    allocate( equilibrium%time_slice(1)%profiles_2d(1)%grid_type%name(1) )
-    equilibrium%time_slice(1)%profiles_2d(1)%grid_type%name(1) = &
-        IDENT%name( IDENT%rectangular )
-    allocate( equilibrium%time_slice(1)%profiles_2d(1)%grid_type%description(1) )
-    equilibrium%time_slice(1)%profiles_2d(1)%grid_type%description(1) = &
-        IDENT%description( IDENT%rectangular )
+
+    call poloidal_plane_coordinates_identifier%set_ids_identifier( equilibrium%time_slice(1)%profiles_2d(1)%grid_type, 'rectangular')
 end program
