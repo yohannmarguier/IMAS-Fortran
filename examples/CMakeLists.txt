@@ -6,7 +6,38 @@ include(ALExampleUtilities)
 ################################################################################
 
 set( TESTS
+    test_core_profiles_get
+    test_core_profiles_put
+    test_core_profiles_put_slice
+    test_core_profiles_validate
+    test_core_sources_get
+    test_core_sources_put
+    test_core_sources_put_slice
+    test_creation_date_plugin
+    test_debug_plugin
+    test_distributions_validate
+    test_edge_profiles_get
+    test_edge_profiles_memory
+    test_edge_profiles_put
+    test_edge_profiles_put_slice
+    test_empty_aos
+    test_empty_dynamic_aos
+    test_empty_static_aos
     test_identifiers
+    test_ids_serialize
+    test_magnetics_get
+    test_magnetics_memory
+    test_magnetics_put
+    test_magnetics_get_sample
+    test_magnetics_validate
+    test_multi_put_slice_dynamic
+    test_multi_put_slice_static
+    test_partial_plugin
+    test_pf_put
+    test_pf_put_slice
+    test_pulse_create
+    test_version
+    test_waves_validate
 )
 # Report an error when a .f90 source file exists without corresponding test:
 error_on_missing_tests( "f90" "${TESTS}" )
@@ -60,3 +91,6 @@ if( AL_PLUGINS )
     PROPERTIES FIXTURES_REQUIRED "example-fortran-test_magnetics_;example-fortran-test_magnetics_get"
   )
 endif()
+set_tests_properties( example-fortran-test_magnetics_get
+  PROPERTIES FIXTURES_SETUP example-fortran-test_magnetics_get
+)
