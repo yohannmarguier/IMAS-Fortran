@@ -1,138 +1,125 @@
 
 ! Test program for coordinate identifier functionality
 program test_coordinate_identifier
-  use al_coordinate_identifier, only: coordinate_identifier
+  use al_coordinate_identifier
   use ids_utilities
+  use ids_types
   
   implicit none
 
-  integer :: idx
-  character(len=132) :: nm, desc
+  integer :: idx, i, test_count, pass_count, fail_count
+  character(len=:), allocatable :: nm, desc
   type(ids_identifier) :: my_identifier
   type(ids_identifier_static) :: my_static_identifier
   type(ids_identifier_static_1d) :: my_static_1d_identifier
   type(ids_identifier_dynamic_aos3) :: my_dynamic_aos3_identifier
   type(ids_identifier_dynamic_aos3_1d) :: my_dynamic_aos3_1d_identifier
+  
+  ! Test coordinate names and expected indices
+  character(len=20), dimension(15) :: test_coordinates = [ &
+    'x                   ', 'y                   ', 'z                   ', &
+    'r                   ', 'phi                 ', 'psi                 ', &
+    'rho_tor             ', 'rho_tor_norm        ', 'rho_pol             ', &
+    'rho_pol_norm        ', 'theta               ', 'velocity            ', &
+    'momentum            ', 'energy_kinetic      ', 'pitch_angle         ' ]
+  
+  integer, dimension(15) :: expected_indices = [ &
+    1, 2, 3, 4, 5, 10, 11, 12, 13, 14, 20, 100, 200, 301, 402 ]
 
-  print *, ''
-  print *, '=========================================='
-  print *, '  COORDINATE IDENTIFIER TEST PROGRAM'
-  print *, '=========================================='
-  print *, ''
-  print *, '=== Testing name to index conversion ==='
-  print *, "Index for 'unspecified':", coordinate_identifier%index('unspecified')
-  print *, "Index for 'x':", coordinate_identifier%index('x')
-  print *, "Index for 'y':", coordinate_identifier%index('y')
-  print *, "Index for 'z':", coordinate_identifier%index('z')
-  print *, "Index for 'r':", coordinate_identifier%index('r')
-  print *, "Index for 'invalid':", coordinate_identifier%index('invalid')
-  print *, ''
+  test_count = 0
+  pass_count = 0
+  fail_count = 0
 
-  print *, '=== Testing index to name/description conversion ==='
-  do idx = 0, 10
-    nm = coordinate_identifier%name(idx)
-    if (len_trim(nm) > 0) then
-      desc = coordinate_identifier%description(idx)
-      print *, 'Index:', idx, 'Name: "', trim(nm), '"'
-      print *, '  Description: "', trim(desc), '"'
-      print *, ''
+  ! Test 1: Basic index() method functionality
+  do i = 1, size(test_coordinates)
+    test_count = test_count + 1
+    idx = coordinate_identifier%index(trim(test_coordinates(i)))
+    if (idx == expected_indices(i)) then
+      pass_count = pass_count + 1
+    else
+      fail_count = fail_count + 1
     end if
   end do
 
-  print *, '=== Testing set_ids_identifier method ==='
-  
-  call coordinate_identifier%set_ids_identifier(my_identifier, 'x')
-  print *, "Set identifier for 'x':"
-  print *, "  Index:", my_identifier%index
-  if (associated(my_identifier%name)) then
-    print *, "  Name: '", trim(my_identifier%name(1)), "'"
+  ! Test 2: Testing invalid coordinate names
+  test_count = test_count + 1
+  idx = coordinate_identifier%index('invalid_coordinate')
+  if (idx == ids_int_invalid) then
+    pass_count = pass_count + 1
+  else
+    fail_count = fail_count + 1
   end if
-  if (associated(my_identifier%description)) then
-    print *, "  Description: '", trim(my_identifier%description(1)), "'"
-  end if
-  print *, ''
-  
-  call coordinate_identifier%set_ids_identifier(my_identifier, 'r')
-  print *, "Set identifier for 'r':"
-  print *, "  Index:", my_identifier%index
-  if (associated(my_identifier%name)) then
-    print *, "  Name: '", trim(my_identifier%name(1)), "'"
-  end if
-  if (associated(my_identifier%description)) then
-    print *, "  Description: '", trim(my_identifier%description(1)), "'"
-  end if
-  print *, ''
-  
-  call coordinate_identifier%set_ids_identifier(my_identifier, 'invalid')
-  print *, "Set identifier for 'invalid':"
-  print *, "  Index:", my_identifier%index
-  if (associated(my_identifier%name)) then
-    print *, "  Name: '", trim(my_identifier%name(1)), "'"
-  end if
-  if (associated(my_identifier%description)) then
-    print *, "  Description: '", trim(my_identifier%description(1)), "'"
-  end if
-  print *, ''
 
-  print *, '=== Testing set_ids_identifier_static method ==='
-  
-  call coordinate_identifier%set_ids_identifier_static(my_static_identifier, 'y')
-  print *, "Set static identifier for 'y':"
-  print *, "  Index:", my_static_identifier%index
-  if (associated(my_static_identifier%name)) then
-    print *, "  Name: '", trim(my_static_identifier%name(1)), "'"
-  end if
-  if (associated(my_static_identifier%description)) then
-    print *, "  Description: '", trim(my_static_identifier%description(1)), "'"
-  end if
-  print *, ''
+  ! Test 3: Testing name() method (reverse lookup)
+  do i = 1, 5  ! Test first 5 coordinates
+    test_count = test_count + 1
+    nm = coordinate_identifier%name(expected_indices(i))
+    if (trim(nm) == trim(test_coordinates(i))) then
+      pass_count = pass_count + 1
+    else
+      fail_count = fail_count + 1
+    end if
+  end do
 
-  print *, '=== Testing set_ids_identifier_static_1d method ==='
-  
-  call coordinate_identifier%set_ids_identifier_static_1d(my_static_1d_identifier, 'z')
-  print *, "Set static 1d identifier for 'z':"
-  if (associated(my_static_1d_identifier%indices)) then
-    print *, "  Index:", my_static_1d_identifier%indices(1)
+  ! Test 4: Testing description() method
+  test_count = test_count + 1
+  desc = coordinate_identifier%description(1)  ! Test 'x' coordinate
+  if (len_trim(desc) > 0) then
+    pass_count = pass_count + 1
+  else
+    fail_count = fail_count + 1
   end if
-  if (associated(my_static_1d_identifier%names)) then
-    print *, "  Name: '", trim(my_static_1d_identifier%names(1)), "'"
-  end if
-  if (associated(my_static_1d_identifier%descriptions)) then
-    print *, "  Description: '", trim(my_static_1d_identifier%descriptions(1)), "'"
-  end if
-  print *, ''
 
-  print *, '=== Testing set_ids_identifier_dynamic_aos3 method ==='
-  
-  call coordinate_identifier%set_ids_identifier_dynamic_aos3(my_dynamic_aos3_identifier, 'x')
-  print *, "Set dynamic aos3 identifier for 'x':"
-  print *, "  Index:", my_dynamic_aos3_identifier%index
-  if (associated(my_dynamic_aos3_identifier%name)) then
-    print *, "  Name: '", trim(my_dynamic_aos3_identifier%name(1)), "'"
+  ! Test 5: Testing set_ids_identifier() method
+  test_count = test_count + 1
+  call coordinate_identifier%set_ids_identifier(my_identifier, 'phi')
+  if (my_identifier%index == 5 .and. &
+      associated(my_identifier%name) .and. &
+      associated(my_identifier%description)) then
+    if (trim(my_identifier%name(1)) == 'phi') then
+      pass_count = pass_count + 1
+    else
+      fail_count = fail_count + 1
+    end if
+  else
+    fail_count = fail_count + 1
   end if
-  if (associated(my_dynamic_aos3_identifier%description)) then
-    print *, "  Description: '", trim(my_dynamic_aos3_identifier%description(1)), "'"
-  end if
-  print *, ''
 
-  print *, '=== Testing set_ids_identifier_dynamic_aos3_1d method ==='
-  
-  call coordinate_identifier%set_ids_identifier_dynamic_aos3_1d(my_dynamic_aos3_1d_identifier, 'r')
-  print *, "Set dynamic aos3 1d identifier for 'r':"
-  if (associated(my_dynamic_aos3_1d_identifier%indices)) then
-    print *, "  Index:", my_dynamic_aos3_1d_identifier%indices(1)
+  ! Test 6: Testing set_ids_identifier_static_1d() method
+  test_count = test_count + 1
+  call coordinate_identifier%set_ids_identifier_static_1d(my_static_1d_identifier, 'rho_tor')
+  if (associated(my_static_1d_identifier%indices) .and. &
+      associated(my_static_1d_identifier%names) .and. &
+      associated(my_static_1d_identifier%descriptions)) then
+    if (my_static_1d_identifier%indices(1) == 11 .and. &
+        trim(my_static_1d_identifier%names(1)) == 'rho_tor') then
+      pass_count = pass_count + 1
+    else
+      fail_count = fail_count + 1
+    end if
+  else
+    fail_count = fail_count + 1
   end if
-  if (associated(my_dynamic_aos3_1d_identifier%names)) then
-    print *, "  Name: '", trim(my_dynamic_aos3_1d_identifier%names(1)), "'"
-  end if
-  if (associated(my_dynamic_aos3_1d_identifier%descriptions)) then
-    print *, "  Description: '", trim(my_dynamic_aos3_1d_identifier%descriptions(1)), "'"
-  end if
-  print *, ''
 
-  print *, '=========================================='
-  print *, '  ALL TESTS COMPLETED SUCCESSFULLY!'
-  print *, '=========================================='
-  print *, ''
+  ! Test 7: Round-trip consistency test
+  do i = 1, 3  ! Test first 3 coordinates
+    test_count = test_count + 1
+    idx = coordinate_identifier%index(trim(test_coordinates(i)))
+    nm = coordinate_identifier%name(idx)
+    if (trim(nm) == trim(test_coordinates(i))) then
+      pass_count = pass_count + 1
+    else
+      fail_count = fail_count + 1
+    end if
+  end do
+
+  ! Summary
+
+  ! Clean up allocated memory
+  if (associated(my_identifier%name)) deallocate(my_identifier%name)
+  if (associated(my_identifier%description)) deallocate(my_identifier%description)
+  if (associated(my_static_1d_identifier%indices)) deallocate(my_static_1d_identifier%indices)
+  if (associated(my_static_1d_identifier%names)) deallocate(my_static_1d_identifier%names)
+  if (associated(my_static_1d_identifier%descriptions)) deallocate(my_static_1d_identifier%descriptions)
 
 end program test_coordinate_identifier

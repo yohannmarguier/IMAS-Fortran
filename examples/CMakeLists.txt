@@ -50,7 +50,7 @@ add_custom_target( example-fortran-all )
 foreach( TEST IN LISTS TESTS )
   set( TEST_NAME "example-fortran-${TEST}")
   add_executable( ${TEST_NAME} ${TEST}.f90 )
-  target_link_libraries( ${TEST_NAME} al-fortran )
+  target_link_libraries( ${TEST_NAME} al-fortran  al-identifiers-fortran)
   add_dependencies( example-fortran-all ${TEST_NAME} )
 
   set( DISABLED OFF )
