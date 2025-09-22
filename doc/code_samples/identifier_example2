@@ -8,5 +8,9 @@ program testindentifiers
     allocate(distribution_sources%source(1))
     allocate(distribution_sources%source(1)%process(1))
 
-    call distribution_source_identifier%set_identifier( distribution_sources%source(1)%process(1)%type, 'phi')
+    call distribution_source_identifier%set_identifier( distribution_sources%source(1)%process(1)%type, 'NBI')
+
+    print *,distribution_sources%source(1)%process(1)%type%name
+    print *,distribution_sources%source(1)%process(1)%type%index
+    print *,distribution_sources%source(1)%process(1)%type%description
 end program

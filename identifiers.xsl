@@ -182,7 +182,8 @@
       <xsl:text>'&#xA;</xsl:text>
     </xsl:for-each>
     <xsl:text>      case default&#xA;</xsl:text>
-    <xsl:text>        ! Keep the default invalid values&#xA;</xsl:text>
+    <xsl:text>        ! Raise error for unknown identifier&#xA;</xsl:text>
+    <xsl:text>        ERROR STOP 'get_type_data_by_name: Unknown coordinate identifier: ' // trim(name)&#xA;</xsl:text>
     <xsl:text>    end select&#xA;</xsl:text>
     <xsl:text>  end subroutine get_type_data_by_name&#xA;&#xA;</xsl:text>
 
@@ -202,7 +203,8 @@
         <xsl:text>        get_type_index = </xsl:text><xsl:value-of select="."/><xsl:text>&#xA;</xsl:text>
       </xsl:for-each>
       <xsl:text>      case default&#xA;</xsl:text>
-      <xsl:text>        get_type_index = ids_int_invalid&#xA;</xsl:text>
+            <xsl:text>        get_type_index = ids_int_invalid&#xA;</xsl:text>
+            <xsl:text>        write(*,*) 'get_type_index: Unknown identifier name:', NAME&#xA;</xsl:text>
       <xsl:text>    end select&#xA;</xsl:text>
       <xsl:text>  end function get_type_index&#xA;&#xA;</xsl:text>
     </xsl:if>
@@ -223,6 +225,7 @@
       </xsl:for-each>
       <xsl:text>      case default&#xA;</xsl:text>
       <xsl:text>        name = ''&#xA;</xsl:text>
+      <xsl:text>        write(*,*) 'get_type_name: Unknown identifier index:', IND&#xA;</xsl:text>
       <xsl:text>    end select&#xA;</xsl:text>
       <xsl:text>  end function get_type_name&#xA;&#xA;</xsl:text>
     </xsl:if>
@@ -252,6 +255,7 @@
       </xsl:for-each>
       <xsl:text>      case default&#xA;</xsl:text>
       <xsl:text>        description = ''&#xA;</xsl:text>
+      <xsl:text>        write(*,*) 'get_type_description: Unknown identifier index:', IND&#xA;</xsl:text>
       <xsl:text>    end select&#xA;</xsl:text>
       <xsl:text>  end function get_type_description&#xA;&#xA;</xsl:text>
     </xsl:if>

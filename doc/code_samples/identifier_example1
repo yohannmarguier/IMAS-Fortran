@@ -3,7 +3,7 @@ program testindentifiers
     implicit none
     integer :: i_phi
 
-    # Note: accessing as a variable like coordinate_identifier%phi is deprecated
+    ! Note: accessing as a variable like coordinate_identifier%phi is deprecated
     i_phi = coordinate_identifier%index('phi') 
 
     print *,i_phi

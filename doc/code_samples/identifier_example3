@@ -1,7 +1,7 @@
 program testindentifiers
     use ids_schemas, only: ids_equilibrium
     use al_poloidal_plane_coordinates_identifier, &
-        only: IDENT=>poloidal_plane_coordinates_identifier
+        only: poloidal_plane_coordinates_identifier
     implicit none
 
     type(ids_equilibrium) :: equilibrium
@@ -9,4 +9,10 @@ program testindentifiers
     allocate( equilibrium%time_slice(1)%profiles_2d(1) )
 
     call poloidal_plane_coordinates_identifier%set_identifier( equilibrium%time_slice(1)%profiles_2d(1)%grid_type, 'rectangular')
+
+    print *,equilibrium%time_slice(1)%profiles_2d(1)%grid_type%name
+    print *,equilibrium%time_slice(1)%profiles_2d(1)%grid_type%index
+    print *,equilibrium%time_slice(1)%profiles_2d(1)%grid_type%description
 end program
+
+
