@@ -16,15 +16,15 @@ program test_coordinate_identifier
   type(ids_identifier_dynamic_aos3_1d) :: my_dynamic_aos3_1d_identifier
   
   ! Test coordinate names and expected indices
-  character(len=20), dimension(15) :: test_coordinates = [ &
-    'x                   ', 'y                   ', 'z                   ', &
-    'r                   ', 'phi                 ', 'psi                 ', &
-    'rho_tor             ', 'rho_tor_norm        ', 'rho_pol             ', &
-    'rho_pol_norm        ', 'theta               ', 'velocity            ', &
-    'momentum            ', 'energy_kinetic      ', 'pitch_angle         ' ]
+  character(len=25), dimension(15) :: test_coordinates = [ &
+    'unspecified              ', 'x                        ', 'y                        ', &
+    'z                        ', 'r                        ', 'phi                      ', &
+    'psi                      ', 'rho_tor                  ', 'rho_tor_norm             ', &
+    'rho_pol                  ', 'rho_pol_norm             ', 'theta                    ', &
+    'velocity                 ', 'momentum                 ', 'energy_kinetic           ' ]
   
   integer, dimension(15) :: expected_indices = [ &
-    1, 2, 3, 4, 5, 10, 11, 12, 13, 14, 20, 100, 200, 301, 402 ]
+    0, 1, 2, 3, 4, 5, 10, 11, 12, 13, 14, 20, 100, 200, 301 ]
 
   test_count = 0
   pass_count = 0
@@ -76,44 +76,105 @@ program test_coordinate_identifier
     fail_count = fail_count + 1
   end if
 
-  ! Test 5: Testing set_ids_identifier() method
-  print *, 'Testing set_ids_identifier() method...'
+  ! Test 5: Testing set_identifier() method for ids_identifier
+  print *, 'Testing set_identifier() method for ids_identifier...'
   test_count = test_count + 1
-  call coordinate_identifier%set_ids_identifier(my_identifier, 'phi')
+  call coordinate_identifier%set_identifier(my_identifier, 'phi')
   if (my_identifier%index == 5 .and. &
       associated(my_identifier%name) .and. &
       associated(my_identifier%description)) then
     if (trim(my_identifier%name(1)) == 'phi') then
       pass_count = pass_count + 1
-      print *, 'PASS: set_ids_identifier for phi - Index:', my_identifier%index, ', Name: "', trim(my_identifier%name(1)), '"'
+      print *, 'PASS: set_identifier for phi - Index:', my_identifier%index, ', Name: "', trim(my_identifier%name(1)), '"'
     else
       fail_count = fail_count + 1
-      print *, 'FAIL: set_ids_identifier name mismatch'
+      print *, 'FAIL: set_identifier name mismatch'
     end if
   else
     fail_count = fail_count + 1
-    print *, 'FAIL: set_ids_identifier structure not properly set'
+    print *, 'FAIL: set_identifier structure not properly set'
   end if
 
-  ! Test 6: Testing set_ids_identifier_static_1d() method
+  ! Test 6: Testing set_identifier() method for ids_identifier_static
+  print *, 'Testing set_identifier() method for ids_identifier_static...'
   test_count = test_count + 1
-  call coordinate_identifier%set_ids_identifier_static_1d(my_static_1d_identifier, 'rho_tor')
+  call coordinate_identifier%set_identifier(my_static_identifier, 'rho_tor')
+  if (my_static_identifier%index == 11 .and. &
+      associated(my_static_identifier%name) .and. &
+      associated(my_static_identifier%description)) then
+    if (trim(my_static_identifier%name(1)) == 'rho_tor') then
+      pass_count = pass_count + 1
+      print *, 'PASS: set_identifier for rho_tor - Index:', my_static_identifier%index, ', Name: "', trim(my_static_identifier%name(1)), '"'
+    else
+      fail_count = fail_count + 1
+      print *, 'FAIL: set_identifier name mismatch'
+    end if
+  else
+    fail_count = fail_count + 1
+    print *, 'FAIL: set_identifier structure not properly set'
+  end if
+
+  ! Test 7: Testing set_identifier() method for ids_identifier_static_1d
+  print *, 'Testing set_identifier() method for ids_identifier_static_1d...'
+  test_count = test_count + 1
+  call coordinate_identifier%set_identifier(my_static_1d_identifier, 'theta')
   if (associated(my_static_1d_identifier%indices) .and. &
       associated(my_static_1d_identifier%names) .and. &
       associated(my_static_1d_identifier%descriptions)) then
-    if (my_static_1d_identifier%indices(1) == 11 .and. &
-        trim(my_static_1d_identifier%names(1)) == 'rho_tor') then
+    if (my_static_1d_identifier%indices(1) == 20 .and. &
+        trim(my_static_1d_identifier%names(1)) == 'theta') then
       pass_count = pass_count + 1
+      print *, 'PASS: set_identifier for theta - Index:', my_static_1d_identifier%indices(1), ', Name: "', trim(my_static_1d_identifier%names(1)), '"'
     else
       fail_count = fail_count + 1
-      print *, 'FAIL: set_ids_identifier names mismatch'
+      print *, 'FAIL: set_identifier indices/names mismatch'
     end if
   else
     fail_count = fail_count + 1
-    print *, 'FAIL: set_ids_identifier structure not properly set'
+    print *, 'FAIL: set_identifier structure not properly set'
   end if
 
-  ! Test 7: Round-trip consistency test
+  ! Test 8: Testing set_identifier() method for ids_identifier_dynamic_aos3
+  print *, 'Testing set_identifier() method for ids_identifier_dynamic_aos3...'
+  test_count = test_count + 1
+  call coordinate_identifier%set_identifier(my_dynamic_aos3_identifier, 'velocity')
+  if (my_dynamic_aos3_identifier%index == 100 .and. &
+      associated(my_dynamic_aos3_identifier%name) .and. &
+      associated(my_dynamic_aos3_identifier%description)) then
+    if (trim(my_dynamic_aos3_identifier%name(1)) == 'velocity') then
+      pass_count = pass_count + 1
+      print *, 'PASS: set_identifier for velocity - Index:', my_dynamic_aos3_identifier%index, ', Name: "', trim(my_dynamic_aos3_identifier%name(1)), '"'
+    else
+      fail_count = fail_count + 1
+      print *, 'FAIL: set_identifier name mismatch'
+    end if
+  else
+    fail_count = fail_count + 1
+    print *, 'FAIL: set_identifier structure not properly set'
+  end if
+
+  ! Test 9: Testing set_identifier() method for ids_identifier_dynamic_aos3_1d
+  print *, 'Testing set_identifier() method for ids_identifier_dynamic_aos3_1d...'
+  test_count = test_count + 1
+  call coordinate_identifier%set_identifier(my_dynamic_aos3_1d_identifier, 'momentum')
+  if (associated(my_dynamic_aos3_1d_identifier%indices) .and. &
+      associated(my_dynamic_aos3_1d_identifier%names) .and. &
+      associated(my_dynamic_aos3_1d_identifier%descriptions)) then
+    if (my_dynamic_aos3_1d_identifier%indices(1) == 200 .and. &
+        trim(my_dynamic_aos3_1d_identifier%names(1)) == 'momentum') then
+      pass_count = pass_count + 1
+      print *, 'PASS: set_identifier for momentum - Index:', my_dynamic_aos3_1d_identifier%indices(1), ', Name: "', trim(my_dynamic_aos3_1d_identifier%names(1)), '"'
+    else
+      fail_count = fail_count + 1
+      print *, 'FAIL: set_identifier indices/names mismatch'
+    end if
+  else
+    fail_count = fail_count + 1
+    print *, 'FAIL: set_identifier structure not properly set'
+  end if
+
+  ! Test 10: Round-trip consistency test
+  print *, 'Testing round-trip consistency...'
   do i = 1, 3  ! Test first 3 coordinates
     test_count = test_count + 1
     idx = coordinate_identifier%index(trim(test_coordinates(i)))
@@ -122,7 +183,7 @@ program test_coordinate_identifier
       pass_count = pass_count + 1
     else
       fail_count = fail_count + 1
-      print *, 'FAIL: set_ids_identifier structure not properly set'
+      print *, 'FAIL: Round-trip consistency failed for coordinate: ', trim(test_coordinates(i))
     end if
   end do
 
@@ -136,8 +197,15 @@ program test_coordinate_identifier
   ! Clean up allocated memory
   if (associated(my_identifier%name)) deallocate(my_identifier%name)
   if (associated(my_identifier%description)) deallocate(my_identifier%description)
+  if (associated(my_static_identifier%name)) deallocate(my_static_identifier%name)
+  if (associated(my_static_identifier%description)) deallocate(my_static_identifier%description)
   if (associated(my_static_1d_identifier%indices)) deallocate(my_static_1d_identifier%indices)
   if (associated(my_static_1d_identifier%names)) deallocate(my_static_1d_identifier%names)
   if (associated(my_static_1d_identifier%descriptions)) deallocate(my_static_1d_identifier%descriptions)
+  if (associated(my_dynamic_aos3_identifier%name)) deallocate(my_dynamic_aos3_identifier%name)
+  if (associated(my_dynamic_aos3_identifier%description)) deallocate(my_dynamic_aos3_identifier%description)
+  if (associated(my_dynamic_aos3_1d_identifier%indices)) deallocate(my_dynamic_aos3_1d_identifier%indices)
+  if (associated(my_dynamic_aos3_1d_identifier%names)) deallocate(my_dynamic_aos3_1d_identifier%names)
+  if (associated(my_dynamic_aos3_1d_identifier%descriptions)) deallocate(my_dynamic_aos3_1d_identifier%descriptions)
 
 end program test_coordinate_identifier

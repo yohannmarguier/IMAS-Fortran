@@ -8,5 +8,5 @@ program testindentifiers
     allocate(distribution_sources%source(1))
     allocate(distribution_sources%source(1)%process(1))
 
-    call distribution_source_identifier%set_ids_identifier( distribution_sources%source(1)%process(1)%type, 'phi')
+    call distribution_source_identifier%set_identifier( distribution_sources%source(1)%process(1)%type, 'phi')
 end program

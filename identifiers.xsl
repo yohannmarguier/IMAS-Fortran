@@ -42,11 +42,14 @@
 	<xsl:text>    procedure :: index => get_type_index&#xA;</xsl:text>
 	<xsl:text>    procedure :: name => get_type_name&#xA;</xsl:text>
 	<xsl:text>    procedure :: description => get_type_description&#xA;</xsl:text>
-	<xsl:text>    procedure :: set_ids_identifier => set_identifier&#xA;</xsl:text>
-	<xsl:text>    procedure :: set_ids_identifier_static => set_identifier_static&#xA;</xsl:text>
-	<xsl:text>    procedure :: set_ids_identifier_static_1d => set_identifier_static_1d&#xA;</xsl:text>
-	<xsl:text>    procedure :: set_ids_identifier_dynamic_aos3 => set_identifier_dynamic_aos3&#xA;</xsl:text>
-	<xsl:text>    procedure :: set_ids_identifier_dynamic_aos3_1d => set_identifier_dynamic_aos3_1d&#xA;</xsl:text>
+	<xsl:text>    procedure, private :: set_ids_identifier => set_identifier&#xA;</xsl:text>
+	<xsl:text>    procedure, private :: set_ids_identifier_static => set_identifier_static&#xA;</xsl:text>
+	<xsl:text>    procedure, private :: set_ids_identifier_static_1d => set_identifier_static_1d&#xA;</xsl:text>
+	<xsl:text>    procedure, private :: set_ids_identifier_dynamic_aos3 => set_identifier_dynamic_aos3&#xA;</xsl:text>
+	<xsl:text>    procedure, private :: set_ids_identifier_dynamic_aos3_1d => set_identifier_dynamic_aos3_1d&#xA;</xsl:text>
+	<xsl:text>    generic :: set_identifier => set_ids_identifier, set_ids_identifier_static, &amp;&#xA;</xsl:text>
+	<xsl:text>                                 set_ids_identifier_static_1d, set_ids_identifier_dynamic_aos3, &amp;&#xA;</xsl:text>
+	<xsl:text>                                 set_ids_identifier_dynamic_aos3_1d&#xA;</xsl:text>
       </xsl:if>
       <xsl:text>  end type type_</xsl:text><xsl:value-of select="$name"/><xsl:text>&#xA;</xsl:text>
 

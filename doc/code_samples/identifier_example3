@@ -8,5 +8,5 @@ program testindentifiers
     allocate( equilibrium%time_slice(1) )
     allocate( equilibrium%time_slice(1)%profiles_2d(1) )
 
-    call poloidal_plane_coordinates_identifier%set_ids_identifier( equilibrium%time_slice(1)%profiles_2d(1)%grid_type, 'rectangular')
+    call poloidal_plane_coordinates_identifier%set_identifier( equilibrium%time_slice(1)%profiles_2d(1)%grid_type, 'rectangular')
 end program
