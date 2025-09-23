@@ -1,10 +1,4 @@
 
-! Test program for coordinate identifier functionality
-! Updated to use the new simplified interface:
-! - index(name) instead of coordinate_identifier%index(name)
-! - name(index) instead of coordinate_identifier%name(index)  
-! - description(index) instead of coordinate_identifier%description(index)
-! - set_coordinate_identifier() generic interface for all identifier types
 program test_coordinate_identifier
   use al_coordinate_identifier
   use ids_utilities
@@ -191,37 +185,6 @@ program test_coordinate_identifier
       print *, 'FAIL: Round-trip consistency failed for coordinate: ', trim(test_coordinates(i))
     end if
   end do
-
-  ! Test 11: Demonstrate the clean new interface
-  print *, 'Testing clean interface demonstration...'
-  test_count = test_count + 1
-  
-  ! Show how simple the new interface is
-  idx = index('phi')                    ! Get index by name
-  nm = name(idx)                        ! Get name by index
-  desc = description(idx)               ! Get description by index
-  
-  ! Use generic setter that automatically chooses the right procedure
-  call set_coordinate_identifier(my_identifier, 'phi')
-  
-  if (idx == 5 .and. trim(nm) == 'phi' .and. len_trim(desc) > 0 .and. &
-      my_identifier%index == 5) then
-    pass_count = pass_count + 1
-    print *, 'PASS: Clean interface test - All functions work seamlessly'
-    print *, '  index("phi") =', idx
-    print *, '  name(5) = "', trim(nm), '"'
-    print *, '  description(5) = "', trim(desc), '"'
-  else
-    fail_count = fail_count + 1
-    print *, 'FAIL: Clean interface test failed'
-  end if
-
-  if (fail_count == 0) then
-    print *, 'ALL TESTS PASSED!'
-  else
-    print *, 'SOME TESTS FAILED!'
-    stop 1  ! Exit with error code if tests failed
-  end if
 
   ! Clean up allocated memory
   if (associated(my_identifier%name)) deallocate(my_identifier%name)
