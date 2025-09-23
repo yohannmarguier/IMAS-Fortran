@@ -1,6 +1,6 @@
 program testindentifiers
     use ids_schemas, only: ids_distribution_sources
-    use al_distribution_source_identifier, only: distribution_source_identifier
+    use al_distribution_source_identifier, only: set_distribution_source_identifier
     implicit none
 
     type(ids_distribution_sources) :: distribution_sources
@@ -8,7 +8,7 @@ program testindentifiers
     allocate(distribution_sources%source(1))
     allocate(distribution_sources%source(1)%process(1))
 
-    call distribution_source_identifier%set_identifier( distribution_sources%source(1)%process(1)%type, 'NBI')
+    call set_distribution_source_identifier( distribution_sources%source(1)%process(1)%type, 'NBI')
 
     print *,distribution_sources%source(1)%process(1)%type%name
     print *,distribution_sources%source(1)%process(1)%type%index

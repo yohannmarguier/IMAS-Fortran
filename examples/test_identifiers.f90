@@ -1,5 +1,10 @@
 
 ! Test program for coordinate identifier functionality
+! Updated to use the new simplified interface:
+! - index(name) instead of coordinate_identifier%index(name)
+! - name(index) instead of coordinate_identifier%name(index)  
+! - description(index) instead of coordinate_identifier%description(index)
+! - set_coordinate_identifier() generic interface for all identifier types
 program test_coordinate_identifier
   use al_coordinate_identifier
   use ids_utilities
@@ -30,11 +35,11 @@ program test_coordinate_identifier
   pass_count = 0
   fail_count = 0
 
-  ! Test 1: Basic index() method functionality
-  print *, 'Testing index() method...'
+  ! Test 1: Basic index() function functionality
+  print *, 'Testing index() function...'
   do i = 1, size(test_coordinates)
     test_count = test_count + 1
-    idx = coordinate_identifier%index(trim(test_coordinates(i)))
+    idx = index(trim(test_coordinates(i)))
     if (idx == expected_indices(i)) then
       pass_count = pass_count + 1
     else
@@ -46,7 +51,7 @@ program test_coordinate_identifier
   ! Test 2: Testing invalid coordinate names
   print *, 'Testing invalid coordinate names...'
   test_count = test_count + 1
-  idx = coordinate_identifier%index('invalid_coordinate')
+  idx = index('invalid_coordinate')
   if (idx == ids_int_invalid) then
     pass_count = pass_count + 1
   else
@@ -54,11 +59,11 @@ program test_coordinate_identifier
     print *, 'FAIL: Invalid coordinate returned ', idx, ', expected ', ids_int_invalid
   end if
 
-  ! Test 3: Testing name() method (reverse lookup)
-  print *, 'Testing name() method (reverse lookup)...'
+  ! Test 3: Testing name() function (reverse lookup)
+  print *, 'Testing name() function (reverse lookup)...'
   do i = 1, 5  ! Test first 5 coordinates
     test_count = test_count + 1
-    nm = coordinate_identifier%name(expected_indices(i))
+    nm = name(expected_indices(i))
     if (trim(nm) == trim(test_coordinates(i))) then
       pass_count = pass_count + 1
     else
@@ -67,118 +72,118 @@ program test_coordinate_identifier
     end if
   end do
 
-  ! Test 4: Testing description() method
+  ! Test 4: Testing description() function
   test_count = test_count + 1
-  desc = coordinate_identifier%description(1)  ! Test 'x' coordinate
+  desc = description(1)  ! Test 'x' coordinate
   if (len_trim(desc) > 0) then
     pass_count = pass_count + 1
   else
     fail_count = fail_count + 1
   end if
 
-  ! Test 5: Testing set_identifier() method for ids_identifier
-  print *, 'Testing set_identifier() method for ids_identifier...'
+  ! Test 5: Testing set_coordinate_identifier() generic interface for ids_identifier
+  print *, 'Testing set_coordinate_identifier() for ids_identifier...'
   test_count = test_count + 1
-  call coordinate_identifier%set_identifier(my_identifier, 'phi')
+  call set_coordinate_identifier(my_identifier, 'phi')
   if (my_identifier%index == 5 .and. &
       associated(my_identifier%name) .and. &
       associated(my_identifier%description)) then
     if (trim(my_identifier%name(1)) == 'phi') then
       pass_count = pass_count + 1
-      print *, 'PASS: set_identifier for phi - Index:', my_identifier%index, ', Name: "', trim(my_identifier%name(1)), '"'
+      print *, 'PASS: set_coordinate_identifier for phi - Index:', my_identifier%index, ', Name: "', trim(my_identifier%name(1)), '"'
     else
       fail_count = fail_count + 1
-      print *, 'FAIL: set_identifier name mismatch'
+      print *, 'FAIL: set_coordinate_identifier name mismatch'
     end if
   else
     fail_count = fail_count + 1
-    print *, 'FAIL: set_identifier structure not properly set'
+    print *, 'FAIL: set_coordinate_identifier structure not properly set'
   end if
 
-  ! Test 6: Testing set_identifier() method for ids_identifier_static
-  print *, 'Testing set_identifier() method for ids_identifier_static...'
+  ! Test 6: Testing set_coordinate_identifier() generic interface for ids_identifier_static
+  print *, 'Testing set_coordinate_identifier() for ids_identifier_static...'
   test_count = test_count + 1
-  call coordinate_identifier%set_identifier(my_static_identifier, 'rho_tor')
+  call set_coordinate_identifier(my_static_identifier, 'rho_tor')
   if (my_static_identifier%index == 11 .and. &
       associated(my_static_identifier%name) .and. &
       associated(my_static_identifier%description)) then
     if (trim(my_static_identifier%name(1)) == 'rho_tor') then
       pass_count = pass_count + 1
-      print *, 'PASS: set_identifier for rho_tor - Index:', my_static_identifier%index, ', Name: "', trim(my_static_identifier%name(1)), '"'
+      print *, 'PASS: set_coordinate_identifier for rho_tor - Index:', my_static_identifier%index, ', Name: "', trim(my_static_identifier%name(1)), '"'
     else
       fail_count = fail_count + 1
-      print *, 'FAIL: set_identifier name mismatch'
+      print *, 'FAIL: set_coordinate_identifier name mismatch'
     end if
   else
     fail_count = fail_count + 1
-    print *, 'FAIL: set_identifier structure not properly set'
+    print *, 'FAIL: set_coordinate_identifier structure not properly set'
   end if
 
-  ! Test 7: Testing set_identifier() method for ids_identifier_static_1d
-  print *, 'Testing set_identifier() method for ids_identifier_static_1d...'
+  ! Test 7: Testing set_coordinate_identifier() generic interface for ids_identifier_static_1d
+  print *, 'Testing set_coordinate_identifier() for ids_identifier_static_1d...'
   test_count = test_count + 1
-  call coordinate_identifier%set_identifier(my_static_1d_identifier, 'theta')
+  call set_coordinate_identifier(my_static_1d_identifier, 'theta')
   if (associated(my_static_1d_identifier%indices) .and. &
       associated(my_static_1d_identifier%names) .and. &
       associated(my_static_1d_identifier%descriptions)) then
     if (my_static_1d_identifier%indices(1) == 20 .and. &
         trim(my_static_1d_identifier%names(1)) == 'theta') then
       pass_count = pass_count + 1
-      print *, 'PASS: set_identifier for theta - Index:', my_static_1d_identifier%indices(1), ', Name: "', trim(my_static_1d_identifier%names(1)), '"'
+      print *, 'PASS: set_coordinate_identifier for theta - Index:', my_static_1d_identifier%indices(1), ', Name: "', trim(my_static_1d_identifier%names(1)), '"'
     else
       fail_count = fail_count + 1
-      print *, 'FAIL: set_identifier indices/names mismatch'
+      print *, 'FAIL: set_coordinate_identifier indices/names mismatch'
     end if
   else
     fail_count = fail_count + 1
-    print *, 'FAIL: set_identifier structure not properly set'
+    print *, 'FAIL: set_coordinate_identifier structure not properly set'
   end if
 
-  ! Test 8: Testing set_identifier() method for ids_identifier_dynamic_aos3
-  print *, 'Testing set_identifier() method for ids_identifier_dynamic_aos3...'
+  ! Test 8: Testing set_coordinate_identifier() generic interface for ids_identifier_dynamic_aos3
+  print *, 'Testing set_coordinate_identifier() for ids_identifier_dynamic_aos3...'
   test_count = test_count + 1
-  call coordinate_identifier%set_identifier(my_dynamic_aos3_identifier, 'velocity')
+  call set_coordinate_identifier(my_dynamic_aos3_identifier, 'velocity')
   if (my_dynamic_aos3_identifier%index == 100 .and. &
       associated(my_dynamic_aos3_identifier%name) .and. &
       associated(my_dynamic_aos3_identifier%description)) then
     if (trim(my_dynamic_aos3_identifier%name(1)) == 'velocity') then
       pass_count = pass_count + 1
-      print *, 'PASS: set_identifier for velocity - Index:', my_dynamic_aos3_identifier%index, ', Name: "', trim(my_dynamic_aos3_identifier%name(1)), '"'
+      print *, 'PASS: set_coordinate_identifier for velocity - Index:', my_dynamic_aos3_identifier%index, ', Name: "', trim(my_dynamic_aos3_identifier%name(1)), '"'
     else
       fail_count = fail_count + 1
-      print *, 'FAIL: set_identifier name mismatch'
+      print *, 'FAIL: set_coordinate_identifier name mismatch'
     end if
   else
     fail_count = fail_count + 1
-    print *, 'FAIL: set_identifier structure not properly set'
+    print *, 'FAIL: set_coordinate_identifier structure not properly set'
   end if
 
-  ! Test 9: Testing set_identifier() method for ids_identifier_dynamic_aos3_1d
-  print *, 'Testing set_identifier() method for ids_identifier_dynamic_aos3_1d...'
+  ! Test 9: Testing set_coordinate_identifier() generic interface for ids_identifier_dynamic_aos3_1d
+  print *, 'Testing set_coordinate_identifier() for ids_identifier_dynamic_aos3_1d...'
   test_count = test_count + 1
-  call coordinate_identifier%set_identifier(my_dynamic_aos3_1d_identifier, 'momentum')
+  call set_coordinate_identifier(my_dynamic_aos3_1d_identifier, 'momentum')
   if (associated(my_dynamic_aos3_1d_identifier%indices) .and. &
       associated(my_dynamic_aos3_1d_identifier%names) .and. &
       associated(my_dynamic_aos3_1d_identifier%descriptions)) then
     if (my_dynamic_aos3_1d_identifier%indices(1) == 200 .and. &
         trim(my_dynamic_aos3_1d_identifier%names(1)) == 'momentum') then
       pass_count = pass_count + 1
-      print *, 'PASS: set_identifier for momentum - Index:', my_dynamic_aos3_1d_identifier%indices(1), ', Name: "', trim(my_dynamic_aos3_1d_identifier%names(1)), '"'
+      print *, 'PASS: set_coordinate_identifier for momentum - Index:', my_dynamic_aos3_1d_identifier%indices(1), ', Name: "', trim(my_dynamic_aos3_1d_identifier%names(1)), '"'
     else
       fail_count = fail_count + 1
-      print *, 'FAIL: set_identifier indices/names mismatch'
+      print *, 'FAIL: set_coordinate_identifier indices/names mismatch'
     end if
   else
     fail_count = fail_count + 1
-    print *, 'FAIL: set_identifier structure not properly set'
+    print *, 'FAIL: set_coordinate_identifier structure not properly set'
   end if
 
   ! Test 10: Round-trip consistency test
   print *, 'Testing round-trip consistency...'
   do i = 1, 3  ! Test first 3 coordinates
     test_count = test_count + 1
-    idx = coordinate_identifier%index(trim(test_coordinates(i)))
-    nm = coordinate_identifier%name(idx)
+    idx = index(trim(test_coordinates(i)))
+    nm = name(idx)
     if (trim(nm) == trim(test_coordinates(i))) then
       pass_count = pass_count + 1
     else
@@ -186,6 +191,30 @@ program test_coordinate_identifier
       print *, 'FAIL: Round-trip consistency failed for coordinate: ', trim(test_coordinates(i))
     end if
   end do
+
+  ! Test 11: Demonstrate the clean new interface
+  print *, 'Testing clean interface demonstration...'
+  test_count = test_count + 1
+  
+  ! Show how simple the new interface is
+  idx = index('phi')                    ! Get index by name
+  nm = name(idx)                        ! Get name by index
+  desc = description(idx)               ! Get description by index
+  
+  ! Use generic setter that automatically chooses the right procedure
+  call set_coordinate_identifier(my_identifier, 'phi')
+  
+  if (idx == 5 .and. trim(nm) == 'phi' .and. len_trim(desc) > 0 .and. &
+      my_identifier%index == 5) then
+    pass_count = pass_count + 1
+    print *, 'PASS: Clean interface test - All functions work seamlessly'
+    print *, '  index("phi") =', idx
+    print *, '  name(5) = "', trim(nm), '"'
+    print *, '  description(5) = "', trim(desc), '"'
+  else
+    fail_count = fail_count + 1
+    print *, 'FAIL: Clean interface test failed'
+  end if
 
   if (fail_count == 0) then
     print *, 'ALL TESTS PASSED!'

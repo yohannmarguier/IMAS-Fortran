@@ -36,27 +36,46 @@
     <xsl:if test="//constants[not(@create_mapping_function)]">
       <xsl:apply-templates select="*[name()!='header' and name()!='include' and @used_internally]" mode="Fortran"/>
     </xsl:if>
-      <xsl:text>  type :: type_</xsl:text><xsl:value-of select="$name"/><xsl:text>&#xA;</xsl:text>
-      <xsl:if test="//constants[@create_mapping_function]">
-	<xsl:text>  contains&#xA;</xsl:text>
-	<xsl:text>    procedure :: index => get_type_index&#xA;</xsl:text>
-	<xsl:text>    procedure :: name => get_type_name&#xA;</xsl:text>
-	<xsl:text>    procedure :: description => get_type_description&#xA;</xsl:text>
-	<xsl:text>    procedure, private :: set_ids_identifier => set_identifier&#xA;</xsl:text>
-	<xsl:text>    procedure, private :: set_ids_identifier_static => set_identifier_static&#xA;</xsl:text>
-	<xsl:text>    procedure, private :: set_ids_identifier_static_1d => set_identifier_static_1d&#xA;</xsl:text>
-	<xsl:text>    procedure, private :: set_ids_identifier_dynamic_aos3 => set_identifier_dynamic_aos3&#xA;</xsl:text>
-	<xsl:text>    procedure, private :: set_ids_identifier_dynamic_aos3_1d => set_identifier_dynamic_aos3_1d&#xA;</xsl:text>
-	<xsl:text>    generic :: set_identifier => set_ids_identifier, set_ids_identifier_static, &amp;&#xA;</xsl:text>
-	<xsl:text>                                 set_ids_identifier_static_1d, set_ids_identifier_dynamic_aos3, &amp;&#xA;</xsl:text>
-	<xsl:text>                                 set_ids_identifier_dynamic_aos3_1d&#xA;</xsl:text>
-      </xsl:if>
-      <xsl:text>  end type type_</xsl:text><xsl:value-of select="$name"/><xsl:text>&#xA;</xsl:text>
-
-	<xsl:text>&#xA;  type(type_</xsl:text><xsl:value-of select="$name"/><xsl:text>), public,parameter :: </xsl:text><xsl:value-of select="$name"/><xsl:text> = &amp;&#xA;</xsl:text>
-	<xsl:text>       type_</xsl:text><xsl:value-of select="$name"/><xsl:text>()&#xA;</xsl:text>
 
       <xsl:if test="//constants[@create_mapping_function]">
+	<xsl:text>  ! Public interface procedures&#xA;</xsl:text>
+	<xsl:text>  private :: get_index&#xA;</xsl:text>
+	<xsl:text>  private :: get_name&#xA;</xsl:text>
+	<xsl:text>  private :: get_description&#xA;</xsl:text>
+	<xsl:text>  private :: set_identifier&#xA;</xsl:text>
+	<xsl:text>  private :: set_identifier_static&#xA;</xsl:text>
+	<xsl:text>  private :: set_identifier_static_1d&#xA;</xsl:text>
+	<xsl:text>  private :: set_identifier_dynamic_aos3&#xA;</xsl:text>
+	<xsl:text>  private :: set_identifier_dynamic_aos3_1d&#xA;</xsl:text>
+	<xsl:text>  &#xA;</xsl:text>
+	<xsl:text>  ! Aliases for easier access&#xA;</xsl:text>
+	<xsl:text>  public :: index&#xA;</xsl:text>
+	<xsl:text>  public :: name&#xA;</xsl:text>
+	<xsl:text>  public :: description&#xA;</xsl:text>
+	<xsl:text>  public :: set_</xsl:text><xsl:value-of select="$name"/><xsl:text>&#xA;</xsl:text>
+	<xsl:text>  &#xA;</xsl:text>
+	<xsl:text>  ! Generic interface for set_identifier so it becomes overloaded &#xA;</xsl:text>
+	<xsl:text>  interface set_</xsl:text><xsl:value-of select="$name"/><xsl:text>&#xA;</xsl:text>
+	<xsl:text>    module procedure set_identifier&#xA;</xsl:text>
+	<xsl:text>    module procedure set_identifier_static&#xA;</xsl:text>
+	<xsl:text>    module procedure set_identifier_static_1d&#xA;</xsl:text>
+	<xsl:text>    module procedure set_identifier_dynamic_aos3&#xA;</xsl:text>
+	<xsl:text>    module procedure set_identifier_dynamic_aos3_1d&#xA;</xsl:text>
+	<xsl:text>  end interface set_</xsl:text><xsl:value-of select="$name"/><xsl:text>&#xA;</xsl:text>
+	<xsl:text>  &#xA;</xsl:text>
+	<xsl:text>  ! Create aliases for getters&#xA;</xsl:text>
+	<xsl:text>  interface index&#xA;</xsl:text>
+	<xsl:text>    module procedure get_index&#xA;</xsl:text>
+	<xsl:text>  end interface index&#xA;</xsl:text>
+	<xsl:text>  &#xA;</xsl:text>
+	<xsl:text>  interface name&#xA;</xsl:text>
+	<xsl:text>    module procedure get_name&#xA;</xsl:text>
+	<xsl:text>  end interface name&#xA;</xsl:text>
+	<xsl:text>  &#xA;</xsl:text>
+	<xsl:text>  interface description&#xA;</xsl:text>
+	<xsl:text>    module procedure get_description&#xA;</xsl:text>
+	<xsl:text>  end interface description&#xA;</xsl:text>
+	<xsl:text>  &#xA;</xsl:text>
 
 	<xsl:call-template name="translations_Fortran"/>
       </xsl:if>
@@ -190,8 +209,7 @@
     <!-- Translation from NAME to VALUE -->
     <xsl:if test="int!='' and */@name!=''">
       <xsl:text>  ! Get </xsl:text><xsl:value-of select="$name"/><xsl:text> index from string name&#xA;</xsl:text>
-      <xsl:text>  integer function get_type_index(self, NAME)&#xA;</xsl:text>
-      <xsl:text>    class(type_</xsl:text><xsl:value-of select="$name"/><xsl:text>), intent(in) :: self&#xA;</xsl:text>
+      <xsl:text>  integer function get_index(NAME)&#xA;</xsl:text>
       <xsl:text>    character(*), intent(in) :: NAME&#xA;</xsl:text>
       <xsl:text>    character(len=:), allocatable :: key&#xA;</xsl:text>
       <xsl:text>    &#xA;</xsl:text>
@@ -200,20 +218,18 @@
       <xsl:text>    select case (key)&#xA;</xsl:text>
       <xsl:for-each select="//constants/int[@name]">
         <xsl:text>      case ('</xsl:text><xsl:value-of select="@name"/><xsl:text>')&#xA;</xsl:text>
-        <xsl:text>        get_type_index = </xsl:text><xsl:value-of select="."/><xsl:text>&#xA;</xsl:text>
+        <xsl:text>        get_index = </xsl:text><xsl:value-of select="."/><xsl:text>&#xA;</xsl:text>
       </xsl:for-each>
       <xsl:text>      case default&#xA;</xsl:text>
-            <xsl:text>        get_type_index = ids_int_invalid&#xA;</xsl:text>
-            <xsl:text>        write(*,*) 'get_type_index: Unknown identifier name:', NAME&#xA;</xsl:text>
+            <xsl:text>        get_index = ids_int_invalid&#xA;</xsl:text>
       <xsl:text>    end select&#xA;</xsl:text>
-      <xsl:text>  end function get_type_index&#xA;&#xA;</xsl:text>
+      <xsl:text>  end function get_index&#xA;&#xA;</xsl:text>
     </xsl:if>
 
     <!-- Translation from VALUE to NAME -->
     <xsl:if test="int!=''">
       <xsl:text>  ! Get </xsl:text><xsl:value-of select="$name"/><xsl:text> name from index&#xA;</xsl:text>
-      <xsl:text>  function get_type_name(self, IND) result(name)&#xA;</xsl:text>
-      <xsl:text>    class(type_</xsl:text><xsl:value-of select="$name"/><xsl:text>), intent(in) :: self&#xA;</xsl:text>
+      <xsl:text>  function get_name(IND) result(name)&#xA;</xsl:text>
       <xsl:text>    integer, intent(in) :: IND&#xA;</xsl:text>
       <xsl:text>    character(len=:), allocatable :: name&#xA;</xsl:text>
       <xsl:text>    &#xA;</xsl:text>
@@ -225,16 +241,14 @@
       </xsl:for-each>
       <xsl:text>      case default&#xA;</xsl:text>
       <xsl:text>        name = ''&#xA;</xsl:text>
-      <xsl:text>        write(*,*) 'get_type_name: Unknown identifier index:', IND&#xA;</xsl:text>
       <xsl:text>    end select&#xA;</xsl:text>
-      <xsl:text>  end function get_type_name&#xA;&#xA;</xsl:text>
+      <xsl:text>  end function get_name&#xA;&#xA;</xsl:text>
     </xsl:if>
 
     <!-- Translation from VALUE to DESCRIPTION -->
     <xsl:if test="int!=''">
       <xsl:text>  ! Get </xsl:text><xsl:value-of select="$name"/><xsl:text> description from index&#xA;</xsl:text>
-      <xsl:text>  function get_type_description(self, IND) result(description)&#xA;</xsl:text>
-      <xsl:text>    class(type_</xsl:text><xsl:value-of select="$name"/><xsl:text>), intent(in) :: self&#xA;</xsl:text>
+      <xsl:text>  function get_description(IND) result(description)&#xA;</xsl:text>
       <xsl:text>    integer, intent(in) :: IND&#xA;</xsl:text>
       <xsl:text>    character(len=:), allocatable :: description&#xA;</xsl:text>
       <xsl:text>    &#xA;</xsl:text>
@@ -255,16 +269,14 @@
       </xsl:for-each>
       <xsl:text>      case default&#xA;</xsl:text>
       <xsl:text>        description = ''&#xA;</xsl:text>
-      <xsl:text>        write(*,*) 'get_type_description: Unknown identifier index:', IND&#xA;</xsl:text>
       <xsl:text>    end select&#xA;</xsl:text>
-      <xsl:text>  end function get_type_description&#xA;&#xA;</xsl:text>
+      <xsl:text>  end function get_description&#xA;&#xA;</xsl:text>
     </xsl:if>
 
     <!-- Set complete ids_identifier structure -->
     <xsl:if test="int!=''">
       <xsl:text>  ! Set complete ids_identifier structure&#xA;</xsl:text>
-      <xsl:text>  subroutine set_identifier(self, identifier, name)&#xA;</xsl:text>
-      <xsl:text>    class(type_</xsl:text><xsl:value-of select="$name"/><xsl:text>), intent(in) :: self&#xA;</xsl:text>
+      <xsl:text>  subroutine set_identifier(identifier, name)&#xA;</xsl:text>
       <xsl:text>    type(ids_identifier), intent(out) :: identifier&#xA;</xsl:text>
       <xsl:text>    character(*), intent(in) :: name&#xA;</xsl:text>
       <xsl:text>    integer :: coord_index&#xA;</xsl:text>
@@ -283,8 +295,7 @@
     <!-- Set complete ids_identifier_static structure -->
     <xsl:if test="int!=''">
       <xsl:text>  ! Set complete ids_identifier_static structure&#xA;</xsl:text>
-      <xsl:text>  subroutine set_identifier_static(self, identifier, name)&#xA;</xsl:text>
-      <xsl:text>    class(type_</xsl:text><xsl:value-of select="$name"/><xsl:text>), intent(in) :: self&#xA;</xsl:text>
+      <xsl:text>  subroutine set_identifier_static(identifier, name)&#xA;</xsl:text>
       <xsl:text>    type(ids_identifier_static), intent(out) :: identifier&#xA;</xsl:text>
       <xsl:text>    character(*), intent(in) :: name&#xA;</xsl:text>
       <xsl:text>    integer :: coord_index&#xA;</xsl:text>
@@ -303,8 +314,7 @@
     <!-- Set complete ids_identifier_static_1d structure -->
     <xsl:if test="int!=''">
       <xsl:text>  ! Set complete ids_identifier_static_1d structure&#xA;</xsl:text>
-      <xsl:text>  subroutine set_identifier_static_1d(self, identifier, name)&#xA;</xsl:text>
-      <xsl:text>    class(type_</xsl:text><xsl:value-of select="$name"/><xsl:text>), intent(in) :: self&#xA;</xsl:text>
+      <xsl:text>  subroutine set_identifier_static_1d(identifier, name)&#xA;</xsl:text>
       <xsl:text>    type(ids_identifier_static_1d), intent(out) :: identifier&#xA;</xsl:text>
       <xsl:text>    character(*), intent(in) :: name&#xA;</xsl:text>
       <xsl:text>    integer :: coord_index&#xA;</xsl:text>
@@ -324,8 +334,7 @@
     <!-- Set complete ids_identifier_dynamic_aos3 structure -->
     <xsl:if test="int!=''">
       <xsl:text>  ! Set complete ids_identifier_dynamic_aos3 structure&#xA;</xsl:text>
-      <xsl:text>  subroutine set_identifier_dynamic_aos3(self, identifier, name)&#xA;</xsl:text>
-      <xsl:text>    class(type_</xsl:text><xsl:value-of select="$name"/><xsl:text>), intent(in) :: self&#xA;</xsl:text>
+      <xsl:text>  subroutine set_identifier_dynamic_aos3(identifier, name)&#xA;</xsl:text>
       <xsl:text>    type(ids_identifier_dynamic_aos3), intent(out) :: identifier&#xA;</xsl:text>
       <xsl:text>    character(*), intent(in) :: name&#xA;</xsl:text>
       <xsl:text>    integer :: coord_index&#xA;</xsl:text>
@@ -344,8 +353,7 @@
     <!-- Set complete ids_identifier_dynamic_aos3_1d structure -->
     <xsl:if test="int!=''">
       <xsl:text>  ! Set complete ids_identifier_dynamic_aos3_1d structure&#xA;</xsl:text>
-      <xsl:text>  subroutine set_identifier_dynamic_aos3_1d(self, identifier, name)&#xA;</xsl:text>
-      <xsl:text>    class(type_</xsl:text><xsl:value-of select="$name"/><xsl:text>), intent(in) :: self&#xA;</xsl:text>
+      <xsl:text>  subroutine set_identifier_dynamic_aos3_1d(identifier, name)&#xA;</xsl:text>
       <xsl:text>    type(ids_identifier_dynamic_aos3_1d), intent(out) :: identifier&#xA;</xsl:text>
       <xsl:text>    character(*), intent(in) :: name&#xA;</xsl:text>
       <xsl:text>    integer :: coord_index&#xA;</xsl:text>
