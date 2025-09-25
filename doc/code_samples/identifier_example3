@@ -1,18 +1,26 @@
 program testindentifiers
-    use ids_schemas, only: ids_equilibrium
-    use al_poloidal_plane_coordinates_identifier, &
-        only: set_poloidal_plane_coordinates_identifier
+    use ids_schemas, only: ids_wall
+    use al_materials_identifier, &
+        only: set_identifier
     implicit none
+    
+    integer :: i
+    type(ids_wall) :: wall
+    character(2), dimension(5) :: names
+    
+    names = ['W ', 'C ', 'Be', 'Cu', 'SS']
 
-    type(ids_equilibrium) :: equilibrium
-    allocate( equilibrium%time_slice(1) )
-    allocate( equilibrium%time_slice(1)%profiles_2d(1) )
+    allocate( wall%description_ggd(1) )
+    allocate( wall%description_ggd(1)%material(1) )
+    allocate( wall%description_ggd(1)%material(1)%grid_subset(1) )
 
-    call set_poloidal_plane_coordinates_identifier( equilibrium%time_slice(1)%profiles_2d(1)%grid_type, 'rectangular')
+    call set_identifier( wall%description_ggd(1)%material(1)%grid_subset(1)%identifiers ,names)
 
-    print *,equilibrium%time_slice(1)%profiles_2d(1)%grid_type%name
-    print *,equilibrium%time_slice(1)%profiles_2d(1)%grid_type%index
-    print *,equilibrium%time_slice(1)%profiles_2d(1)%grid_type%desc
+    print *, 'Number of materials:', size(wall%description_ggd(1)%material(1)%grid_subset(1)%identifiers%indices)
+    do i = 1, size(wall%description_ggd(1)%material(1)%grid_subset(1)%identifiers%indices)
+        print *, 'Material', i, ':'
+        print *, '  Index:', wall%description_ggd(1)%material(1)%grid_subset(1)%identifiers%indices(i)
+        print *, '  Name: "', trim(wall%description_ggd(1)%material(1)%grid_subset(1)%identifiers%names(i)), '"'
+        print *, '  Description: "', trim(wall%description_ggd(1)%material(1)%grid_subset(1)%identifiers%descriptions(i)), '"'
+    end do
 end program
-
-

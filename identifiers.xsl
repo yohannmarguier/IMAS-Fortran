@@ -38,42 +38,26 @@
     </xsl:if>
 
       <xsl:if test="//constants[@create_mapping_function]">
-	<xsl:text>  private :: get_index&#xA;</xsl:text>
-	<xsl:text>  private :: get_name&#xA;</xsl:text>
-	<xsl:text>  private :: get_description&#xA;</xsl:text>
-	<xsl:text>  private :: set_identifier&#xA;</xsl:text>
+	<xsl:text>  public :: get_index&#xA;</xsl:text>
+	<xsl:text>  public :: get_name&#xA;</xsl:text>
+	<xsl:text>  public :: get_description&#xA;</xsl:text>
+	<xsl:text>  private :: set_identifier_base&#xA;</xsl:text>
 	<xsl:text>  private :: set_identifier_static&#xA;</xsl:text>
 	<xsl:text>  private :: set_identifier_static_1d&#xA;</xsl:text>
 	<xsl:text>  private :: set_identifier_dynamic_aos3&#xA;</xsl:text>
 	<xsl:text>  private :: set_identifier_dynamic_aos3_1d&#xA;</xsl:text>
 	<xsl:text>  &#xA;</xsl:text>
 	<xsl:text>  ! Aliases for easier access&#xA;</xsl:text>
-	<xsl:text>  public :: </xsl:text><xsl:value-of select="$name"/><xsl:text>_index&#xA;</xsl:text>
-	<xsl:text>  public :: </xsl:text><xsl:value-of select="$name"/><xsl:text>_name&#xA;</xsl:text>
-	<xsl:text>  public :: </xsl:text><xsl:value-of select="$name"/><xsl:text>_desc&#xA;</xsl:text>
-	<xsl:text>  public :: set_</xsl:text><xsl:value-of select="$name"/><xsl:text>&#xA;</xsl:text>
+	<xsl:text>  public :: set_identifier&#xA;</xsl:text>
 	<xsl:text>  &#xA;</xsl:text>
 	<xsl:text>  ! Generic interface for set_identifier so it becomes overloaded &#xA;</xsl:text>
-	<xsl:text>  interface set_</xsl:text><xsl:value-of select="$name"/><xsl:text>&#xA;</xsl:text>
-	<xsl:text>    module procedure set_identifier&#xA;</xsl:text>
+	<xsl:text>  interface set_identifier&#xA;</xsl:text>
+	<xsl:text>    module procedure set_identifier_base&#xA;</xsl:text>
 	<xsl:text>    module procedure set_identifier_static&#xA;</xsl:text>
 	<xsl:text>    module procedure set_identifier_static_1d&#xA;</xsl:text>
 	<xsl:text>    module procedure set_identifier_dynamic_aos3&#xA;</xsl:text>
 	<xsl:text>    module procedure set_identifier_dynamic_aos3_1d&#xA;</xsl:text>
-	<xsl:text>  end interface set_</xsl:text><xsl:value-of select="$name"/><xsl:text>&#xA;</xsl:text>
-	<xsl:text>  &#xA;</xsl:text>
-	<xsl:text>  ! Create aliases for getters&#xA;</xsl:text>
-	<xsl:text>  interface </xsl:text><xsl:value-of select="$name"/><xsl:text>_index&#xA;</xsl:text>
-	<xsl:text>    module procedure get_index&#xA;</xsl:text>
-	<xsl:text>  end interface </xsl:text><xsl:value-of select="$name"/><xsl:text>_index&#xA;</xsl:text>
-	<xsl:text>  &#xA;</xsl:text>
-	<xsl:text>  interface </xsl:text><xsl:value-of select="$name"/><xsl:text>_name&#xA;</xsl:text>
-	<xsl:text>    module procedure get_name&#xA;</xsl:text>
-	<xsl:text>  end interface </xsl:text><xsl:value-of select="$name"/><xsl:text>_name&#xA;</xsl:text>
-	<xsl:text>  &#xA;</xsl:text>
-	<xsl:text>  interface </xsl:text><xsl:value-of select="$name"/><xsl:text>_desc&#xA;</xsl:text>
-	<xsl:text>    module procedure get_description&#xA;</xsl:text>
-	<xsl:text>  end interface </xsl:text><xsl:value-of select="$name"/><xsl:text>_desc&#xA;</xsl:text>
+	<xsl:text>  end interface set_identifier&#xA;</xsl:text>
 	<xsl:text>  &#xA;</xsl:text>
 
 	<xsl:call-template name="translations_Fortran"/>
@@ -275,7 +259,7 @@
     <!-- Set complete ids_identifier structure -->
     <xsl:if test="int!=''">
       <xsl:text>  ! Set complete ids_identifier structure&#xA;</xsl:text>
-      <xsl:text>  subroutine set_identifier(identifier, name)&#xA;</xsl:text>
+      <xsl:text>  subroutine set_identifier_base(identifier, name)&#xA;</xsl:text>
       <xsl:text>    type(ids_identifier), intent(out) :: identifier&#xA;</xsl:text>
       <xsl:text>    character(*), intent(in) :: name&#xA;</xsl:text>
       <xsl:text>    integer :: index_out&#xA;</xsl:text>
@@ -288,7 +272,7 @@
       <xsl:text>    allocate(identifier%description(1))&#xA;</xsl:text>
       <xsl:text>    identifier%name(1) = name_out&#xA;</xsl:text>
       <xsl:text>    identifier%description(1) = description_out&#xA;</xsl:text>
-      <xsl:text>  end subroutine set_identifier&#xA;&#xA;</xsl:text>
+      <xsl:text>  end subroutine set_identifier_base&#xA;&#xA;</xsl:text>
     </xsl:if>
 
     <!-- Set complete ids_identifier_static structure -->

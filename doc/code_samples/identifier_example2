@@ -1,16 +1,25 @@
 program testindentifiers
-    use ids_schemas, only: ids_distribution_sources
-    use al_distribution_source_identifier, only: set_distribution_source_identifier
+    use ids_schemas, only: ids_distribution_sources, ids_equilibrium
+    use al_distribution_source_identifier, only: set_ds_identifier => set_identifier
+    use al_poloidal_plane_coordinates_identifier, &
+        only: set_ppc_identifier => set_identifier
     implicit none
 
     type(ids_distribution_sources) :: distribution_sources
+    type(ids_equilibrium) :: equilibrium
 
     allocate(distribution_sources%source(1))
     allocate(distribution_sources%source(1)%process(1))
+    allocate( equilibrium%time_slice(1) )
+    allocate( equilibrium%time_slice(1)%profiles_2d(1) )
 
-    call set_distribution_source_identifier( distribution_sources%source(1)%process(1)%type, 'NBI')
+    call set_ds_identifier( distribution_sources%source(1)%process(1)%type, 'NBI')
+    call set_ppc_identifier( equilibrium%time_slice(1)%profiles_2d(1)%grid_type, 'rectangular')
 
     print *,distribution_sources%source(1)%process(1)%type%name
     print *,distribution_sources%source(1)%process(1)%type%index
-    print *,distribution_sources%source(1)%process(1)%type%desc
+    print *,distribution_sources%source(1)%process(1)%type%description
+    print *,equilibrium%time_slice(1)%profiles_2d(1)%grid_type%name
+    print *,equilibrium%time_slice(1)%profiles_2d(1)%grid_type%index
+    print *,equilibrium%time_slice(1)%profiles_2d(1)%grid_type%description
 end program

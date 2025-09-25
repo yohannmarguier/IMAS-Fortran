@@ -4,10 +4,10 @@ program testindentifiers
     integer :: i_phi
 
     ! Note: accessing as a variable like coordinate_identifier%phi is deprecated
-    i_phi = coordinate_identifier_index('phi') 
+    i_phi = get_index('phi') 
 
     print *,i_phi
-    print *,coordinate_identifier_index('phi')
-    print *,coordinate_identifier_name(i_phi)
-    print *,coordinate_identifier_desc(i_phi)
+    print *,get_index('phi')
+    print *,get_name(i_phi)
+    print *,get_description(i_phi)
 end program
