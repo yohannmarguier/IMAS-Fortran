@@ -38,7 +38,6 @@
     </xsl:if>
 
       <xsl:if test="//constants[@create_mapping_function]">
-	<xsl:text>  ! Public interface procedures&#xA;</xsl:text>
 	<xsl:text>  private :: get_index&#xA;</xsl:text>
 	<xsl:text>  private :: get_name&#xA;</xsl:text>
 	<xsl:text>  private :: get_description&#xA;</xsl:text>
@@ -49,9 +48,9 @@
 	<xsl:text>  private :: set_identifier_dynamic_aos3_1d&#xA;</xsl:text>
 	<xsl:text>  &#xA;</xsl:text>
 	<xsl:text>  ! Aliases for easier access&#xA;</xsl:text>
-	<xsl:text>  public :: index&#xA;</xsl:text>
-	<xsl:text>  public :: name&#xA;</xsl:text>
-	<xsl:text>  public :: description&#xA;</xsl:text>
+	<xsl:text>  public :: </xsl:text><xsl:value-of select="$name"/><xsl:text>_index&#xA;</xsl:text>
+	<xsl:text>  public :: </xsl:text><xsl:value-of select="$name"/><xsl:text>_name&#xA;</xsl:text>
+	<xsl:text>  public :: </xsl:text><xsl:value-of select="$name"/><xsl:text>_description&#xA;</xsl:text>
 	<xsl:text>  public :: set_</xsl:text><xsl:value-of select="$name"/><xsl:text>&#xA;</xsl:text>
 	<xsl:text>  &#xA;</xsl:text>
 	<xsl:text>  ! Generic interface for set_identifier so it becomes overloaded &#xA;</xsl:text>
@@ -64,17 +63,17 @@
 	<xsl:text>  end interface set_</xsl:text><xsl:value-of select="$name"/><xsl:text>&#xA;</xsl:text>
 	<xsl:text>  &#xA;</xsl:text>
 	<xsl:text>  ! Create aliases for getters&#xA;</xsl:text>
-	<xsl:text>  interface index&#xA;</xsl:text>
+	<xsl:text>  interface </xsl:text><xsl:value-of select="$name"/><xsl:text>_index&#xA;</xsl:text>
 	<xsl:text>    module procedure get_index&#xA;</xsl:text>
-	<xsl:text>  end interface index&#xA;</xsl:text>
+	<xsl:text>  end interface </xsl:text><xsl:value-of select="$name"/><xsl:text>_index&#xA;</xsl:text>
 	<xsl:text>  &#xA;</xsl:text>
-	<xsl:text>  interface name&#xA;</xsl:text>
+	<xsl:text>  interface </xsl:text><xsl:value-of select="$name"/><xsl:text>_name&#xA;</xsl:text>
 	<xsl:text>    module procedure get_name&#xA;</xsl:text>
-	<xsl:text>  end interface name&#xA;</xsl:text>
+	<xsl:text>  end interface </xsl:text><xsl:value-of select="$name"/><xsl:text>_name&#xA;</xsl:text>
 	<xsl:text>  &#xA;</xsl:text>
-	<xsl:text>  interface description&#xA;</xsl:text>
+	<xsl:text>  interface </xsl:text><xsl:value-of select="$name"/><xsl:text>_description&#xA;</xsl:text>
 	<xsl:text>    module procedure get_description&#xA;</xsl:text>
-	<xsl:text>  end interface description&#xA;</xsl:text>
+	<xsl:text>  end interface </xsl:text><xsl:value-of select="$name"/><xsl:text>_description&#xA;</xsl:text>
 	<xsl:text>  &#xA;</xsl:text>
 
 	<xsl:call-template name="translations_Fortran"/>
@@ -172,24 +171,24 @@
 
     <!-- Private helper subroutine -->
     <xsl:text>  ! helper to get </xsl:text><xsl:value-of select="$name"/><xsl:text> data by name&#xA;</xsl:text>
-    <xsl:text>  subroutine get_type_data_by_name(name, coord_index, coord_name, coord_description)&#xA;</xsl:text>
+    <xsl:text>  subroutine get_type_data_by_name(name, index_out, name_out, description_out)&#xA;</xsl:text>
     <xsl:text>    character(*), intent(in) :: name&#xA;</xsl:text>
-    <xsl:text>    integer, intent(out) :: coord_index&#xA;</xsl:text>
-    <xsl:text>    character(len=ids_string_length), intent(out) :: coord_name&#xA;</xsl:text>
-    <xsl:text>    character(len=ids_string_length), intent(out) :: coord_description&#xA;</xsl:text>
+    <xsl:text>    integer, intent(out) :: index_out&#xA;</xsl:text>
+    <xsl:text>    character(len=ids_string_length), intent(out) :: name_out&#xA;</xsl:text>
+    <xsl:text>    character(len=ids_string_length), intent(out) :: description_out&#xA;</xsl:text>
     <xsl:text>    character(len=:), allocatable :: key&#xA;</xsl:text>
     <xsl:text>    &#xA;</xsl:text>
     <xsl:text>    key = trim(name)&#xA;</xsl:text>
-    <xsl:text>    coord_index = ids_int_invalid&#xA;</xsl:text>
-    <xsl:text>    coord_name = ''&#xA;</xsl:text>
-    <xsl:text>    coord_description = ''&#xA;</xsl:text>
+    <xsl:text>    index_out = ids_int_invalid&#xA;</xsl:text>
+    <xsl:text>    name_out = ''&#xA;</xsl:text>
+    <xsl:text>    description_out = ''&#xA;</xsl:text>
     <xsl:text>    &#xA;</xsl:text>
     <xsl:text>    select case (key)&#xA;</xsl:text>
     <xsl:for-each select="//constants/int[@name]">
       <xsl:text>      case ('</xsl:text><xsl:value-of select="@name"/><xsl:text>')&#xA;</xsl:text>
-      <xsl:text>        coord_index = </xsl:text><xsl:value-of select="."/><xsl:text>&#xA;</xsl:text>
-      <xsl:text>        coord_name = '</xsl:text><xsl:value-of select="@name"/><xsl:text>'&#xA;</xsl:text>
-      <xsl:text>        coord_description = '</xsl:text>
+      <xsl:text>        index_out = </xsl:text><xsl:value-of select="."/><xsl:text>&#xA;</xsl:text>
+      <xsl:text>        name_out = '</xsl:text><xsl:value-of select="@name"/><xsl:text>'&#xA;</xsl:text>
+      <xsl:text>        description_out = '</xsl:text>
       <xsl:choose>
         <xsl:when test="string-length(@description) > 132">
           <xsl:value-of select="substring(@description, 1, 132)"/>
@@ -279,16 +278,16 @@
       <xsl:text>  subroutine set_identifier(identifier, name)&#xA;</xsl:text>
       <xsl:text>    type(ids_identifier), intent(out) :: identifier&#xA;</xsl:text>
       <xsl:text>    character(*), intent(in) :: name&#xA;</xsl:text>
-      <xsl:text>    integer :: coord_index&#xA;</xsl:text>
-      <xsl:text>    character(len=ids_string_length) :: coord_name, coord_description&#xA;</xsl:text>
+      <xsl:text>    integer :: index_out&#xA;</xsl:text>
+      <xsl:text>    character(len=ids_string_length) :: name_out, description_out&#xA;</xsl:text>
       <xsl:text>    &#xA;</xsl:text>
-      <xsl:text>    call get_type_data_by_name(name, coord_index, coord_name, coord_description)&#xA;</xsl:text>
+      <xsl:text>    call get_type_data_by_name(name, index_out, name_out, description_out)&#xA;</xsl:text>
       <xsl:text>    &#xA;</xsl:text>
-      <xsl:text>    identifier%index = coord_index&#xA;</xsl:text>
+      <xsl:text>    identifier%index = index_out&#xA;</xsl:text>
       <xsl:text>    allocate(identifier%name(1))&#xA;</xsl:text>
       <xsl:text>    allocate(identifier%description(1))&#xA;</xsl:text>
-      <xsl:text>    identifier%name(1) = coord_name&#xA;</xsl:text>
-      <xsl:text>    identifier%description(1) = coord_description&#xA;</xsl:text>
+      <xsl:text>    identifier%name(1) = name_out&#xA;</xsl:text>
+      <xsl:text>    identifier%description(1) = description_out&#xA;</xsl:text>
       <xsl:text>  end subroutine set_identifier&#xA;&#xA;</xsl:text>
     </xsl:if>
 
@@ -298,36 +297,43 @@
       <xsl:text>  subroutine set_identifier_static(identifier, name)&#xA;</xsl:text>
       <xsl:text>    type(ids_identifier_static), intent(out) :: identifier&#xA;</xsl:text>
       <xsl:text>    character(*), intent(in) :: name&#xA;</xsl:text>
-      <xsl:text>    integer :: coord_index&#xA;</xsl:text>
-      <xsl:text>    character(len=ids_string_length) :: coord_name, coord_description&#xA;</xsl:text>
+      <xsl:text>    integer :: index_out&#xA;</xsl:text>
+      <xsl:text>    character(len=ids_string_length) :: name_out, description_out&#xA;</xsl:text>
       <xsl:text>    &#xA;</xsl:text>
-      <xsl:text>    call get_type_data_by_name(name, coord_index, coord_name, coord_description)&#xA;</xsl:text>
+      <xsl:text>    call get_type_data_by_name(name, index_out, name_out, description_out)&#xA;</xsl:text>
       <xsl:text>    &#xA;</xsl:text>
-      <xsl:text>    identifier%index = coord_index&#xA;</xsl:text>
+      <xsl:text>    identifier%index = index_out&#xA;</xsl:text>
       <xsl:text>    allocate(identifier%name(1))&#xA;</xsl:text>
       <xsl:text>    allocate(identifier%description(1))&#xA;</xsl:text>
-      <xsl:text>    identifier%name(1) = coord_name&#xA;</xsl:text>
-      <xsl:text>    identifier%description(1) = coord_description&#xA;</xsl:text>
+      <xsl:text>    identifier%name(1) = name_out&#xA;</xsl:text>
+      <xsl:text>    identifier%description(1) = description_out&#xA;</xsl:text>
       <xsl:text>  end subroutine set_identifier_static&#xA;&#xA;</xsl:text>
     </xsl:if>
 
     <!-- Set complete ids_identifier_static_1d structure -->
     <xsl:if test="int!=''">
       <xsl:text>  ! Set complete ids_identifier_static_1d structure&#xA;</xsl:text>
-      <xsl:text>  subroutine set_identifier_static_1d(identifier, name)&#xA;</xsl:text>
+      <xsl:text>  subroutine set_identifier_static_1d(identifier, names)&#xA;</xsl:text>
       <xsl:text>    type(ids_identifier_static_1d), intent(out) :: identifier&#xA;</xsl:text>
-      <xsl:text>    character(*), intent(in) :: name&#xA;</xsl:text>
-      <xsl:text>    integer :: coord_index&#xA;</xsl:text>
-      <xsl:text>    character(len=ids_string_length) :: coord_name, coord_description&#xA;</xsl:text>
+      <xsl:text>    character(*), dimension(:), intent(in) :: names&#xA;</xsl:text>
+      <xsl:text>    integer :: i, n_identifiers&#xA;</xsl:text>
+      <xsl:text>    integer :: index_out&#xA;</xsl:text>
+      <xsl:text>    character(len=ids_string_length) :: name_out, description_out&#xA;</xsl:text>
+      <xsl:text>&#xA;</xsl:text>
+      <xsl:text>    n_identifiers = size(names)&#xA;</xsl:text>
       <xsl:text>    &#xA;</xsl:text>
-      <xsl:text>    call get_type_data_by_name(name, coord_index, coord_name, coord_description)&#xA;</xsl:text>
-      <xsl:text>    &#xA;</xsl:text>
-      <xsl:text>    allocate(identifier%indices(1))&#xA;</xsl:text>
-      <xsl:text>    allocate(identifier%names(1))&#xA;</xsl:text>
-      <xsl:text>    allocate(identifier%descriptions(1))&#xA;</xsl:text>
-      <xsl:text>    identifier%indices(1) = coord_index&#xA;</xsl:text>
-      <xsl:text>    identifier%names(1) = coord_name&#xA;</xsl:text>
-      <xsl:text>    identifier%descriptions(1) = coord_description&#xA;</xsl:text>
+      <xsl:text>    allocate(identifier%indices(n_identifiers))&#xA;</xsl:text>
+      <xsl:text>    allocate(identifier%names(n_identifiers))&#xA;</xsl:text>
+      <xsl:text>    allocate(identifier%descriptions(n_identifiers))&#xA;</xsl:text>
+      <xsl:text>&#xA;</xsl:text>
+      <xsl:text>    ! Process each name in the array&#xA;</xsl:text>
+      <xsl:text>    do i = 1, n_identifiers&#xA;</xsl:text>
+      <xsl:text>      call get_type_data_by_name(trim(names(i)), index_out, name_out, description_out)&#xA;</xsl:text>
+      <xsl:text>      &#xA;</xsl:text>
+      <xsl:text>      identifier%indices(i) = index_out&#xA;</xsl:text>
+      <xsl:text>      identifier%names(i) = name_out&#xA;</xsl:text>
+      <xsl:text>      identifier%descriptions(i) = description_out&#xA;</xsl:text>
+      <xsl:text>    end do&#xA;</xsl:text>
       <xsl:text>  end subroutine set_identifier_static_1d&#xA;&#xA;</xsl:text>
     </xsl:if>
 
@@ -337,36 +343,43 @@
       <xsl:text>  subroutine set_identifier_dynamic_aos3(identifier, name)&#xA;</xsl:text>
       <xsl:text>    type(ids_identifier_dynamic_aos3), intent(out) :: identifier&#xA;</xsl:text>
       <xsl:text>    character(*), intent(in) :: name&#xA;</xsl:text>
-      <xsl:text>    integer :: coord_index&#xA;</xsl:text>
-      <xsl:text>    character(len=ids_string_length) :: coord_name, coord_description&#xA;</xsl:text>
+      <xsl:text>    integer :: index_out&#xA;</xsl:text>
+      <xsl:text>    character(len=ids_string_length) :: name_out, description_out&#xA;</xsl:text>
       <xsl:text>    &#xA;</xsl:text>
-      <xsl:text>    call get_type_data_by_name(name, coord_index, coord_name, coord_description)&#xA;</xsl:text>
+      <xsl:text>    call get_type_data_by_name(name, index_out, name_out, description_out)&#xA;</xsl:text>
       <xsl:text>    &#xA;</xsl:text>
-      <xsl:text>    identifier%index = coord_index&#xA;</xsl:text>
+      <xsl:text>    identifier%index = index_out&#xA;</xsl:text>
       <xsl:text>    allocate(identifier%name(1))&#xA;</xsl:text>
       <xsl:text>    allocate(identifier%description(1))&#xA;</xsl:text>
-      <xsl:text>    identifier%name(1) = coord_name&#xA;</xsl:text>
-      <xsl:text>    identifier%description(1) = coord_description&#xA;</xsl:text>
+      <xsl:text>    identifier%name(1) = name_out&#xA;</xsl:text>
+      <xsl:text>    identifier%description(1) = description_out&#xA;</xsl:text>
       <xsl:text>  end subroutine set_identifier_dynamic_aos3&#xA;&#xA;</xsl:text>
     </xsl:if>
 
     <!-- Set complete ids_identifier_dynamic_aos3_1d structure -->
     <xsl:if test="int!=''">
       <xsl:text>  ! Set complete ids_identifier_dynamic_aos3_1d structure&#xA;</xsl:text>
-      <xsl:text>  subroutine set_identifier_dynamic_aos3_1d(identifier, name)&#xA;</xsl:text>
+      <xsl:text>  subroutine set_identifier_dynamic_aos3_1d(identifier, names)&#xA;</xsl:text>
       <xsl:text>    type(ids_identifier_dynamic_aos3_1d), intent(out) :: identifier&#xA;</xsl:text>
-      <xsl:text>    character(*), intent(in) :: name&#xA;</xsl:text>
-      <xsl:text>    integer :: coord_index&#xA;</xsl:text>
-      <xsl:text>    character(len=ids_string_length) :: coord_name, coord_description&#xA;</xsl:text>
+      <xsl:text>    character(*), dimension(:), intent(in) :: names&#xA;</xsl:text>
+      <xsl:text>    integer :: i, n_identifiers&#xA;</xsl:text>
+      <xsl:text>    integer :: index_out&#xA;</xsl:text>
+      <xsl:text>    character(len=ids_string_length) :: name_out, description_out&#xA;</xsl:text>
+      <xsl:text>&#xA;</xsl:text>
+      <xsl:text>    n_identifiers = size(names)&#xA;</xsl:text>
       <xsl:text>    &#xA;</xsl:text>
-      <xsl:text>    call get_type_data_by_name(name, coord_index, coord_name, coord_description)&#xA;</xsl:text>
-      <xsl:text>    &#xA;</xsl:text>
-      <xsl:text>    allocate(identifier%indices(1))&#xA;</xsl:text>
-      <xsl:text>    allocate(identifier%names(1))&#xA;</xsl:text>
-      <xsl:text>    allocate(identifier%descriptions(1))&#xA;</xsl:text>
-      <xsl:text>    identifier%indices(1) = coord_index&#xA;</xsl:text>
-      <xsl:text>    identifier%names(1) = coord_name&#xA;</xsl:text>
-      <xsl:text>    identifier%descriptions(1) = coord_description&#xA;</xsl:text>
+      <xsl:text>    allocate(identifier%indices(n_identifiers))&#xA;</xsl:text>
+      <xsl:text>    allocate(identifier%names(n_identifiers))&#xA;</xsl:text>
+      <xsl:text>    allocate(identifier%descriptions(n_identifiers))&#xA;</xsl:text>
+      <xsl:text>&#xA;</xsl:text>
+      <xsl:text>    ! Process each name in the array&#xA;</xsl:text>
+      <xsl:text>    do i = 1, n_identifiers&#xA;</xsl:text>
+      <xsl:text>      call get_type_data_by_name(trim(names(i)), index_out, name_out, description_out)&#xA;</xsl:text>
+      <xsl:text>      &#xA;</xsl:text>
+      <xsl:text>      identifier%indices(i) = index_out&#xA;</xsl:text>
+      <xsl:text>      identifier%names(i) = name_out&#xA;</xsl:text>
+      <xsl:text>      identifier%descriptions(i) = description_out&#xA;</xsl:text>
+      <xsl:text>    end do&#xA;</xsl:text>
       <xsl:text>  end subroutine set_identifier_dynamic_aos3_1d&#xA;</xsl:text>
     </xsl:if>
 

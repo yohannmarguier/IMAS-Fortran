@@ -14,26 +14,28 @@ program test_coordinate_identifier
   type(ids_identifier_dynamic_aos3) :: my_dynamic_aos3_identifier
   type(ids_identifier_dynamic_aos3_1d) :: my_dynamic_aos3_1d_identifier
   
-  ! Test coordinate names and expected indices
-  character(len=25), dimension(15) :: test_coordinates = [ &
+  ! Test coordinate names and expected indices (expanded set based on actual module)
+  character(len=25), dimension(20) :: test_coordinates = [ &
     'unspecified              ', 'x                        ', 'y                        ', &
     'z                        ', 'r                        ', 'phi                      ', &
     'psi                      ', 'rho_tor                  ', 'rho_tor_norm             ', &
     'rho_pol                  ', 'rho_pol_norm             ', 'theta                    ', &
-    'velocity                 ', 'momentum                 ', 'energy_kinetic           ' ]
+    'theta_straight           ', 'theta_equal_arc          ', 'velocity                 ', &
+    'velocity_x               ', 'momentum                 ', 'energy_kinetic           ', &
+    'lambda                   ', 'n_phi                    ' ]
   
-  integer, dimension(15) :: expected_indices = [ &
-    0, 1, 2, 3, 4, 5, 10, 11, 12, 13, 14, 20, 100, 200, 301 ]
+  integer, dimension(20) :: expected_indices = [ &
+    0, 1, 2, 3, 4, 5, 10, 11, 12, 13, 14, 20, 21, 22, 100, 101, 200, 301, 400, 500 ]
 
   test_count = 0
   pass_count = 0
   fail_count = 0
 
-  ! Test 1: Basic index() function functionality
-  print *, 'Testing index() function...'
+  ! Test 1: Basic coordinate_identifier_index() function functionality
+  print *, 'Testing coordinate_identifier_index() function...'
   do i = 1, size(test_coordinates)
     test_count = test_count + 1
-    idx = index(trim(test_coordinates(i)))
+    idx = coordinate_identifier_index(trim(test_coordinates(i)))
     if (idx == expected_indices(i)) then
       pass_count = pass_count + 1
     else
@@ -45,7 +47,7 @@ program test_coordinate_identifier
   ! Test 2: Testing invalid coordinate names
   print *, 'Testing invalid coordinate names...'
   test_count = test_count + 1
-  idx = index('invalid_coordinate')
+  idx = coordinate_identifier_index('invalid_coordinate')
   if (idx == ids_int_invalid) then
     pass_count = pass_count + 1
   else
@@ -53,11 +55,11 @@ program test_coordinate_identifier
     print *, 'FAIL: Invalid coordinate returned ', idx, ', expected ', ids_int_invalid
   end if
 
-  ! Test 3: Testing name() function (reverse lookup)
-  print *, 'Testing name() function (reverse lookup)...'
+  ! Test 3: Testing coordinate_identifier_name() function (reverse lookup)
+  print *, 'Testing coordinate_identifier_name() function (reverse lookup)...'
   do i = 1, 5  ! Test first 5 coordinates
     test_count = test_count + 1
-    nm = name(expected_indices(i))
+    nm = coordinate_identifier_name(expected_indices(i))
     if (trim(nm) == trim(test_coordinates(i))) then
       pass_count = pass_count + 1
     else
@@ -66,13 +68,15 @@ program test_coordinate_identifier
     end if
   end do
 
-  ! Test 4: Testing description() function
+  ! Test 4: Testing coordinate_identifier_description() function
   test_count = test_count + 1
-  desc = description(1)  ! Test 'x' coordinate
+  desc = coordinate_identifier_description(1)  ! Test 'x' coordinate
   if (len_trim(desc) > 0) then
     pass_count = pass_count + 1
+    print *, 'PASS: Description for x coordinate: "', trim(desc), '"'
   else
     fail_count = fail_count + 1
+    print *, 'FAIL: Empty description for x coordinate'
   end if
 
   ! Test 5: Testing set_coordinate_identifier() generic interface for ids_identifier
@@ -116,14 +120,19 @@ program test_coordinate_identifier
   ! Test 7: Testing set_coordinate_identifier() generic interface for ids_identifier_static_1d
   print *, 'Testing set_coordinate_identifier() for ids_identifier_static_1d...'
   test_count = test_count + 1
-  call set_coordinate_identifier(my_static_1d_identifier, 'theta')
+  call set_coordinate_identifier(my_static_1d_identifier, ['theta     ', 'phi       '])
   if (associated(my_static_1d_identifier%indices) .and. &
       associated(my_static_1d_identifier%names) .and. &
       associated(my_static_1d_identifier%descriptions)) then
-    if (my_static_1d_identifier%indices(1) == 20 .and. &
-        trim(my_static_1d_identifier%names(1)) == 'theta') then
+    if (size(my_static_1d_identifier%indices) == 2 .and. &
+        my_static_1d_identifier%indices(1) == 20 .and. &
+        my_static_1d_identifier%indices(2) == 5 .and. &
+        trim(my_static_1d_identifier%names(1)) == 'theta' .and. &
+        trim(my_static_1d_identifier%names(2)) == 'phi') then
       pass_count = pass_count + 1
-      print *, 'PASS: set_coordinate_identifier for theta - Index:', my_static_1d_identifier%indices(1), ', Name: "', trim(my_static_1d_identifier%names(1)), '"'
+      print *, 'PASS: set_coordinate_identifier for multiple coordinates - Size:', size(my_static_1d_identifier%indices)
+      print *, '  Index 1:', my_static_1d_identifier%indices(1), ', Name: "', trim(my_static_1d_identifier%names(1)), '"'
+      print *, '  Index 2:', my_static_1d_identifier%indices(2), ', Name: "', trim(my_static_1d_identifier%names(2)), '"'
     else
       fail_count = fail_count + 1
       print *, 'FAIL: set_coordinate_identifier indices/names mismatch'
@@ -155,14 +164,22 @@ program test_coordinate_identifier
   ! Test 9: Testing set_coordinate_identifier() generic interface for ids_identifier_dynamic_aos3_1d
   print *, 'Testing set_coordinate_identifier() for ids_identifier_dynamic_aos3_1d...'
   test_count = test_count + 1
-  call set_coordinate_identifier(my_dynamic_aos3_1d_identifier, 'momentum')
+  call set_coordinate_identifier(my_dynamic_aos3_1d_identifier, ['momentum      ', 'velocity      ', 'energy_kinetic'])
   if (associated(my_dynamic_aos3_1d_identifier%indices) .and. &
       associated(my_dynamic_aos3_1d_identifier%names) .and. &
       associated(my_dynamic_aos3_1d_identifier%descriptions)) then
-    if (my_dynamic_aos3_1d_identifier%indices(1) == 200 .and. &
-        trim(my_dynamic_aos3_1d_identifier%names(1)) == 'momentum') then
+    if (size(my_dynamic_aos3_1d_identifier%indices) == 3 .and. &
+        my_dynamic_aos3_1d_identifier%indices(1) == 200 .and. &
+        my_dynamic_aos3_1d_identifier%indices(2) == 100 .and. &
+        my_dynamic_aos3_1d_identifier%indices(3) == 301 .and. &
+        trim(my_dynamic_aos3_1d_identifier%names(1)) == 'momentum' .and. &
+        trim(my_dynamic_aos3_1d_identifier%names(2)) == 'velocity' .and. &
+        trim(my_dynamic_aos3_1d_identifier%names(3)) == 'energy_kinetic') then
       pass_count = pass_count + 1
-      print *, 'PASS: set_coordinate_identifier for momentum - Index:', my_dynamic_aos3_1d_identifier%indices(1), ', Name: "', trim(my_dynamic_aos3_1d_identifier%names(1)), '"'
+      print *, 'PASS: set_coordinate_identifier for multiple coordinates - Size:', size(my_dynamic_aos3_1d_identifier%indices)
+      print *, '  Index 1:', my_dynamic_aos3_1d_identifier%indices(1), ', Name: "', trim(my_dynamic_aos3_1d_identifier%names(1)), '"'
+      print *, '  Index 2:', my_dynamic_aos3_1d_identifier%indices(2), ', Name: "', trim(my_dynamic_aos3_1d_identifier%names(2)), '"'
+      print *, '  Index 3:', my_dynamic_aos3_1d_identifier%indices(3), ', Name: "', trim(my_dynamic_aos3_1d_identifier%names(3)), '"'
     else
       fail_count = fail_count + 1
       print *, 'FAIL: set_coordinate_identifier indices/names mismatch'
@@ -176,8 +193,8 @@ program test_coordinate_identifier
   print *, 'Testing round-trip consistency...'
   do i = 1, 3  ! Test first 3 coordinates
     test_count = test_count + 1
-    idx = index(trim(test_coordinates(i)))
-    nm = name(idx)
+    idx = coordinate_identifier_index(trim(test_coordinates(i)))
+    nm = coordinate_identifier_name(idx)
     if (trim(nm) == trim(test_coordinates(i))) then
       pass_count = pass_count + 1
     else
