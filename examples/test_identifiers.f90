@@ -70,7 +70,7 @@ program test_coordinate_identifier
 
   ! Test 4: Testing coordinate_identifier_description() function
   test_count = test_count + 1
-  desc = coordinate_identifier_description(1)  ! Test 'x' coordinate
+  desc = coordinate_identifier_desc(1)  ! Test 'x' coordinate
   if (len_trim(desc) > 0) then
     pass_count = pass_count + 1
     print *, 'PASS: Description for x coordinate: "', trim(desc), '"'

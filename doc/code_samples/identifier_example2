@@ -12,5 +12,5 @@ program testindentifiers
 
     print *,distribution_sources%source(1)%process(1)%type%name
     print *,distribution_sources%source(1)%process(1)%type%index
-    print *,distribution_sources%source(1)%process(1)%type%description
+    print *,distribution_sources%source(1)%process(1)%type%desc
 end program

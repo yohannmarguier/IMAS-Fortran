@@ -12,7 +12,7 @@ program testindentifiers
 
     print *,equilibrium%time_slice(1)%profiles_2d(1)%grid_type%name
     print *,equilibrium%time_slice(1)%profiles_2d(1)%grid_type%index
-    print *,equilibrium%time_slice(1)%profiles_2d(1)%grid_type%description
+    print *,equilibrium%time_slice(1)%profiles_2d(1)%grid_type%desc
 end program
 
 

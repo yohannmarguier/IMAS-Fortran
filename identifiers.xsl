@@ -50,7 +50,7 @@
 	<xsl:text>  ! Aliases for easier access&#xA;</xsl:text>
 	<xsl:text>  public :: </xsl:text><xsl:value-of select="$name"/><xsl:text>_index&#xA;</xsl:text>
 	<xsl:text>  public :: </xsl:text><xsl:value-of select="$name"/><xsl:text>_name&#xA;</xsl:text>
-	<xsl:text>  public :: </xsl:text><xsl:value-of select="$name"/><xsl:text>_description&#xA;</xsl:text>
+	<xsl:text>  public :: </xsl:text><xsl:value-of select="$name"/><xsl:text>_desc&#xA;</xsl:text>
 	<xsl:text>  public :: set_</xsl:text><xsl:value-of select="$name"/><xsl:text>&#xA;</xsl:text>
 	<xsl:text>  &#xA;</xsl:text>
 	<xsl:text>  ! Generic interface for set_identifier so it becomes overloaded &#xA;</xsl:text>
@@ -71,9 +71,9 @@
 	<xsl:text>    module procedure get_name&#xA;</xsl:text>
 	<xsl:text>  end interface </xsl:text><xsl:value-of select="$name"/><xsl:text>_name&#xA;</xsl:text>
 	<xsl:text>  &#xA;</xsl:text>
-	<xsl:text>  interface </xsl:text><xsl:value-of select="$name"/><xsl:text>_description&#xA;</xsl:text>
+	<xsl:text>  interface </xsl:text><xsl:value-of select="$name"/><xsl:text>_desc&#xA;</xsl:text>
 	<xsl:text>    module procedure get_description&#xA;</xsl:text>
-	<xsl:text>  end interface </xsl:text><xsl:value-of select="$name"/><xsl:text>_description&#xA;</xsl:text>
+	<xsl:text>  end interface </xsl:text><xsl:value-of select="$name"/><xsl:text>_desc&#xA;</xsl:text>
 	<xsl:text>  &#xA;</xsl:text>
 
 	<xsl:call-template name="translations_Fortran"/>

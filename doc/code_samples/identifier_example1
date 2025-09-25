@@ -9,5 +9,5 @@ program testindentifiers
     print *,i_phi
     print *,coordinate_identifier_index('phi')
     print *,coordinate_identifier_name(i_phi)
-    print *,coordinate_identifier_description(i_phi)
+    print *,coordinate_identifier_desc(i_phi)
 end program
