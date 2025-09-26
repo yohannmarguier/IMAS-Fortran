@@ -182,6 +182,22 @@
         </xsl:otherwise>
       </xsl:choose>
       <xsl:text>'&#xA;</xsl:text>
+      <!-- If alias exists, add additional case for alias -->
+      <xsl:if test="@alias">
+        <xsl:text>      case ('</xsl:text><xsl:value-of select="@alias"/><xsl:text>')&#xA;</xsl:text>
+        <xsl:text>        index_out = </xsl:text><xsl:value-of select="."/><xsl:text>&#xA;</xsl:text>
+        <xsl:text>        name_out = '</xsl:text><xsl:value-of select="@name"/><xsl:text>'&#xA;</xsl:text>
+        <xsl:text>        description_out = '</xsl:text>
+        <xsl:choose>
+          <xsl:when test="string-length(@description) > 132">
+            <xsl:value-of select="substring(@description, 1, 132)"/>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:value-of select="@description"/>
+          </xsl:otherwise>
+        </xsl:choose>
+        <xsl:text>'&#xA;</xsl:text>
+      </xsl:if>
     </xsl:for-each>
     <xsl:text>      case default&#xA;</xsl:text>
     <xsl:text>        ! Raise error for unknown identifier&#xA;</xsl:text>
@@ -202,6 +218,11 @@
       <xsl:for-each select="//constants/int[@name]">
         <xsl:text>      case ('</xsl:text><xsl:value-of select="@name"/><xsl:text>')&#xA;</xsl:text>
         <xsl:text>        get_index = </xsl:text><xsl:value-of select="."/><xsl:text>&#xA;</xsl:text>
+        <!-- If alias exists, add additional case for alias -->
+        <xsl:if test="@alias">
+          <xsl:text>      case ('</xsl:text><xsl:value-of select="@alias"/><xsl:text>')&#xA;</xsl:text>
+          <xsl:text>        get_index = </xsl:text><xsl:value-of select="."/><xsl:text>&#xA;</xsl:text>
+        </xsl:if>
       </xsl:for-each>
       <xsl:text>      case default&#xA;</xsl:text>
             <xsl:text>        get_index = ids_int_invalid&#xA;</xsl:text>
