@@ -4,16 +4,6 @@
 <xsl:stylesheet xmlns:yaslt="http://www.mod-xslt2.com/ns/2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:xs="http://www.w3.org/2001/XMLSchema" version="2.0" extension-element-prefixes="yaslt" xmlns:fn="http://www.w3.org/2005/02/xpath-functions" xmlns:local="http://www.example.com/functions/local" exclude-result-prefixes="local xs">
 <xsl:output method="text" version="1.0" encoding="UTF-8" indent="yes"/>	<!-- This XSL translates the list of IMAS IDSDefs to Fortran 90 GET/PUT Routines for IDSs -->
 
-<!-- Performance optimization: Keys for deduplication -->
-<xsl:key name="structure-by-type" match="field[@data_type='structure' or @data_type='struct_array']" 
-         use="if (@structure_reference='self') then @name else @structure_reference"/>
-<xsl:key name="structure-by-name" match="field[@data_type='structure' or @data_type='struct_array']" 
-         use="@name"/>
-<!-- Additional keys for IDS-specific lookups -->
-<xsl:key name="structure-by-type-and-ids" match="field[@data_type='structure' or @data_type='struct_array']" 
-         use="concat(if (@structure_reference='self') then @name else @structure_reference, '|', ancestor::IDS/@name)"/>
-<xsl:key name="utilities-field-by-name" match="/IDSs/utilities/field" use="@name"/>
-
 <xsl:param name="DD_GIT_DESCRIBE" as="xs:string" required="yes"/>
 <xsl:param name="AL_GIT_DESCRIBE" as="xs:string" required="yes"/>
 
@@ -32,19 +22,15 @@
 <!--  </xsl:variable>
         <xsl:value-of select="$result"/>-->
 </xsl:function>
-
-<xsl:function name="local:is-first-occurrence-in-ids" as="xs:boolean">
-  <!-- Check if this is the first occurrence of a structure type within a specific IDS -->
-  <xsl:param name="field" as="element()"/>
-  <xsl:param name="structure-type" as="xs:string"/>
-  <xsl:param name="ids-name" as="xs:string"/>
-  
-  <xsl:variable name="key-lookup" select="concat($structure-type, '|', $ids-name)"/>
-  <xsl:variable name="first-in-ids" select="key('structure-by-type-and-ids', $key-lookup, root($field))[1]"/>
-  <xsl:variable name="utilities-field" select="key('utilities-field-by-name', $structure-type, root($field))"/>
-  
-  <xsl:sequence select="(generate-id($field) = generate-id($first-in-ids)) and not($utilities-field)"/>
-</xsl:function>
+<xsl:key name="unique-structures-by-type" match="field[@data_type='structure' or @data_type='struct_array']" 
+         use="if (@structure_reference='self') then @name else @structure_reference" />
+<xsl:key name="unique-structures-by-name" match="field[@data_type='structure' or @data_type='struct_array']" 
+         use="@name" />
+<xsl:key name="unique-structures-combined" match="field[@data_type='structure' or @data_type='struct_array']" 
+         use="concat(if (@structure_reference='self') then @name else @structure_reference, '|', @name)" />
+<xsl:key name="unique-structures-by-ids" match="field[@data_type='structure' or @data_type='struct_array']" 
+         use="concat(if (@structure_reference='self') then @name else @structure_reference, '|', ancestor::IDS/@name)" />
+<xsl:key name="utilities-fields" match="/IDSs/utilities/field" use="@name" />
 
 <xsl:template match="/IDSs">
   <xsl:result-document href="ids_schemas.f90">
@@ -612,7 +598,7 @@ end interface
       </xsl:otherwise>
     </xsl:choose>
   </xsl:variable>
-  <xsl:if test="not (preceding::field[@structure_reference=$this-type or @name=$this-type])">
+  <xsl:if test="generate-id() = generate-id(key('unique-structures-by-type', $this-type)[1])">
 
 subroutine ids_deallocate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(struct_in,  c_data)
   use al_low_level_wrap
@@ -1945,17 +1931,13 @@ end module
 </xsl:template>
 
 <xsl:template match="utilities" mode="VALIDATE_UTILITIES">
-<!-- <xsl:message>DEBUG: Starting VALIDATE_UTILITIES template</xsl:message> -->
-<xsl:variable name="structure-fields" select=".//field[@data_type='structure' or @data_type='struct_array']"/>
-<!-- <xsl:message>DEBUG: Found <xsl:value-of select="count($structure-fields)"/> structure fields in utilities</xsl:message> -->
 <xsl:result-document href="utilities_validate_struct.f90">
 module utilities_validate_struct
 
 use ids_types
 
 interface ids_validate
-  <xsl:for-each select="$structure-fields">
-  <!-- <xsl:message>DEBUG: Processing structure field <xsl:value-of select="position()"/>/<xsl:value-of select="count($structure-fields)"/>: <xsl:value-of select="@name"/></xsl:message> -->
+  <xsl:for-each select=".//field[@data_type='structure' or @data_type='struct_array']">
   <xsl:variable name="this-type">
     <xsl:choose>
       <xsl:when test="@structure_reference='self'">
@@ -1966,19 +1948,11 @@ interface ids_validate
       </xsl:otherwise>
     </xsl:choose>
   </xsl:variable>
-  <!-- <xsl:message>DEBUG: Determined type: <xsl:value-of select="$this-type"/></xsl:message> -->
   <xsl:variable name="procedure-content">
   <xsl:apply-templates select="." mode="VALIDATE_UTILITIES_DEFINITION"/>
   </xsl:variable>
-  <!-- <xsl:message>DEBUG: Generated procedure content length: <xsl:value-of select="string-length(normalize-space($procedure-content))"/></xsl:message> -->
   <xsl:if test="normalize-space($procedure-content)">
-   <!-- <xsl:message>DEBUG: Checking for first occurrence of type <xsl:value-of select="$this-type"/></xsl:message> -->
-   <!-- Use key for fast deduplication instead of expensive preceding:: axis -->
-   <xsl:variable name="first-by-type" select="key('structure-by-type', $this-type)[1]"/>
-   <xsl:variable name="first-by-name" select="key('structure-by-name', $this-type)[1]"/>
-   <xsl:variable name="first-occurrence" select="if ($first-by-type) then $first-by-type else $first-by-name"/>
-   <xsl:if test="generate-id(.) = generate-id($first-occurrence)">
-    <!-- <xsl:message>DEBUG: This is the first occurrence, generating procedure</xsl:message> -->
+   <xsl:if test="generate-id() = generate-id(key('unique-structures-by-type', $this-type)[1])">
     module procedure ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>
   </xsl:if>
   </xsl:if>
@@ -2086,7 +2060,6 @@ subroutine str_replace(str, old, new)
   
   end subroutine str_replace
 
-<!-- <xsl:message>DEBUG: Finishing VALIDATE_UTILITIES template</xsl:message> -->
 end module 
 </xsl:result-document>
 </xsl:template>
@@ -2115,11 +2088,7 @@ end module
     <xsl:apply-templates select="." mode="VALIDATE_UTILITIES_CHILD_6D"/>
   </xsl:variable> 
   
-  <!-- Use key for fast deduplication instead of expensive preceding:: axis -->
-  <xsl:variable name="first-by-type" select="key('structure-by-type', $this-type)[1]"/>
-  <xsl:variable name="first-by-name" select="key('structure-by-name', $this-type)[1]"/>
-  <xsl:variable name="first-occurrence" select="if ($first-by-type) then $first-by-type else $first-by-name"/>
-  <xsl:if test="generate-id(.) = generate-id($first-occurrence)">
+  <xsl:if test="generate-id() = generate-id(key('unique-structures-by-type', $this-type)[1])">
   <xsl:if test="normalize-space($utilities_definition_content)">
   !----------------------------------------------------------------------- 
   !--- validation of <xsl:value-of select="$this-type"/>
@@ -2305,16 +2274,13 @@ or @data_type='cpx_1d_type' or @data_type='CPX_1D') and contains(@path_doc,$cont
     </xsl:choose>
   </xsl:variable>
 <xsl:variable name="definition_content">
-  <!-- Use key for fast deduplication instead of expensive preceding:: axis -->
-  <xsl:variable name="first-by-type" select="key('structure-by-type', $this-type)[1]"/>
-  <xsl:variable name="first-by-name" select="key('structure-by-name', $this-type)[1]"/>
-  <xsl:variable name="first-occurrence" select="if ($first-by-type) then $first-by-type else $first-by-name"/>
+  <xsl:variable name="is_first_occurrence" select="generate-id() = generate-id(key('unique-structures-by-type', $this-type)[1])"/>
   <xsl:choose>
-    <xsl:when test="generate-id(.) = generate-id($first-occurrence)">
-      <xsl:apply-templates select="." mode="VALIDATE_UTILITIES_DEFINITION"/>
+    <xsl:when test="not($is_first_occurrence)">
+      <xsl:apply-templates select="key('unique-structures-by-type', $this-type)[1]" mode="VALIDATE_UTILITIES_DEFINITION"/>
     </xsl:when>
     <xsl:otherwise>
-      <xsl:apply-templates select="$first-occurrence" mode="VALIDATE_UTILITIES_DEFINITION"/>
+      <xsl:apply-templates select="." mode="VALIDATE_UTILITIES_DEFINITION"/>
     </xsl:otherwise>
   </xsl:choose>
 </xsl:variable>
