@@ -150,7 +150,7 @@ echo ${CMAKE_ARGS[@]} | tr ' ' '\n'
 cmake -B build "${CMAKE_ARGS[@]}"
 
 # Build
-make -C build -j8 all
+make -C build -j2 all
 
 # Create test database, point USER env variable to the test database
 rm -rf testdb
