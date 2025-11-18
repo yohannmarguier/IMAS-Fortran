@@ -62,11 +62,9 @@ CMAKE_ARGS=(${CMAKE_ARGS[@]}
 echo "... 2023b"
 MODULES=(
     CMake/3.27.6-GCCcore-13.2.0
-    Boost/1.83.0-GCC-13.2.0
-    UDA/2.8.1-GCC-13.2.0
     Saxon-HE/12.4-Java-21
     Blitz++/1.0.2-GCCcore-13.2.0
-    MDSplus/7.132.0-GCCcore-13.2.0
+    MDSplus/7.153.3-GCCcore-13.2.0
     Python/3.11.5-GCCcore-13.2.0  # for docs
 )
   ;;&
@@ -74,7 +72,8 @@ MODULES=(
 echo "... foss-2023b"
 MODULES=(${MODULES[@]}
     HDF5/1.14.3-gompi-2023b
-    NAGfor/6.2.14
+    Boost/1.83.0-GCC-13.2.0
+    UDA/2.9.1-GCC-13.2.0
 )
 CMAKE_ARGS=(${CMAKE_ARGS[@]}
     -DCMAKE_C_COMPILER=${CC:-gcc}
@@ -87,6 +86,8 @@ echo "... intel-2023b"
 MODULES=(${MODULES[@]}
     intel/2023b
     HDF5/1.14.3-iimpi-2023b
+    Boost/1.83.0-intel-compilers-2023.2.1
+    UDA/2.9.1-intel-compilers-2023.2.1
 )
 CMAKE_ARGS=(${CMAKE_ARGS[@]}
     -DCMAKE_C_COMPILER=${CC:-icx}
