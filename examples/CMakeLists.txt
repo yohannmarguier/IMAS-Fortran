@@ -6,7 +6,7 @@ include(ALExampleUtilities)
 ################################################################################
 
 set( TESTS
-    test_core_profiles_get
+    test_core_profiles_get_slice
     test_core_profiles_put
     test_core_profiles_put_slice
     test_core_profiles_validate
