@@ -13,7 +13,7 @@ program test_magnetics_put
   do b=1,size(BACKEND)
      print *,"Test with backend ",BACKEND(b)
 
-     call imas_open('imas:'//trim(BACKEND(b))//'?path=./test_db_test_core_profiles', FORCE_CREATE_PULSE, idx)
+     call imas_open('imas:'//trim(BACKEND(b))//'?path=./test_db_test_magnetics', FORCE_CREATE_PULSE, idx)
 
      write(*,*) 'Created pulse file, idx = ', idx
   

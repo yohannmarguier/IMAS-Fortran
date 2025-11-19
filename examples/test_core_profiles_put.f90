@@ -15,7 +15,7 @@ program test
 
   character(len=7), dimension(2) :: BACKEND = ['mdsplus','hdf5   ']
 
-   do b=1,size(BACKEND)
+  do b=1,size(BACKEND)
      print *,"Test with backend ",BACKEND(b)
 
      call imas_open('imas:'//trim(BACKEND(b))//'?path=./test_db_test_core_profiles', FORCE_CREATE_PULSE, idx)

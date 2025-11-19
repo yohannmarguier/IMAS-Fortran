@@ -8,11 +8,12 @@ program test_multi_put_slice_dynamic
   character(len=7), dimension(2) :: BACKEND = ['mdsplus','hdf5   ']
   s    = 2
   r    = 2
-
+  status = 0
+  
   do b=1,size(BACKEND)
      print *,"Test with backend ",BACKEND(b)
 
-     call imas_open('imas:'//trim(BACKEND(b))//'?path=./test_db_test_core_profiles', FORCE_CREATE_PULSE, pctx)
+     call imas_open('imas:'//trim(BACKEND(b))//'?path=./test_db_test_multislice_equilibrium', FORCE_CREATE_PULSE, pctx)
 
      if (status.ne.0) ERROR STOP 'Error creating the pulse'
   

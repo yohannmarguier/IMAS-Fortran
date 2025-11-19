@@ -1,15 +1,15 @@
 PROGRAM test_core_profiles_validate
     USE al_defs 
     USE ids_schemas_core_profiles
-	USE core_profiles_put_struct
-	USE core_profiles_put_slice_struct
-	USE core_profiles_get_struct
-	USE core_profiles_get_slice_struct
-	USE core_profiles_delete
-	USE core_profiles_copy_struct
-	USE core_profiles_deallocate_struct
-	USE core_profiles_validate_struct
-	IMPLICIT NONE
+    USE core_profiles_put_struct
+    USE core_profiles_put_slice_struct
+    USE core_profiles_get_struct
+    USE core_profiles_get_slice_struct
+    USE core_profiles_delete
+    USE core_profiles_copy_struct
+    USE core_profiles_deallocate_struct
+    USE core_profiles_validate_struct
+    IMPLICIT NONE
     INTEGER :: status
     TYPE(ids_core_profiles) :: core_profiles
     CHARACTER(:), ALLOCATABLE :: err_msg

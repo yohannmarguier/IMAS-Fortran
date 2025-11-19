@@ -13,7 +13,7 @@ program test_magnetics_get
   do b=1,size(BACKEND)
      print *,"Test with backend ",BACKEND(b)
 
-     call imas_open('imas:'//trim(BACKEND(b))//'?path=./test_db_test_core_profiles', OPEN_PULSE, idx)     
+     call imas_open('imas:'//trim(BACKEND(b))//'?path=./test_db_test_magnetics', OPEN_PULSE, idx)     
      write(*,*) 'Opened pulse file, idx = ', idx
 
      print *,"getting full magnetics"

@@ -16,7 +16,7 @@ program test
   do b=1,size(BACKEND)
      print *,"Test with backend ",BACKEND(b)
 
-     call imas_open('imas:'//trim(BACKEND(b))//'?path=./test_db_test_core_profiles', FORCE_CREATE_PULSE, idx)
+     call imas_open('imas:'//trim(BACKEND(b))//'?path=./test_db_test_pf', FORCE_CREATE_PULSE, idx)
      write(*,*) 'Created pulse file, idx = ', idx
 
      ! Define a first generic vector and its time base

@@ -17,7 +17,7 @@ program test
   do b=1,size(BACKEND)
      print *,"Test with backend ",BACKEND(b)
 
-     call imas_open('imas:'//trim(BACKEND(b))//'?path=./test_db_test_core_profiles', OPEN_PULSE, idx)
+     call imas_open('imas:'//trim(BACKEND(b))//'?path=./test_db_test_edge_profiles', OPEN_PULSE, idx)
      write(*,*) 'Opened pulse file, idx = ', idx
 
 

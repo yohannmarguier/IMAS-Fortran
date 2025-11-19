@@ -12,7 +12,7 @@ program test_multi_put_slice_static
   do ibackend=1,size(BACKEND)
      print *,"Test with backend ",BACKEND(ibackend)
 
-     call imas_open('imas:'//trim(BACKEND(ibackend))//'?path=./test_db_test_gas_injection', FORCE_CREATE_PULSE, pctx)
+     call imas_open('imas:'//trim(BACKEND(ibackend))//'?path=./test_db_test_multislice_gas_injection', FORCE_CREATE_PULSE, pctx)
 
      gas_inj%ids_properties%homogeneous_time = 1
      allocate(gas_inj%pipe(1))
