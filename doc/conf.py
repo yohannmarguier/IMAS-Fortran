@@ -46,7 +46,7 @@ extensions = [
     "sphinx.ext.mathjax",
     "sphinx.ext.napoleon",
     "sphinx_immaterial",
-    "sphinx_fortran.fortran_domain",
+    "sphinxfortran.fortran_domain",
 ]
 
 primary_domain = "f"

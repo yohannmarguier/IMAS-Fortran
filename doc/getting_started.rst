@@ -153,7 +153,7 @@ Key Subroutines Reference
 +---------------------------------------------+----------------------------------------------------+
 | ``ids_init(ids_obj)``                       | Initialize a new IDS structure                     |
 +---------------------------------------------+----------------------------------------------------+
-| ``ids_get_slice(ctx, ids_obj, time, status)``| Load a specific time slice                        |
+| ``ids_get_slice(ctx, ids_obj, time, status)`` | Load a specific time slice                        |
 +=============================================+====================================================+
 
 

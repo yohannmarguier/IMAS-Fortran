@@ -1,10 +1,10 @@
-Building and installing the IMAS-MATLAB
+Building and installing the IMAS-Fortran
 ========================================
 
-This page describes how to build and install the IMAS-MATLAB.
+This page describes how to build and install the IMAS-Fortran.
 
-Documentation for developers wishing to contribute to the IMAS-MATLAB can be found in
-the :ref:`IMAS-MATLAB development guide`. Please refer to that guide if you wish to set
+Documentation for developers wishing to contribute to the IMAS-Fortran can be found in
+the :ref:`IMAS-Fortran development guide`. Please refer to that guide if you wish to set
 up a development environment.
 
 For more information about related components, see:
@@ -13,18 +13,12 @@ For more information about related components, see:
 -   `IMAS Data Dictionary Documentation <https://imas-data-dictionary.readthedocs.io/en/latest/>`__
 
 
-.. note::
-
-    For Windows-specific installation instructions, please refer to the
-    :doc:`MATLAB on Windows <matlab_on_windows>` guide.
-
-
 .. _`build prerequisites`:
 
 Prerequisites
 -------------
 
-To build the IMAS-MATLAB you need:
+To build the IMAS-Fortran you need:
 
 -   Git
 -   A C++11 compiler (tested with GCC and Intel compilers)
@@ -46,9 +40,9 @@ The following dependencies are only required for some of the components:
     and add its support by adding the CMake switch `-DENABLE_CAPNP=ON` when configuring UDA. 
 
 
--   MATLAB High Level Interface
+-   Fortran High Level Interface
 
-    -   **MATLAB High Level Interface**: A working MATLAB installation (tested with
+    -   **Fortran High Level Interface**: A working Fortran installation (tested with
         version 2023b)
 
 
@@ -69,7 +63,7 @@ Standard environments:
                 Boost/1.83.0-iimpi-2023b HDF5/1.14.3-iimpi-2023b \
                 MDSplus/7.132.0-GCCcore-13.2.0 \
                 UDA/2.8.1-iimpi-2023b Blitz++/1.0.2-GCCcore-13.2.0 \
-                MATLAB/2023b-r5-GCCcore-13.2.0 SciPy-bundle/2023.11-intel-2023b \
+                SciPy-bundle/2023.11-intel-2023b \
                 scikit-build-core/0.9.3-GCCcore-13.2.0
 
     .. md-tab-item:: SDCC ``foss-2023b``
@@ -83,23 +77,9 @@ Standard environments:
                 Boost/1.83.0-GCC-13.2.0 HDF5/1.14.3-gompi-2023b \
                 MDSplus/7.132.0-GCCcore-13.2.0 \
                 UDA/2.8.1-GCC-13.2.0 Blitz++/1.0.2-GCCcore-13.2.0 \
-                MATLAB/2023b-r5-GCCcore-13.2.0 SciPy-bundle/2023.11-gfbf-2023b \
+                SciPy-bundle/2023.11-gfbf-2023b \
                 build/1.0.3-foss-2023b scikit-build-core/0.9.3-GCCcore-13.2.0
 
-        .. admonition:: The MATLAB/2023b-r5 installation is lightly tweaked
-
-            The installation at ITER uses `EB PR#20508 
-            <https://github.com/easybuilders/easybuild-easyconfigs/pull/20508>`__
-            and its tweak resolves `IMAS-5162 <https://jira.iter.org/browse/IMAS-5162>`__ 
-            by removing ``libstdc++.so.6`` from the MATLAB installation. It also adds 
-            ``extern/bin/glnxa64`` to ``LD_LIBRARY_PATH`` to address the
-            ``MatlabEngine not found`` issue.
-
-        .. caution::
-
-            When using the HDF5 backend within MATLAB, depending on the HDF5 library being used
-            you may need to add ``LD_PRELOAD=<hdf5_install_dir>/lib/libhdf5_hl.so`` when starting
-            MATLAB.
 
     .. md-tab-item:: Ubuntu 22.04
 
@@ -119,13 +99,12 @@ Standard environments:
             <https://mdsplus.org/>`__ for installation instructions.
         -   UDA: see their `GitHub repository <https://github.com/ukaea/UDA>`__ for more
             details.
-        -   MATLAB, which is not freely available.
 
 
 Building and installing a single High Level Interface
 -----------------------------------------------------
 
-This section explains how to install a Matlab High Level Interface. Please make sure you
+This section explains how to install a Fortran High Level Interface. Please make sure you
 have the :ref:`build prerequisites` installed.
 
 
@@ -136,9 +115,11 @@ First you need to clone the repository of the High Level Interface you want to b
 
 .. code-block:: bash
 
-    # For the MATLAB HLI use:
-    git clone git@github.com:iterorganization/IMAS-MATLAB.git
+    # For the Fortran HLI use:
+    git clone git@github.com:iterorganization/IMAS-Fortran.git
 
+
+.. _configuration:
 
 Configuration
 `````````````
@@ -149,12 +130,12 @@ overview of configuration options.
 
 .. code-block:: bash
 
-    cd al-matlab  # al-fortran, al-java, al-cpp or al-python
+    cd al-fortran
     cmake -B build -D CMAKE_INSTALL_PREFIX=$HOME/al-install -D OPTION1=VALUE1 -D OPTION2=VALUE2 [...]
 
 .. note:: 
 
-    CMake will automatically fetch dependencies from other IMAS-MATLAB GIT repositories
+    CMake will automatically fetch dependencies from other IMAS-Fortran GIT repositories
     for you. You may need to provide credentials to clone the following repositories:
 
     -   `imas-core (git@github.com:iterorganization/IMAS-Core.git)
@@ -212,33 +193,6 @@ Configuration options
 For a complete list of available configuration options, please see the `IMAS Core Configuration Options <https://imas-core.readthedocs.io/en/latest/user_guide/installation.html#configuration-options>`__.
 
 
-MATLAB-specific configuration options
-'''''''''''''''''''''''''''''''''''''
-
-The following options are specific to the MATLAB High Level Interface:
-
-- ``AL_CREATE_TOOLBOX``: Automatically create MATLAB toolbox package (``.mltbx``) during installation
-  
-  - **Default:** ``OFF``
-  - **Type:** Boolean
-  - **Description:** If set to ``ON``, the MATLAB toolbox package will be created automatically when you run 
-    ``cmake --install``. This requires MATLAB to be installed and available in your PATH. If disabled, you can 
-    create the toolbox manually at any time using the ``matlab-toolbox`` build target.
-  
-  - **Usage Examples:**
-  
-    - Enable during configuration::
-    
-        cmake -B build -DAL_CREATE_TOOLBOX=ON ...
-        cmake --install build
-    
-    - Create toolbox after installation (default)::
-    
-        cmake -B build ...
-        cmake --install build
-        cmake --build build --target matlab-toolbox
-
-
 Build the High Level Interface
 ``````````````````````````````
 
@@ -292,7 +246,7 @@ Use the High Level Interface
 ````````````````````````````
 
 After installing the HLI, you need to ensure that your code can find the installed
-IMAS-MATLAB. To help you with this, a file ``al_env.sh`` is installed. You can
+IMAS-Fortran. To help you with this, a file ``al_env.sh`` is installed. You can
 ``source`` this file to set all required environment variables:
 
 .. code-block:: bash
@@ -314,7 +268,7 @@ Layer installation available for you.
     IMAS_VERSION=3.41.0``.
 
 Once you have set the required environment variables, you may continue :ref:`Using the
-IMAS-MATLAB`.
+IMAS-Fortran`.
 
 
 Troubleshooting
