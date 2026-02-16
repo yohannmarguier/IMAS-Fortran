@@ -1,38 +1,39 @@
 # CMake build configuration for the Access Layer Fortran HLI
 cmake_minimum_required( VERSION 3.16 )
+if(POLICY CMP0144)
+  cmake_policy(SET CMP0144 NEW)
+endif()
+
+# Local paths for IMAS-Fortran
+################################################################################
+# Use full path since CMAKE_MODULE_PATH hasn't been configured yet
+include(${CMAKE_CURRENT_SOURCE_DIR}/common/cmake/ALLocalPaths.cmake)
 
 # Configuration options for common assets
 ################################################################################
 option( AL_DOWNLOAD_DEPENDENCIES "Automatically download assets from the AL git repository" ON )
-set( AL_CORE_GIT_REPOSITORY "ssh://git@git.iter.org/imas/al-core.git" CACHE STRING "Git repository of AL-core" )
+set( AL_CORE_GIT_REPOSITORY "https://github.com/iterorganization/IMAS-Core.git" CACHE STRING "Git repository of AL-core" )
 set( AL_CORE_VERSION "main" CACHE STRING "Git commit/tag/branch of AL-core" )
 
 include(FetchContent)
 
-# Load common assets
+# Load dependency
 ################################################################################
-if( DEFINED ENV{AL_COMMON_PATH} )
-  # Take common assets from the path in this environment variable instead of al-core
-  set( AL_COMMON_PATH $ENV{AL_COMMON_PATH} )
-else()
-  if( ${AL_DOWNLOAD_DEPENDENCIES} )
-    # Download common assets from the ITER git:
-    FetchContent_Declare(
-      al-core
-      GIT_REPOSITORY "${AL_CORE_GIT_REPOSITORY}"
-      GIT_TAG "${AL_CORE_VERSION}"
-    )
-  else()
-    FetchContent_Declare(
-      al-core
-      SOURCE_DIR      "${CMAKE_CURRENT_SOURCE_DIR}/../al-core"
-    )
-  endif()
+if( ${AL_DOWNLOAD_DEPENDENCIES} )
+  # Download common assets from the ITER git:
+  FetchContent_Declare(
+    al-core
+    GIT_REPOSITORY "${AL_CORE_GIT_REPOSITORY}"
+    GIT_TAG "${AL_CORE_VERSION}"
+  )
   FetchContent_MakeAvailable( al-core )
-  set( AL_COMMON_PATH "${al-core_SOURCE_DIR}/common" )
+elseif ( ${AL_DEVELOPMENT_LAYOUT} )
+  FetchContent_Declare(
+    al-core
+    SOURCE_DIR      "${CMAKE_CURRENT_SOURCE_DIR}/../al-core"
+  )
+  FetchContent_MakeAvailable( al-core )
 endif()
-add_subdirectory( ${AL_COMMON_PATH} _common )
-
 
 # Define project
 ################################################################################
@@ -102,25 +103,60 @@ foreach( IDS_NAME IN LISTS IDS_NAMES )
   list( APPEND GENERATED_SOURCES "${GENERATED_SRC_DIR}/${IDS_NAME}_schema.f90" )
 endforeach()
 
-find_package( SaxonHE )
+find_package( Python3 REQUIRED COMPONENTS Interpreter )
+
+# Setup Python venv for saxonche (used for XSLT transformations)
+if(WIN32)
+  set(_SAXONCHE_VENV_PYTHON "${CMAKE_CURRENT_BINARY_DIR}/saxonche_env/Scripts/python.exe")
+  set(_SAXONCHE_VENV_PIP "${CMAKE_CURRENT_BINARY_DIR}/saxonche_env/Scripts/pip.exe")
+else()
+  set(_SAXONCHE_VENV_PYTHON "${CMAKE_CURRENT_BINARY_DIR}/saxonche_env/bin/python")
+  set(_SAXONCHE_VENV_PIP "${CMAKE_CURRENT_BINARY_DIR}/saxonche_env/bin/pip")
+endif()
+
+# Create Python venv and install saxonche if not already done
+if(NOT EXISTS "${_SAXONCHE_VENV_PYTHON}")
+  message(STATUS "Creating Python virtual environment for saxonche...")
+  execute_process(
+    COMMAND ${Python3_EXECUTABLE} -m venv saxonche_env
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    RESULT_VARIABLE _VENV_EXITCODE
+  )
+  
+  if(_VENV_EXITCODE)
+    message(FATAL_ERROR "Failed to create Python venv for saxonche")
+  endif()
+  
+  message(STATUS "Installing saxonche in virtual environment...")
+  execute_process(
+    COMMAND ${_SAXONCHE_VENV_PIP} install saxonche
+    RESULT_VARIABLE _PIP_EXITCODE
+  )
+  
+  if(_PIP_EXITCODE)
+    message(FATAL_ERROR "Failed to install saxonche")
+  endif()
+  message(STATUS "saxonche installed successfully")
+endif()
+
 add_custom_command(
   # Use a dummy output file: when listing all actual output files (which are
   # source files of target `al-fortran`), they would be re-created with every build.
   OUTPUT ${GENERATED_SRC_DIR}/dummy.txt
   # Generate routine files with IDSDef2F90Routines.xsl
   COMMAND 
-    java -cp ${SaxonHE_CLASSPATH}
-      net.sf.saxon.Transform -t -warnings:fatal
-      "-xsl:${CMAKE_CURRENT_SOURCE_DIR}/IDSDef2F90Routines.xsl"
-      "-s:${IDSDEF}"
+    ${_SAXONCHE_VENV_PYTHON} "${AL_LOCAL_XSLTPROC_SCRIPT}"
+      -xsl ${CMAKE_CURRENT_SOURCE_DIR}/IDSDef2F90Routines.xsl
+      -s ${IDSDEF}
+      -o ${CMAKE_CURRENT_BINARY_DIR}/IDSDef2F90Routines_output.xml
       DD_GIT_DESCRIBE=${DD_VERSION}
       AL_GIT_DESCRIBE=${FULL_VERSION}
   # Generate schema files with IDSDef2F90TypeDef.xsl
   COMMAND 
-    java -cp ${SaxonHE_CLASSPATH}
-      net.sf.saxon.Transform -t -warnings:fatal
-      "-xsl:${CMAKE_CURRENT_SOURCE_DIR}/IDSDef2F90TypeDef.xsl"
-      "-s:${IDSDEF}"
+    ${_SAXONCHE_VENV_PYTHON} "${AL_LOCAL_XSLTPROC_SCRIPT}"
+      -xsl ${CMAKE_CURRENT_SOURCE_DIR}/IDSDef2F90TypeDef.xsl
+      -s ${IDSDEF}
+      -o ${CMAKE_CURRENT_BINARY_DIR}/IDSDef2F90TypeDef_output.xml
       DD_GIT_DESCRIBE=${DD_VERSION}
       AL_GIT_DESCRIBE=${FULL_VERSION}
   # Create/update our dummy file
