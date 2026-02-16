@@ -171,7 +171,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ~/boost
-        key: boost-${{ env.BOOST_VERSION }}-${{ runner.os }}-${{ matrix.name }}-${{ github.sha }}
+        key: boost-${{ env.BOOST_VERSION }}-${{ runner.os }}-${{ matrix.name }}
         restore-keys: |
           boost-${{ env.BOOST_VERSION }}-${{ runner.os }}-${{ matrix.name }}-
           boost-${{ env.BOOST_VERSION }}-${{ runner.os }}-
@@ -228,7 +228,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ~/hdf5
-        key: hdf5-${{ env.HDF5_VERSION }}-${{ runner.os }}-${{ matrix.name }}-${{ github.sha }}
+        key: hdf5-${{ env.HDF5_VERSION }}-${{ runner.os }}-${{ matrix.name }}
         restore-keys: |
           hdf5-${{ env.HDF5_VERSION }}-${{ runner.os }}-${{ matrix.name }}-
           hdf5-${{ env.HDF5_VERSION }}-${{ runner.os }}-
