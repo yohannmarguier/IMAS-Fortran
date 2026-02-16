@@ -75,6 +75,7 @@ add_custom_command(
     ${_SAXONCHE_VENV_PYTHON} "${AL_LOCAL_XSLTPROC_SCRIPT}"
       -xsl ${CMAKE_CURRENT_SOURCE_DIR}/IDSDef2TestSuite.xsl
       -s ${IDSDEF}
+      -o ${CMAKE_CURRENT_BINARY_DIR}/test_output.xml
       newLowLevel=yes
   # Create/update our dummy file
   COMMAND ${CMAKE_COMMAND} -E touch ${GENERATED_SRC_DIR}/dummy.txt

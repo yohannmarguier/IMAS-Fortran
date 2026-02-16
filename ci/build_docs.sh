@@ -4,7 +4,7 @@
 # This script expects to be run from the repository root directory
 
 # Debuggging:
-# set -e -o pipefail
+set -e -o pipefail
 echo "Loading modules..."
 
 # Set up environment such that module files can be loaded
@@ -27,16 +27,6 @@ module load "${MODULES[@]}"
 # Debuggging:
 echo "Done loading modules"
 set -x
-
-# Create a local git configuration with our access token
-# if [ "x$bamboo_HTTP_AUTH_BEARER_PASSWORD" != "x" ]; then
-#     mkdir -p git
-#     echo "[http \"https://git.iter.org/\"]
-#         extraheader = Authorization: Bearer $bamboo_HTTP_AUTH_BEARER_PASSWORD" > git/config
-#     export XDG_CONFIG_HOME=$PWD
-#     git config -l
-# fi
-
 
 # Ensure the build directory is clean:
 rm -rf build
