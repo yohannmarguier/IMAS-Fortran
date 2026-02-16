@@ -137,9 +137,8 @@ jobs:
     - name: Install Python dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install sphinx sphinx-rtd-theme myst-parser sphinx-design sphinxfortran
-        # Install saxonche for XSLT transformations
-        pip install saxonche 2>/dev/null || echo "saxonche installation attempted"
+        pip install -r doc/doc_common/requirements.txt
+        pip install sphinx-fortran saxonche
     
     - name: Build and install UDA
       if: matrix.backend_uda == 'ON' && matrix.use_system_packages == true
@@ -420,7 +419,8 @@ jobs:
     - name: Install Python dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install sphinx sphinx-rtd-theme myst-parser sphinx-design sphinxfortran saxonche
+        pip install -r doc/doc_common/requirements.txt
+        pip install sphinx-fortran saxonche
     
     - name: Configure CMake for docs only
       run: |
