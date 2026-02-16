@@ -148,7 +148,6 @@ add_custom_command(
     ${_SAXONCHE_VENV_PYTHON} "${AL_LOCAL_XSLTPROC_SCRIPT}"
       -xsl ${CMAKE_CURRENT_SOURCE_DIR}/IDSDef2F90Routines.xsl
       -s ${IDSDEF}
-      -o ${CMAKE_CURRENT_BINARY_DIR}/IDSDef2F90Routines_output.xml
       DD_GIT_DESCRIBE=${DD_VERSION}
       AL_GIT_DESCRIBE=${FULL_VERSION}
   # Generate schema files with IDSDef2F90TypeDef.xsl
@@ -156,7 +155,6 @@ add_custom_command(
     ${_SAXONCHE_VENV_PYTHON} "${AL_LOCAL_XSLTPROC_SCRIPT}"
       -xsl ${CMAKE_CURRENT_SOURCE_DIR}/IDSDef2F90TypeDef.xsl
       -s ${IDSDEF}
-      -o ${CMAKE_CURRENT_BINARY_DIR}/IDSDef2F90TypeDef_output.xml
       DD_GIT_DESCRIBE=${DD_VERSION}
       AL_GIT_DESCRIBE=${FULL_VERSION}
   # Create/update our dummy file
