@@ -205,11 +205,12 @@ foreach( ID_FILE IN LISTS DD_IDENTIFIER_FILES )
   add_custom_command(
     OUTPUT ${SOURCE_NAME}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${IDENTIFIER_SRC_DIR}
-    COMMAND ${LIBXSLT_XSLTPROC_EXECUTABLE}
-      --stringparam name ${ID_NAME}
-      --stringparam prefix "${IDENTIFIER_SRC_DIR}"
-      ${CMAKE_CURRENT_BINARY_DIR}/identifiers.xsl
-      ${ID_FILE}
+    COMMAND ${_SAXONCHE_VENV_PYTHON} "${AL_LOCAL_XSLTPROC_SCRIPT}"
+      -xsl ${CMAKE_CURRENT_BINARY_DIR}/identifiers.xsl
+      -s ${ID_FILE}
+      -o ${CMAKE_CURRENT_BINARY_DIR}/${ID_NAME}_identifier_output.xml
+      name=${ID_NAME}
+      prefix=${IDENTIFIER_SRC_DIR}
     DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/identifiers.xsl
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   )
