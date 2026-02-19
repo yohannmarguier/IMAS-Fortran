@@ -62,6 +62,7 @@ foreach( TEST IN LISTS TESTS )
   if( AL_BACKEND_MDSPLUS )
     get_target_property( MDSPLUS_MODEL_DIR al-mdsplus-model BINARY_DIR )
     set( TEST_ENVIRONMENT "MDSPLUS_MODELS_PATH=${MDSPLUS_MODEL_DIR}" )
+    set( TEST_ENVIRONMENT "ids_path=${MDSPLUS_MODEL_DIR}" )
   endif()
 
   # Execute the test without plugins
