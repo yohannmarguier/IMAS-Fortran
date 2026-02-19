@@ -186,7 +186,7 @@ list( APPEND SOURCES
 # Unfortunately, xsl:include doesn't support parameters, so we need to put them together
 # in the build folder:
 file( CREATE_LINK
-  "${al-common_SOURCE_DIR}/identifiers.common.xsl" 
+  "${CMAKE_CURRENT_SOURCE_DIR}/common/identifiers.common.xsl" 
   "${CMAKE_CURRENT_BINARY_DIR}/identifiers.common.xsl"
   SYMBOLIC COPY_ON_ERROR
 )
