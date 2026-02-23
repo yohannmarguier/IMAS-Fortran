@@ -103,41 +103,8 @@ foreach( IDS_NAME IN LISTS IDS_NAMES )
   list( APPEND GENERATED_SOURCES "${GENERATED_SRC_DIR}/${IDS_NAME}_schema.f90" )
 endforeach()
 
-find_package( Python3 REQUIRED COMPONENTS Interpreter )
-
-# Setup Python venv for saxonche (used for XSLT transformations)
-if(WIN32)
-  set(_SAXONCHE_VENV_PYTHON "${CMAKE_CURRENT_BINARY_DIR}/saxonche_env/Scripts/python.exe")
-  set(_SAXONCHE_VENV_PIP "${CMAKE_CURRENT_BINARY_DIR}/saxonche_env/Scripts/pip.exe")
-else()
-  set(_SAXONCHE_VENV_PYTHON "${CMAKE_CURRENT_BINARY_DIR}/saxonche_env/bin/python")
-  set(_SAXONCHE_VENV_PIP "${CMAKE_CURRENT_BINARY_DIR}/saxonche_env/bin/pip")
-endif()
-
-# Create Python venv and install saxonche if not already done
-if(NOT EXISTS "${_SAXONCHE_VENV_PYTHON}")
-  message(STATUS "Creating Python virtual environment for saxonche...")
-  execute_process(
-    COMMAND ${Python3_EXECUTABLE} -m venv saxonche_env
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    RESULT_VARIABLE _VENV_EXITCODE
-  )
-  
-  if(_VENV_EXITCODE)
-    message(FATAL_ERROR "Failed to create Python venv for saxonche")
-  endif()
-  
-  message(STATUS "Installing saxonche in virtual environment...")
-  execute_process(
-    COMMAND ${_SAXONCHE_VENV_PIP} install saxonche
-    RESULT_VARIABLE _PIP_EXITCODE
-  )
-  
-  if(_PIP_EXITCODE)
-    message(FATAL_ERROR "Failed to install saxonche")
-  endif()
-  message(STATUS "saxonche installed successfully")
-endif()
+# Note: saxonche is provided by dd_build_env (set up in ALBuildDataDictionary)
+# _VENV_PYTHON points to that environment and is used for all XSLT transformations
 
 add_custom_command(
   # Use a dummy output file: when listing all actual output files (which are
@@ -145,7 +112,7 @@ add_custom_command(
   OUTPUT ${GENERATED_SRC_DIR}/dummy.txt
   # Generate routine files with IDSDef2F90Routines.xsl
   COMMAND 
-    ${_SAXONCHE_VENV_PYTHON} "${AL_LOCAL_XSLTPROC_SCRIPT}"
+    ${_VENV_PYTHON} "${AL_LOCAL_XSLTPROC_SCRIPT}"
       -xsl ${CMAKE_CURRENT_SOURCE_DIR}/IDSDef2F90Routines.xsl
       -s ${IDSDEF}
       -o ${GENERATED_SRC_DIR}/routines_output.xml
@@ -153,7 +120,7 @@ add_custom_command(
       AL_GIT_DESCRIBE=${FULL_VERSION}
   # Generate schema files with IDSDef2F90TypeDef.xsl
   COMMAND 
-    ${_SAXONCHE_VENV_PYTHON} "${AL_LOCAL_XSLTPROC_SCRIPT}"
+    ${_VENV_PYTHON} "${AL_LOCAL_XSLTPROC_SCRIPT}"
       -xsl ${CMAKE_CURRENT_SOURCE_DIR}/IDSDef2F90TypeDef.xsl
       -s ${IDSDEF}
       -o ${GENERATED_SRC_DIR}/schemas_output.xml
@@ -196,6 +163,7 @@ file( CREATE_LINK
   SYMBOLIC COPY_ON_ERROR
 )
 set( IDENTIFIER_SRC_DIR ${CMAKE_CURRENT_BINARY_DIR}/identifiers/src/ )
+file( MAKE_DIRECTORY ${IDENTIFIER_SRC_DIR} )
 
 set( IDENTIFIER_SOURCES )
 foreach( ID_FILE IN LISTS DD_IDENTIFIER_FILES )
@@ -204,8 +172,7 @@ foreach( ID_FILE IN LISTS DD_IDENTIFIER_FILES )
   set( SOURCE_NAME "${IDENTIFIER_SRC_DIR}/${ID_NAME}.f90" )
   add_custom_command(
     OUTPUT ${SOURCE_NAME}
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${IDENTIFIER_SRC_DIR}
-    COMMAND ${_SAXONCHE_VENV_PYTHON} "${AL_LOCAL_XSLTPROC_SCRIPT}"
+    COMMAND ${_VENV_PYTHON} "${AL_LOCAL_XSLTPROC_SCRIPT}"
       -xsl ${CMAKE_CURRENT_BINARY_DIR}/identifiers.xsl
       -s ${ID_FILE}
       -o ${CMAKE_CURRENT_BINARY_DIR}/${ID_NAME}_identifier_output.xml

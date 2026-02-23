@@ -31,48 +31,15 @@ foreach( IDS_NAME IN LISTS IDS_NAMES )
   endif()
 endforeach()
 
-find_package( Python3 REQUIRED COMPONENTS Interpreter )
-
-# Setup Python venv for saxonche (used for XSLT transformations)
-if(WIN32)
-  set(_SAXONCHE_VENV_PYTHON "${CMAKE_CURRENT_BINARY_DIR}/saxonche_env/Scripts/python.exe")
-  set(_SAXONCHE_VENV_PIP "${CMAKE_CURRENT_BINARY_DIR}/saxonche_env/Scripts/pip.exe")
-else()
-  set(_SAXONCHE_VENV_PYTHON "${CMAKE_CURRENT_BINARY_DIR}/saxonche_env/bin/python")
-  set(_SAXONCHE_VENV_PIP "${CMAKE_CURRENT_BINARY_DIR}/saxonche_env/bin/pip")
-endif()
-
-# Create Python venv and install saxonche if not already done
-if(NOT EXISTS "${_SAXONCHE_VENV_PYTHON}")
-  message(STATUS "Creating Python virtual environment for saxonche...")
-  execute_process(
-    COMMAND ${Python3_EXECUTABLE} -m venv saxonche_env
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    RESULT_VARIABLE _VENV_EXITCODE
-  )
-  
-  if(_VENV_EXITCODE)
-    message(FATAL_ERROR "Failed to create Python venv for saxonche")
-  endif()
-  
-  message(STATUS "Installing saxonche in virtual environment...")
-  execute_process(
-    COMMAND ${_SAXONCHE_VENV_PIP} install saxonche
-    RESULT_VARIABLE _PIP_EXITCODE
-  )
-  
-  if(_PIP_EXITCODE)
-    message(FATAL_ERROR "Failed to install saxonche")
-  endif()
-  message(STATUS "saxonche installed successfully")
-endif()
+# Note: saxonche is provided by dd_build_env (set up in ALBuildDataDictionary)
+# _VENV_PYTHON points to that environment and is used for all XSLT transformations
 
 add_custom_command(
   # Use a dummy output file: when listing all actual output files,
   # they would be re-created with every build.
   OUTPUT ${GENERATED_SRC_DIR}/dummy.txt
   COMMAND 
-    ${_SAXONCHE_VENV_PYTHON} "${AL_LOCAL_XSLTPROC_SCRIPT}"
+    ${_VENV_PYTHON} "${AL_LOCAL_XSLTPROC_SCRIPT}"
       -xsl ${CMAKE_CURRENT_SOURCE_DIR}/IDSDef2TestSuite.xsl
       -s ${IDSDEF}
       -o ${CMAKE_CURRENT_BINARY_DIR}/test_output.xml
