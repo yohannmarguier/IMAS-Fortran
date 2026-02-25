@@ -38,19 +38,20 @@ where your data is stored and in what format.
 
 .. code-block:: fortran
 
-    use ids_ids
-    use imas_al
+    use ids_routines
     implicit none
     
-    integer :: ctx
+    integer :: ctx, status
     character(len=256) :: uri
+    character(:), allocatable :: errmsg
     
-    ! Open a database entry
+    ! Open a database entry (read mode)
     uri = 'imas:hdf5?path=/path/to/data'
-    ctx = imas_open(uri, 40)
+    call imas_open(uri, OPEN_PULSE, ctx, status, errmsg)
     
-    if (ctx < 0) then
-        error stop 'Unable to open database'
+    if (status /= 0) then
+        write(*,*) 'Unable to open database: ', errmsg
+        error stop
     end if
 
 **What's an IMAS URI?**
@@ -72,16 +73,16 @@ Fetch an IDS from your database entry:
 
 .. code-block:: fortran
 
-    use ids_magnetics_mod
+    use ids_routines
     implicit none
     
-    type(magnetics_type) :: magnetics
-    integer :: ios
+    type(ids_magnetics) :: magnetics
+    integer :: status
     
     ! Load the magnetics IDS (occurrence 0)
-    call ids_get(ctx, magnetics, ios)
+    call ids_get(ctx, "magnetics", magnetics, status)
     
-    if (ios /= 0) then
+    if (status /= 0) then
         error stop 'Failed to load magnetics'
     end if
     
@@ -98,26 +99,27 @@ You can create new data, modify existing data, and store it back:
 
 .. code-block:: fortran
 
-    use ids_equilibrium_mod
+    use ids_routines
     implicit none
     
-    type(equilibrium_type) :: equilibrium
-    integer :: ios
+    type(ids_equilibrium) :: equilibrium
+    integer :: status
     
-    ! Create a new IDS
-    call ids_init(equilibrium)
+    ! Initialize a new IDS
+    equilibrium%ids_properties%homogeneous_time = IDS_TIME_MODE_HOMOGENEOUS
     
     ! Modify data
     allocate(equilibrium%time(4))
-    equilibrium%time = [0.0_dp, 1.0_dp, 2.0_dp, 3.0_dp]
+    equilibrium%time = [0.0, 1.0, 2.0, 3.0]
     
-    allocate(equilibrium%q_profile%value%data(4))
-    equilibrium%q_profile%value%data = [1.0_dp, 2.0_dp, 3.0_dp, 4.0_dp]
+    allocate(equilibrium%time_slice(4))
+    allocate(equilibrium%time_slice(1)%profiles_1d%q(10))
+    equilibrium%time_slice(1)%profiles_1d%q = [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5]
     
     ! Store it to the database
-    call ids_put(ctx, equilibrium, ios)
+    call ids_put(ctx, "equilibrium", equilibrium, status)
     
-    if (ios /= 0) then
+    if (status /= 0) then
         error stop 'Failed to store equilibrium'
     end if
 
@@ -129,10 +131,10 @@ Always close the database entry when you're done:
 
 .. code-block:: fortran
 
-    integer :: ios
+    integer :: status
     
-    call imas_close(ctx, ios)
-    if (ios /= 0) then
+    call imas_close(ctx, status)
+    if (status /= 0) then
         print *, 'Warning: error closing database'
     end if
 
@@ -140,21 +142,35 @@ Always close the database entry when you're done:
 Key Subroutines Reference
 --------------------------
 
-+=============================================+====================================================+
-| Subroutine                                  | Purpose                                            |
-+=============================================+====================================================+
-| ``imas_open(uri, version, ctx)``            | Open a database entry at the given URI             |
-+---------------------------------------------+----------------------------------------------------+
-| ``imas_close(ctx, status)``                 | Close the database entry                           |
-+---------------------------------------------+----------------------------------------------------+
-| ``ids_get(ctx, ids_obj, status)``           | Load an entire IDS                                 |
-+---------------------------------------------+----------------------------------------------------+
-| ``ids_put(ctx, ids_obj, status)``           | Store an IDS to disk                               |
-+---------------------------------------------+----------------------------------------------------+
-| ``ids_init(ids_obj)``                       | Initialize a new IDS structure                     |
-+---------------------------------------------+----------------------------------------------------+
-| ``ids_get_slice(ctx, ids_obj, time, status)`` | Load a specific time slice                        |
-+=============================================+====================================================+
++----------------------------------------------------------------+----------------------------------------------------+
+| Subroutine                                                     | Purpose                                            |
++================================================================+====================================================+
+| ``imas_open(uri, mode, ctx, status, errmsg)``                  | Open a database entry at the given URI             |
++----------------------------------------------------------------+----------------------------------------------------+
+| ``imas_close(ctx, status)``                                    | Close the database entry                           |
++----------------------------------------------------------------+----------------------------------------------------+
+| ``ids_get(ctx, name, ids_obj, status)``                        | Load an entire IDS by name                         |
++----------------------------------------------------------------+----------------------------------------------------+
+| ``ids_put(ctx, name, ids_obj, status)``                        | Store an IDS to disk                               |
++----------------------------------------------------------------+----------------------------------------------------+
+| ``ids_get_slice(ctx, name, ids_obj, time, interp, status)``    | Load a specific time slice with interpolation     |
++----------------------------------------------------------------+----------------------------------------------------+
+| ``ids_put_slice(ctx, name, ids_obj, status)``                  | Append a time slice to existing IDS                |
++----------------------------------------------------------------+----------------------------------------------------+
+| ``ids_deallocate(ids_obj)``                                    | Deallocate memory for an IDS                       |
++================================================================+====================================================+
+
+**Open Mode Constants:**
+
+- ``OPEN_PULSE`` - Open existing data entry (read mode)
+- ``CREATE_PULSE`` - Create new entry only if it doesn't exist
+- ``FORCE_CREATE_PULSE`` - Force create/overwrite existing entry
+
+**Interpolation Mode Constants:**
+
+- ``CLOSEST_INTERP`` - Use closest time point
+- ``PREVIOUS_INTERP`` - Use previous time point
+- ``LINEAR_INTERP`` - Linear interpolation between time points
 
 
 Common Use Cases
@@ -164,22 +180,26 @@ Common Use Cases
 
 .. code-block:: fortran
 
-    use ids_equilibrium_mod
+    use ids_routines
     implicit none
     
-    type(equilibrium_type) :: equilibrium
-    integer :: ios
+    type(ids_equilibrium) :: equilibrium
+    integer :: status
     
-    ! Use CLOSEST interpolation
-    call ids_get_slice(ctx, equilibrium, 2.5_dp, ios)
+    ! Use CLOSEST interpolation at time = 2.5
+    call ids_get_slice(ctx, "equilibrium", equilibrium, 2.5, CLOSEST_INTERP, status)
 
 
-**Check if data is defined:**
+**Check if data is allocated:**
 
 .. code-block:: fortran
 
-    if (ids_isdefined(magnetics%flux_loop(1)%flux)) then
-        print *, 'Flux data is defined'
+    if (allocated(magnetics%flux_loop)) then
+        if (size(magnetics%flux_loop) > 0) then
+            if (allocated(magnetics%flux_loop(1)%flux%data)) then
+                print *, 'Flux data is defined'
+            end if
+        end if
     end if
 
 
@@ -197,33 +217,37 @@ Complete Example Program
 .. code-block:: fortran
 
     program example_imas_usage
-        use imas_al
-        use ids_magnetics_mod
+        use ids_routines
         implicit none
         
-        integer :: ctx, ios
-        type(magnetics_type) :: magnetics
+        integer :: ctx, status
+        type(ids_magnetics) :: magnetics
         character(len=256) :: uri
+        character(:), allocatable :: errmsg
         
         ! Open database
         uri = 'imas:hdf5?path=/data/example.h5'
-        ctx = imas_open(uri, 3)
+        call imas_open(uri, OPEN_PULSE, ctx, status, errmsg)
         
-        if (ctx < 0) then
-            error stop 'Failed to open database'
+        if (status /= 0) then
+            write(*,*) 'Failed to open database: ', errmsg
+            error stop
         end if
         
         ! Load magnetics data
-        call ids_get(ctx, magnetics, ios)
+        call ids_get(ctx, "magnetics", magnetics, status)
         
-        if (ios == 0) then
+        if (status == 0) then
             print *, 'Successfully loaded magnetics'
-            print *, 'Time points:', size(magnetics%time)
+            if (allocated(magnetics%time)) then
+                print *, 'Time points:', size(magnetics%time)
+            end if
         else
-            print *, 'Error loading magnetics:', ios
+            print *, 'Error loading magnetics:', status
         end if
         
-        ! Close database
-        call imas_close(ctx, ios)
+        ! Deallocate and close
+        call ids_deallocate(magnetics)
+        call imas_close(ctx, status)
         
     end program example_imas_usage
