@@ -142,23 +142,26 @@ Always close the database entry when you're done:
 Key Subroutines Reference
 --------------------------
 
-+----------------------------------------------------------------+----------------------------------------------------+
-| Subroutine                                                     | Purpose                                            |
-+================================================================+====================================================+
-| ``imas_open(uri, mode, ctx, status, errmsg)``                  | Open a database entry at the given URI             |
-+----------------------------------------------------------------+----------------------------------------------------+
-| ``imas_close(ctx, status)``                                    | Close the database entry                           |
-+----------------------------------------------------------------+----------------------------------------------------+
-| ``ids_get(ctx, name, ids_obj, status)``                        | Load an entire IDS by name                         |
-+----------------------------------------------------------------+----------------------------------------------------+
-| ``ids_put(ctx, name, ids_obj, status)``                        | Store an IDS to disk                               |
-+----------------------------------------------------------------+----------------------------------------------------+
-| ``ids_get_slice(ctx, name, ids_obj, time, interp, status)``    | Load a specific time slice with interpolation     |
-+----------------------------------------------------------------+----------------------------------------------------+
-| ``ids_put_slice(ctx, name, ids_obj, status)``                  | Append a time slice to existing IDS                |
-+----------------------------------------------------------------+----------------------------------------------------+
-| ``ids_deallocate(ids_obj)``                                    | Deallocate memory for an IDS                       |
-+================================================================+====================================================+
+.. list-table::
+   :header-rows: 1
+   :widths: auto
+
+   * - Subroutine
+     - Purpose
+   * - ``imas_open(uri, mode, ctx, status, errmsg)``
+     - Open a database entry at the given URI
+   * - ``imas_close(ctx, status)``
+     - Close the database entry
+   * - ``ids_get(ctx, name, ids_obj, status)``
+     - Load an entire IDS by name
+   * - ``ids_put(ctx, name, ids_obj, status)``
+     - Store an IDS to disk
+   * - ``ids_get_slice(ctx, name, ids_obj, time, interp, status)``
+     - Load a specific time slice with interpolation
+   * - ``ids_put_slice(ctx, name, ids_obj, status)``
+     - Append a time slice to existing IDS
+   * - ``ids_deallocate(ids_obj)``
+     - Deallocate memory for an IDS
 
 **Open Mode Constants:**
 

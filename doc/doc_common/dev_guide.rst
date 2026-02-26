@@ -38,7 +38,7 @@ folder is not important).
 
 .. code-block:: text
 
-    IMAS-Dev/                 # Feel free to name this folder however you want
+    imas-dev/                 # Feel free to name this folder however you want
     ├── al-core/            # IMAS-Core
     ├── al-plugins/         # IMAS-Core-Plugins Optional
     ├── al-Fortran/         # IMAS-Fortran 
@@ -134,7 +134,7 @@ and nothing else.
 .. code-block:: console
     :caption: Example: building the documentation for the Python HLI
 
-    al-dev$ cd al-fortran
+    imas-dev$ cd al-fortran
     al-fortran$ # Configure cmake to only create the documentation:
     al-fortran$ cmake -B build -D AL_HLI_DOCS -D AL_DOCS_ONLY
     [...]
