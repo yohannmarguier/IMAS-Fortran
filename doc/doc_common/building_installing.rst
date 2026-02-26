@@ -140,7 +140,7 @@ overview of configuration options.
 
     -   `imas-core (git@github.com:iterorganization/IMAS-Core.git)
         <https://github.com/iterorganization/IMAS-Core>`__
-    -   `al-plugins (https://github.com/iterorganization/al-plugins.git)
+    -   `imas-core-plugins (https://github.com/iterorganization/IMAS-Core-Plugins.git) 
         <https://github.com/iterorganization/IMAS-Core-Plugins>`__
     -   `imas-data-dictionary (git@github.com:iterorganization/IMAS-Data-Dictionary.git)
         <https://github.com/iterorganization/IMAS-Data-Dictionary>`__
