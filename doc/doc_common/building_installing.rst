@@ -235,7 +235,7 @@ This executes ``ctest`` to run all test and example programs. Note that this may
 long time to complete.
 
 
-Install the High Level Interface
+Install IMAS-Fortran
 ````````````````````````````````
 
 Run ``make install`` to install the high level interface in the folder that you chose in
