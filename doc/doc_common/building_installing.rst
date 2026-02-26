@@ -130,7 +130,7 @@ overview of configuration options.
 
 .. code-block:: bash
 
-    cd al-fortran
+    cd IMAS-Fortran
     cmake -B build -D CMAKE_INSTALL_PREFIX=$HOME/IMAS-Fortran -D OPTION1=VALUE1 -D OPTION2=VALUE2 [...]
 
 .. note:: 
