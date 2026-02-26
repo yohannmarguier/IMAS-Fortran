@@ -100,27 +100,27 @@ Backend identifiers
 .. f:variable:: ASCII_BACKEND
     :attrs: parameter=11
 
-    Identifier of the ASCII backend for IMAS-Core. See `IMAS-Core documentation <https://imas-core.readthedocs.io/en/latest/user_guide/backends_guide.html>`__ for backend details.
+    Identifier for the ASCII backend. See  `IMAS-Core documentation <https://imas-core.readthedocs.io/en/latest/user_guide/backends_guide.html>`__ for backend details..
 
 .. f:variable:: MDSPLUS_BACKEND
     :attrs: parameter=12
 
-    Identifier for the MDSplus backend. See :doc:`imas_uri` for details.
+    Identifier for the MDSplus backend. See  `IMAS-Core documentation <https://imas-core.readthedocs.io/en/latest/user_guide/backends_guide.html>`__ for backend details.
 
 .. f:variable:: HDF5_BACKEND
     :attrs: parameter=13
 
-    Identifier for the HDF5 backend. See :doc:`imas_uri` for details.
+    Identifier for the HDF5 backend. See  `IMAS-Core documentation <https://imas-core.readthedocs.io/en/latest/user_guide/backends_guide.html>`__ for backend details.
 
 .. f:variable:: MEMORY_BACKEND
     :attrs: parameter=14
 
-    Identifier for the memory backend. See :doc:`imas_uri` for details.
+    Identifier for the memory backend. See  `IMAS-Core documentation <https://imas-core.readthedocs.io/en/latest/user_guide/backends_guide.html>`__ for backend details.
 
 .. f:variable:: UDA_BACKEND
     :attrs: parameter=15
 
-    Identifier for the UDA backend. See :doc:`imas_uri` for details.
+    Identifier for the UDA backend. See  `IMAS-Core documentation <https://imas-core.readthedocs.io/en/latest/user_guide/backends_guide.html>`__ for backend details.
 
 
 Data entry open/create modes

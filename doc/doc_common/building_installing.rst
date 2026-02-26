@@ -10,6 +10,7 @@ up a development environment.
 For more information about related components, see:
 
 -   `IMAS Core Documentation <https://imas-core.readthedocs.io/en/latest/>`__
+  
 -   `IMAS Data Dictionary Documentation <https://imas-data-dictionary.readthedocs.io/en/latest/>`__
 
 
@@ -18,34 +19,21 @@ For more information about related components, see:
 Prerequisites
 -------------
 
-To build the IMAS-Fortran you need:
-
 -   Git
--   A C++11 compiler (tested with GCC and Intel compilers)
 -   CMake (3.16 or newer)
--   Boost C++ libraries (1.66 or newer)
+-   Python
 -   PkgConfig
 
-The following dependencies are only required for some of the components:
 
--   Backends
-
-    -   **HDF5 backend**: HDF5 C/C++ libraries (1.8.12 or newer)
-    -   **MDSplus backend**: MDSplus libraries (7.84.8 or newer)
-    -   **UDA backend**: `UDA <https://github.com/ukaea/UDA/>`__ libraries
-	(2.7.5 or newer) [#uda_install]_
-
-..  [#uda_install] When installing UDA, make sure you have 
-    `Cap'n'Proto <https://github.com/capnproto/capnproto>`__ installed in your system
-    and add its support by adding the CMake switch `-DENABLE_CAPNP=ON` when configuring UDA. 
+To build the IMAS-Core together with IMAS-Fortran refer to 
+IMAS-Core's requirements and link to the Core documentation for specific backends.
+`IMAS Core Installation <https://imas-core.readthedocs.io/en/latest/user_guide/installation.html#imas-core>`__
 
 
 -   Fortran High Level Interface
 
-    -   **Fortran High Level Interface**: A working Fortran installation (tested with
-        version 2023b)
-
-
+    -   **Fortran High Level Interface**: A Fortran 2003 compliant compiler
+        (gfortran 10.0 or later, ifort 2020 or later, ifx, NAGfor 6.2 or later, nvfortran)
 
 
 Standard environments:
@@ -59,8 +47,11 @@ Standard environments:
 
         .. code-block:: bash
 
-            module load intel-compilers/2023.2.1 CMake/3.27.6-GCCcore-13.2.0 Saxon-HE/12.4-Java-21 \
-                Boost/1.83.0-iimpi-2023b HDF5/1.14.3-iimpi-2023b \
+            module load intel-compilers/2023.2.1 CMake/3.27.6-GCCcore-13.2.0 \
+            Python/3.11.9-GCCcore-13.2.0
+
+            # Additionally load the following modules if building IMAS-Core together with IMAS-Fortran
+            module load Boost/1.83.0-iimpi-2023b HDF5/1.14.3-iimpi-2023b \
                 MDSplus/7.132.0-GCCcore-13.2.0 \
                 UDA/2.8.1-iimpi-2023b Blitz++/1.0.2-GCCcore-13.2.0 \
                 SciPy-bundle/2023.11-intel-2023b \
@@ -73,8 +64,10 @@ Standard environments:
 
         .. code-block:: bash
 
-            module load CMake/3.27.6-GCCcore-13.2.0 Saxon-HE/12.4-Java-21 \
-                Boost/1.83.0-GCC-13.2.0 HDF5/1.14.3-gompi-2023b \
+            module load CMake/3.27.6-GCCcore-13.2.0 Python/3.11.9-GCCcore-13.2.0
+
+            # Additionally load the following modules if building IMAS-Core together with IMAS-Fortran
+            module load  Boost/1.83.0-GCC-13.2.0 HDF5/1.14.3-gompi-2023b \
                 MDSplus/7.132.0-GCCcore-13.2.0 \
                 UDA/2.8.1-GCC-13.2.0 Blitz++/1.0.2-GCCcore-13.2.0 \
                 SciPy-bundle/2023.11-gfbf-2023b \
@@ -87,12 +80,15 @@ Standard environments:
 
         .. code-block:: bash
 
-            apt install git build-essential cmake libsaxonhe-java libboost-all-dev \
-                pkg-config libhdf5-dev xsltproc libblitz0-dev gfortran \
+            apt install git build-essential cmake pkg-config gfortran \
+            
+            # Additionally load the following modules if building IMAS-Core together with IMAS-Fortran
+            apt install libboost-all-dev \
+                libhdf5-dev libblitz0-dev  \
                 default-jdk-headless python3-dev python3-venv python3-pip
 
         The following dependencies are not available from the package repository,
-        you will need to install them yourself:
+        you will need to install them yourself if building IMAS-Core together with IMAS-Fortran:
 
         -   MDSplus: see their `GitHub repository
             <https://github.com/MDSplus/mdsplus>`__ or `home page
@@ -101,8 +97,8 @@ Standard environments:
             details.
 
 
-Building and installing a single High Level Interface
------------------------------------------------------
+Building and installing IMAS-Fortran
+------------------------------------
 
 This section explains how to install a Fortran High Level Interface. Please make sure you
 have the :ref:`build prerequisites` installed.
@@ -275,6 +271,6 @@ Troubleshooting
 ```````````````
 
 **Problem:** ``Target Boost::log already has an imported location``
-    This problem is known to occur with the ``2020b`` toolchain on SDCC. Add the CMake
-    configuration option ``-D Boost_NO_BOOST_CMAKE=ON`` to work around the problem.
+    Add the CMake configuration option ``-D Boost_NO_BOOST_CMAKE=ON`` to work around
+    the problem.
 
