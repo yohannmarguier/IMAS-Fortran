@@ -193,7 +193,7 @@ Configuration options
 For a complete list of available configuration options, please see the `IMAS Core Configuration Options <https://imas-core.readthedocs.io/en/latest/user_guide/installation.html#configuration-options>`__.
 
 
-Build the High Level Interface
+Build IMAS-Fortran
 ``````````````````````````````
 
 Use ``make`` to build everything. You can speed things up by using parallel compiling
