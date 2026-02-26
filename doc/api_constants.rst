@@ -100,7 +100,7 @@ Backend identifiers
 .. f:variable:: ASCII_BACKEND
     :attrs: parameter=11
 
-    Identifier for the ASCII backend. See :doc:`imas_uri` for details.
+    Identifier of the ASCII backend for IMAS-Core. See `IMAS-Core documentation <https://imas-core.readthedocs.io/en/latest/user_guide/backends_guide.html>`__ for backend details.
 
 .. f:variable:: MDSPLUS_BACKEND
     :attrs: parameter=12
