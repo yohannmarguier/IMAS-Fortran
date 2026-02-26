@@ -26,8 +26,7 @@ Prerequisites
 
 
 To build the IMAS-Core together with IMAS-Fortran refer to 
-IMAS-Core's requirements and link to the Core documentation for specific backends.
-`IMAS Core Installation <https://imas-core.readthedocs.io/en/latest/user_guide/installation.html#imas-core>`__
+IMAS-Core's requirements `IMAS Core Installation <https://imas-core.readthedocs.io/en/latest/user_guide/installation.html#imas-core>`__
 
 
 -   Fortran High Level Interface
@@ -265,6 +264,21 @@ Layer installation available for you.
 
 Once you have set the required environment variables, you may continue :ref:`Using the
 IMAS-Fortran`.
+
+
+.. code-block:: bash
+
+    # Compile your program with pkg-config
+    gfortran your_program.f90 $(pkg-config --cflags --libs al-fortran)
+
+Or manually specify the include and library paths:
+
+.. code-block:: bash
+
+    gfortran your_program.f90 \
+        -I/path/to/install/include/fortran \
+        -L/path/to/install/lib \
+        -lal-fortran-<version>
 
 
 Troubleshooting

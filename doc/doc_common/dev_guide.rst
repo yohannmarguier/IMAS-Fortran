@@ -38,10 +38,10 @@ folder is not important).
 
 .. code-block:: text
 
-    al-dev/                 # Feel free to name this folder however you want
-    ├── al-core/
-    ├── al-plugins/         # Optional
-    ├── al-Fortran/          
+    IMAS-Dev/                 # Feel free to name this folder however you want
+    ├── al-core/            # IMAS-Core
+    ├── al-plugins/         # IMAS-Core-Plugins Optional
+    ├── al-Fortran/         # IMAS-Fortran 
     └── data-dictionary/
 
 Then, when you configure a project for building (see the Configuration section in the
