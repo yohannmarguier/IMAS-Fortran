@@ -242,7 +242,7 @@ Run ``make install`` to install the high level interface in the folder that you 
 the configuration step above.
 
 
-Use the High Level Interface
+Use IMAS-Fortran
 ````````````````````````````
 
 After installing the HLI, you need to ensure that your code can find the installed
