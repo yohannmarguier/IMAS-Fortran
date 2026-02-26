@@ -218,7 +218,7 @@ cause the build to fail. This is especially the case with the C++ High Level Int
     details.
 
 
-Optional: Test the High Level Interface
+Optional: Test IMAS-Fortran
 ```````````````````````````````````````
 
 If you set either of the options ``AL_EXAMPLES`` or ``AL_TESTS`` to ``ON``, you can run
