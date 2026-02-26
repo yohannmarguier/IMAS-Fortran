@@ -155,7 +155,7 @@ overview of configuration options.
 
         cmake -B build \
             -D AL_CORE_GIT_REPOSITORY=git@github.com:iterorganization/IMAS-Core.git \
-            -D AL_PLUGINS_GIT_REPOSITORY=git@github.com:iterorganization/al-plugins.git \
+            -D AL_PLUGINS_GIT_REPOSITORY=git@github.com:iterorganization/IMAS-Core-Plugins.git \
             -D DD_GIT_REPOSITORY=git@github.com:iterorganization/IMAS-Data-Dictionary.git
 
     If you use CMake 3.21 or newer, you can also use the ``https`` preset:
