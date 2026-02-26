@@ -19,44 +19,6 @@ module purge
 TOOLCHAIN=${TOOLCHAIN:-foss-2023b}
 # Load modules that correspond to toolchain
 case "$TOOLCHAIN" in
-  *-2020b)
-echo "... 2020b"
-MODULES=(
-    CMake/3.24.3-GCCcore-10.2.0
-    Boost/1.74.0-GCC-10.2.0
-    Blitz++/1.0.2-GCCcore-10.2.0
-    Python/3.8.6-GCCcore-10.2.0  # for docs
-    MDSplus/7.131.6-GCCcore-10.2.0
-    MDSplus-Java/7.131.6-GCCcore-10.2.0-Java-11
-    UDA/2.7.5-GCC-10.2.0
-    NAGfor/6.2.14
-    NVHPC/21.2
-)
-  ;;&
-  *foss-2020b)
-echo "... foss-2020b"
-MODULES=(${MODULES[@]}
-    SciPy-bundle/2020.11-foss-2020b
-    HDF5/1.10.7-gompi-2020b
-)
-CMAKE_ARGS=(${CMAKE_ARGS[@]}
-    -DCMAKE_C_COMPILER=${CC:-gcc}
-    -DCMAKE_CXX_COMPILER=${CXX:-g++}
-    -DCMAKE_Fortran_COMPILER=${FC:-gfortran}
-)
-  ;;&
-  *intel-2020b)
-echo "... intel-2020b"
-MODULES=(${MODULES[@]}
-    iccifort/2020.4.304
-    HDF5/1.10.7-iimpi-2020b
-)
-CMAKE_ARGS=(${CMAKE_ARGS[@]}
-    -DCMAKE_C_COMPILER=${CC:-icc}
-    -DCMAKE_CXX_COMPILER=${CXX:-icpc}
-    -DCMAKE_Fortran_COMPILER=${FC:-ifort}
-)
-  ;;
   *-2023b)
 echo "... 2023b"
 MODULES=(
@@ -129,7 +91,7 @@ CMAKE_ARGS=(${CMAKE_ARGS[@]}
   -DAL_PLUGINS=${AL_PLUGINS:-ON}
   # Build documentation
   -DAL_HLI_DOCS=${AL_HLI_DOCS:-ON}
-  # Work around Boost linker issues on 2020b toolchain
+  # Work around Boost linker issues
   -DBoost_NO_BOOST_CMAKE=${Boost_NO_BOOST_CMAKE:-ON}
   -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD:-17}
 )
