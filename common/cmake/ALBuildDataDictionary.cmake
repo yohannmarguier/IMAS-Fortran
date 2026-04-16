@@ -22,8 +22,8 @@ if(WIN32)
 	  set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
   endif()
 else()
-	find_package(Python3 REQUIRED COMPONENTS Interpreter)
-	set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
+	find_package(Python REQUIRED COMPONENTS Interpreter Development.Module)
+	set(PYTHON_EXECUTABLE ${Python_EXECUTABLE})
 endif()
 
 message(STATUS "Found Python: ${PYTHON_EXECUTABLE}")
@@ -38,8 +38,20 @@ else()
 endif()
 
 if( NOT AL_DOWNLOAD_DEPENDENCIES AND NOT AL_DEVELOPMENT_LAYOUT )
-  # The DD easybuild module should be loaded, use that module:
-  # Create Python venv first and install imas_data_dictionary
+  if(DEFINED DD_VERSION)
+    if(WIN32)
+      set(_IDSINFO_COMMAND "${CMAKE_CURRENT_BINARY_DIR}/dd_build_env/Scripts/idsinfo.exe")
+    else()
+      set(_IDSINFO_COMMAND "${CMAKE_CURRENT_BINARY_DIR}/dd_build_env/bin/idsinfo")
+    endif()
+  else()
+    if(WIN32)
+      set(_IDSINFO_COMMAND "idsinfo.exe")
+    else()
+      set(_IDSINFO_COMMAND "idsinfo")
+    endif()
+  endif()
+
   if(NOT EXISTS "${_VENV_PYTHON}")
     execute_process(
       COMMAND ${PYTHON_EXECUTABLE} -m venv dd_build_env
@@ -62,21 +74,14 @@ if( NOT AL_DOWNLOAD_DEPENDENCIES AND NOT AL_DEVELOPMENT_LAYOUT )
         OUTPUT_VARIABLE _PIP_OUTPUT
         ERROR_VARIABLE _PIP_ERROR
       )
-    else()
-      execute_process(
-        COMMAND ${_VENV_PIP} install imas_data_dictionary
-        RESULT_VARIABLE _PIP_EXITCODE
-        OUTPUT_VARIABLE _PIP_OUTPUT
-        ERROR_VARIABLE _PIP_ERROR
-      )
+      if(_PIP_EXITCODE)
+        message(STATUS "imas_data_dictionary pip output: ${_PIP_OUTPUT}")
+        message(STATUS "imas_data_dictionary pip error: ${_PIP_ERROR}")
+        message(FATAL_ERROR "Failed to install imas_data_dictionary dependency (exit code: ${_PIP_EXITCODE}). Check network connectivity and Python wheel compatibility.")
+      endif()
     endif()
-    
-    if(_PIP_EXITCODE)
-      message(STATUS "imas_data_dictionary pip output: ${_PIP_OUTPUT}")
-      message(STATUS "imas_data_dictionary pip error: ${_PIP_ERROR}")
-      message(FATAL_ERROR "Failed to install imas_data_dictionary dependency (exit code: ${_PIP_EXITCODE}). Check network connectivity and Python wheel compatibility.")
-    endif()
-    
+
+    # install saxonche dependency
     execute_process(
       COMMAND ${_VENV_PIP} install saxonche
       RESULT_VARIABLE _PIP_EXITCODE
@@ -90,12 +95,6 @@ if( NOT AL_DOWNLOAD_DEPENDENCIES AND NOT AL_DEVELOPMENT_LAYOUT )
       message(FATAL_ERROR "Failed to install saxonche dependency (exit code: ${_PIP_EXITCODE}). Check network connectivity and Python wheel compatibility.")
     endif()
   endif()
-# Set up idsinfo command path
-if(WIN32)
-  set(_IDSINFO_COMMAND "${CMAKE_CURRENT_BINARY_DIR}/dd_build_env/Scripts/idsinfo.exe")
-else()
-  set(_IDSINFO_COMMAND "${CMAKE_CURRENT_BINARY_DIR}/dd_build_env/bin/idsinfo")
-endif()
 
   # Use idsinfo idspath command from venv to get the path to IDSDef.xml or data_dictionary.xml
   execute_process(
@@ -135,7 +134,6 @@ endif()
   if( NOT DD_IDENTIFIER_FILES )
     message( WARNING "No identifier XML files found in Data Dictionary at: ${IDSDEF}" )
   endif()
-  
 else()
   if(WIN32)
     # Build the DD from source using direct git commands:
@@ -183,6 +181,8 @@ else()
     endif() 
   else()
     # Build the DD from source:
+    include(FetchContent)
+
     if( AL_DOWNLOAD_DEPENDENCIES )
       # Download the Data Dictionary from the ITER git:
       FetchContent_Declare(
@@ -291,8 +291,9 @@ else()
 endif()
 
 # Find out which IDSs exist and populate IDS_NAMES
+
 set( list_idss_file ${CMAKE_SOURCE_DIR}/common/list_idss.xsl )
-set_property( DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${list_idss_file} ${IDSDEF} )
+set( CMAKE_CONFIGURE_DEPENDS ${CMAKE_CONFIGURE_DEPENDS};${list_idss_file};${IDSDEF} )
 set( ids_names_tmpfile "${CMAKE_CURRENT_BINARY_DIR}/ids_names_tmp.txt" )
 execute_process( COMMAND
   ${_VENV_PYTHON} "${AL_LOCAL_XSLTPROC_SCRIPT}"
