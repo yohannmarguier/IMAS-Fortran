@@ -227,14 +227,18 @@ install( DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/ DESTINATION include/fort
 
 # Generate and install .pc files
 configure_file( pkgconfig/al-fortran.pc.in al-fortran.pc @ONLY )
-configure_file( pkgconfig/al-fortran.pc.in imas-fortran.pc @ONLY )
+configure_file( pkgconfig/imas-fortran.pc.in imas-fortran.pc @ONLY )
 configure_file( pkgconfig/al-fortran-DD_VERSION.pc.in al-fortran-${DD_VERSION}.pc @ONLY )
+configure_file( pkgconfig/imas-fortran-DD_VERSION.pc.in imas-fortran-${DD_VERSION}.pc @ONLY )
 configure_file( pkgconfig/al-identifiers-fortran.pc.in al-identifiers-fortran.pc @ONLY )
+configure_file( pkgconfig/imas-identifiers-fortran.pc.in imas-identifiers-fortran.pc @ONLY )
 install( FILES
     ${CMAKE_CURRENT_BINARY_DIR}/al-fortran.pc
     ${CMAKE_CURRENT_BINARY_DIR}/imas-fortran.pc
     ${CMAKE_CURRENT_BINARY_DIR}/al-fortran-${DD_VERSION}.pc
+    ${CMAKE_CURRENT_BINARY_DIR}/imas-fortran-${DD_VERSION}.pc
     ${CMAKE_CURRENT_BINARY_DIR}/al-identifiers-fortran.pc
+    ${CMAKE_CURRENT_BINARY_DIR}/imas-identifiers-fortran.pc
   DESTINATION lib/pkgconfig
 )
 
