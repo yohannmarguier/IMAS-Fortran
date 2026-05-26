@@ -3,7 +3,7 @@ exec_prefix=${prefix}
 libdir=${exec_prefix}/lib
 includedir=${prefix}/include
 
-Name: imas-identifiers-fortran
+Name: al-identifiers-fortran
 Version: @FULL_VERSION@
 Description: IMAS Access Layer identifiers libraries (fortran)
 URL: https://imas.iter.org/
