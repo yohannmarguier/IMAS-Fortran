@@ -314,7 +314,7 @@ jobs:
             -DAL_EXAMPLES=ON \
             -DAL_TESTS=ON \
             -DAL_PLUGINS=OFF \
-            -DAL_HLI_DOCS=ON \
+            -DAL_HLI_DOCS=OFF \
             $BOOST_OPTS \
             $HDF5_OPTS && break
           
@@ -373,244 +373,37 @@ jobs:
         echo ""
         echo "Checking installed modules:"
         find install -name "*.mod" | head -20
-    
-    - name: Upload build artifacts
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: build-artifacts-${{ matrix.name }}
-        path: |
-          build/CMakeCache.txt
-          build/CMakeFiles/CMakeError.log
-          build/CMakeFiles/CMakeOutput.log
-          build/Testing/
-        retention-days: 7
-    
-    - name: Upload installation
-      if: success()
-      uses: actions/upload-artifact@v4
-      with:
-        name: installation-${{ matrix.name }}
-        path: install/
-        retention-days: 7
 
-  build-docs-only:
-    name: Build Documentation Only
-    runs-on: ubuntu-22.04
-    
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-    
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
-    
-    - name: Install system dependencies
+    - name: Print diagnostics on failure
+      if: failure()
       run: |
-        sudo apt-get update
-        sudo apt-get install -y \
-          cmake \
-          pkg-config \
-          wget \
-          gfortran
-    
-    - name: Install Python dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r doc/doc_common/requirements.txt
-        pip install saxonche
-    
-    - name: Configure CMake for docs only
-      run: |
-        # Configure CMake with retry logic for git operations
-        export GIT_CURL_VERBOSE=1
-        for attempt in 1 2 3; do
-          echo "CMake docs configuration attempt $attempt..."
-          cmake -B build \
-            -DCMAKE_INSTALL_PREFIX=$PWD/install \
-            -DAL_DOWNLOAD_DEPENDENCIES=ON \
-            -DAL_CORE_GIT_REPOSITORY=https://github.com/iterorganization/IMAS-Core.git \
-            -DDD_GIT_REPOSITORY=https://github.com/iterorganization/IMAS-Data-Dictionary.git \
-            -DAL_CORE_VERSION=develop \
-            -DDD_VERSION=main \
-            -DAL_HLI_DOCS=ON \
-            -DAL_DOCS_ONLY=ON && break
-          
-          if [ $attempt -lt 3 ]; then
-            echo "CMake configuration failed, retrying in 10 seconds..."
-            rm -rf build
-            sleep 10
-          else
-            echo "CMake configuration failed after 3 attempts"
-            exit 1
-          fi
-        done
-    
-    - name: Build documentation
-      run: |
-        mkdir -p doc/_build/html
-        make -C build al-fortran-docs || true
-    
-    - name: Check for documentation warnings
-      run: |
-        if [ -f build/doc_warnings.log ]; then
-          echo "Documentation warnings found:"
-          cat build/doc_warnings.log
-        fi
-    
-    - name: Debug - Check documentation build output
-      if: always()
-      run: |
-        echo "Checking for documentation files..."
-        # Check the actual doc directory where Sphinx builds
-        if [ -d doc/_build/html/ ]; then
-          echo "Documentation directory found at doc/_build/html/:"
-          echo "Files count: $(find doc/_build/html/ -type f | wc -l)"
-          ls -lR doc/_build/html/ | head -100
-        elif [ -d build/doc/_build/html/ ]; then
-          echo "Documentation directory found at build/doc/_build/html/:"
-          echo "Files count: $(find build/doc/_build/html/ -type f | wc -l)"
-          ls -lR build/doc/_build/html/ | head -100
+        echo "CMake cache:"
+        if [ -f build/CMakeCache.txt ]; then
+          cat build/CMakeCache.txt
         else
-          echo "Documentation directory NOT found at expected locations"
-          echo "Searching for html directories:"
-          find . -type d -name "*html*" 2>/dev/null | head -20
-          echo "Searching for _build directories:"
-          find . -type d -name "_build" 2>/dev/null | head -10
+          echo "build/CMakeCache.txt not found"
         fi
-    
-    - name: Upload documentation
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: documentation
-        path: doc/_build/html/
-        retention-days: 30
-        if-no-files-found: warn
-        compression-level: 6
-        overwrite: false
-        include-hidden-files: false
-    
-    - name: Deploy to GitHub Pages
-      if: success() && github.ref == 'refs/heads/develop'
-      uses: peaceiris/actions-gh-pages@v3
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./doc/_build/html
-        destination_dir: docs
-        commit_message: 'docs: update documentation from ${{ github.sha }}'
 
-  create-release:
-    name: Create GitHub Release
-    runs-on: ubuntu-latest
-    needs: [build-linux]
-    if: startsWith(github.ref, 'refs/tags/')
-    permissions:
-      contents: write
-    
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-    
-    - name: Download installation artifacts
-      uses: actions/download-artifact@v4
-      with:
-        pattern: installation-*
-        path: release-artifacts
-        merge-multiple: true
-    
-    - name: List downloaded artifacts
-      run: |
-        echo "Downloaded artifacts:"
-        ls -lR release-artifacts/
-    
-    - name: Extract version from tag
-      id: version
-      run: |
-        TAG_NAME=${GITHUB_REF#refs/tags/}
-        echo "tag=${TAG_NAME}" >> $GITHUB_OUTPUT
-        echo "version=${TAG_NAME#v}" >> $GITHUB_OUTPUT
-    
-    - name: Create Release
-      uses: softprops/action-gh-release@v1
-      with:
-        name: Release ${{ steps.version.outputs.tag }}
-        draft: false
-        prerelease: false
-        generate_release_notes: true
-        files: |
-          release-artifacts/**
-        body: |
-          ## IMAS-Fortran Release ${{ steps.version.outputs.version }}
-          
-          This release includes the IMAS Access Layer Fortran High Level Interface (HLI) compiled for Linux.
-          
-          ### Available Platforms
-          
-          - **Linux (x86_64)**: Ubuntu 24.04 and compatible systems (using GCC toolchain, equivalent to foss-2023b)
-          
-          ### Installation
-          
-          1. Download the installation archive for your platform
-          
-          2. Extract the archive to your desired installation location:
-          ```bash
-          tar xzf imas-fortran-<version>-linux.tar.gz
-          cd imas-fortran-<version>
-          ```
-          
-          3. Source the environment setup script:
-          ```bash
-          source bin/al_env.sh
-          ```
-          
-          4. Verify the installation:
-          ```bash
-          pkg-config --modversion al-fortran
-          ```
-          
-          ### Usage
-          
-          After sourcing `al_env.sh`, the IMAS-Fortran libraries and module files will be available. You can use them in your Fortran projects:
-          
-          ```fortran
-          use ids_ids
-          use imas_al
-          implicit none
-          
-          integer :: ctx
-          character(len=256) :: uri
-          
-          ! Open IMAS database using URI
-          uri = 'imas:hdf5?path=./my_database'
-          ctx = imas_open(uri, 40)
-          
-          ! Use the database...
-          
-          ! Close database
-          call imas_close(ctx)
-          ```
-          
-          Compile with:
-          ```bash
-          gfortran -I$(pkg-config --cflags al-fortran) \
-                   your_program.f90 \
-                   -o your_program \
-                   $(pkg-config --libs al-fortran)
-          ```
-          
-          ### What's Changed
-          
-          See the full changelog below.
-          
-          ### Support
-          
-          For issues, documentation, and additional resources, see:
-          - Documentation: https://imas.iter.org/
-          - GitHub Issues: https://github.com/iterorganization/IMAS-Fortran/issues
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        echo ""
+        echo "CMake error log:"
+        if [ -f build/CMakeFiles/CMakeError.log ]; then
+          cat build/CMakeFiles/CMakeError.log
+        else
+          echo "build/CMakeFiles/CMakeError.log not found"
+        fi
+
+        echo ""
+        echo "CMake output log:"
+        if [ -f build/CMakeFiles/CMakeOutput.log ]; then
+          cat build/CMakeFiles/CMakeOutput.log
+        else
+          echo "build/CMakeFiles/CMakeOutput.log not found"
+        fi
+
+        echo ""
+        echo "CTest logs:"
+        if [ -d build/Testing ]; then
+          find build/Testing -maxdepth 3 -type f -print -exec sh -c 'echo "===== $1 ====="; cat "$1"' sh {} \;
+        else
+          echo "build/Testing not found"
+        fi
