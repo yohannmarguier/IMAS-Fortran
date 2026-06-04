@@ -45,10 +45,14 @@ folder is not important).
     └── data-dictionary/
 
 Then, when you configure a project for building (see the Configuration section in the
-building and installation documentation), set the
-option ``-D AL_DOWNLOAD_DEPENDENCIES=OFF``. Instead of fetching requirements from the
-ITER git, CMake will now use the repositories as they are checked out in your
-development folders.
+building and installation documentation), set the option
+``-D AL_DEVELOPMENT_LAYOUT=ON``. Instead of fetching requirements from the GitHub repositories,
+CMake will now use the repositories as they are checked out in your development
+folders. This option automatically disables ``AL_DOWNLOAD_DEPENDENCIES``.
+
+    When both ``AL_DEVELOPMENT_LAYOUT=OFF`` and ``AL_DOWNLOAD_DEPENDENCIES=OFF`` are
+    used, CMake expects dependencies such as ``al-core`` to be available as installed
+    packages through ``pkg-config``.
 
     With this setup, it is your responsibility to update the repositories to their
     latest versions (if needed). The ``<component>_VERSION`` configuration options are
