@@ -11,7 +11,7 @@ repositories:
 -   `imas-core <https://github.com/iterorganization/IMAS-Core>`__: the
     IMAS core repository, MDSplus model generator and Python lowlevel
     bindings.
--   `data-dictionary
+-   `IMAS-Data-Dictionary
     <https://github.com/iterorganization/IMAS-Data-Dictionary>`__: the IMAS Data
     Dictionary definitions, used for generating MDSplus models and the traditional High
     Level Interfaces.
@@ -39,10 +39,10 @@ folder is not important).
 .. code-block:: text
 
     imas-dev/                 # Feel free to name this folder however you want
-    ├── al-core/            # IMAS-Core
-    ├── al-plugins/         # IMAS-Core-Plugins Optional
-    ├── al-Fortran/         # IMAS-Fortran 
-    └── data-dictionary/
+    ├── IMAS-Core/            # IMAS-Core
+    ├── IMAS-Core-Plugins/         # IMAS-Core-Plugins Optional
+    ├── IMAS-Fortran/         # IMAS-Fortran 
+    └── IMAS-Data-Dictionary/
 
 Then, when you configure a project for building (see the Configuration section in the
 building and installation documentation), set the option
@@ -72,7 +72,7 @@ between the different repositories:
     :name: repository-dependencies
 
     flowchart
-        core[al-core] -->|"MDSplus<br>models"| dd[data-dictionary]
+        core[imas-core] -->|"MDSplus<br>models"| dd[data-dictionary]
         plugins[al-plugins] --> core
         hli["al-{hli}"] --> core
         hli --> dd
@@ -122,8 +122,7 @@ The documentation is generated with Sphinx. For more information on Sphinx, see 
 
 Documentation of the HLI is inside the ``doc`` folder of the repository. This folder
 contains the configuration (``conf.py``), and documentation pages (``*.rst``).
-Documentation that is common to all High Level Interfaces (such as this developer guide)
-is in the `common/doc_common folder in the al-core repository
+Documentation such as this developer guide is in the `common/doc_common folder
 <https://github.com/iterorganization/IMAS-Fortran/blob/develop/common/doc_common>`__.
 
 
@@ -138,11 +137,11 @@ and nothing else.
 .. code-block:: console
     :caption: Example: building the documentation for the Python HLI
 
-    imas-dev$ cd al-fortran
-    al-fortran$ # Configure cmake to only create the documentation:
-    al-fortran$ cmake -B build -D AL_HLI_DOCS -D AL_DOCS_ONLY
+    imas-dev$ cd IMAS-Cpp
+    IMAS-Cpp$ # Configure cmake to only create the documentation:
+    IMAS-Cpp$ cmake -B build -D AL_HLI_DOCS -D AL_DOCS_ONLY
     [...]
-    al-fortran$ make -C build al-fortran-docs
+    IMAS-Cpp$ make -C build al-fortran-docs
     [...]
 
 

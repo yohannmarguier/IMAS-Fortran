@@ -21,7 +21,3 @@ if( AL_DOWNLOAD_DEPENDENCIES OR AL_DEVELOPMENT_LAYOUT )
       TYPE BIN
     )
 endif()
-
-# al-common_SOURCE_DIR is used in some scripts in the cmake/ folder to refer to the
-# current source directory:
-set( al-common_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR} PARENT_SCOPE )

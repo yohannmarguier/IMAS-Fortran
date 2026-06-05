@@ -10,7 +10,6 @@ up a development environment.
 For more information about related components, see:
 
 -   `IMAS Core Documentation <https://imas-core.readthedocs.io/en/latest/>`__
-  
 -   `IMAS Data Dictionary Documentation <https://imas-data-dictionary.readthedocs.io/en/latest/>`__
 
 
@@ -126,18 +125,18 @@ overview of configuration options.
 .. code-block:: bash
 
     cd IMAS-Fortran
-    cmake -B build -D CMAKE_INSTALL_PREFIX=$HOME/IMAS-Fortran -D OPTION1=VALUE1 -D OPTION2=VALUE2 [...]
+    cmake -B build -D CMAKE_INSTALL_PREFIX=$HOME/test-install -D OPTION1=VALUE1 -D OPTION2=VALUE2 [...]
 
 .. note:: 
 
     CMake will automatically fetch dependencies from other IMAS-Fortran GIT repositories
     for you. You may need to provide credentials to clone the following repositories:
 
-    -   `imas-core (git@github.com:iterorganization/IMAS-Core.git)
+    -   `al-core (git@github.com:iterorganization/IMAS-Core.git)
         <https://github.com/iterorganization/IMAS-Core>`__
-    -   `imas-core-plugins (https://github.com/iterorganization/IMAS-Core-Plugins.git) 
-        <https://github.com/iterorganization/IMAS-Core-Plugins>`__
-    -   `imas-data-dictionary (git@github.com:iterorganization/IMAS-Data-Dictionary.git)
+    -   `al-plugins (https://github.com/iterorganization/IMAS-Core-plugins.git)
+        <https://github.com/iterorganization/IMAS-Core-plugins>`__
+    -   `data-dictionary (git@github.com:iterorganization/IMAS-Data-Dictionary.git)
         <https://github.com/iterorganization/IMAS-Data-Dictionary>`__
 
     If you need to change the git repositories, for example to point to a mirror of the
@@ -225,6 +224,15 @@ the corresponding test programs as follows:
     make -C build test
     # Directly invoke ctest
     ctest --test-dir build
+
+.. note::
+
+    The `ids_path` environment variable used to locate MDSplus models has been renamed to
+    `MDSPLUS_MODELS_PATH` in IMAS-Core 5.6.0 and later. Set it as follows:
+
+    .. code-block:: bash
+
+        export MDSPLUS_MODELS_PATH=/path/to/your/mdsplus/models
 
 This executes ``ctest`` to run all test and example programs. Note that this may take a
 long time to complete.

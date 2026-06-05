@@ -36,10 +36,11 @@ if( ${AL_DOWNLOAD_DEPENDENCIES} )
 elseif ( ${AL_DEVELOPMENT_LAYOUT} )
   FetchContent_Declare(
     al-core
-    SOURCE_DIR      "${CMAKE_CURRENT_SOURCE_DIR}/../al-core"
+    SOURCE_DIR      "${CMAKE_CURRENT_SOURCE_DIR}/../IMAS-Core"
   )
   FetchContent_MakeAvailable( al-core )
 endif()
+
 
 # Define project
 ################################################################################
