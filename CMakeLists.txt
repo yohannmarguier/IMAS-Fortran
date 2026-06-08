@@ -1,37 +1,45 @@
 # CMake build configuration for the Access Layer Fortran HLI
 cmake_minimum_required( VERSION 3.16 )
+if(POLICY CMP0144)
+  cmake_policy(SET CMP0144 NEW)
+endif()
+
+# Local paths for IMAS-Fortran
+################################################################################
+# Use full path since CMAKE_MODULE_PATH hasn't been configured yet
+include(${CMAKE_CURRENT_SOURCE_DIR}/common/cmake/ALLocalPaths.cmake)
 
 # Configuration options for common assets
 ################################################################################
 option( AL_DOWNLOAD_DEPENDENCIES "Automatically download assets from the AL git repository" ON )
-set( AL_CORE_GIT_REPOSITORY "ssh://git@git.iter.org/imas/al-core.git" CACHE STRING "Git repository of AL-core" )
+option( AL_DEVELOPMENT_LAYOUT "Use development repositories from sibling directory" OFF )
+if( AL_DEVELOPMENT_LAYOUT AND AL_DOWNLOAD_DEPENDENCIES )
+    message( STATUS "AL_DEVELOPMENT_LAYOUT=ON: setting AL_DOWNLOAD_DEPENDENCIES=OFF" )
+    set( AL_DOWNLOAD_DEPENDENCIES OFF CACHE BOOL "Automatically download assets from the AL git
+    repository" FORCE )
+endif()
+set( AL_CORE_GIT_REPOSITORY "https://github.com/iterorganization/IMAS-Core.git" CACHE STRING "Git repository of AL-core" )
 set( AL_CORE_VERSION "main" CACHE STRING "Git commit/tag/branch of AL-core" )
 
 include(FetchContent)
 
-# Load common assets
+# Load dependency
 ################################################################################
-if( DEFINED ENV{AL_COMMON_PATH} )
-  # Take common assets from the path in this environment variable instead of al-core
-  set( AL_COMMON_PATH $ENV{AL_COMMON_PATH} )
-else()
-  if( ${AL_DOWNLOAD_DEPENDENCIES} )
-    # Download common assets from the ITER git:
-    FetchContent_Declare(
-      al-core
-      GIT_REPOSITORY "${AL_CORE_GIT_REPOSITORY}"
-      GIT_TAG "${AL_CORE_VERSION}"
-    )
-  else()
-    FetchContent_Declare(
-      al-core
-      SOURCE_DIR      "${CMAKE_CURRENT_SOURCE_DIR}/../al-core"
-    )
-  endif()
+if( ${AL_DOWNLOAD_DEPENDENCIES} )
+  # Download common assets from the ITER git:
+  FetchContent_Declare(
+    al-core
+    GIT_REPOSITORY "${AL_CORE_GIT_REPOSITORY}"
+    GIT_TAG "${AL_CORE_VERSION}"
+  )
   FetchContent_MakeAvailable( al-core )
-  set( AL_COMMON_PATH "${al-core_SOURCE_DIR}/common" )
+elseif ( ${AL_DEVELOPMENT_LAYOUT} )
+  FetchContent_Declare(
+    al-core
+    SOURCE_DIR      "${CMAKE_CURRENT_SOURCE_DIR}/../IMAS-Core"
+  )
+  FetchContent_MakeAvailable( al-core )
 endif()
-add_subdirectory( ${AL_COMMON_PATH} _common )
 
 
 # Define project
@@ -102,25 +110,27 @@ foreach( IDS_NAME IN LISTS IDS_NAMES )
   list( APPEND GENERATED_SOURCES "${GENERATED_SRC_DIR}/${IDS_NAME}_schema.f90" )
 endforeach()
 
-find_package( SaxonHE )
+# Note: saxonche is provided by dd_build_env (set up in ALBuildDataDictionary)
+# _VENV_PYTHON points to that environment and is used for all XSLT transformations
+
 add_custom_command(
   # Use a dummy output file: when listing all actual output files (which are
   # source files of target `al-fortran`), they would be re-created with every build.
   OUTPUT ${GENERATED_SRC_DIR}/dummy.txt
   # Generate routine files with IDSDef2F90Routines.xsl
   COMMAND 
-    java -cp ${SaxonHE_CLASSPATH}
-      net.sf.saxon.Transform -t -warnings:fatal
-      "-xsl:${CMAKE_CURRENT_SOURCE_DIR}/IDSDef2F90Routines.xsl"
-      "-s:${IDSDEF}"
+    ${_VENV_PYTHON} "${AL_LOCAL_XSLTPROC_SCRIPT}"
+      -xsl ${CMAKE_CURRENT_SOURCE_DIR}/IDSDef2F90Routines.xsl
+      -s ${IDSDEF}
+      -o ${GENERATED_SRC_DIR}/routines_output.xml
       DD_GIT_DESCRIBE=${DD_VERSION}
       AL_GIT_DESCRIBE=${FULL_VERSION}
   # Generate schema files with IDSDef2F90TypeDef.xsl
   COMMAND 
-    java -cp ${SaxonHE_CLASSPATH}
-      net.sf.saxon.Transform -t -warnings:fatal
-      "-xsl:${CMAKE_CURRENT_SOURCE_DIR}/IDSDef2F90TypeDef.xsl"
-      "-s:${IDSDEF}"
+    ${_VENV_PYTHON} "${AL_LOCAL_XSLTPROC_SCRIPT}"
+      -xsl ${CMAKE_CURRENT_SOURCE_DIR}/IDSDef2F90TypeDef.xsl
+      -s ${IDSDEF}
+      -o ${GENERATED_SRC_DIR}/schemas_output.xml
       DD_GIT_DESCRIBE=${DD_VERSION}
       AL_GIT_DESCRIBE=${FULL_VERSION}
   # Create/update our dummy file
@@ -150,7 +160,7 @@ list( APPEND SOURCES
 # Unfortunately, xsl:include doesn't support parameters, so we need to put them together
 # in the build folder:
 file( CREATE_LINK
-  "${al-common_SOURCE_DIR}/identifiers.common.xsl" 
+  "${CMAKE_CURRENT_SOURCE_DIR}/common/identifiers.common.xsl" 
   "${CMAKE_CURRENT_BINARY_DIR}/identifiers.common.xsl"
   SYMBOLIC COPY_ON_ERROR
 )
@@ -160,6 +170,7 @@ file( CREATE_LINK
   SYMBOLIC COPY_ON_ERROR
 )
 set( IDENTIFIER_SRC_DIR ${CMAKE_CURRENT_BINARY_DIR}/identifiers/src/ )
+file( MAKE_DIRECTORY ${IDENTIFIER_SRC_DIR} )
 
 set( IDENTIFIER_SOURCES )
 foreach( ID_FILE IN LISTS DD_IDENTIFIER_FILES )
@@ -168,12 +179,12 @@ foreach( ID_FILE IN LISTS DD_IDENTIFIER_FILES )
   set( SOURCE_NAME "${IDENTIFIER_SRC_DIR}/${ID_NAME}.f90" )
   add_custom_command(
     OUTPUT ${SOURCE_NAME}
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${IDENTIFIER_SRC_DIR}
-    COMMAND ${LIBXSLT_XSLTPROC_EXECUTABLE}
-      --stringparam name ${ID_NAME}
-      --stringparam prefix "${IDENTIFIER_SRC_DIR}"
-      ${CMAKE_CURRENT_BINARY_DIR}/identifiers.xsl
-      ${ID_FILE}
+    COMMAND ${_VENV_PYTHON} "${AL_LOCAL_XSLTPROC_SCRIPT}"
+      -xsl ${CMAKE_CURRENT_BINARY_DIR}/identifiers.xsl
+      -s ${ID_FILE}
+      -o ${CMAKE_CURRENT_BINARY_DIR}/${ID_NAME}_identifier_output.xml
+      name=${ID_NAME}
+      prefix=${IDENTIFIER_SRC_DIR}
     DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/identifiers.xsl
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   )
@@ -230,6 +241,25 @@ install( FILES
     ${CMAKE_CURRENT_BINARY_DIR}/al-fortran-${DD_VERSION}.pc
     ${CMAKE_CURRENT_BINARY_DIR}/al-identifiers-fortran.pc
   DESTINATION lib/pkgconfig
+)
+# Create backward-compatibility symlinks for imas-* pkgconfig files
+install( CODE
+  "execute_process(
+    COMMAND ${CMAKE_COMMAND} -E create_symlink
+      al-fortran.pc imas-fortran.pc
+    WORKING_DIRECTORY \${CMAKE_INSTALL_PREFIX}/lib/pkgconfig
+  )
+  execute_process(
+    COMMAND ${CMAKE_COMMAND} -E create_symlink
+      al-fortran-${DD_VERSION}.pc imas-fortran-${DD_VERSION}.pc
+    WORKING_DIRECTORY \${CMAKE_INSTALL_PREFIX}/lib/pkgconfig
+  )
+  execute_process(
+    COMMAND ${CMAKE_COMMAND} -E create_symlink
+      al-identifiers-fortran.pc imas-identifiers-fortran.pc
+    WORKING_DIRECTORY \${CMAKE_INSTALL_PREFIX}/lib/pkgconfig
+  )
+"
 )
 
 

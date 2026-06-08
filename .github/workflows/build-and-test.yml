@@ -1,0 +1,409 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ main, develop, feature/** ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+env:
+  CMAKE_VERSION: '3.27.6'
+  BOOST_VERSION: '1.83.0'
+  HDF5_VERSION: '1.14.3'
+  PYTHON_VERSION: '3.11'
+  UDA_VERSION: '2.9.1'
+  FMT_VERSION: '9.1.0'
+
+jobs:
+  build-linux:
+    name: Build on ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            name: "Ubuntu 24.04 (foss-2023b equiv)"
+            cc: gcc-14
+            cxx: g++-14
+            fc: gfortran-14
+            backend_hdf5: ON
+            backend_mdsplus: OFF  # Tests will run with HDF5 backend only
+            backend_uda: OFF
+            install_compiler: false  # gcc-14 is default
+            use_system_packages: false
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v6
+      with:
+        fetch-depth: 0
+    
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Verify Fortran compiler
+      run: |
+        which ${{ matrix.fc }} || echo "Fortran compiler not found"
+        ${{ matrix.fc }} --version
+    
+    - name: Cache pip packages
+      uses: actions/cache@v5
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ env.PYTHON_VERSION }}-${{ hashFiles('**/requirements.txt') }}-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-pip-${{ env.PYTHON_VERSION }}-${{ hashFiles('**/requirements.txt') }}-
+          ${{ runner.os }}-pip-${{ env.PYTHON_VERSION }}-
+          ${{ runner.os }}-pip-
+    
+    - name: Install system dependencies
+      run: |
+        # Detect package manager and install dependencies
+        if command -v apt-get &> /dev/null; then
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            pkg-config \
+            wget \
+            gfortran \
+            gfortran-14
+          
+          # Install specific compiler version if needed
+          if [ "${{ matrix.install_compiler }}" = "true" ]; then
+            sudo apt-get install -y ${{ matrix.cxx }} ${{ matrix.cc }} ${{ matrix.fc }}
+          fi
+        elif command -v dnf &> /dev/null; then
+          # AlmaLinux/RHEL 8+ with full backend support
+          dnf update -y
+          
+          # Install EPEL and PowerTools first (needed for some devel packages)
+          dnf install -y epel-release
+          dnf config-manager --set-enabled powertools || dnf config-manager --set-enabled PowerTools || true
+          
+          # Install base build tools
+          dnf install -y \
+            gcc gcc-c++ gcc-gfortran \
+            cmake \
+            pkgconfig \
+            wget \
+            make \
+            openssl-devel \
+            git \
+            curl \
+            tar \
+            gzip \
+            ca-certificates \
+            python3 \
+            python3-pip
+          
+          # Update CA certificates for SSL issues
+          update-ca-trust
+          
+          # Install backend-specific packages if using system packages
+          if [ "${{ matrix.use_system_packages }}" = "true" ]; then
+            # Install system packages for backends
+            dnf install -y \
+              boost-devel \
+              hdf5-devel \
+              capnproto capnproto-devel \
+              fmt-devel \
+              spdlog-devel \
+              libtirpc-devel \
+              libxml2-devel || echo "Some packages failed to install, continuing..."
+          fi
+        elif command -v yum &> /dev/null; then
+          # CentOS/RHEL 7
+          yum install -y \
+            gcc gcc-c++ gcc-gfortran \
+            cmake \
+            pkgconfig \
+            wget \
+            make \
+            git \
+            curl
+        else
+          echo "Unsupported package manager"
+          exit 1
+        fi
+    
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r doc/doc_common/requirements.txt
+        pip install saxonche
+    
+    - name: Build and install UDA
+      if: matrix.backend_uda == 'ON' && matrix.use_system_packages == true
+      run: |
+        cd $HOME
+        echo "Downloading UDA ${UDA_VERSION}..."
+        curl -LO https://github.com/ukaea/UDA/archive/refs/tags/${UDA_VERSION}.tar.gz
+        tar zxf ${UDA_VERSION}.tar.gz
+        cd UDA-${UDA_VERSION}
+        
+        echo "Configuring UDA..."
+        cmake -B build . \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DBUILD_SHARED_LIBS=ON \
+          -DSSLAUTHENTICATION=ON \
+          -DCLIENT_ONLY=ON \
+          -DENABLE_CAPNP=ON
+        
+        echo "Building UDA..."
+        cmake --build build -j$(nproc)
+        
+        echo "Installing UDA..."
+        cmake --install build
+        
+        echo "UDA installation complete"
+    
+    - name: Cache Boost installation
+      if: matrix.use_system_packages == false
+      id: cache-boost
+      uses: actions/cache@v5
+      with:
+        path: ~/boost
+        key: boost-${{ env.BOOST_VERSION }}-${{ runner.os }}-${{ matrix.name }}
+        restore-keys: |
+          boost-${{ env.BOOST_VERSION }}-${{ runner.os }}-${{ matrix.name }}-
+          boost-${{ env.BOOST_VERSION }}-${{ runner.os }}-
+    
+    - name: Download and install Boost
+      if: matrix.use_system_packages == false && steps.cache-boost.outputs.cache-hit != 'true'
+      run: |
+        cd $HOME
+        BOOST_VERSION_UNDERSCORE=$(echo $BOOST_VERSION | tr '.' '_')
+        
+        # Double-check if boost is already properly installed
+        if [ -d "$HOME/boost/lib" ] && [ "$(find $HOME/boost/lib -name 'libboost_system*' 2>/dev/null | wc -l)" -gt 0 ]; then
+          echo "Boost already found and verified in cache, skipping download and build"
+          exit 0
+        fi
+        
+        echo "Downloading Boost ${BOOST_VERSION}..."
+        # Try SourceForge as primary (JFrog Artifactory has been deactivated)
+        BOOST_URL_SF="https://sourceforge.net/projects/boost/files/boost/${BOOST_VERSION}/boost_${BOOST_VERSION_UNDERSCORE}.tar.gz/download"
+        if ! wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 3 \
+                  -O boost_${BOOST_VERSION_UNDERSCORE}.tar.gz "$BOOST_URL_SF"; then
+          # Fallback to archives.boost.io
+          echo "SourceForge download failed, trying archives.boost.io..."
+          BOOST_URL_ARCHIVE="https://archives.boost.io/release/${BOOST_VERSION}/source/boost_${BOOST_VERSION_UNDERSCORE}.tar.gz"
+          if ! wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 3 \
+                    -O boost_${BOOST_VERSION_UNDERSCORE}.tar.gz "$BOOST_URL_ARCHIVE"; then
+            # Last resort: try GitHub mirror
+            echo "archives.boost.io failed, trying GitHub mirror..."
+            BOOST_URL_GH="https://github.com/boostorg/boost/releases/download/boost-${BOOST_VERSION}/boost-${BOOST_VERSION}-cmake.tar.gz"
+            wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 3 \
+                 -O boost_${BOOST_VERSION_UNDERSCORE}.tar.gz "$BOOST_URL_GH"
+          fi
+        fi
+        
+        echo "Extracting Boost..."
+        tar xzf boost_${BOOST_VERSION_UNDERSCORE}.tar.gz
+        cd boost_${BOOST_VERSION_UNDERSCORE}
+        
+        echo "Building Boost libraries..."
+        ./bootstrap.sh --prefix=$HOME/boost --with-libraries=system,filesystem,log,thread
+        ./b2 install -j$(nproc) > /dev/null
+        
+        echo "Boost installation complete"
+    
+    - name: Set Boost environment variables
+      if: matrix.use_system_packages == false
+      run: |
+        echo "BOOST_ROOT=$HOME/boost" >> $GITHUB_ENV
+        echo "$HOME/boost/lib" >> $GITHUB_PATH
+    
+    - name: Cache HDF5 installation
+      if: matrix.use_system_packages == false
+      id: cache-hdf5
+      uses: actions/cache@v5
+      with:
+        path: ~/hdf5
+        key: hdf5-${{ env.HDF5_VERSION }}-${{ runner.os }}-${{ matrix.name }}
+        restore-keys: |
+          hdf5-${{ env.HDF5_VERSION }}-${{ runner.os }}-${{ matrix.name }}-
+          hdf5-${{ env.HDF5_VERSION }}-${{ runner.os }}-
+    
+    - name: Download and install HDF5
+      if: matrix.use_system_packages == false && steps.cache-hdf5.outputs.cache-hit != 'true'
+      run: |
+        cd $HOME
+        HDF5_VERSION_SHORT=$(echo $HDF5_VERSION | cut -d. -f1,2)
+        HDF5_URL="https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-${HDF5_VERSION_SHORT}/hdf5-${HDF5_VERSION}/src/hdf5-${HDF5_VERSION}.tar.gz"
+        
+        # Double-check if HDF5 is already properly installed
+        if [ -d "$HOME/hdf5/lib" ] && [ "$(find $HOME/hdf5/lib -name 'libhdf5*' 2>/dev/null | wc -l)" -gt 0 ]; then
+          echo "HDF5 already found and verified in cache, skipping download and build"
+          exit 0
+        fi
+        
+        echo "Downloading HDF5 ${HDF5_VERSION}..."
+        # Try with retries
+        if ! wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 3 \
+                  -O hdf5-${HDF5_VERSION}.tar.gz "$HDF5_URL"; then
+          # Try alternative mirror
+          echo "Primary download failed, trying alternative URL..."
+          HDF5_URL_ALT="https://hdf-wordpress-1.s3.amazonaws.com/wp-content/uploads/manual/HDF5/HDF5_${HDF5_VERSION_SHORT}/hdf5-${HDF5_VERSION}.tar.gz"
+          wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 3 \
+               -O hdf5-${HDF5_VERSION}.tar.gz "$HDF5_URL_ALT"
+        fi
+        
+        echo "Extracting HDF5..."
+        tar xzf hdf5-${HDF5_VERSION}.tar.gz
+        cd hdf5-${HDF5_VERSION}
+        
+        echo "Configuring HDF5..."
+        ./configure --prefix=$HOME/hdf5 --enable-cxx --enable-fortran > /dev/null
+        
+        echo "Building HDF5..."
+        make -j$(nproc) > /dev/null
+        make install > /dev/null
+        
+        echo "HDF5 installation complete"
+    
+    - name: Set HDF5 environment variables
+      if: matrix.use_system_packages == false
+      run: |
+        echo "HDF5_ROOT=$HOME/hdf5" >> $GITHUB_ENV
+        echo "$HOME/hdf5/bin" >> $GITHUB_PATH
+        echo "LD_LIBRARY_PATH=$HOME/hdf5/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+    
+    - name: Configure CMake
+      run: |
+        # Set Boost and HDF5 paths based on installation method
+        if [ "${{ matrix.use_system_packages }}" = "true" ]; then
+          BOOST_OPTS=""
+          HDF5_OPTS=""
+          PREFIX_PATH=""
+        else
+          BOOST_OPTS="-DBoost_NO_BOOST_CMAKE=ON -DBOOST_ROOT=$HOME/boost -DBoost_INCLUDE_DIR=$HOME/boost/include"
+          HDF5_OPTS="-DHDF5_ROOT=$HOME/hdf5"
+          PREFIX_PATH="-DCMAKE_PREFIX_PATH=$HOME/boost;$HOME/hdf5"
+        fi
+        
+        # Configure CMake with retry logic for git operations
+        export GIT_CURL_VERBOSE=1
+        for attempt in 1 2 3; do
+          echo "CMake configuration attempt $attempt..."
+          cmake -B build \
+            -DCMAKE_INSTALL_PREFIX=$PWD/install \
+            -DCMAKE_C_COMPILER=${{ matrix.cc }} \
+            -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} \
+            -DCMAKE_Fortran_COMPILER=${{ matrix.fc }} \
+            -DCMAKE_CXX_STANDARD=17 \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            $PREFIX_PATH \
+            -DAL_BACKEND_HDF5=${{ matrix.backend_hdf5 }} \
+            -DAL_BACKEND_MDSPLUS=${{ matrix.backend_mdsplus }} \
+            -DAL_BACKEND_UDA=${{ matrix.backend_uda }} \
+            -DAL_BUILD_MDSPLUS_MODELS=OFF \
+            -DAL_DOWNLOAD_DEPENDENCIES=ON \
+            -DAL_CORE_GIT_REPOSITORY=https://github.com/iterorganization/IMAS-Core.git \
+            -DDD_GIT_REPOSITORY=https://github.com/iterorganization/IMAS-Data-Dictionary.git \
+            -DAL_CORE_VERSION=develop \
+            -DDD_VERSION=main \
+            -DAL_EXAMPLES=ON \
+            -DAL_TESTS=ON \
+            -DAL_PLUGINS=OFF \
+            -DAL_HLI_DOCS=OFF \
+            $BOOST_OPTS \
+            $HDF5_OPTS && break
+          
+          if [ $attempt -lt 3 ]; then
+            echo "CMake configuration failed, retrying in 10 seconds..."
+            rm -rf build
+            sleep 10
+          else
+            echo "CMake configuration failed after 3 attempts"
+            exit 1
+          fi
+        done
+    
+    - name: Build
+      run: |
+        make -C build -j$(nproc) all
+    
+    - name: Run tests
+      run: |
+        # Create test database
+        mkdir -p testdb
+        export USER="$PWD/testdb"
+        
+        # Verify environment
+        echo "C Compiler: ${{ matrix.cc }}"
+        echo "C++ Compiler: ${{ matrix.cxx }}"
+        echo "Fortran Compiler: ${{ matrix.fc }}"
+        
+        cd build
+        echo "Available tests:"
+        ctest -N
+        
+        # Check if at least one backend is enabled
+        if [ "${{ matrix.backend_hdf5 }}" = "ON" ] || [ "${{ matrix.backend_mdsplus }}" = "ON" ]; then
+          echo "Running tests with available backend(s)..."
+          echo "HDF5: ${{ matrix.backend_hdf5 }}, MDSplus: ${{ matrix.backend_mdsplus }}"
+          ctest --output-on-failure --verbose
+        else
+          echo "No backends enabled, skipping tests"
+        fi
+      continue-on-error: true
+    
+    - name: Install
+      run: |
+        make -C build install
+    
+    - name: List installed files
+      run: |
+        echo "Installation directory contents:"
+        ls -lR install/
+        
+        echo ""
+        echo "Checking installed libraries:"
+        find install -name "*.a" -o -name "*.so*" | head -20
+        
+        echo ""
+        echo "Checking installed modules:"
+        find install -name "*.mod" | head -20
+
+    - name: Print diagnostics on failure
+      if: failure()
+      run: |
+        echo "CMake cache:"
+        if [ -f build/CMakeCache.txt ]; then
+          cat build/CMakeCache.txt
+        else
+          echo "build/CMakeCache.txt not found"
+        fi
+
+        echo ""
+        echo "CMake error log:"
+        if [ -f build/CMakeFiles/CMakeError.log ]; then
+          cat build/CMakeFiles/CMakeError.log
+        else
+          echo "build/CMakeFiles/CMakeError.log not found"
+        fi
+
+        echo ""
+        echo "CMake output log:"
+        if [ -f build/CMakeFiles/CMakeOutput.log ]; then
+          cat build/CMakeFiles/CMakeOutput.log
+        else
+          echo "build/CMakeFiles/CMakeOutput.log not found"
+        fi
+
+        echo ""
+        echo "CTest logs:"
+        if [ -d build/Testing ]; then
+          find build/Testing -maxdepth 3 -type f -print -exec sh -c 'echo "===== $1 ====="; cat "$1"' sh {} \;
+        else
+          echo "build/Testing not found"
+        fi
