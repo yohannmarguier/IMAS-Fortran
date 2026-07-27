@@ -1,29 +1,42 @@
 # imas-projection-engine
 
 The same-major Data Dictionary projection-engine substrate: a Rust library
-behind a narrow, stable C ABI. Full design: issue #18. This crate currently
-implements the skeleton scoped by issue #20 — the smallest callable
-substrate, not the real projection logic.
+behind a narrow, stable C ABI. Full design: issue #18. This crate
+implements the skeleton scoped by issue #20 plus the schema-pair
+acquisition scoped by issue #21 — not yet the real rename/projection
+logic.
 
-## Scope of this slice (#20)
+## Scope of this slice (#20, #21)
 
 Implemented here:
-- Opaque ABI handle (`pe_operation_t`).
+- Opaque ABI handles (`pe_operation_t`, `pe_map_t`).
 - Shared status (`pe_status_t`) and projection-verdict (`pe_verdict_t`)
-  vocabulary.
+  vocabulary, including the `PE_STATUS_SCHEMA_IDENTITY` and
+  `PE_STATUS_CROSS_MAJOR` statuses added by #21.
 - One returned-string ownership convention (caller-provided buffer +
-  required-length query), demonstrated by `pe_status_message`.
+  required-length query), demonstrated by `pe_status_message` and reused
+  by `pe_map_version`.
 - Deterministic reset/read projection-entry instrumentation
   (`pe_instrumentation_reset` / `pe_instrumentation_read`).
 - A representative entry point, `pe_project_node_query`, that validates
   its inputs and ticks the instrumentation counter but always reports
   `PE_VERDICT_SAME` — the real rename/skip computation is out of scope
-  here.
+  here (issue #23).
+- `pe_map_acquire` / `pe_map_release` / `pe_map_version` (#21): given
+  stored and working DD XML documents plus their claimed identities,
+  parses both with `roxmltree`, resolves each schema's DD version (the
+  XML `<version>` element is authoritative when present; a caller-supplied
+  fallback is used only when it is absent), validates the resolved
+  version against the claimed identity, and refuses to build a map for a
+  cross-major pair. All four input buffers are borrowed only for the
+  duration of the call; the engine copies what it needs to retain (see
+  `src/schema.rs`).
 - A C contract test (`tests/contract/test_contract.c`), registered with
   CTest, that drives every capability above through the header only.
 
-Deliberately **not** here (see issue #21 and the full #18 spec): XML
-parsing, rename-map construction/caching, real projection verdicts, loss
+Deliberately **not** here (see the full #18 spec and issues #22-#28): a
+`field/@path` index or real rename-map construction, map caching/reuse
+across acquisitions, LRU eviction, real per-node projection verdicts, loss
 accumulation, Fortran types, IMAS-Core, backend selection, or a Python
 runtime dependency.
 
@@ -48,14 +61,15 @@ To iterate on the crate directly: `cd engine && cargo test`.
 ## MSRV
 
 `Cargo.toml` declares `rust-version = "1.76.0"`, matching the blessed ITER
-Rust 1.76.0 module (see issue #18 §8). This crate has no dependencies yet;
-when issue #21 adds XML/cache crates, pick versions whose own declared
-`rust-version` stays at or below 1.76.0 — several mature XML/LRU crates
+Rust 1.76.0 module (see issue #18 §8). Issue #21 adds this crate's first
+dependency, `roxmltree` (declared `rust-version = "1.60"`, well under this
+crate's floor); when a later slice adds a cache crate, pick one whose own
+declared `rust-version` stays at or below 1.76.0 — several mature crates
 have raised theirs past it in recent releases. CI enforces this floor by
 building this crate with an actual 1.76.0 toolchain (see
 `.github/workflows/rust-engine-msrv.yml`); that job fails if the crate's
-own code or any (future) dependency requires a newer compiler, regardless
-of what `rust-version` merely declares.
+own code or any dependency requires a newer compiler, regardless of what
+`rust-version` merely declares.
 
 ## ABI conventions
 

@@ -16,7 +16,7 @@ use std::panic::{self, AssertUnwindSafe};
 use std::sync::{Mutex, Once, OnceLock};
 
 use crate::status::{PeStatus, PeVerdict};
-use crate::Operation;
+use crate::{AcquireError, Map, MapRole, Operation};
 
 static INSTALL_PANIC_HOOK: Once = Once::new();
 
@@ -27,6 +27,46 @@ static INSTALL_PANIC_HOOK: Once = Once::new();
 fn active_operations() -> &'static Mutex<HashSet<usize>> {
     static ACTIVE_OPERATIONS: OnceLock<Mutex<HashSet<usize>>> = OnceLock::new();
     ACTIVE_OPERATIONS.get_or_init(|| Mutex::new(HashSet::new()))
+}
+
+/// Addresses of map handles that this ABI has issued and not yet released.
+/// Same rationale as [`active_operations`], applied to `pe_map_t` (issue
+/// #21).
+fn active_maps() -> &'static Mutex<HashSet<usize>> {
+    static ACTIVE_MAPS: OnceLock<Mutex<HashSet<usize>>> = OnceLock::new();
+    ACTIVE_MAPS.get_or_init(|| Mutex::new(HashSet::new()))
+}
+
+/// Borrows `ptr`/`len` as `&str` for the duration of the caller's closure,
+/// rejecting a null pointer, a zero length, or invalid UTF-8 by returning
+/// `None`. Mirrors the null/zero-length convention `pe_project_node_query`
+/// already established for its borrowed `node_path` parameter.
+///
+/// # Safety
+/// `ptr` must be either null or a valid pointer to at least `len` readable
+/// bytes.
+unsafe fn borrow_str<'a>(ptr: *const c_char, len: usize) -> Option<&'a str> {
+    if ptr.is_null() || len == 0 {
+        return None;
+    }
+    let bytes = unsafe { std::slice::from_raw_parts(ptr.cast::<u8>(), len) };
+    std::str::from_utf8(bytes).ok()
+}
+
+/// Borrows an optional claimed DD version. A zero-length value represents an
+/// absent fallback identity and is passed through as an empty string so the
+/// schema resolver can report `SchemaIdentity` when the XML has no
+/// `<version>` element. A non-empty value follows the normal borrowed-string
+/// validation rules.
+///
+/// # Safety
+/// When `len` is non-zero, `ptr` must be a valid pointer to at least `len`
+/// readable bytes. A null pointer is allowed only with a zero length.
+unsafe fn borrow_claimed_version<'a>(ptr: *const c_char, len: usize) -> Option<&'a str> {
+    if len == 0 {
+        return Some("");
+    }
+    unsafe { borrow_str(ptr, len) }
 }
 
 /// Installs a silent panic hook exactly once. Every entry point below
@@ -108,8 +148,8 @@ unsafe fn write_str_to_buffer(
     }
 }
 
-/// Begins operation-scoped state, foreshadowing the loss/dead-subtree
-/// state issue #21 adds without changing this handle shape. Returns the
+/// Begins operation-scoped state, foreshadowing the projection/loss state
+/// issues #26/#27 add without changing this handle shape. Returns the
 /// new handle through `out_operation`.
 ///
 /// # Safety
@@ -160,9 +200,168 @@ pub unsafe extern "C" fn pe_operation_end(operation: *mut Operation) -> PeStatus
     })
 }
 
+/// Acquires a validated same-major stored/working DD schema pair as an
+/// opaque, releasable [`Map`] handle (issue #21).
+///
+/// `stored_xml`/`working_xml` are each parsed as UTF-8 XML; the XML
+/// `<version>` element is authoritative when present, and must then agree
+/// with the corresponding `*_claimed_version` string. When the element is
+/// absent, `*_claimed_version` is used as the schema's version directly.
+/// An invalid or fabricated identity never produces a usable handle:
+/// malformed XML, a missing version with no valid fallback, or a
+/// claimed/parsed mismatch on either schema all return
+/// `PE_STATUS_SCHEMA_IDENTITY`. A pair that individually validates but
+/// disagrees on major version returns the distinct `PE_STATUS_CROSS_MAJOR`.
+/// Neither failure writes `out_map`.
+///
+/// `stored`/`working` are caller-assigned roles, not an ordering by DD
+/// version: the same parsing and validation runs for both regardless of
+/// which one is semantically older or curated.
+///
+/// Input ownership: all four input buffers are borrowed for the duration
+/// of this call only. On success, the engine copies the bytes it needs
+/// (the resolved version and a copy of each schema's XML source) into the
+/// returned `Map`; none of the four input pointers is retained past this
+/// call returning, and the caller may free or overwrite them immediately
+/// afterwards.
+///
+/// # Safety
+/// `stored_xml`, `stored_claimed_version`, `working_xml`, and
+/// `working_claimed_version` must each be either null or a valid pointer
+/// to at least their respective `*_len` readable bytes; none need be
+/// NUL-terminated. `out_map` must be either null or a valid pointer to one
+/// writable `*mut Map`.
+#[no_mangle]
+pub unsafe extern "C" fn pe_map_acquire(
+    stored_xml: *const c_char,
+    stored_xml_len: usize,
+    stored_claimed_version: *const c_char,
+    stored_claimed_version_len: usize,
+    working_xml: *const c_char,
+    working_xml_len: usize,
+    working_claimed_version: *const c_char,
+    working_claimed_version_len: usize,
+    out_map: *mut *mut Map,
+) -> PeStatus {
+    guard(|| {
+        if out_map.is_null() {
+            return PeStatus::InvalidArgument;
+        }
+        let stored_xml = match unsafe { borrow_str(stored_xml, stored_xml_len) } {
+            Some(s) => s,
+            None => return PeStatus::InvalidArgument,
+        };
+        let stored_claimed_version = match unsafe {
+            borrow_claimed_version(stored_claimed_version, stored_claimed_version_len)
+        } {
+            Some(s) => s,
+            None => return PeStatus::InvalidArgument,
+        };
+        let working_xml = match unsafe { borrow_str(working_xml, working_xml_len) } {
+            Some(s) => s,
+            None => return PeStatus::InvalidArgument,
+        };
+        let working_claimed_version = match unsafe {
+            borrow_claimed_version(working_claimed_version, working_claimed_version_len)
+        } {
+            Some(s) => s,
+            None => return PeStatus::InvalidArgument,
+        };
+
+        match crate::acquire_map(
+            stored_xml,
+            stored_claimed_version,
+            working_xml,
+            working_claimed_version,
+        ) {
+            Ok(map) => {
+                let mut active = active_maps().lock().unwrap();
+                let map = Box::into_raw(Box::new(map));
+                active.insert(map as usize);
+                unsafe {
+                    *out_map = map;
+                }
+                PeStatus::Ok
+            }
+            Err(AcquireError::Identity) => PeStatus::SchemaIdentity,
+            Err(AcquireError::CrossMajor) => PeStatus::CrossMajor,
+        }
+    })
+}
+
+/// Releases a map handle returned by [`pe_map_acquire`].
+///
+/// # Safety
+/// A null handle returns [`PeStatus::NullHandle`]. A handle not currently
+/// owned by this ABI, including one already passed to this function,
+/// returns [`PeStatus::InvalidArgument`] without being dereferenced.
+#[no_mangle]
+pub unsafe extern "C" fn pe_map_release(map: *mut Map) -> PeStatus {
+    guard(|| {
+        if map.is_null() {
+            return PeStatus::NullHandle;
+        }
+
+        let was_active = active_maps().lock().unwrap().remove(&(map as usize));
+        if !was_active {
+            return PeStatus::InvalidArgument;
+        }
+        unsafe {
+            drop(Box::from_raw(map));
+        }
+        PeStatus::Ok
+    })
+}
+
+/// Reads back the resolved version string of one schema in `map`, following
+/// the buffer convention documented on [`write_str_to_buffer`]. Exists so a
+/// caller (including this crate's own contract test) can observe that
+/// acquisition resolved and retained each schema's version correctly and
+/// independently of the input buffers passed to [`pe_map_acquire`].
+///
+/// `role` is accepted as a raw `i32` for the same reason `pe_status_message`
+/// accepts a raw status: transmuting an out-of-range value directly into a
+/// Rust enum is undefined behaviour even though both are `#[repr(i32)]`. An
+/// unrecognized value is rejected as `PeStatus::InvalidArgument`.
+///
+/// # Safety
+/// `map` must be either null or a valid, still-live handle returned by
+/// `pe_map_acquire`. `buffer` must be either null or a valid pointer to at
+/// least `buffer_len` writable bytes. `required_len` must be either null or
+/// a valid pointer to one writable `usize`.
+#[no_mangle]
+pub unsafe extern "C" fn pe_map_version(
+    map: *const Map,
+    role: i32,
+    buffer: *mut c_char,
+    buffer_len: usize,
+    required_len: *mut usize,
+) -> PeStatus {
+    guard(|| {
+        if map.is_null() {
+            return PeStatus::NullHandle;
+        }
+        if !active_maps().lock().unwrap().contains(&(map as usize)) {
+            return PeStatus::InvalidArgument;
+        }
+        let role = match MapRole::from_raw(role) {
+            Some(role) => role,
+            None => return PeStatus::InvalidArgument,
+        };
+
+        let map = unsafe { &*map };
+        let schema = match role {
+            MapRole::Stored => map.stored(),
+            MapRole::Working => map.working(),
+        };
+        let text = schema.version().to_string();
+        unsafe { write_str_to_buffer(&text, buffer, buffer_len, required_len) }
+    })
+}
+
 /// Representative "project node" entry point. This is a placeholder: it
 /// validates its inputs, records one projection-entry instrumentation
-/// tick, and always reports `PeVerdict::Same`. Issue #21 replaces the
+/// tick, and always reports `PeVerdict::Same`. Issue #23 replaces the
 /// verdict computation with real rename/skip map lookups; the ABI shape
 /// (handle, borrowed path, out-verdict) does not need to change to do so.
 ///

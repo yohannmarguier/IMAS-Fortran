@@ -14,6 +14,18 @@ pub enum PeStatus {
     NullHandle = 2,
     BufferTooSmall = 3,
     Internal = 4,
+    /// Malformed XML, a missing DD version with no valid caller-supplied
+    /// fallback, or a caller-claimed identity that disagrees with the
+    /// parsed `<version>` element. Introduced by issue #21; covers every
+    /// map-acquisition failure that is not the distinct cross-major refusal
+    /// below.
+    SchemaIdentity = 5,
+    /// The stored and working schemas parsed to different major DD
+    /// versions. Automatic same-major projection refuses to build a map
+    /// for this pair; kept distinct from `SchemaIdentity` so a caller can
+    /// tell "one of these schemas is unusable" from "both parse fine but do
+    /// not pair". Introduced by issue #21.
+    CrossMajor = 6,
 }
 
 impl PeStatus {
@@ -27,6 +39,8 @@ impl PeStatus {
             2 => Some(PeStatus::NullHandle),
             3 => Some(PeStatus::BufferTooSmall),
             4 => Some(PeStatus::Internal),
+            5 => Some(PeStatus::SchemaIdentity),
+            6 => Some(PeStatus::CrossMajor),
             _ => None,
         }
     }
@@ -41,13 +55,15 @@ impl PeStatus {
             PeStatus::NullHandle => "null handle",
             PeStatus::BufferTooSmall => "buffer too small",
             PeStatus::Internal => "internal condition",
+            PeStatus::SchemaIdentity => "schema identity invalid",
+            PeStatus::CrossMajor => "cross-major pair rejected",
         }
     }
 }
 
 /// Shared projection-verdict vocabulary. This skeleton establishes the type;
 /// real rename/skip decisions are computed once the map/cache substrate
-/// lands in a later slice (see issue #21). Until then, every entry point
+/// lands in a later slice (see issue #23). Until then, every entry point
 /// that returns a verdict always reports `Same`.
 #[repr(i32)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -65,6 +81,8 @@ mod tests {
     fn from_raw_accepts_known_discriminants() {
         assert_eq!(PeStatus::from_raw(0), Some(PeStatus::Ok));
         assert_eq!(PeStatus::from_raw(3), Some(PeStatus::BufferTooSmall));
+        assert_eq!(PeStatus::from_raw(5), Some(PeStatus::SchemaIdentity));
+        assert_eq!(PeStatus::from_raw(6), Some(PeStatus::CrossMajor));
     }
 
     #[test]
@@ -93,6 +111,8 @@ mod tests {
             PeStatus::NullHandle,
             PeStatus::BufferTooSmall,
             PeStatus::Internal,
+            PeStatus::SchemaIdentity,
+            PeStatus::CrossMajor,
         ] {
             let lower = status.message().to_lowercase();
             for word in FORBIDDEN {
