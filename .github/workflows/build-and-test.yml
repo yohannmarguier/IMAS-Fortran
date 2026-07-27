@@ -52,6 +52,11 @@ jobs:
       run: |
         which ${{ matrix.fc }} || echo "Fortran compiler not found"
         ${{ matrix.fc }} --version
+
+    - name: Verify Rust toolchain
+      run: |
+        cargo --version
+        rustc --version
     
     - name: Cache pip packages
       uses: actions/cache@v6
@@ -315,6 +320,7 @@ jobs:
             -DAL_TESTS=ON \
             -DAL_PLUGINS=OFF \
             -DAL_HLI_DOCS=OFF \
+            -DAL_RUST_ENGINE=ON \
             $BOOST_OPTS \
             $HDF5_OPTS && break
           

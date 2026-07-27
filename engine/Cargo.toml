@@ -1,0 +1,14 @@
+[package]
+name = "imas-projection-engine"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.76.0"
+description = "Same-major DD projection-engine substrate behind a narrow C ABI (IMAS-Fortran #18/#20)"
+license = "LGPL-3.0-or-later"
+publish = false
+
+[lib]
+name = "imas_projection_engine"
+crate-type = ["staticlib"]
+
+[dependencies]
