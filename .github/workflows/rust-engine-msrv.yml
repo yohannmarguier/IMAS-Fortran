@@ -1,0 +1,51 @@
+name: Rust Engine MSRV
+
+# Enforces the toolchain floor declared by engine/Cargo.toml's `rust-version`
+# (see issue #18 §8 and engine/README.md#msrv): builds and tests the crate
+# directly with the blessed ITER Rust 1.76.0 toolchain, independent of the
+# CMake/Corrosion integration exercised by build-and-test.yml. This job
+# fails if the crate's own code, or any dependency it gains in a later
+# slice, requires a newer compiler than 1.76.0 -- regardless of what
+# `rust-version` merely declares.
+
+on:
+  push:
+    branches: [ main, develop, feature/** ]
+    paths:
+      - 'engine/**'
+      - '.github/workflows/rust-engine-msrv.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'engine/**'
+      - '.github/workflows/rust-engine-msrv.yml'
+  workflow_dispatch:
+
+env:
+  ENGINE_MSRV: '1.76.0'
+
+jobs:
+  msrv-build:
+    name: Build engine/ with the pinned MSRV toolchain
+    runs-on: ubuntu-24.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v7
+
+    - name: Install pinned Rust ${{ env.ENGINE_MSRV }}
+      run: |
+        rustup toolchain install ${{ env.ENGINE_MSRV }} --profile minimal
+        rustup override set ${{ env.ENGINE_MSRV }}
+
+    - name: Verify pinned toolchain is active
+      working-directory: engine
+      run: rustc --version
+
+    - name: cargo build (MSRV floor)
+      working-directory: engine
+      run: cargo build --locked
+
+    - name: cargo test (MSRV floor)
+      working-directory: engine
+      run: cargo test --locked

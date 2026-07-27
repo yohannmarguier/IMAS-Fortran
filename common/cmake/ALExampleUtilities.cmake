@@ -1,5 +1,7 @@
 # CMake file providing common logic to test AL examples
 
+include( ALCTestConventions )
+
 set( EXAMPLE_ENVIRONMENT_WITHOUT_PLUGINS
   "IMAS_AL_ENABLE_PLUGINS=FALSE"
 )
@@ -16,8 +18,7 @@ endif()
 function( set_al_example_properties TEST DISABLED USE_PLUGINS EXTRA_ENVIRONMENT )
   # Set common properties
   set_tests_properties( ${TEST} PROPERTIES
-    # Case insensitive fault|error[^_]|exception|severe|abort|segmentation|fault|dump|logic_error|failed
-    FAIL_REGULAR_EXPRESSION "[Ff][Aa][Uu][Ll][Tt]|[Ee][Rr][Rr][Oo][Rr][^_]|[Ee][Xx][Cc][Ee][Pp][Tt][Ii][Oo][Nn]|[Ss][Ee][Vv][Ee][Rr][Ee]|[Aa][Bb][Oo][Rr][Tt]|[Ss][Ee][Gg][Mm][Ee][Nn][Tt][Aa][Tt][Ii][Oo][Nn]|[Ff][Aa][Uu][Ll][Tt]|[Dd][Uu][Mm][Pp]|[Ll][Oo][Gg][Ii][Cc]_[Ee][Rr][Rr][Oo][Rr]|[Ff][Aa][Ii][Ll][Ee][Dd]"
+    FAIL_REGULAR_EXPRESSION "${AL_CTEST_FAIL_REGULAR_EXPRESSION}"
     DISABLED ${DISABLED}
   )
 

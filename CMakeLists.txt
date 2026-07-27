@@ -13,6 +13,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/common/cmake/ALLocalPaths.cmake)
 ################################################################################
 option( AL_DOWNLOAD_DEPENDENCIES "Automatically download assets from the AL git repository" ON )
 option( AL_DEVELOPMENT_LAYOUT "Use development repositories from sibling directory" OFF )
+option( AL_RUST_ENGINE "Build the Rust projection-engine substrate (requires cargo)" OFF )
 if( AL_DEVELOPMENT_LAYOUT AND AL_DOWNLOAD_DEPENDENCIES )
     message( STATUS "AL_DEVELOPMENT_LAYOUT=ON: setting AL_DOWNLOAD_DEPENDENCIES=OFF" )
     set( AL_DOWNLOAD_DEPENDENCIES OFF CACHE BOOL "Automatically download assets from the AL git
@@ -70,6 +71,13 @@ include( ALCore )
 # Stop processing when only building documentation
 if( AL_DOCS_ONLY )
   return()
+endif()
+
+# Rust projection-engine substrate
+################################################################################
+
+if( AL_RUST_ENGINE )
+  add_subdirectory( engine )
 endif()
 
 
