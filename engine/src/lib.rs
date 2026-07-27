@@ -7,21 +7,28 @@
 //! [`Map`] handle. Issue #22 adds process-wide reuse of that validated
 //! pair (see [`cache`]): reacquiring the same pair, including with the
 //! stored/working roles swapped, returns a handle backed by the one
-//! cached pair instead of reparsing and revalidating it. It still does
-//! not build rename maps or compute real per-node projection verdicts --
-//! see issue #23 for that. Issue #31 adds the operation lifecycle: an
-//! [`Operation`] is begun against one acquired [`Map`] handle and carries
-//! its own reset/end/release lifecycle, isolated from every other live
-//! operation or map.
+//! cached pair instead of reparsing and revalidating it. Issue #31 adds
+//! the operation lifecycle: an [`Operation`] is begun against one acquired
+//! [`Map`] handle and carries its own reset/end/release lifecycle,
+//! isolated from every other live operation or map. Issue #23 adds the
+//! first real per-node projection verdicts (see [`projection`]): each
+//! schema is indexed by `field/@path`, and [`project_node`] classifies a
+//! node relative to that reciprocal index for the classifications that
+//! need no rename metadata (same, compiled-only/stored-only, datatype-
+//! changed) while holding any rename-tagged node in the distinct
+//! [`projection::Classification::RenamePending`] state. Full rename
+//! resolution is issue #24 (leaf, successive history) and issue #25
+//! (array-of-structures, plain-structure, cascade).
 //!
 //! All `unsafe` code is confined to the [`ffi`] module; this module,
-//! [`status`], [`schema`], [`version`], and [`cache`] are safe Rust,
-//! enforced by `#![deny(unsafe_code)]` below (overridden locally by
-//! `ffi`, the only place that needs it).
+//! [`status`], [`schema`], [`version`], [`cache`], and [`projection`] are
+//! safe Rust, enforced by `#![deny(unsafe_code)]` below (overridden
+//! locally by `ffi`, the only place that needs it).
 #![deny(unsafe_code)]
 
 pub mod cache;
 pub mod ffi;
+pub mod projection;
 pub mod schema;
 pub mod status;
 pub mod version;
@@ -29,6 +36,7 @@ pub mod version;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 
+pub use projection::Classification;
 pub use schema::{ParsedSchema, SchemaError};
 pub use status::{PeStatus, PeVerdict};
 pub use version::DdVersion;
@@ -250,17 +258,52 @@ impl Operation {
     }
 }
 
+/// Which schema in a [`Map`] pair plays the query's source for one
+/// [`project_node`] call, so reciprocal behaviour is drivable through the
+/// ABI rather than only inferable from which endpoint was acquired as
+/// stored vs. working (issue #23). During real `get`/`put`, the compiled
+/// working version always drives the walk, so production callers always
+/// use `WorkingToStored`; `StoredToWorking` exists so either endpoint can
+/// be exercised as source for direct contract testing (see #18's "Context
+/// model and query semantics"). Crosses the ABI as a raw `i32` and is
+/// validated the same way as [`MapRole`]/[`PeStatus`]: an out-of-range
+/// value is rejected instead of being transmuted into an invalid enum.
+#[repr(i32)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PeDirection {
+    WorkingToStored = 0,
+    StoredToWorking = 1,
+}
+
+impl PeDirection {
+    pub fn from_raw(raw: i32) -> Option<Self> {
+        match raw {
+            0 => Some(PeDirection::WorkingToStored),
+            1 => Some(PeDirection::StoredToWorking),
+            _ => None,
+        }
+    }
+}
+
 /// Process-wide counter of projection-node entries, reset/read through the
 /// ABI so a same-version Fortran I/O path can prove the engine was never
 /// entered (see #18 user story 16).
 static PROJECTION_ENTRY_COUNT: AtomicU64 = AtomicU64::new(0);
 
-/// Records one projection-node entry and returns the placeholder verdict.
-/// Real rename/skip logic replaces this body in a later slice; the
-/// counter semantics established here do not change.
-pub fn project_node_entry() -> PeVerdict {
+/// Records one projection-node entry and classifies `node_path` relative
+/// to `map`'s two field indices, read in the order `direction` selects
+/// (issue #23). Returns `None` when `node_path` is not known to the
+/// selected source schema at all; `ffi::pe_project_node_query` treats that
+/// as an invalid argument. The counter increments regardless of whether a
+/// classification is found, matching "entered" rather than "resolved" --
+/// the same gate the skeleton this replaces already used.
+pub fn project_node(map: &Map, direction: PeDirection, node_path: &str) -> Option<Classification> {
     PROJECTION_ENTRY_COUNT.fetch_add(1, Ordering::SeqCst);
-    PeVerdict::Same
+    let (source, target) = match direction {
+        PeDirection::WorkingToStored => (map.working(), map.stored()),
+        PeDirection::StoredToWorking => (map.stored(), map.working()),
+    };
+    projection::classify(source.field_index(), target.field_index(), node_path)
 }
 
 pub fn instrumentation_reset() {
@@ -276,16 +319,41 @@ mod tests {
     use super::*;
     use serial_test_helper::SEQUENTIAL;
 
+    const V_INSTR_STORED: &str =
+        "<IDSs><version>50.1.0</version><field name=\"a\" path=\"a\" data_type=\"INT_0D\"/></IDSs>";
+    const V_INSTR_WORKING: &str =
+        "<IDSs><version>50.0.9</version><field name=\"a\" path=\"a\" data_type=\"INT_0D\"/></IDSs>";
+
     #[test]
     fn entry_increments_and_reset_zeroes_the_counter() {
         let _guard = SEQUENTIAL.lock().unwrap();
+        let map = acquire_map(V_INSTR_STORED, "50.1.0", V_INSTR_WORKING, "50.0.9").unwrap();
         instrumentation_reset();
         assert_eq!(instrumentation_read(), 0);
-        assert_eq!(project_node_entry(), PeVerdict::Same);
-        assert_eq!(project_node_entry(), PeVerdict::Same);
+        assert_eq!(
+            project_node(&map, PeDirection::WorkingToStored, "a"),
+            Some(Classification::Same)
+        );
+        assert_eq!(
+            project_node(&map, PeDirection::WorkingToStored, "a"),
+            Some(Classification::Same)
+        );
         assert_eq!(instrumentation_read(), 2);
         instrumentation_reset();
         assert_eq!(instrumentation_read(), 0);
+    }
+
+    #[test]
+    fn entry_still_increments_when_the_path_is_unknown_to_the_source_schema() {
+        let _guard = SEQUENTIAL.lock().unwrap();
+        let map = acquire_map(V_INSTR_STORED, "50.1.0", V_INSTR_WORKING, "50.0.9").unwrap();
+        instrumentation_reset();
+        assert_eq!(
+            project_node(&map, PeDirection::WorkingToStored, "does/not/exist"),
+            None
+        );
+        assert_eq!(instrumentation_read(), 1);
+        instrumentation_reset();
     }
 
     /// The counter is a process-wide `static`, so tests that touch it must

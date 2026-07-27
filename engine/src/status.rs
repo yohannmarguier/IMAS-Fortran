@@ -26,6 +26,17 @@ pub enum PeStatus {
     /// tell "one of these schemas is unusable" from "both parse fine but do
     /// not pair". Introduced by issue #21.
     CrossMajor = 6,
+    /// The queried node's own field, or the identically-pathed field on
+    /// the other schema, carries automatic rename metadata
+    /// (`change_nbc_description` of `leaf_renamed`, `aos_renamed`, or
+    /// `structure_renamed`). Resolving that metadata into a real verdict
+    /// is issue #24 (leaf renames, successive history) and issue #25
+    /// (array-of-structures/plain-structure renames); until each lands,
+    /// this distinct status is the explicit "awaiting rename resolution"
+    /// state so such a node is never reported as a fabricated `same`,
+    /// `skip`, or `rename` verdict. Introduced by issue #23. See
+    /// `projection::Classification::RenamePending`.
+    RenamePending = 7,
 }
 
 impl PeStatus {
@@ -41,6 +52,7 @@ impl PeStatus {
             4 => Some(PeStatus::Internal),
             5 => Some(PeStatus::SchemaIdentity),
             6 => Some(PeStatus::CrossMajor),
+            7 => Some(PeStatus::RenamePending),
             _ => None,
         }
     }
@@ -57,6 +69,7 @@ impl PeStatus {
             PeStatus::Internal => "internal condition",
             PeStatus::SchemaIdentity => "schema identity invalid",
             PeStatus::CrossMajor => "cross-major pair rejected",
+            PeStatus::RenamePending => "rename resolution not yet supported",
         }
     }
 }
@@ -83,6 +96,7 @@ mod tests {
         assert_eq!(PeStatus::from_raw(3), Some(PeStatus::BufferTooSmall));
         assert_eq!(PeStatus::from_raw(5), Some(PeStatus::SchemaIdentity));
         assert_eq!(PeStatus::from_raw(6), Some(PeStatus::CrossMajor));
+        assert_eq!(PeStatus::from_raw(7), Some(PeStatus::RenamePending));
     }
 
     #[test]
@@ -113,6 +127,7 @@ mod tests {
             PeStatus::Internal,
             PeStatus::SchemaIdentity,
             PeStatus::CrossMajor,
+            PeStatus::RenamePending,
         ] {
             let lower = status.message().to_lowercase();
             for word in FORBIDDEN {
