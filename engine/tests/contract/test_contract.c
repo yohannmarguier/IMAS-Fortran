@@ -249,6 +249,16 @@ static int test_map_acquire_negative_identity_paths(void) {
           "a missing version with no valid fallback should be rejected");
     CHECK(map == NULL, "a rejected acquire should not produce a usable handle");
 
+    /* An absent caller-supplied fallback is still an identity condition,
+     * not an ABI argument violation, when XML also lacks <version>. */
+    map = NULL;
+    CHECK(pe_map_acquire(XML_NO_VERSION_ELEMENT, STR_LEN(XML_NO_VERSION_ELEMENT),
+                          NULL, 0, XML_WORKING_3_38_1,
+                          STR_LEN(XML_WORKING_3_38_1), "3.38.1", STR_LEN("3.38.1"),
+                          &map) == PE_STATUS_SCHEMA_IDENTITY,
+          "a missing version with an absent fallback should be rejected as identity");
+    CHECK(map == NULL, "a rejected acquire should not produce a usable handle");
+
     /* Supplied/parsed identity mismatch: the XML says 3.39.0, the claim
      * says otherwise. */
     map = NULL;

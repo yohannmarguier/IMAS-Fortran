@@ -53,6 +53,22 @@ unsafe fn borrow_str<'a>(ptr: *const c_char, len: usize) -> Option<&'a str> {
     std::str::from_utf8(bytes).ok()
 }
 
+/// Borrows an optional claimed DD version. A zero-length value represents an
+/// absent fallback identity and is passed through as an empty string so the
+/// schema resolver can report `SchemaIdentity` when the XML has no
+/// `<version>` element. A non-empty value follows the normal borrowed-string
+/// validation rules.
+///
+/// # Safety
+/// When `len` is non-zero, `ptr` must be a valid pointer to at least `len`
+/// readable bytes. A null pointer is allowed only with a zero length.
+unsafe fn borrow_claimed_version<'a>(ptr: *const c_char, len: usize) -> Option<&'a str> {
+    if len == 0 {
+        return Some("");
+    }
+    unsafe { borrow_str(ptr, len) }
+}
+
 /// Installs a silent panic hook exactly once. Every entry point below
 /// already turns a caught panic into `PeStatus::Internal` without
 /// unwinding, but the default hook still writes a message to stderr first
@@ -235,20 +251,22 @@ pub unsafe extern "C" fn pe_map_acquire(
             Some(s) => s,
             None => return PeStatus::InvalidArgument,
         };
-        let stored_claimed_version =
-            match unsafe { borrow_str(stored_claimed_version, stored_claimed_version_len) } {
-                Some(s) => s,
-                None => return PeStatus::InvalidArgument,
-            };
+        let stored_claimed_version = match unsafe {
+            borrow_claimed_version(stored_claimed_version, stored_claimed_version_len)
+        } {
+            Some(s) => s,
+            None => return PeStatus::InvalidArgument,
+        };
         let working_xml = match unsafe { borrow_str(working_xml, working_xml_len) } {
             Some(s) => s,
             None => return PeStatus::InvalidArgument,
         };
-        let working_claimed_version =
-            match unsafe { borrow_str(working_claimed_version, working_claimed_version_len) } {
-                Some(s) => s,
-                None => return PeStatus::InvalidArgument,
-            };
+        let working_claimed_version = match unsafe {
+            borrow_claimed_version(working_claimed_version, working_claimed_version_len)
+        } {
+            Some(s) => s,
+            None => return PeStatus::InvalidArgument,
+        };
 
         match crate::acquire_map(
             stored_xml,
