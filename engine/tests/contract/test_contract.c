@@ -924,6 +924,20 @@ static int acquire_eviction_pressure_pair(int index, pe_map_t **out_map) {
                            working_version, strlen(working_version), out_map) == PE_STATUS_OK;
 }
 
+/* Acquires and immediately releases the `index`-th eviction-pressure pair
+ * (see acquire_eviction_pressure_pair), applying one unit of eviction
+ * pressure without needing a kept handle. Returns 0 on success, 1 on
+ * failure (the same convention as every test function's CHECK-driven
+ * return below); shared by both eviction-proof tests so they don't
+ * duplicate this loop body. */
+static int apply_one_eviction_pressure_pair(int index) {
+    pe_map_t *pressure = NULL;
+    CHECK(acquire_eviction_pressure_pair(index, &pressure),
+          "acquiring an eviction-pressure pair should succeed");
+    pe_map_release(pressure);
+    return 0;
+}
+
 /* Acquiring enough distinct pairs evicts the least-recently-used entry;
  * evicting it never invalidates a live caller handle still referencing it;
  * and reacquiring the evicted content afterwards rebuilds a fresh, distinct
@@ -943,10 +957,9 @@ static int test_map_cache_eviction_evicts_the_least_recently_used_pair(void) {
     /* Push enough distinct pairs through the cache, without ever touching
      * `kept` again, to force it out as the least-recently-used entry. */
     for (i = 0; i < EVICTION_PROOF_PAIR_COUNT; ++i) {
-        pe_map_t *pressure = NULL;
-        CHECK(acquire_eviction_pressure_pair(i, &pressure),
-              "acquiring an eviction-pressure pair should succeed");
-        pe_map_release(pressure);
+        if (apply_one_eviction_pressure_pair(i)) {
+            return 1;
+        }
     }
 
     /* Eviction must never invalidate a live caller handle: `kept` was never
@@ -1003,12 +1016,11 @@ static int test_map_cache_touching_a_pair_under_pressure_prevents_its_eviction(v
     touched = NULL;
 
     for (i = 0; i < EVICTION_PROOF_PAIR_COUNT; ++i) {
-        pe_map_t *pressure = NULL;
         /* Distinct index range from the previous test's pressure pairs so
          * the two proofs cannot collide on the same synthetic content. */
-        CHECK(acquire_eviction_pressure_pair(EVICTION_PROOF_PAIR_COUNT + i, &pressure),
-              "acquiring an eviction-pressure pair should succeed");
-        pe_map_release(pressure);
+        if (apply_one_eviction_pressure_pair(EVICTION_PROOF_PAIR_COUNT + i)) {
+            return 1;
+        }
 
         if (i % touch_every == 0) {
             CHECK(acquire_shared_pair(&touched),
