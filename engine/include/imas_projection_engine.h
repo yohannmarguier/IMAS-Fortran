@@ -75,8 +75,10 @@ typedef struct pe_operation pe_operation_t;
  * adds without changing this handle shape. */
 pe_status_t pe_operation_begin(pe_operation_t **out_operation);
 
-/* Ends operation-scoped state and releases `operation`. Does not evict
- * any cached immutable map (there is none yet in this skeleton). */
+/* Ends operation-scoped state and releases `operation`. Passing NULL returns
+ * PE_STATUS_NULL_HANDLE; a foreign or already-ended handle returns
+ * PE_STATUS_INVALID_ARGUMENT. Does not evict any cached immutable map
+ * (there is none yet in this skeleton). */
 pe_status_t pe_operation_end(pe_operation_t *operation);
 
 /* Representative "project node" entry point. Placeholder: validates its

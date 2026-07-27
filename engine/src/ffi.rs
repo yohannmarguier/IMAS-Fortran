@@ -10,14 +10,24 @@
 //! (see the crate-level `#![deny(unsafe_code)]` in `lib.rs`).
 #![allow(unsafe_code)]
 
+use std::collections::HashSet;
 use std::os::raw::c_char;
 use std::panic::{self, AssertUnwindSafe};
-use std::sync::Once;
+use std::sync::{Mutex, Once, OnceLock};
 
 use crate::status::{PeStatus, PeVerdict};
 use crate::Operation;
 
 static INSTALL_PANIC_HOOK: Once = Once::new();
+
+/// Addresses of operation handles that this ABI has issued and not yet
+/// released. Keeping this registry lets `pe_operation_end` reject a stale,
+/// foreign, or already-ended handle before it ever turns that address back
+/// into a `Box`.
+fn active_operations() -> &'static Mutex<HashSet<usize>> {
+    static ACTIVE_OPERATIONS: OnceLock<Mutex<HashSet<usize>>> = OnceLock::new();
+    ACTIVE_OPERATIONS.get_or_init(|| Mutex::new(HashSet::new()))
+}
 
 /// Installs a silent panic hook exactly once. Every entry point below
 /// already turns a caught panic into `PeStatus::Internal` without
@@ -111,9 +121,12 @@ pub unsafe extern "C" fn pe_operation_begin(out_operation: *mut *mut Operation) 
         if out_operation.is_null() {
             return PeStatus::InvalidArgument;
         }
-        let boxed = Box::new(Operation::new());
+
+        let mut active = active_operations().lock().unwrap();
+        let operation = Box::into_raw(Box::new(Operation::new()));
+        active.insert(operation as usize);
         unsafe {
-            *out_operation = Box::into_raw(boxed);
+            *out_operation = operation;
         }
         PeStatus::Ok
     })
@@ -123,14 +136,22 @@ pub unsafe extern "C" fn pe_operation_begin(out_operation: *mut *mut Operation) 
 /// (not yet implemented) cached immutable map.
 ///
 /// # Safety
-/// `operation` must be either null or a handle previously returned by
-/// [`pe_operation_begin`] that has not already been passed to this
-/// function.
+/// A null handle returns [`PeStatus::NullHandle`]. A handle not currently
+/// owned by this ABI, including one already passed to this function, returns
+/// [`PeStatus::InvalidArgument`] without being dereferenced.
 #[no_mangle]
 pub unsafe extern "C" fn pe_operation_end(operation: *mut Operation) -> PeStatus {
     guard(|| {
         if operation.is_null() {
             return PeStatus::NullHandle;
+        }
+
+        let was_active = active_operations()
+            .lock()
+            .unwrap()
+            .remove(&(operation as usize));
+        if !was_active {
+            return PeStatus::InvalidArgument;
         }
         unsafe {
             drop(Box::from_raw(operation));

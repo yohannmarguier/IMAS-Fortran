@@ -45,6 +45,8 @@ static int test_operation_lifecycle_and_input_validation(void) {
     CHECK(pe_operation_end(NULL) == PE_STATUS_NULL_HANDLE,
           "end(NULL) should be rejected");
     CHECK(pe_operation_end(operation) == PE_STATUS_OK, "end should succeed");
+    CHECK(pe_operation_end(operation) == PE_STATUS_INVALID_ARGUMENT,
+          "ending the same handle twice should be rejected");
 
     printf("operation lifecycle: negative paths rejected as expected\n");
     return 0;
