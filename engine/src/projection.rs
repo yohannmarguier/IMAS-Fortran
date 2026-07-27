@@ -194,23 +194,6 @@ impl FieldIndex {
             .iter()
             .any(|reference| reference.may_refer_to(path))
     }
-
-    /// Paths present in `self` but absent from `other`: a schema-level
-    /// fact retained regardless of whether any projection query ever
-    /// visits them. When `self` is a stored schema and `other` is its
-    /// working counterpart, this is exactly the "present in stored
-    /// version, not loaded into working version" set issue #23 requires
-    /// to be retained rather than lost -- because the compiled walk never
-    /// visits a stored-only path, [`classify`] alone would never surface
-    /// it, so this schema-fact enumeration is what keeps it available for
-    /// issue #27's loss enumeration to consume later.
-    pub fn only_in_self<'a>(&'a self, other: &FieldIndex) -> Vec<&'a str> {
-        self.by_path
-            .keys()
-            .filter(|path| !other.by_path.contains_key(path.as_str()))
-            .map(|path| path.as_str())
-            .collect()
-    }
 }
 
 /// The rename-metadata-free classification of one node relative to a
@@ -517,15 +500,18 @@ mod tests {
     }
 
     #[test]
-    fn only_in_self_reports_stored_only_schema_facts_even_though_no_query_ever_visits_them() {
+    fn a_stored_only_path_is_retained_in_the_index_even_though_no_query_ever_visits_it() {
+        // The compiled walk never visits a stored-only path, so `classify`
+        // alone would never surface it; retention lives in `by_path` itself
+        // (built unconditionally over every `<field>`, not just queried
+        // ones), which is what keeps this schema fact available for issue
+        // #27's loss enumeration to consume later.
         let stored = index(
             r#"<IDSs>
                  <field name="a" path="shared" data_type="INT_0D"/>
                  <field name="b" path="stored_only" data_type="INT_0D"/>
                </IDSs>"#,
         );
-        let working = index(r#"<IDSs><field name="a" path="shared" data_type="INT_0D"/></IDSs>"#);
-        assert_eq!(stored.only_in_self(&working), vec!["stored_only"]);
-        assert!(working.only_in_self(&stored).is_empty());
+        assert!(stored.get("stored_only").is_some());
     }
 }

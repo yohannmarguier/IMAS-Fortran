@@ -83,11 +83,17 @@
  *      renamed descendant                NEW rescued_signal (no "orphan_container"
  *                                         field exists on the NEW side at all)
  *
- * Only 1 (unchanged_leaf), 5, 6, and 7 are asserted through the ABI here --
- * see #23's own acceptance criteria on why the other five must not be
- * asserted against by this ticket: #24/#25 legitimately reclassify them
- * once rename resolution lands, and asserting a specific verdict here would
- * make this ticket's own vectors the thing that breaks.
+ * `unchanged_leaf` (not itself one of the nine numbered features) plus
+ * features 5, 6, and 7 are asserted through the ABI here with a durable,
+ * must-remain-valid verdict -- see #23's own acceptance criteria on why a
+ * *durable* verdict for the six rename-bearing features (1-4, 8, 9) must
+ * not be asserted by this ticket: #24/#25 legitimately reclassify them once
+ * rename resolution lands, and asserting a specific resolved verdict here
+ * would make this ticket's own vectors the thing that breaks. Those six are
+ * instead only asserted to report PE_STATUS_RENAME_PENDING for now, in
+ * test_projection_shared_fixture_rename_bearing_fields_report_rename_pending
+ * below -- a deliberately non-durable vector #24/#25 must update, not one
+ * of the four this ticket's acceptance criteria freezes.
  *
  * Note for #24/#25: querying most of these rename-tagged OLD-side paths via
  * PE_DIRECTION_STORED_TO_WORKING reports PE_STATUS_RENAME_PENDING rather
@@ -1014,6 +1020,7 @@ static int test_projection_unknown_path_is_rejected(void) {
     pe_map_t *map = NULL;
     pe_operation_t *operation = NULL;
     pe_verdict_t verdict = PE_VERDICT_SAME;
+    uint64_t count = 0;
     const char path[] = "does/not/exist";
 
     CHECK(pe_map_acquire(XML_FIXTURE_OLD_20_1_0, STR_LEN(XML_FIXTURE_OLD_20_1_0), "20.1.0",
@@ -1023,15 +1030,26 @@ static int test_projection_unknown_path_is_rejected(void) {
           "acquiring the shared fixture pair should succeed");
     CHECK(pe_operation_begin(map, &operation) == PE_STATUS_OK, "begin should succeed");
 
+    CHECK(pe_instrumentation_reset() == PE_STATUS_OK, "reset should succeed");
+
     CHECK(pe_project_node_query(map, operation, PE_DIRECTION_WORKING_TO_STORED, path,
                                  sizeof(path) - 1, &verdict) == PE_STATUS_INVALID_ARGUMENT,
           "a path unknown to the source schema should be rejected");
     CHECK(verdict == PE_VERDICT_SAME, "a rejected query must leave out_verdict unwritten");
 
+    /* The counter tracks "entered", not "resolved": an unknown path still
+     * reaches project_node (unlike the null-handle/bad-direction negative
+     * paths in test_projection_entry_instrumentation, which are rejected
+     * before entry and correctly do not tick it). */
+    CHECK(pe_instrumentation_read(&count) == PE_STATUS_OK, "read should succeed");
+    CHECK(count == 1,
+          "a query unknown to the source schema still counts as an entry");
+
     pe_operation_release(operation);
     pe_map_release(map);
 
-    printf("project_node_query: a path unknown to the source schema was rejected\n");
+    printf("project_node_query: a path unknown to the source schema was rejected, and "
+           "still counted as a projection entry\n");
     return 0;
 }
 
@@ -1066,6 +1084,72 @@ static int test_projection_rename_tagged_node_reports_rename_pending(void) {
     return 0;
 }
 
+/*
+ * Proves, through the ABI and against the real shared nine-feature fixture
+ * (not just the deliberately-separate ad-hoc pair above), that querying a
+ * field which carries automatic rename metadata on its own `<field>`
+ * element reports PE_STATUS_RENAME_PENDING rather than a fabricated verdict.
+ * This covers the NEW-side name of each of the six rename-bearing features
+ * (1-4, 8, 9) via the natural PE_DIRECTION_WORKING_TO_STORED direction,
+ * where the classification depends only on the field's own tag -- not on
+ * FieldIndex::mentions_as_previous_name's exact-path heuristic, which this
+ * ticket's own fixture comment already documents as incomplete for some of
+ * these paths in the reverse direction.
+ *
+ * Unlike the four vectors in
+ * test_projection_{unchanged_field,added_and_removed_fields,
+ * datatype_changed_field}_reports_*, this test is NOT one of the vectors
+ * issue #23's acceptance criteria requires to remain valid and unedited:
+ * once #24/#25 give these specific features a real resolved verdict, this
+ * test *must* be updated (paths it activates removed from here, mirroring
+ * the durable-vector comment's own warning). It exists only to prove the
+ * "not silently reclassified as add/remove" guarantee against the actual
+ * shared corpus through the ABI seam, rather than solely through
+ * `projection.rs`'s Rust-internal unit tests, which use different literal
+ * XML.
+ */
+static int test_projection_shared_fixture_rename_bearing_fields_report_rename_pending(void) {
+    pe_map_t *map = NULL;
+    pe_operation_t *operation = NULL;
+    pe_verdict_t verdict;
+    static const char *const rename_tagged_paths[] = {
+        "new_leaf_name",       /* feature 1: leaf rename */
+        "new_struct",          /* feature 2: plain-structure rename+cascade */
+        "new_aos",             /* feature 3: array-of-structures rename */
+        "thrice_renamed",      /* feature 4: successive rename history */
+        "dynamic_group/signal", /* feature 8: renamed time-dependent node */
+        "rescued_signal",      /* feature 9: missing parent, reachable descendant */
+    };
+    size_t i;
+
+    CHECK(pe_map_acquire(XML_FIXTURE_OLD_20_1_0, STR_LEN(XML_FIXTURE_OLD_20_1_0), "20.1.0",
+                          STR_LEN("20.1.0"), XML_FIXTURE_NEW_20_2_0,
+                          STR_LEN(XML_FIXTURE_NEW_20_2_0), "20.2.0", STR_LEN("20.2.0"),
+                          &map) == PE_STATUS_OK,
+          "acquiring the shared fixture pair should succeed");
+    CHECK(pe_operation_begin(map, &operation) == PE_STATUS_OK, "begin should succeed");
+
+    for (i = 0; i < sizeof(rename_tagged_paths) / sizeof(rename_tagged_paths[0]); ++i) {
+        const char *path = rename_tagged_paths[i];
+        size_t path_len = strlen(path);
+
+        verdict = PE_VERDICT_SAME;
+        CHECK(pe_project_node_query(map, operation, PE_DIRECTION_WORKING_TO_STORED, path,
+                                     path_len, &verdict) == PE_STATUS_RENAME_PENDING,
+              "a rename-tagged shared-fixture field should report "
+              "PE_STATUS_RENAME_PENDING rather than a fabricated verdict");
+        CHECK(verdict == PE_VERDICT_SAME,
+              "a PE_STATUS_RENAME_PENDING result must leave out_verdict unwritten");
+    }
+
+    pe_operation_release(operation);
+    pe_map_release(map);
+
+    printf("project_node_query: every rename-bearing field in the shared fixture "
+           "reported PE_STATUS_RENAME_PENDING through the ABI\n");
+    return 0;
+}
+
 int main(void) {
     int failures = 0;
 
@@ -1092,6 +1176,7 @@ int main(void) {
     failures += test_projection_datatype_changed_field_reports_skip_in_both_directions();
     failures += test_projection_unknown_path_is_rejected();
     failures += test_projection_rename_tagged_node_reports_rename_pending();
+    failures += test_projection_shared_fixture_rename_bearing_fields_report_rename_pending();
 
     if (failures == 0) {
         printf("contract test: all checks passed\n");

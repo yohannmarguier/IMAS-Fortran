@@ -606,14 +606,15 @@ pub unsafe extern "C" fn pe_project_node_query(
         match crate::project_node(&map, direction, node_path) {
             None => PeStatus::InvalidArgument,
             Some(Classification::RenamePending) => PeStatus::RenamePending,
-            Some(classification) => {
-                let verdict = match classification {
-                    Classification::Same => PeVerdict::Same,
-                    Classification::SourceOnly | Classification::DatatypeChanged => PeVerdict::Skip,
-                    Classification::RenamePending => unreachable!("handled above"),
-                };
+            Some(Classification::Same) => {
                 unsafe {
-                    *out_verdict = verdict;
+                    *out_verdict = PeVerdict::Same;
+                }
+                PeStatus::Ok
+            }
+            Some(Classification::SourceOnly | Classification::DatatypeChanged) => {
+                unsafe {
+                    *out_verdict = PeVerdict::Skip;
                 }
                 PeStatus::Ok
             }
