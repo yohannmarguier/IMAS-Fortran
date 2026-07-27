@@ -1,7 +1,8 @@
 //! XML parsing and DD-version identity resolution for one schema document
 //! (issue #21). "Parsing" here is a `roxmltree` well-formedness check plus
-//! locating the root's `<version>` child; building the `field/@path` index
-//! used by real projection queries is issue #23's job.
+//! locating the root's `<version>` child, plus (issue #23) building the
+//! `field/@path` index used by real projection queries -- see
+//! [`crate::projection`].
 //!
 //! Resolution rule (see issue #21's "What to build"): the XML `<version>`
 //! element is authoritative when present, and the caller's claimed
@@ -9,18 +10,20 @@
 //! is used only when the element is absent. Either way, a fabricated or
 //! mismatched identity must never produce a [`ParsedSchema`].
 
+use crate::projection::FieldIndex;
 use crate::version::DdVersion;
 
 /// One parsed, identity-validated DD schema document.
 ///
-/// Holds the resolved version and the schema's own owned XML source (the
+/// Holds the resolved version, the schema's own owned XML source (the
 /// input is copied here rather than borrowed -- see `ffi::pe_map_acquire`'s
-/// doc comment for why). Building a `field/@path` index over this source
-/// is deferred to issue #23.
+/// doc comment for why), and its [`FieldIndex`] (issue #23), built once
+/// from the same parse rather than re-parsing the XML on every query.
 #[derive(Debug)]
 pub struct ParsedSchema {
     version: DdVersion,
     xml: String,
+    field_index: FieldIndex,
 }
 
 impl ParsedSchema {
@@ -30,6 +33,10 @@ impl ParsedSchema {
 
     pub fn xml(&self) -> &str {
         &self.xml
+    }
+
+    pub fn field_index(&self) -> &FieldIndex {
+        &self.field_index
     }
 }
 
@@ -74,9 +81,12 @@ pub fn parse_and_resolve(xml: &str, claimed_version: &str) -> Result<ParsedSchem
         None => DdVersion::parse(claimed_version).map_err(|_| SchemaError::NoValidVersion)?,
     };
 
+    let field_index = FieldIndex::from_document(&doc);
+
     Ok(ParsedSchema {
         version,
         xml: xml.to_string(),
+        field_index,
     })
 }
 

@@ -17,7 +17,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, Once, OnceLock};
 
 use crate::status::{PeStatus, PeVerdict};
-use crate::{AcquireError, Map, MapRole, Operation, OperationError};
+use crate::{AcquireError, Classification, Map, MapRole, Operation, OperationError, PeDirection};
 
 static INSTALL_PANIC_HOOK: Once = Once::new();
 
@@ -529,18 +529,33 @@ pub unsafe extern "C" fn pe_map_cache_identity(
     })
 }
 
-/// Representative "project node" entry point. This is a placeholder: it
-/// validates its inputs, records one projection-entry instrumentation
-/// tick, and always reports `PeVerdict::Same`. Issue #23 replaces the
-/// verdict computation with real rename/skip map lookups; the ABI shape
-/// (map, operation, borrowed path, out-verdict) does not need to change to
-/// do so.
+/// Projects `node_path`, read from whichever schema `direction` selects as
+/// source, against the other schema in `map` (issue #23). Records one
+/// projection-entry instrumentation tick whenever every handle/argument
+/// validation below passes, regardless of the classification outcome.
+///
+/// Reports through `out_verdict`/return status:
+/// - unchanged (present in both, matching `data_type`, no rename metadata)
+///   -- `PE_STATUS_OK`, `PE_VERDICT_SAME`;
+/// - compiled-only or stored-only (present in source, absent from target,
+///   no rename metadata), or a datatype change (present in both, differing
+///   `data_type`, no rename metadata) -- `PE_STATUS_OK`, `PE_VERDICT_SKIP`;
+/// - a node whose own field, or the identically-pathed field on the other
+///   side, carries automatic rename metadata not yet resolved by issue
+///   #24/#25 -- the distinct `PE_STATUS_RENAME_PENDING`, `out_verdict` left
+///   unwritten;
+/// - a `node_path` unknown to the selected source schema -- rejected as
+///   `PE_STATUS_INVALID_ARGUMENT`, `out_verdict` left unwritten, since a
+///   real compiled walk only ever queries paths it already knows belong to
+///   its own schema.
 ///
 /// `map` must be the same currently-live handle passed to
 /// [`pe_operation_begin`] for `operation`; `operation` must also be live.
 /// A null handle is rejected as `PeStatus::NullHandle`; a foreign, released,
 /// or mismatched handle is rejected as `PeStatus::InvalidArgument`, without
-/// either opaque token being dereferenced (issue #31).
+/// either opaque token being dereferenced (issue #31). An unrecognized
+/// `direction` is rejected as `PeStatus::InvalidArgument`, the same way an
+/// unrecognized `pe_map_role_t` is (issue #23).
 ///
 /// `node_path` is borrowed for the duration of this call only; it need
 /// not be NUL-terminated since its length is given explicitly.
@@ -553,6 +568,7 @@ pub unsafe extern "C" fn pe_map_cache_identity(
 pub unsafe extern "C" fn pe_project_node_query(
     map: *const Map,
     operation: *mut Operation,
+    direction: i32,
     node_path: *const c_char,
     node_path_len: usize,
     out_verdict: *mut PeVerdict,
@@ -575,17 +591,34 @@ pub unsafe extern "C" fn pe_project_node_query(
         if !Arc::ptr_eq(&map, operation.map()) {
             return PeStatus::InvalidArgument;
         }
-        if node_path.is_null() || node_path_len == 0 {
-            return PeStatus::InvalidArgument;
-        }
+        let direction = match PeDirection::from_raw(direction) {
+            Some(direction) => direction,
+            None => return PeStatus::InvalidArgument,
+        };
+        let node_path = match unsafe { borrow_str(node_path, node_path_len) } {
+            Some(s) => s,
+            None => return PeStatus::InvalidArgument,
+        };
         if out_verdict.is_null() {
             return PeStatus::InvalidArgument;
         }
-        let verdict = crate::project_node_entry();
-        unsafe {
-            *out_verdict = verdict;
+
+        match crate::project_node(&map, direction, node_path) {
+            None => PeStatus::InvalidArgument,
+            Some(Classification::RenamePending) => PeStatus::RenamePending,
+            Some(Classification::Same) => {
+                unsafe {
+                    *out_verdict = PeVerdict::Same;
+                }
+                PeStatus::Ok
+            }
+            Some(Classification::SourceOnly | Classification::DatatypeChanged) => {
+                unsafe {
+                    *out_verdict = PeVerdict::Skip;
+                }
+                PeStatus::Ok
+            }
         }
-        PeStatus::Ok
     })
 }
 
