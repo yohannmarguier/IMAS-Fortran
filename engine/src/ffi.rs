@@ -13,6 +13,7 @@
 use std::collections::HashMap;
 use std::os::raw::c_char;
 use std::panic::{self, AssertUnwindSafe};
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, Once, OnceLock};
 
 use crate::status::{PeStatus, PeVerdict};
@@ -20,37 +21,52 @@ use crate::{AcquireError, Map, MapRole, Operation, OperationError};
 
 static INSTALL_PANIC_HOOK: Once = Once::new();
 
-/// Live operation handles issued by this ABI, mirroring [`active_maps`]'s
-/// retain-under-lock pattern: the registry keeps an `Arc` for each live
-/// handle so a reader can clone it while holding the mutex, then safely use
-/// the `Operation` after the mutex is released even if another thread
-/// releases that same handle meanwhile (issue #31). Membership alone (not
-/// the `Arc` payload) is also what lets `pe_operation_reset`/`pe_operation_
-/// end`/`pe_operation_release`/`pe_project_node_query` reject a stale,
-/// foreign, or already-released handle before it is ever dereferenced.
+/// Monotonic, process-unique values used as opaque ABI-handle tokens. The
+/// tokens are represented by typed raw pointers for C compatibility but are
+/// never dereferenced; the registries below are their sole authority. Unlike
+/// allocation addresses, a released token cannot be recycled for a later
+/// handle, so a stale handle cannot become valid again through allocator ABA
+/// reuse.
+static NEXT_HANDLE_TOKEN: AtomicUsize = AtomicUsize::new(1);
+
+fn next_handle_token<T>() -> Option<*mut T> {
+    let token = NEXT_HANDLE_TOKEN
+        .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |current| {
+            current.checked_add(1)
+        })
+        .ok()?;
+    Some(token as *mut T)
+}
+
+/// Live operation handles issued by this ABI, keyed by process-unique opaque
+/// tokens. The registry keeps an `Arc` for each live handle so a reader can
+/// clone it while holding the mutex, then safely use the `Operation` after
+/// the mutex is released even if another thread releases that same handle
+/// meanwhile (issue #31).
 fn active_operations() -> &'static Mutex<HashMap<usize, Arc<Operation>>> {
     static ACTIVE_OPERATIONS: OnceLock<Mutex<HashMap<usize, Arc<Operation>>>> = OnceLock::new();
     ACTIVE_OPERATIONS.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
-/// Live map handles issued by this ABI. Besides validating a raw handle
-/// address, the registry keeps an `Arc` for each live handle so a reader can
-/// clone it while holding the mutex, then safely use the `Map` after the
-/// mutex is released even if another thread releases that handle meanwhile.
+/// Live map handles issued by this ABI, keyed by the same process-unique
+/// opaque-token sequence as operations. The registry keeps an `Arc` for each
+/// live handle so a reader can clone it while holding the mutex, then safely
+/// use the `Map` after the mutex is released even if another thread releases
+/// that same handle meanwhile.
 fn active_maps() -> &'static Mutex<HashMap<usize, Arc<Map>>> {
     static ACTIVE_MAPS: OnceLock<Mutex<HashMap<usize, Arc<Map>>>> = OnceLock::new();
     ACTIVE_MAPS.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
-/// Retains the map addressed by a live ABI handle without dereferencing the
-/// raw pointer. The retained `Arc` keeps the map live after a concurrent
+/// Retains the map addressed by a live ABI token without dereferencing it.
+/// The retained `Arc` keeps the map live after a concurrent
 /// `pe_map_release` removes the caller's handle from [`active_maps`].
 fn retain_active_map(map: *const Map) -> Option<Arc<Map>> {
     active_maps().lock().unwrap().get(&(map as usize)).cloned()
 }
 
-/// Retains the operation addressed by a live ABI handle without
-/// dereferencing the raw pointer, mirroring [`retain_active_map`]. The
+/// Retains the operation addressed by a live ABI token without dereferencing
+/// it, mirroring [`retain_active_map`]. The
 /// retained `Arc` keeps the operation usable for the rest of the caller's
 /// call even if a concurrent `pe_operation_release` removes it from
 /// [`active_operations`] meanwhile.
@@ -208,8 +224,11 @@ pub unsafe extern "C" fn pe_operation_begin(
             None => return PeStatus::InvalidArgument,
         };
 
+        let raw_operation = match next_handle_token() {
+            Some(token) => token,
+            None => return PeStatus::Internal,
+        };
         let operation = Arc::new(Operation::new(map));
-        let raw_operation = Arc::into_raw(operation.clone()) as *mut Operation;
         active_operations()
             .lock()
             .unwrap()
@@ -295,15 +314,13 @@ pub unsafe extern "C" fn pe_operation_release(operation: *mut Operation) -> PeSt
             return PeStatus::NullHandle;
         }
 
-        let retained = active_operations()
+        if active_operations()
             .lock()
             .unwrap()
-            .remove(&(operation as usize));
-        if retained.is_none() {
+            .remove(&(operation as usize))
+            .is_none()
+        {
             return PeStatus::InvalidArgument;
-        }
-        unsafe {
-            Arc::decrement_strong_count(operation as *const Operation);
         }
         PeStatus::Ok
     })
@@ -384,9 +401,12 @@ pub unsafe extern "C" fn pe_map_acquire(
             working_claimed_version,
         ) {
             Ok(map) => {
+                let raw_map = match next_handle_token() {
+                    Some(token) => token,
+                    None => return PeStatus::Internal,
+                };
                 let mut active = active_maps().lock().unwrap();
                 let map = Arc::new(map);
-                let raw_map = Arc::into_raw(map.clone()) as *mut Map;
                 active.insert(raw_map as usize, map);
                 unsafe {
                     *out_map = raw_map;
@@ -412,12 +432,13 @@ pub unsafe extern "C" fn pe_map_release(map: *mut Map) -> PeStatus {
             return PeStatus::NullHandle;
         }
 
-        let retained = active_maps().lock().unwrap().remove(&(map as usize));
-        if retained.is_none() {
+        if active_maps()
+            .lock()
+            .unwrap()
+            .remove(&(map as usize))
+            .is_none()
+        {
             return PeStatus::InvalidArgument;
-        }
-        unsafe {
-            Arc::decrement_strong_count(map as *const Map);
         }
         PeStatus::Ok
     })
@@ -512,12 +533,14 @@ pub unsafe extern "C" fn pe_map_cache_identity(
 /// validates its inputs, records one projection-entry instrumentation
 /// tick, and always reports `PeVerdict::Same`. Issue #23 replaces the
 /// verdict computation with real rename/skip map lookups; the ABI shape
-/// (handle, borrowed path, out-verdict) does not need to change to do so.
+/// (map, operation, borrowed path, out-verdict) does not need to change to
+/// do so.
 ///
-/// `operation` must be a currently-live handle returned by
-/// [`pe_operation_begin`] and not yet released; a foreign or released
-/// handle is rejected the same way as a null one, without being
-/// dereferenced (issue #31).
+/// `map` must be the same currently-live handle passed to
+/// [`pe_operation_begin`] for `operation`; `operation` must also be live.
+/// A null handle is rejected as `PeStatus::NullHandle`; a foreign, released,
+/// or mismatched handle is rejected as `PeStatus::InvalidArgument`, without
+/// either opaque token being dereferenced (issue #31).
 ///
 /// `node_path` is borrowed for the duration of this call only; it need
 /// not be NUL-terminated since its length is given explicitly.
@@ -528,16 +551,28 @@ pub unsafe extern "C" fn pe_map_cache_identity(
 /// valid pointer to one writable `PeVerdict`.
 #[no_mangle]
 pub unsafe extern "C" fn pe_project_node_query(
+    map: *const Map,
     operation: *mut Operation,
     node_path: *const c_char,
     node_path_len: usize,
     out_verdict: *mut PeVerdict,
 ) -> PeStatus {
     guard(|| {
+        if map.is_null() {
+            return PeStatus::NullHandle;
+        }
         if operation.is_null() {
             return PeStatus::NullHandle;
         }
-        if retain_active_operation(operation).is_none() {
+        let map = match retain_active_map(map) {
+            Some(map) => map,
+            None => return PeStatus::InvalidArgument,
+        };
+        let operation = match retain_active_operation(operation) {
+            Some(operation) => operation,
+            None => return PeStatus::InvalidArgument,
+        };
+        if !Arc::ptr_eq(&map, operation.map()) {
             return PeStatus::InvalidArgument;
         }
         if node_path.is_null() || node_path_len == 0 {
@@ -699,7 +734,7 @@ mod tests {
             PeStatus::NullHandle
         );
         assert_eq!(
-            unsafe { pe_operation_begin(1 as *const Map, &mut operation) },
+            unsafe { pe_operation_begin(usize::MAX as *const Map, &mut operation) },
             PeStatus::InvalidArgument
         );
         assert_eq!(

@@ -70,12 +70,15 @@ against, captured once at `pe_operation_begin` time. Because of that, this
 ABI places **no ordering requirement** between releasing a map handle and
 the lifetime of any operation begun against it: a caller may call
 `pe_map_release` before, during, or after an operation's own
-reset/end/release calls, and the operation remains fully usable regardless
-— `pe_project_node_query`, `pe_operation_reset`, and `pe_operation_end` all
-keep working against it. Symmetrically, releasing an operation handle only
-ever touches this ABI's own operation registry and never releases or
-otherwise invalidates the map handle it was begun against, or any other
-live operation begun against that same map (see
+reset/end/release calls, and the operation's lifecycle remains usable
+regardless — `pe_operation_reset` and `pe_operation_end` keep working
+against its retained map. `pe_project_node_query` has its final `(map,
+operation, ...)` ABI shape and deliberately requires the same **live** map
+handle supplied to `pe_operation_begin`, so callers must retain that map
+handle until their projection queries finish. Symmetrically, releasing an
+operation handle only ever touches this ABI's own operation registry and
+never releases or otherwise invalidates the map handle it was begun against,
+or any other live operation begun against that same map (see
 `ffi::pe_operation_begin`/`pe_operation_release` and the
 `operation_retains_its_map_after_the_map_handle_is_released` test in
 `src/ffi.rs`). Every live map/operation handle also remains independently
@@ -123,6 +126,12 @@ after releasing the lock) is what lets a concurrent release never
 invalidate a call already in flight. As with the map cache, this is a
 memory-safety guarantee only; this crate makes no throughput guarantee
 beyond it.
+
+Map and operation ABI handles are process-unique opaque tokens, not exposed
+Rust allocation addresses. A released token is never reused for a later
+handle, so use-after-release is deterministically rejected even after new
+maps or operations are created; the registry entries alone own the retained
+`Arc`s and are dropped on release.
 
 ## Building
 

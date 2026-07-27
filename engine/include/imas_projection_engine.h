@@ -234,13 +234,17 @@ pe_status_t pe_map_cache_identity(const pe_map_t *map, uint64_t *out_identity);
 
 /* Representative "project node" entry point. Placeholder: validates its
  * inputs, records one projection-entry instrumentation tick, and always
- * reports PE_VERDICT_SAME through `out_verdict`. `operation` must be a
- * currently-live handle returned by pe_operation_begin and not yet
- * released; a foreign or released handle returns PE_STATUS_INVALID_ARGUMENT
- * without being dereferenced (issue #31). `node_path` is borrowed for the
- * duration of this call only and need not be NUL-terminated; `node_path_len`
- * gives its length in bytes. */
+ * reports PE_VERDICT_SAME through `out_verdict`. `map` must be the same
+ * currently-live handle passed to pe_operation_begin for `operation`, and
+ * `operation` must also still be live. A null handle returns
+ * PE_STATUS_NULL_HANDLE; a foreign, released, or mismatched handle returns
+ * PE_STATUS_INVALID_ARGUMENT without either opaque handle being dereferenced
+ * (issue #31). Releasing a map does not invalidate its operation's own
+ * lifecycle, but this entry requires the caller to retain the map handle for
+ * each query. `node_path` is borrowed for the duration of this call only and
+ * need not be NUL-terminated; `node_path_len` gives its length in bytes. */
 pe_status_t pe_project_node_query(
+    const pe_map_t *map,
     pe_operation_t *operation,
     const char *node_path,
     size_t node_path_len,
