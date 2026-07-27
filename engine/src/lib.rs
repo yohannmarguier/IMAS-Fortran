@@ -16,12 +16,17 @@
 //! release lifecycle, isolated from every other live operation or map.
 //! Issue #23 adds the first real per-node projection verdicts (see
 //! [`projection`]): each schema is indexed by `field/@path`, and
-//! [`project_node`] classifies a node relative to that reciprocal index
-//! for the classifications that need no rename metadata (same, compiled-
-//! only/stored-only, datatype-changed) while holding any rename-tagged
-//! node in the distinct [`projection::Classification::RenamePending`]
-//! state. Full rename resolution is issue #24 (leaf, successive history)
-//! and issue #25 (array-of-structures, plain-structure, cascade).
+//! [`project_node`] classifies a node relative to that reciprocal index for
+//! the classifications that need no rename metadata (same, compiled-only/
+//! stored-only, datatype-changed) while holding any rename-tagged node in
+//! the distinct [`projection::Classification::RenamePending`] state. Issue
+//! #24 resolves `leaf_renamed` metadata into a real
+//! [`projection::Classification::Renamed`] verdict, including comma-separated
+//! successive histories and the version-cutoff selection rule researched from
+//! IMAS-Python in issue #13; [`project_node`] now threads this pair's
+//! semantically older endpoint version through to [`projection::classify`] for
+//! that purpose. `aos_renamed`/`structure_renamed` resolution remains issue
+//! #25's (array-of-structures, plain-structure, cascade).
 //!
 //! All `unsafe` code is confined to the [`ffi`] module; this module,
 //! [`status`], [`schema`], [`version`], [`cache`], and [`projection`] are
@@ -39,7 +44,7 @@ pub mod version;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 
-pub use projection::Classification;
+pub use projection::{Classification, RenameHistoryError};
 pub use schema::{ParsedSchema, SchemaError};
 pub use status::{PeStatus, PeVerdict};
 pub use version::DdVersion;
@@ -293,18 +298,34 @@ static PROJECTION_ENTRY_COUNT: AtomicU64 = AtomicU64::new(0);
 
 /// Records one projection-node entry and classifies `node_path` relative
 /// to `map`'s two field indices, read in the order `direction` selects
-/// (issue #23). Returns `None` when `node_path` is not known to the
-/// selected source schema at all; `ffi::pe_project_node_query` treats that
-/// as an invalid argument. The counter increments regardless of whether a
-/// classification is found, matching "entered" rather than "resolved" --
+/// (issue #23). The pair's semantically older endpoint version -- not
+/// dependent on `direction` or on which endpoint was acquired as stored vs.
+/// working -- is passed through to [`projection::classify`] as the cutoff
+/// for resolving `leaf_renamed` history (issue #24).
+///
+/// Returns `Ok(None)` when `node_path` is not known to the selected source
+/// schema at all; `ffi::pe_project_node_query` treats that as an invalid
+/// argument. Returns `Err` when a `leaf_renamed` field's history fails to
+/// parse (see [`projection::RenameHistoryError`]). The counter increments
+/// regardless of the outcome, matching "entered" rather than "resolved" --
 /// the same gate the skeleton this replaces already used.
-pub fn project_node(map: &Map, direction: PeDirection, node_path: &str) -> Option<Classification> {
+pub fn project_node(
+    map: &Map,
+    direction: PeDirection,
+    node_path: &str,
+) -> Result<Option<Classification>, projection::RenameHistoryError> {
     PROJECTION_ENTRY_COUNT.fetch_add(1, Ordering::SeqCst);
     let (source, target) = match direction {
         PeDirection::WorkingToStored => (map.working(), map.stored()),
         PeDirection::StoredToWorking => (map.stored(), map.working()),
     };
-    projection::classify(source.field_index(), target.field_index(), node_path)
+    let older_endpoint = map.stored().version().min(map.working().version());
+    projection::classify(
+        source.field_index(),
+        target.field_index(),
+        node_path,
+        older_endpoint,
+    )
 }
 
 pub fn instrumentation_reset() {
@@ -333,11 +354,11 @@ mod tests {
         assert_eq!(instrumentation_read(), 0);
         assert_eq!(
             project_node(&map, PeDirection::WorkingToStored, "a"),
-            Some(Classification::Same)
+            Ok(Some(Classification::Same))
         );
         assert_eq!(
             project_node(&map, PeDirection::WorkingToStored, "a"),
-            Some(Classification::Same)
+            Ok(Some(Classification::Same))
         );
         assert_eq!(instrumentation_read(), 2);
         instrumentation_reset();
@@ -351,7 +372,7 @@ mod tests {
         instrumentation_reset();
         assert_eq!(
             project_node(&map, PeDirection::WorkingToStored, "does/not/exist"),
-            None
+            Ok(None)
         );
         assert_eq!(instrumentation_read(), 1);
         instrumentation_reset();

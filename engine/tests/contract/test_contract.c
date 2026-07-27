@@ -1,6 +1,6 @@
 /*
  * C contract test for the projection-engine ABI (IMAS-Fortran #20, #21,
- * #22, #28, #31).
+ * #22, #23, #24, #28, #31).
  *
  * This is the highest seam this repo's later slices add vectors to: it
  * drives the engine only through imas_projection_engine.h, the same way
@@ -84,24 +84,28 @@
  *                                         field exists on the NEW side at all)
  *
  * `unchanged_leaf` (not itself one of the nine numbered features) plus
- * features 5, 6, and 7 are asserted through the ABI here with a durable,
- * must-remain-valid verdict -- see #23's own acceptance criteria on why a
- * *durable* verdict for the six rename-bearing features (1-4, 8, 9) must
- * not be asserted by this ticket: #24/#25 legitimately reclassify them once
- * rename resolution lands, and asserting a specific resolved verdict here
- * would make this ticket's own vectors the thing that breaks. Those six are
- * instead only asserted to report PE_STATUS_RENAME_PENDING for now, in
- * test_projection_shared_fixture_rename_bearing_fields_report_rename_pending
- * below -- a deliberately non-durable vector #24/#25 must update, not one
- * of the four this ticket's acceptance criteria freezes.
+ * features 5, 6, and 7 were asserted through the ABI by issue #23 with a
+ * durable, must-remain-valid verdict -- see #23's own acceptance criteria
+ * on why a *durable* verdict for the six rename-bearing features (1-4, 8,
+ * 9) could not be asserted by that ticket: #24/#25 legitimately reclassify
+ * them once rename resolution lands, and asserting a specific resolved
+ * verdict there would have made that ticket's own vectors the thing that
+ * breaks. Issue #24 now activates leaf_renamed resolution for four of
+ * those six (1, 4, 8, 9 -- see
+ * test_projection_shared_fixture_leaf_and_successive_rename_features_resolve
+ * and test_projection_shared_fixture_time_dependent_and_missing_parent_renames_resolve
+ * below); the remaining two (2, 3 -- aos_renamed/structure_renamed) stay in
+ * test_projection_shared_fixture_rename_bearing_fields_report_rename_pending,
+ * pending issue #25.
  *
- * Note for #24/#25: querying most of these rename-tagged OLD-side paths via
+ * Note for #25: querying the OLD-side paths of features 2/3 via
  * PE_DIRECTION_STORED_TO_WORKING reports PE_STATUS_RENAME_PENDING rather
  * than a fabricated added/removed skip. FieldIndex::may_have_renamed_from
  * (src/projection.rs) recognizes exact predecessor paths, bare predecessor
  * names within their unchanged parent, and descendants of renamed
  * structures/AoSs. Do not read that conservative pending guard as rename
- * resolution: #24/#25 still determine the actual same/rename verdict.
+ * resolution: #25 still determines the actual same/rename verdict for
+ * those two.
  */
 #define XML_FIXTURE_OLD_20_1_0                                               \
     "<IDSs><version>20.1.0</version>"                                       \
@@ -159,18 +163,19 @@
 /* A small, deliberately separate ad-hoc pair -- NOT part of the shared
  * fixture above -- used only to prove PE_STATUS_RENAME_PENDING itself
  * works end to end through the ABI (issue #23's "explicit unsupported-yet
- * state" requirement). Kept independent of the shared corpus on purpose:
- * once #24/#25 resolve rename metadata in the shared pair, every one of
- * its nine feature nodes will legitimately stop reporting
- * PE_STATUS_RENAME_PENDING, and this test must keep passing regardless. */
+ * state" requirement). Uses structure_renamed rather than leaf_renamed:
+ * issue #24 resolves leaf_renamed into a real verdict, so only
+ * aos_renamed/structure_renamed still report PE_STATUS_RENAME_PENDING
+ * pending issue #25, and this smoke test must keep exercising a kind that
+ * is genuinely still pending. */
 #define XML_RENAME_PENDING_SOURCE                                            \
     "<IDSs><version>30.2.0</version>"                                       \
-    "<field name=\"tagged\" path=\"tagged\" data_type=\"STR_0D\" "            \
-    "change_nbc_version=\"30.2.0\" change_nbc_description=\"leaf_renamed\" "  \
+    "<field name=\"tagged\" path=\"tagged\" data_type=\"structure\" "         \
+    "change_nbc_version=\"30.2.0\" change_nbc_description=\"structure_renamed\" " \
     "change_nbc_previous_name=\"untagged\"/></IDSs>"
 #define XML_RENAME_PENDING_TARGET                                            \
     "<IDSs><version>30.1.0</version>"                                       \
-    "<field name=\"untagged\" path=\"untagged\" data_type=\"STR_0D\"/></IDSs>"
+    "<field name=\"untagged\" path=\"untagged\" data_type=\"structure\"/></IDSs>"
 
 #define STR_LEN(literal) (sizeof(literal) - 1)
 
@@ -192,6 +197,46 @@ static int map_version_matches(const pe_map_t *map, pe_map_role_t role,
         return 0;
     }
     return strcmp(buffer, expected) == 0;
+}
+
+/* Thin wrapper over pe_project_node_query for every call site that only
+ * cares about the status/verdict, not the projected-path output added by
+ * issue #24 -- passes NULL/0/NULL for the trailing three parameters,
+ * which is exactly what that convention documents as "just tell me the
+ * required length" and is harmless when no rename is expected anyway. */
+static pe_status_t query(const pe_map_t *map, pe_operation_t *operation,
+                          pe_direction_t direction, const char *node_path,
+                          size_t node_path_len, pe_verdict_t *out_verdict) {
+    return pe_project_node_query(map, operation, direction, node_path,
+                                  node_path_len, out_verdict, NULL, 0, NULL);
+}
+
+/* Reads back the projected path from a PE_VERDICT_RENAME result and
+ * compares it against `expected`, exercising the same query-then-fill
+ * buffer convention as map_version_matches above (issue #24). */
+static int projected_path_matches(const pe_map_t *map, pe_operation_t *operation,
+                                   pe_direction_t direction, const char *node_path,
+                                   size_t node_path_len, const char *expected) {
+    pe_verdict_t verdict = PE_VERDICT_SAME;
+    size_t required_len = 0;
+    char buffer[64];
+
+    if (pe_project_node_query(map, operation, direction, node_path, node_path_len,
+                               &verdict, NULL, 0, &required_len) != PE_STATUS_OK) {
+        return 0;
+    }
+    if (verdict != PE_VERDICT_RENAME) {
+        return 0;
+    }
+    if (required_len >= sizeof(buffer)) {
+        return 0;
+    }
+    verdict = PE_VERDICT_SAME;
+    if (pe_project_node_query(map, operation, direction, node_path, node_path_len,
+                               &verdict, buffer, sizeof(buffer), NULL) != PE_STATUS_OK) {
+        return 0;
+    }
+    return verdict == PE_VERDICT_RENAME && strcmp(buffer, expected) == 0;
 }
 
 /* Acquires the shared XML_STORED_3_39_0 / XML_WORKING_3_38_1 pair, used by
@@ -275,7 +320,7 @@ static int test_released_operation_token_never_aliases_a_new_operation(void) {
 
     CHECK(pe_operation_reset(released) == PE_STATUS_INVALID_ARGUMENT,
           "resetting a released token should remain rejected after another begin");
-    CHECK(pe_project_node_query(map, released, PE_DIRECTION_WORKING_TO_STORED, path, sizeof(path) - 1, &verdict) ==
+    CHECK(query(map, released, PE_DIRECTION_WORKING_TO_STORED, path, sizeof(path) - 1, &verdict) ==
               PE_STATUS_INVALID_ARGUMENT,
           "querying with a released token should remain rejected after another begin");
     CHECK(pe_operation_release(released) == PE_STATUS_INVALID_ARGUMENT,
@@ -306,7 +351,7 @@ static int test_operation_survives_its_map_handle_being_released(void) {
      * release use the operation's retained reference. */
     CHECK(pe_map_release(map) == PE_STATUS_OK, "releasing the map should succeed");
 
-    CHECK(pe_project_node_query(map, operation, PE_DIRECTION_WORKING_TO_STORED, path, sizeof(path) - 1, &verdict) ==
+    CHECK(query(map, operation, PE_DIRECTION_WORKING_TO_STORED, path, sizeof(path) - 1, &verdict) ==
               PE_STATUS_INVALID_ARGUMENT,
           "querying after map release should require a still-live map handle");
     CHECK(pe_operation_reset(operation) == PE_STATUS_OK,
@@ -412,13 +457,13 @@ static int test_projection_entry_instrumentation(void) {
     CHECK(pe_instrumentation_read(&count) == PE_STATUS_OK, "read should succeed");
     CHECK(count == 0, "counter should be zero right after reset");
 
-    CHECK(pe_project_node_query(map, operation, PE_DIRECTION_WORKING_TO_STORED, path, sizeof(path) - 1, &verdict) ==
+    CHECK(query(map, operation, PE_DIRECTION_WORKING_TO_STORED, path, sizeof(path) - 1, &verdict) ==
               PE_STATUS_OK,
           "project_node_query should succeed on valid input");
     CHECK(verdict == PE_VERDICT_SAME,
           "an unchanged, identically-typed field on both sides reports PE_VERDICT_SAME");
 
-    CHECK(pe_project_node_query(map, operation, PE_DIRECTION_WORKING_TO_STORED, path, sizeof(path) - 1, &verdict) ==
+    CHECK(query(map, operation, PE_DIRECTION_WORKING_TO_STORED, path, sizeof(path) - 1, &verdict) ==
               PE_STATUS_OK,
           "project_node_query should succeed on valid input");
 
@@ -426,29 +471,29 @@ static int test_projection_entry_instrumentation(void) {
     CHECK(count == 2, "counter should tick once per project_node_query call");
 
     /* Negative paths: rejected without incrementing the counter. */
-    CHECK(pe_project_node_query(NULL, operation, PE_DIRECTION_WORKING_TO_STORED, path, sizeof(path) - 1, &verdict) ==
+    CHECK(query(NULL, operation, PE_DIRECTION_WORKING_TO_STORED, path, sizeof(path) - 1, &verdict) ==
               PE_STATUS_NULL_HANDLE,
           "project_node_query(NULL map) should be rejected");
-    CHECK(pe_project_node_query(map, NULL, PE_DIRECTION_WORKING_TO_STORED, path, sizeof(path) - 1, &verdict) ==
+    CHECK(query(map, NULL, PE_DIRECTION_WORKING_TO_STORED, path, sizeof(path) - 1, &verdict) ==
               PE_STATUS_NULL_HANDLE,
           "project_node_query(NULL operation) should be rejected");
-    CHECK(pe_project_node_query(map, (pe_operation_t *)map, PE_DIRECTION_WORKING_TO_STORED, path, sizeof(path) - 1,
+    CHECK(query(map, (pe_operation_t *)map, PE_DIRECTION_WORKING_TO_STORED, path, sizeof(path) - 1,
                                  &verdict) == PE_STATUS_INVALID_ARGUMENT,
           "project_node_query(foreign operation) should be rejected");
     CHECK(acquire_shared_pair(&other_map), "acquiring a second map should succeed");
-    CHECK(pe_project_node_query(other_map, operation, PE_DIRECTION_WORKING_TO_STORED, path, sizeof(path) - 1,
+    CHECK(query(other_map, operation, PE_DIRECTION_WORKING_TO_STORED, path, sizeof(path) - 1,
                                 &verdict) == PE_STATUS_INVALID_ARGUMENT,
           "project_node_query(mismatched map) should be rejected");
-    CHECK(pe_project_node_query(map, operation, PE_DIRECTION_WORKING_TO_STORED, NULL, 1, &verdict) ==
+    CHECK(query(map, operation, PE_DIRECTION_WORKING_TO_STORED, NULL, 1, &verdict) ==
               PE_STATUS_INVALID_ARGUMENT,
           "project_node_query(NULL path) should be rejected");
-    CHECK(pe_project_node_query(map, operation, PE_DIRECTION_WORKING_TO_STORED, path, 0, &verdict) ==
+    CHECK(query(map, operation, PE_DIRECTION_WORKING_TO_STORED, path, 0, &verdict) ==
               PE_STATUS_INVALID_ARGUMENT,
           "project_node_query(zero-length path) should be rejected");
-    CHECK(pe_project_node_query(map, operation, PE_DIRECTION_WORKING_TO_STORED, path, sizeof(path) - 1, NULL) ==
+    CHECK(query(map, operation, PE_DIRECTION_WORKING_TO_STORED, path, sizeof(path) - 1, NULL) ==
               PE_STATUS_INVALID_ARGUMENT,
           "project_node_query(NULL out_verdict) should be rejected");
-    CHECK(pe_project_node_query(map, operation, (pe_direction_t)9999, path, sizeof(path) - 1,
+    CHECK(query(map, operation, (pe_direction_t)9999, path, sizeof(path) - 1,
                                  &verdict) == PE_STATUS_INVALID_ARGUMENT,
           "project_node_query(unrecognized direction) should be rejected, not coerced "
           "into a default");
@@ -461,12 +506,12 @@ static int test_projection_entry_instrumentation(void) {
     CHECK(count == 2, "rejected calls must not tick the counter");
 
     CHECK(pe_operation_end(operation) == PE_STATUS_OK, "end should succeed");
-    CHECK(pe_project_node_query(map, operation, PE_DIRECTION_WORKING_TO_STORED, path, sizeof(path) - 1, &verdict) ==
+    CHECK(query(map, operation, PE_DIRECTION_WORKING_TO_STORED, path, sizeof(path) - 1, &verdict) ==
               PE_STATUS_OK,
           "project_node_query should still work against an ended-but-not-"
           "released operation");
     CHECK(pe_operation_release(operation) == PE_STATUS_OK, "release should succeed");
-    CHECK(pe_project_node_query(map, operation, PE_DIRECTION_WORKING_TO_STORED, path, sizeof(path) - 1, &verdict) ==
+    CHECK(query(map, operation, PE_DIRECTION_WORKING_TO_STORED, path, sizeof(path) - 1, &verdict) ==
               PE_STATUS_INVALID_ARGUMENT,
           "project_node_query(released operation) should be rejected");
 
@@ -1071,11 +1116,11 @@ static int test_projection_unchanged_field_reports_same_in_both_directions(void)
           "acquiring the shared fixture pair should succeed");
     CHECK(pe_operation_begin(map, &operation) == PE_STATUS_OK, "begin should succeed");
 
-    CHECK(pe_project_node_query(map, operation, PE_DIRECTION_WORKING_TO_STORED, path,
+    CHECK(query(map, operation, PE_DIRECTION_WORKING_TO_STORED, path,
                                  sizeof(path) - 1, &verdict) == PE_STATUS_OK &&
               verdict == PE_VERDICT_SAME,
           "an unchanged field should report PE_VERDICT_SAME with source=working");
-    CHECK(pe_project_node_query(map, operation, PE_DIRECTION_STORED_TO_WORKING, path,
+    CHECK(query(map, operation, PE_DIRECTION_STORED_TO_WORKING, path,
                                  sizeof(path) - 1, &verdict) == PE_STATUS_OK &&
               verdict == PE_VERDICT_SAME,
           "an unchanged field should report PE_VERDICT_SAME with source=stored too");
@@ -1107,7 +1152,7 @@ static int test_projection_added_and_removed_fields_report_skip_in_both_directio
 
     /* added_only_field: present only in NEW/working -- compiled-only from
      * the natural working-to-stored direction. */
-    CHECK(pe_project_node_query(natural, natural_op, PE_DIRECTION_WORKING_TO_STORED,
+    CHECK(query(natural, natural_op, PE_DIRECTION_WORKING_TO_STORED,
                                  added_path, sizeof(added_path) - 1,
                                  &verdict) == PE_STATUS_OK &&
               verdict == PE_VERDICT_SKIP,
@@ -1115,7 +1160,7 @@ static int test_projection_added_and_removed_fields_report_skip_in_both_directio
 
     /* removed_only_field: present only in OLD/stored -- stored-only from
      * the reciprocal stored-to-working direction. */
-    CHECK(pe_project_node_query(natural, natural_op, PE_DIRECTION_STORED_TO_WORKING,
+    CHECK(query(natural, natural_op, PE_DIRECTION_STORED_TO_WORKING,
                                  removed_path, sizeof(removed_path) - 1,
                                  &verdict) == PE_STATUS_OK &&
               verdict == PE_VERDICT_SKIP,
@@ -1131,12 +1176,12 @@ static int test_projection_added_and_removed_fields_report_skip_in_both_directio
           "acquiring the fixture pair with roles reversed should succeed");
     CHECK(pe_operation_begin(reversed, &reversed_op) == PE_STATUS_OK, "begin should succeed");
 
-    CHECK(pe_project_node_query(reversed, reversed_op, PE_DIRECTION_STORED_TO_WORKING,
+    CHECK(query(reversed, reversed_op, PE_DIRECTION_STORED_TO_WORKING,
                                  added_path, sizeof(added_path) - 1,
                                  &verdict) == PE_STATUS_OK &&
               verdict == PE_VERDICT_SKIP,
           "added field should still report PE_VERDICT_SKIP with roles reversed");
-    CHECK(pe_project_node_query(reversed, reversed_op, PE_DIRECTION_WORKING_TO_STORED,
+    CHECK(query(reversed, reversed_op, PE_DIRECTION_WORKING_TO_STORED,
                                  removed_path, sizeof(removed_path) - 1,
                                  &verdict) == PE_STATUS_OK &&
               verdict == PE_VERDICT_SKIP,
@@ -1165,11 +1210,11 @@ static int test_projection_datatype_changed_field_reports_skip_in_both_direction
           "acquiring the shared fixture pair should succeed");
     CHECK(pe_operation_begin(map, &operation) == PE_STATUS_OK, "begin should succeed");
 
-    CHECK(pe_project_node_query(map, operation, PE_DIRECTION_WORKING_TO_STORED, path,
+    CHECK(query(map, operation, PE_DIRECTION_WORKING_TO_STORED, path,
                                  sizeof(path) - 1, &verdict) == PE_STATUS_OK &&
               verdict == PE_VERDICT_SKIP,
           "a datatype change should report PE_VERDICT_SKIP with source=working");
-    CHECK(pe_project_node_query(map, operation, PE_DIRECTION_STORED_TO_WORKING, path,
+    CHECK(query(map, operation, PE_DIRECTION_STORED_TO_WORKING, path,
                                  sizeof(path) - 1, &verdict) == PE_STATUS_OK &&
               verdict == PE_VERDICT_SKIP,
           "a datatype change should report PE_VERDICT_SKIP with source=stored too");
@@ -1198,7 +1243,7 @@ static int test_projection_unknown_path_is_rejected(void) {
 
     CHECK(pe_instrumentation_reset() == PE_STATUS_OK, "reset should succeed");
 
-    CHECK(pe_project_node_query(map, operation, PE_DIRECTION_WORKING_TO_STORED, path,
+    CHECK(query(map, operation, PE_DIRECTION_WORKING_TO_STORED, path,
                                  sizeof(path) - 1, &verdict) == PE_STATUS_INVALID_ARGUMENT,
           "a path unknown to the source schema should be rejected");
     CHECK(verdict == PE_VERDICT_SAME, "a rejected query must leave out_verdict unwritten");
@@ -1235,7 +1280,7 @@ static int test_projection_rename_tagged_node_reports_rename_pending(void) {
           "acquiring the rename-pending smoke pair should succeed");
     CHECK(pe_operation_begin(map, &operation) == PE_STATUS_OK, "begin should succeed");
 
-    CHECK(pe_project_node_query(map, operation, PE_DIRECTION_WORKING_TO_STORED, path,
+    CHECK(query(map, operation, PE_DIRECTION_WORKING_TO_STORED, path,
                                  sizeof(path) - 1, &verdict) == PE_STATUS_RENAME_PENDING,
           "a node carrying automatic rename metadata should report "
           "PE_STATUS_RENAME_PENDING rather than a fabricated verdict");
@@ -1253,38 +1298,32 @@ static int test_projection_rename_tagged_node_reports_rename_pending(void) {
 /*
  * Proves, through the ABI and against the real shared nine-feature fixture
  * (not just the deliberately-separate ad-hoc pair above), that querying a
- * field which carries automatic rename metadata on its own `<field>`
- * element reports PE_STATUS_RENAME_PENDING rather than a fabricated verdict.
- * This covers the NEW-side name of each of the six rename-bearing features
- * (1-4, 8, 9) via the natural PE_DIRECTION_WORKING_TO_STORED direction,
- * where the classification depends only on the field's own tag -- not on
- * FieldIndex::mentions_as_previous_name's exact-path heuristic, which this
- * ticket's own fixture comment already documents as incomplete for some of
- * these paths in the reverse direction.
+ * field which carries aos_renamed/structure_renamed metadata on its own
+ * `<field>` element still reports PE_STATUS_RENAME_PENDING rather than a
+ * fabricated verdict, now that issue #24 has resolved the other four
+ * rename-bearing features (1, 4, 8, 9 -- see
+ * test_projection_shared_fixture_leaf_and_successive_rename_features_resolve
+ * and
+ * test_projection_shared_fixture_time_dependent_and_missing_parent_renames_resolve
+ * below) into real verdicts. This test itself was updated by issue #24 per
+ * its own predecessor's warning ("this test *must* be updated"): it
+ * originally covered all six rename-bearing features and is narrowed here
+ * to the two (2, 3) that remain pending issue #25.
  *
  * Unlike the four vectors in
  * test_projection_{unchanged_field,added_and_removed_fields,
  * datatype_changed_field}_reports_*, this test is NOT one of the vectors
  * issue #23's acceptance criteria requires to remain valid and unedited:
- * once #24/#25 give these specific features a real resolved verdict, this
- * test *must* be updated (paths it activates removed from here, mirroring
- * the durable-vector comment's own warning). It exists only to prove the
- * "not silently reclassified as add/remove" guarantee against the actual
- * shared corpus through the ABI seam, rather than solely through
- * `projection.rs`'s Rust-internal unit tests, which use different literal
- * XML.
+ * once #25 gives these two remaining features a real resolved verdict,
+ * this test must be updated again the same way.
  */
 static int test_projection_shared_fixture_rename_bearing_fields_report_rename_pending(void) {
     pe_map_t *map = NULL;
     pe_operation_t *operation = NULL;
     pe_verdict_t verdict;
     static const char *const rename_tagged_paths[] = {
-        "new_leaf_name",       /* feature 1: leaf rename */
         "new_struct",          /* feature 2: plain-structure rename+cascade */
         "new_aos",             /* feature 3: array-of-structures rename */
-        "thrice_renamed",      /* feature 4: successive rename history */
-        "dynamic_group/signal", /* feature 8: renamed time-dependent node */
-        "rescued_signal",      /* feature 9: missing parent, reachable descendant */
     };
     size_t i;
 
@@ -1300,7 +1339,7 @@ static int test_projection_shared_fixture_rename_bearing_fields_report_rename_pe
         size_t path_len = strlen(path);
 
         verdict = PE_VERDICT_SAME;
-        CHECK(pe_project_node_query(map, operation, PE_DIRECTION_WORKING_TO_STORED, path,
+        CHECK(query(map, operation, PE_DIRECTION_WORKING_TO_STORED, path,
                                      path_len, &verdict) == PE_STATUS_RENAME_PENDING,
               "a rename-tagged shared-fixture field should report "
               "PE_STATUS_RENAME_PENDING rather than a fabricated verdict");
@@ -1311,8 +1350,379 @@ static int test_projection_shared_fixture_rename_bearing_fields_report_rename_pe
     pe_operation_release(operation);
     pe_map_release(map);
 
-    printf("project_node_query: every rename-bearing field in the shared fixture "
-           "reported PE_STATUS_RENAME_PENDING through the ABI\n");
+    printf("project_node_query: the two aos/structure-renamed fields in the shared "
+           "fixture still reported PE_STATUS_RENAME_PENDING through the ABI\n");
+    return 0;
+}
+
+/*
+ * Issue #24 parity vector (issue #13/#18's cutoff-selection portability
+ * rule), driven against a dedicated ad-hoc pair so the older-endpoint
+ * cutoff and comma-separated history can be exercised at version gaps the
+ * shared fixture's own fixed 20.1.0/20.2.0 pair does not cover. Both
+ * endpoints share major version 70 (a same-major pair is required for
+ * pe_map_acquire to succeed at all); three releases (70.10.0, 70.11.0,
+ * 70.12.0) each rename the field once, and acquiring the pair at an older
+ * endpoint of 70.10.5 must select the second entry (70.11.0 -> "v1_name"),
+ * ignoring the first (70.10.0 -> "v0_name"), which predates this gap.
+ */
+#define XML_GAP_OLDER_70_10_5                                                \
+    "<IDSs><version>70.10.5</version>"                                      \
+    "<field name=\"v1\" path=\"v1_name\" data_type=\"STR_0D\"/></IDSs>"
+#define XML_GAP_NEWER_70_13_0                                                \
+    "<IDSs><version>70.13.0</version>"                                      \
+    "<field name=\"v3\" path=\"v3_name\" data_type=\"STR_0D\" "               \
+    "change_nbc_version=\"70.10.0,70.11.0,70.12.0\" "                       \
+    "change_nbc_description=\"leaf_renamed\" "                              \
+    "change_nbc_previous_name=\"v0_name,v1_name,v2_name\"/></IDSs>"
+
+static int test_projection_successive_rename_history_resolves_across_a_multi_release_gap(void) {
+    pe_map_t *natural = NULL;
+    pe_map_t *reversed = NULL;
+    pe_operation_t *natural_op = NULL;
+    pe_operation_t *reversed_op = NULL;
+    const char new_path[] = "v3_name";
+    const char old_path[] = "v1_name";
+
+    /* Natural acquisition: stored=older, working=newer. */
+    CHECK(pe_map_acquire(XML_GAP_OLDER_70_10_5, STR_LEN(XML_GAP_OLDER_70_10_5), "70.10.5",
+                          STR_LEN("70.10.5"), XML_GAP_NEWER_70_13_0,
+                          STR_LEN(XML_GAP_NEWER_70_13_0), "70.13.0", STR_LEN("70.13.0"),
+                          &natural) == PE_STATUS_OK,
+          "acquiring the multi-release gap pair should succeed");
+    CHECK(pe_operation_begin(natural, &natural_op) == PE_STATUS_OK, "begin should succeed");
+
+    CHECK(projected_path_matches(natural, natural_op, PE_DIRECTION_WORKING_TO_STORED,
+                                  new_path, sizeof(new_path) - 1, old_path),
+          "the gap-spanning history should skip the stale 70.10.0 entry and resolve to "
+          "the 70.11.0 entry's previous name");
+    CHECK(projected_path_matches(natural, natural_op, PE_DIRECTION_STORED_TO_WORKING,
+                                  old_path, sizeof(old_path) - 1, new_path),
+          "the reciprocal bare-predecessor-name query should resolve back to the "
+          "tagged field's current path");
+
+    /* Reversed acquisition: stored=newer, working=older. The resolution
+     * must not depend on which endpoint was acquired as stored/working. */
+    CHECK(pe_map_acquire(XML_GAP_NEWER_70_13_0, STR_LEN(XML_GAP_NEWER_70_13_0), "70.13.0",
+                          STR_LEN("70.13.0"), XML_GAP_OLDER_70_10_5,
+                          STR_LEN(XML_GAP_OLDER_70_10_5), "70.10.5", STR_LEN("70.10.5"),
+                          &reversed) == PE_STATUS_OK,
+          "acquiring the gap pair with roles reversed should succeed");
+    CHECK(pe_operation_begin(reversed, &reversed_op) == PE_STATUS_OK, "begin should succeed");
+
+    CHECK(projected_path_matches(reversed, reversed_op, PE_DIRECTION_STORED_TO_WORKING,
+                                  new_path, sizeof(new_path) - 1, old_path),
+          "the same gap-spanning resolution should hold with roles reversed");
+    CHECK(projected_path_matches(reversed, reversed_op, PE_DIRECTION_WORKING_TO_STORED,
+                                  old_path, sizeof(old_path) - 1, new_path),
+          "the reciprocal resolution should hold with roles reversed too");
+
+    pe_operation_release(natural_op);
+    pe_map_release(natural);
+    pe_operation_release(reversed_op);
+    pe_map_release(reversed);
+
+    printf("project_node_query: a successive rename history spanning several releases "
+           "resolved end to end, independent of caller endpoint ordering\n");
+    return 0;
+}
+
+/*
+ * Issue #24 parity vector (issue #13/#18's aligned-history and
+ * ordering-validation portability rules): a leaf_renamed field whose
+ * change_nbc_version/change_nbc_previous_name history is malformed fails
+ * deterministically with PE_STATUS_RENAME_HISTORY_MALFORMED instead of
+ * producing a fabricated mapping. Each sub-case uses its own dedicated,
+ * otherwise-unused minor version, all sharing major version 40 with the
+ * target so every acquisition stays same-major (a cross-major pair would
+ * be rejected by pe_map_acquire before the malformed history is ever
+ * consulted, which is not what this vector means to exercise). */
+#define XML_MALFORMED_HISTORY_SHAPE_MISMATCH                                 \
+    "<IDSs><version>40.2.0</version>"                                       \
+    "<field name=\"n\" path=\"new_name\" data_type=\"STR_0D\" "               \
+    "change_nbc_version=\"1.0.0,2.0.0\" change_nbc_description=\"leaf_renamed\" " \
+    "change_nbc_previous_name=\"only_one\"/></IDSs>"
+#define XML_MALFORMED_HISTORY_NON_ASCENDING                                  \
+    "<IDSs><version>40.3.0</version>"                                       \
+    "<field name=\"n\" path=\"new_name\" data_type=\"STR_0D\" "               \
+    "change_nbc_version=\"2.0.0,1.0.0\" change_nbc_description=\"leaf_renamed\" " \
+    "change_nbc_previous_name=\"ancient_name,middle_name\"/></IDSs>"
+#define XML_MALFORMED_HISTORY_UNPARSEABLE_VERSION                            \
+    "<IDSs><version>40.4.0</version>"                                       \
+    "<field name=\"n\" path=\"new_name\" data_type=\"STR_0D\" "               \
+    "change_nbc_version=\"not-a-version\" change_nbc_description=\"leaf_renamed\" " \
+    "change_nbc_previous_name=\"old_name\"/></IDSs>"
+#define XML_MALFORMED_HISTORY_TARGET                                         \
+    "<IDSs><version>40.1.0</version>"                                       \
+    "<field name=\"n\" path=\"old_name\" data_type=\"STR_0D\"/></IDSs>"
+
+static int test_projection_malformed_rename_history_is_rejected_deterministically(void) {
+    pe_map_t *map = NULL;
+    pe_operation_t *operation = NULL;
+    pe_verdict_t verdict = PE_VERDICT_SAME;
+    const char path[] = "new_name";
+
+    /* Shape mismatch: two versions, one previous name. */
+    CHECK(pe_map_acquire(XML_MALFORMED_HISTORY_TARGET, STR_LEN(XML_MALFORMED_HISTORY_TARGET),
+                          "40.1.0", STR_LEN("40.1.0"), XML_MALFORMED_HISTORY_SHAPE_MISMATCH,
+                          STR_LEN(XML_MALFORMED_HISTORY_SHAPE_MISMATCH), "40.2.0",
+                          STR_LEN("40.2.0"), &map) == PE_STATUS_OK,
+          "acquiring the shape-mismatch pair should succeed (the malformed history "
+          "is only checked when the field is actually queried)");
+    CHECK(pe_operation_begin(map, &operation) == PE_STATUS_OK, "begin should succeed");
+    CHECK(query(map, operation, PE_DIRECTION_WORKING_TO_STORED, path, sizeof(path) - 1,
+                &verdict) == PE_STATUS_RENAME_HISTORY_MALFORMED,
+          "unequal change_nbc_version/change_nbc_previous_name entry counts should be "
+          "rejected deterministically");
+    CHECK(verdict == PE_VERDICT_SAME,
+          "a PE_STATUS_RENAME_HISTORY_MALFORMED result must leave out_verdict unwritten");
+    pe_operation_release(operation);
+    pe_map_release(map);
+
+    /* Non-ascending version order. */
+    map = NULL;
+    operation = NULL;
+    verdict = PE_VERDICT_SAME;
+    CHECK(pe_map_acquire(XML_MALFORMED_HISTORY_TARGET, STR_LEN(XML_MALFORMED_HISTORY_TARGET),
+                          "40.1.0", STR_LEN("40.1.0"), XML_MALFORMED_HISTORY_NON_ASCENDING,
+                          STR_LEN(XML_MALFORMED_HISTORY_NON_ASCENDING), "40.3.0",
+                          STR_LEN("40.3.0"), &map) == PE_STATUS_OK,
+          "acquiring the non-ascending pair should succeed");
+    CHECK(pe_operation_begin(map, &operation) == PE_STATUS_OK, "begin should succeed");
+    CHECK(query(map, operation, PE_DIRECTION_WORKING_TO_STORED, path, sizeof(path) - 1,
+                &verdict) == PE_STATUS_RENAME_HISTORY_MALFORMED,
+          "out-of-order change_nbc_version entries should be rejected deterministically");
+    pe_operation_release(operation);
+    pe_map_release(map);
+
+    /* Unparseable version text. */
+    map = NULL;
+    operation = NULL;
+    verdict = PE_VERDICT_SAME;
+    CHECK(pe_map_acquire(XML_MALFORMED_HISTORY_TARGET, STR_LEN(XML_MALFORMED_HISTORY_TARGET),
+                          "40.1.0", STR_LEN("40.1.0"), XML_MALFORMED_HISTORY_UNPARSEABLE_VERSION,
+                          STR_LEN(XML_MALFORMED_HISTORY_UNPARSEABLE_VERSION), "40.4.0",
+                          STR_LEN("40.4.0"), &map) == PE_STATUS_OK,
+          "acquiring the unparseable-version pair should succeed");
+    CHECK(pe_operation_begin(map, &operation) == PE_STATUS_OK, "begin should succeed");
+    CHECK(query(map, operation, PE_DIRECTION_WORKING_TO_STORED, path, sizeof(path) - 1,
+                &verdict) == PE_STATUS_RENAME_HISTORY_MALFORMED,
+          "an unparseable change_nbc_version entry should be rejected deterministically");
+    pe_operation_release(operation);
+    pe_map_release(map);
+
+    printf("project_node_query: malformed rename histories (shape mismatch, "
+           "non-ascending order, unparseable version) were all rejected "
+           "deterministically rather than producing a fabricated mapping\n");
+    return 0;
+}
+
+/*
+ * Issue #24 parity vector (issue #18's "every datatype change is an
+ * automatic-seam skip" rule, extended to the resolved-rename case): a
+ * leaf_renamed field whose two sides also differ in data_type reports the
+ * skip, not a fabricated rename -- proving no semantic type-conversion
+ * callback executes even though the field was also renamed.
+ */
+#define XML_RENAMED_AND_RETYPED_OLD                                          \
+    "<IDSs><version>50.1.0</version>"                                       \
+    "<field name=\"n\" path=\"old_retyped\" data_type=\"INT_0D\"/></IDSs>"
+#define XML_RENAMED_AND_RETYPED_NEW                                          \
+    "<IDSs><version>50.2.0</version>"                                       \
+    "<field name=\"n\" path=\"new_retyped\" data_type=\"FLT_0D\" "            \
+    "change_nbc_version=\"50.2.0\" change_nbc_description=\"leaf_renamed\" "  \
+    "change_nbc_previous_name=\"old_retyped\"/></IDSs>"
+
+static int test_projection_datatype_change_after_rename_still_reports_skip(void) {
+    pe_map_t *map = NULL;
+    pe_operation_t *operation = NULL;
+    pe_verdict_t verdict;
+    const char new_path[] = "new_retyped";
+    const char old_path[] = "old_retyped";
+
+    CHECK(pe_map_acquire(XML_RENAMED_AND_RETYPED_OLD, STR_LEN(XML_RENAMED_AND_RETYPED_OLD),
+                          "50.1.0", STR_LEN("50.1.0"), XML_RENAMED_AND_RETYPED_NEW,
+                          STR_LEN(XML_RENAMED_AND_RETYPED_NEW), "50.2.0", STR_LEN("50.2.0"),
+                          &map) == PE_STATUS_OK,
+          "acquiring the renamed-and-retyped pair should succeed");
+    CHECK(pe_operation_begin(map, &operation) == PE_STATUS_OK, "begin should succeed");
+
+    CHECK(query(map, operation, PE_DIRECTION_WORKING_TO_STORED, new_path,
+                sizeof(new_path) - 1, &verdict) == PE_STATUS_OK && verdict == PE_VERDICT_SKIP,
+          "a resolved rename whose data_type also changed should report PE_VERDICT_SKIP, "
+          "not PE_VERDICT_RENAME");
+    CHECK(query(map, operation, PE_DIRECTION_STORED_TO_WORKING, old_path,
+                sizeof(old_path) - 1, &verdict) == PE_STATUS_OK && verdict == PE_VERDICT_SKIP,
+          "the reciprocal bare-predecessor-name query should report the same skip");
+
+    pe_operation_release(operation);
+    pe_map_release(map);
+
+    printf("project_node_query: a datatype change coinciding with a resolved rename "
+           "still reported PE_VERDICT_SKIP, proving no conversion callback executed\n");
+    return 0;
+}
+
+/*
+ * Issue #24: leaf_renamed resolution verified through the C ABI against a
+ * dedicated ad-hoc pair (feature-1-shaped, but independent of the shared
+ * fixture so this vector's own acquisition endpoints can be chosen freely).
+ * Both directions, and both caller endpoint orderings, must agree.
+ */
+#define XML_LEAF_OLD "<IDSs><version>60.1.0</version>" \
+    "<field name=\"n\" path=\"old_leaf\" data_type=\"STR_0D\"/></IDSs>"
+#define XML_LEAF_NEW                                                         \
+    "<IDSs><version>60.2.0</version>"                                       \
+    "<field name=\"n\" path=\"new_leaf\" data_type=\"STR_0D\" "               \
+    "change_nbc_version=\"60.2.0\" change_nbc_description=\"leaf_renamed\" "  \
+    "change_nbc_previous_name=\"old_leaf\"/></IDSs>"
+
+static int test_projection_single_leaf_rename_resolves_in_both_directions(void) {
+    pe_map_t *natural = NULL;
+    pe_map_t *reversed = NULL;
+    pe_operation_t *natural_op = NULL;
+    pe_operation_t *reversed_op = NULL;
+    const char new_path[] = "new_leaf";
+    const char old_path[] = "old_leaf";
+
+    CHECK(pe_map_acquire(XML_LEAF_OLD, STR_LEN(XML_LEAF_OLD), "60.1.0", STR_LEN("60.1.0"),
+                          XML_LEAF_NEW, STR_LEN(XML_LEAF_NEW), "60.2.0", STR_LEN("60.2.0"),
+                          &natural) == PE_STATUS_OK,
+          "acquiring the single-leaf-rename pair should succeed");
+    CHECK(pe_operation_begin(natural, &natural_op) == PE_STATUS_OK, "begin should succeed");
+
+    CHECK(projected_path_matches(natural, natural_op, PE_DIRECTION_WORKING_TO_STORED,
+                                  new_path, sizeof(new_path) - 1, old_path),
+          "querying the tagged (post-rename) path should resolve to the previous name");
+    CHECK(projected_path_matches(natural, natural_op, PE_DIRECTION_STORED_TO_WORKING,
+                                  old_path, sizeof(old_path) - 1, new_path),
+          "querying the bare predecessor path should resolve to the tagged field's "
+          "current path");
+
+    CHECK(pe_map_acquire(XML_LEAF_NEW, STR_LEN(XML_LEAF_NEW), "60.2.0", STR_LEN("60.2.0"),
+                          XML_LEAF_OLD, STR_LEN(XML_LEAF_OLD), "60.1.0", STR_LEN("60.1.0"),
+                          &reversed) == PE_STATUS_OK,
+          "acquiring the same pair with roles reversed should succeed");
+    CHECK(pe_operation_begin(reversed, &reversed_op) == PE_STATUS_OK, "begin should succeed");
+
+    CHECK(projected_path_matches(reversed, reversed_op, PE_DIRECTION_STORED_TO_WORKING,
+                                  new_path, sizeof(new_path) - 1, old_path),
+          "resolution should be unaffected by which endpoint was acquired as stored "
+          "vs. working");
+    CHECK(projected_path_matches(reversed, reversed_op, PE_DIRECTION_WORKING_TO_STORED,
+                                  old_path, sizeof(old_path) - 1, new_path),
+          "the reciprocal resolution should hold with roles reversed too");
+
+    pe_operation_release(natural_op);
+    pe_map_release(natural);
+    pe_operation_release(reversed_op);
+    pe_map_release(reversed);
+
+    printf("project_node_query: a single leaf_renamed field resolved correctly in both "
+           "directions, independent of caller endpoint ordering\n");
+    return 0;
+}
+
+/*
+ * Issue #24: verifies, through the ABI, that the real shared nine-feature
+ * fixture's own feature 1 (leaf rename: old_leaf_name/new_leaf_name) and
+ * feature 4 (successive history: middle_name/thrice_renamed) now resolve
+ * to PE_VERDICT_RENAME with the projected path called for by #18's cutoff
+ * rule -- the same shared corpus test_projection_shared_fixture_rename_bearing_fields_report_rename_pending
+ * used to cover these two paths before this ticket activated them (see
+ * that fixture's own doc comment for the feature -> field mapping and the
+ * durability rule governing #23's still-frozen four vectors).
+ */
+static int test_projection_shared_fixture_leaf_and_successive_rename_features_resolve(void) {
+    pe_map_t *map = NULL;
+    pe_operation_t *operation = NULL;
+
+    CHECK(pe_map_acquire(XML_FIXTURE_OLD_20_1_0, STR_LEN(XML_FIXTURE_OLD_20_1_0), "20.1.0",
+                          STR_LEN("20.1.0"), XML_FIXTURE_NEW_20_2_0,
+                          STR_LEN(XML_FIXTURE_NEW_20_2_0), "20.2.0", STR_LEN("20.2.0"),
+                          &map) == PE_STATUS_OK,
+          "acquiring the shared fixture pair should succeed");
+    CHECK(pe_operation_begin(map, &operation) == PE_STATUS_OK, "begin should succeed");
+
+    /* Feature 1: leaf rename. */
+    CHECK(projected_path_matches(map, operation, PE_DIRECTION_WORKING_TO_STORED,
+                                  "new_leaf_name", STR_LEN("new_leaf_name"), "old_leaf_name"),
+          "feature 1 (leaf rename) should resolve to its OLD-side previous name");
+    CHECK(projected_path_matches(map, operation, PE_DIRECTION_STORED_TO_WORKING,
+                                  "old_leaf_name", STR_LEN("old_leaf_name"), "new_leaf_name"),
+          "feature 1 should resolve reciprocally from its OLD-side bare name");
+
+    /* Feature 4: successive rename history. The shared fixture's older
+     * endpoint (20.1.0) is the first version greater than 19.5.0 but not
+     * greater than 20.2.0, so the cutoff selects the "middle_name" entry --
+     * exactly the OLD side's own literal field name. */
+    CHECK(projected_path_matches(map, operation, PE_DIRECTION_WORKING_TO_STORED,
+                                  "thrice_renamed", STR_LEN("thrice_renamed"), "middle_name"),
+          "feature 4 (successive history) should select the cutoff-appropriate "
+          "previous name, not the stale \"ancient_name\" entry");
+    CHECK(projected_path_matches(map, operation, PE_DIRECTION_STORED_TO_WORKING,
+                                  "middle_name", STR_LEN("middle_name"), "thrice_renamed"),
+          "feature 4 should resolve reciprocally from its OLD-side bare name");
+
+    pe_operation_release(operation);
+    pe_map_release(map);
+
+    printf("project_node_query: the shared fixture's leaf-rename and successive-history "
+           "features resolved to PE_VERDICT_RENAME with the expected projected path\n");
+    return 0;
+}
+
+/*
+ * Issue #24: verifies, through the ABI, that the real shared fixture's
+ * feature 8 (renamed time-dependent node: dynamic_group/legacy_signal ->
+ * dynamic_group/signal, a bare previous name expanded against the renamed
+ * field's own unchanged parent) and feature 9 (missing parent with a
+ * reachable renamed descendant: orphan_container/direct_signal ->
+ * rescued_signal, a full-path previous name) now resolve to
+ * PE_VERDICT_RENAME. Both are mechanically leaf_renamed fields; feature 9's
+ * "missing parent" framing describes why the fixture has no literal
+ * "orphan_container" field, not a different resolution mechanism.
+ */
+static int test_projection_shared_fixture_time_dependent_and_missing_parent_renames_resolve(void) {
+    pe_map_t *map = NULL;
+    pe_operation_t *operation = NULL;
+
+    CHECK(pe_map_acquire(XML_FIXTURE_OLD_20_1_0, STR_LEN(XML_FIXTURE_OLD_20_1_0), "20.1.0",
+                          STR_LEN("20.1.0"), XML_FIXTURE_NEW_20_2_0,
+                          STR_LEN(XML_FIXTURE_NEW_20_2_0), "20.2.0", STR_LEN("20.2.0"),
+                          &map) == PE_STATUS_OK,
+          "acquiring the shared fixture pair should succeed");
+    CHECK(pe_operation_begin(map, &operation) == PE_STATUS_OK, "begin should succeed");
+
+    /* Feature 8: bare previous name expanded against the unchanged parent
+     * "dynamic_group". */
+    CHECK(projected_path_matches(map, operation, PE_DIRECTION_WORKING_TO_STORED,
+                                  "dynamic_group/signal", STR_LEN("dynamic_group/signal"),
+                                  "dynamic_group/legacy_signal"),
+          "feature 8 (renamed time-dependent node) should resolve to its full OLD-side "
+          "path via the unchanged parent");
+    CHECK(projected_path_matches(map, operation, PE_DIRECTION_STORED_TO_WORKING,
+                                  "dynamic_group/legacy_signal",
+                                  STR_LEN("dynamic_group/legacy_signal"), "dynamic_group/signal"),
+          "feature 8 should resolve reciprocally from its OLD-side path");
+
+    /* Feature 9: full-path previous name, used verbatim. */
+    CHECK(projected_path_matches(map, operation, PE_DIRECTION_WORKING_TO_STORED,
+                                  "rescued_signal", STR_LEN("rescued_signal"),
+                                  "orphan_container/direct_signal"),
+          "feature 9 (missing parent, reachable descendant) should resolve to its "
+          "full OLD-side path even though no \"orphan_container\" field itself exists");
+    CHECK(projected_path_matches(map, operation, PE_DIRECTION_STORED_TO_WORKING,
+                                  "orphan_container/direct_signal",
+                                  STR_LEN("orphan_container/direct_signal"), "rescued_signal"),
+          "feature 9 should resolve reciprocally from its OLD-side path");
+
+    pe_operation_release(operation);
+    pe_map_release(map);
+
+    printf("project_node_query: the shared fixture's time-dependent-node and "
+           "missing-parent rename features resolved to PE_VERDICT_RENAME with the "
+           "expected projected path\n");
     return 0;
 }
 
@@ -1345,6 +1755,12 @@ int main(void) {
     failures += test_projection_unknown_path_is_rejected();
     failures += test_projection_rename_tagged_node_reports_rename_pending();
     failures += test_projection_shared_fixture_rename_bearing_fields_report_rename_pending();
+    failures += test_projection_successive_rename_history_resolves_across_a_multi_release_gap();
+    failures += test_projection_malformed_rename_history_is_rejected_deterministically();
+    failures += test_projection_datatype_change_after_rename_still_reports_skip();
+    failures += test_projection_single_leaf_rename_resolves_in_both_directions();
+    failures += test_projection_shared_fixture_leaf_and_successive_rename_features_resolve();
+    failures += test_projection_shared_fixture_time_dependent_and_missing_parent_renames_resolve();
 
     if (failures == 0) {
         printf("contract test: all checks passed\n");

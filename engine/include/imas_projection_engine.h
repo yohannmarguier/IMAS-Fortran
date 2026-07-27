@@ -24,9 +24,16 @@
  * whose own field, or the identically-pathed field on the other schema,
  * carries automatic rename metadata is deliberately held in the distinct
  * PE_STATUS_RENAME_PENDING state rather than being folded into an added/
- * removed verdict; full resolution lands in issue #24 (leaf renames,
- * successive history) and issue #25 (array-of-structures, plain-structure
- * renames, cascade).
+ * removed verdict. Issue #24 resolves change_nbc_description=leaf_renamed
+ * metadata into a real PE_VERDICT_RENAME, including a comma-separated
+ * successive history and the version-cutoff selection rule researched
+ * from IMAS-Python in issue #13; pe_project_node_query grows three
+ * trailing parameters carrying the projected path on the other schema,
+ * following the same caller-provided-buffer convention as every other
+ * returned string. A malformed leaf-rename history reports the distinct
+ * PE_STATUS_RENAME_HISTORY_MALFORMED rather than fabricating a mapping.
+ * aos_renamed/structure_renamed resolution remains issue #25's
+ * (array-of-structures, plain-structure renames, cascade).
  *
  * Hand-maintained, not generated: every declaration here must be kept in
  * sync with its `#[no_mangle] extern "C"` definition in `src/ffi.rs`.
@@ -85,22 +92,32 @@ typedef enum pe_status {
      * to build a map for this pair. */
     PE_STATUS_CROSS_MAJOR = 6,
     /* The queried node's own field, or the identically-pathed field on
-     * the other schema, carries automatic rename metadata
-     * (change_nbc_description of leaf_renamed, aos_renamed, or
-     * structure_renamed) that this engine does not yet resolve into a
-     * real verdict (issue #24/#25). pe_project_node_query leaves
-     * out_verdict unwritten when it returns this status, exactly as for
-     * any other non-PE_STATUS_OK result. */
+     * the other schema, carries aos_renamed or structure_renamed metadata
+     * (change_nbc_description) that this engine does not yet resolve into
+     * a real verdict (issue #25). pe_project_node_query leaves out_verdict
+     * and the projected-path output unwritten when it returns this
+     * status, exactly as for any other non-PE_STATUS_OK result. No longer
+     * reported for leaf_renamed metadata, which issue #24 resolves into a
+     * real PE_VERDICT_RENAME instead. */
     PE_STATUS_RENAME_PENDING = 7,
+    /* A leaf_renamed field's change_nbc_version/change_nbc_previous_name
+     * history is not a well-formed, aligned, strictly-ascending
+     * comma-separated list -- unequal entry counts, an unparseable
+     * version, or entries out of semantic order (issue #24). The engine
+     * refuses to guess a resolution in this case rather than fabricate a
+     * mapping from ambiguous metadata; out_verdict and the projected-path
+     * output are left unwritten. */
+    PE_STATUS_RENAME_HISTORY_MALFORMED = 8,
 } pe_status_t;
 
 /* Shared projection-verdict vocabulary. Issue #23 gives
  * pe_project_node_query its first real verdicts for the classifications
  * that need no rename metadata: an unchanged node reports PE_VERDICT_SAME;
  * a compiled-only, stored-only, or datatype-changed node reports
- * PE_VERDICT_SKIP. A node awaiting rename resolution reports the distinct
- * PE_STATUS_RENAME_PENDING status instead of a verdict (see pe_status_t).
- * PE_VERDICT_RENAME is reserved for issue #24/#25. */
+ * PE_VERDICT_SKIP. Issue #24 gives it its first real PE_VERDICT_RENAME, for
+ * a resolved leaf_renamed field. A node awaiting aos_renamed/
+ * structure_renamed resolution (issue #25) reports the distinct
+ * PE_STATUS_RENAME_PENDING status instead of a verdict (see pe_status_t). */
 typedef enum pe_verdict {
     PE_VERDICT_SAME = 0,
     PE_VERDICT_RENAME = 1,
@@ -266,29 +283,49 @@ typedef enum pe_direction {
 } pe_direction_t;
 
 /* Projects `node_path`, read from whichever schema `direction` selects as
- * source, against the other schema in `map` (issue #23). `map` must be the
- * same currently-live handle passed to pe_operation_begin for `operation`,
- * and `operation` must also still be live. A null handle returns
- * PE_STATUS_NULL_HANDLE; a foreign, released, or mismatched handle returns
- * PE_STATUS_INVALID_ARGUMENT without either opaque handle being dereferenced
- * (issue #31). An unrecognized `direction` returns PE_STATUS_INVALID_ARGUMENT,
- * the same way an unrecognized pe_map_role_t does. `node_path` is borrowed
- * for the duration of this call only and need not be NUL-terminated;
- * `node_path_len` gives its length in bytes.
+ * source, against the other schema in `map` (issues #23, #24). `map` must
+ * be the same currently-live handle passed to pe_operation_begin for
+ * `operation`, and `operation` must also still be live. A null handle
+ * returns PE_STATUS_NULL_HANDLE; a foreign, released, or mismatched handle
+ * returns PE_STATUS_INVALID_ARGUMENT without either opaque handle being
+ * dereferenced (issue #31). An unrecognized `direction` returns
+ * PE_STATUS_INVALID_ARGUMENT, the same way an unrecognized pe_map_role_t
+ * does. `node_path` is borrowed for the duration of this call only and
+ * need not be NUL-terminated; `node_path_len` gives its length in bytes.
  *
- * Reports through `out_verdict`/the return status:
+ * Reports through `out_verdict`/`projected_path_*`/the return status:
  *  - unchanged (present in both schemas, matching data_type, no rename
- *    metadata) -- PE_STATUS_OK, PE_VERDICT_SAME;
- *  - compiled-only, stored-only (present in source, absent from target, no
- *    rename metadata), or datatype-changed (present in both, differing
- *    data_type, no rename metadata) -- PE_STATUS_OK, PE_VERDICT_SKIP;
+ *    metadata applies) -- PE_STATUS_OK, PE_VERDICT_SAME,
+ *    `projected_path_*` left untouched (no replacement string is needed);
+ *  - compiled-only, stored-only (present in source, absent from target,
+ *    no rename metadata resolves to it), or datatype-changed (present in
+ *    both, directly or via a resolved rename, with differing data_type)
+ *    -- PE_STATUS_OK, PE_VERDICT_SKIP, `projected_path_*` left untouched;
+ *  - a resolved leaf_renamed field (issue #24) -- PE_STATUS_OK,
+ *    PE_VERDICT_RENAME, with the projected path on the other schema
+ *    written to `projected_path_buffer` following the same
+ *    caller-provided-buffer convention documented above for every other
+ *    returned string (an undersized buffer reports the distinct
+ *    PE_STATUS_BUFFER_TOO_SMALL, with `out_verdict` still written since
+ *    the classification itself is not in question, only the buffer size);
  *  - a node whose own field, or the identically-pathed field on the other
- *    schema, carries automatic rename metadata not yet resolved by issue
- *    #24/#25 -- PE_STATUS_RENAME_PENDING, `out_verdict` left unwritten;
+ *    schema, carries aos_renamed/structure_renamed metadata not yet
+ *    resolved by issue #25 -- PE_STATUS_RENAME_PENDING, `out_verdict` and
+ *    `projected_path_*` left untouched;
+ *  - a leaf_renamed field whose change_nbc_version/change_nbc_previous_name
+ *    history is malformed (issue #24) -- the distinct
+ *    PE_STATUS_RENAME_HISTORY_MALFORMED, `out_verdict` and
+ *    `projected_path_*` left untouched;
  *  - a `node_path` unknown to the selected source schema -- rejected as
- *    PE_STATUS_INVALID_ARGUMENT, `out_verdict` left unwritten, since a real
- *    compiled walk only ever queries paths it already knows belong to its
- *    own schema.
+ *    PE_STATUS_INVALID_ARGUMENT, `out_verdict` and `projected_path_*` left
+ *    untouched, since a real compiled walk only ever queries paths it
+ *    already knows belong to its own schema.
+ *
+ * `projected_path_buffer`/`projected_path_buffer_len`/
+ * `projected_path_required_len` follow the string ownership convention
+ * documented above; pass `projected_path_buffer = NULL` (or
+ * `projected_path_buffer_len = 0`) to learn the required length first, as
+ * with any other returned string.
  *
  * Releasing a map does not invalidate its operation's own lifecycle, but
  * this entry requires the caller to retain the map handle for each query. */
@@ -298,7 +335,10 @@ pe_status_t pe_project_node_query(
     pe_direction_t direction,
     const char *node_path,
     size_t node_path_len,
-    pe_verdict_t *out_verdict);
+    pe_verdict_t *out_verdict,
+    char *projected_path_buffer,
+    size_t projected_path_buffer_len,
+    size_t *projected_path_required_len);
 
 /* Zeroes the process-wide projection-entry counter. */
 pe_status_t pe_instrumentation_reset(void);
