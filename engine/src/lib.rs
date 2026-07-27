@@ -7,18 +7,21 @@
 //! [`Map`] handle. Issue #22 adds process-wide reuse of that validated
 //! pair (see [`cache`]): reacquiring the same pair, including with the
 //! stored/working roles swapped, returns a handle backed by the one
-//! cached pair instead of reparsing and revalidating it. Issue #31 adds
-//! the operation lifecycle: an [`Operation`] is begun against one acquired
-//! [`Map`] handle and carries its own reset/end/release lifecycle,
-//! isolated from every other live operation or map. Issue #23 adds the
-//! first real per-node projection verdicts (see [`projection`]): each
-//! schema is indexed by `field/@path`, and [`project_node`] classifies a
-//! node relative to that reciprocal index for the classifications that
-//! need no rename metadata (same, compiled-only/stored-only, datatype-
-//! changed) while holding any rename-tagged node in the distinct
-//! [`projection::Classification::RenamePending`] state. Full rename
-//! resolution is issue #24 (leaf, successive history) and issue #25
-//! (array-of-structures, plain-structure, cascade).
+//! cached pair instead of reparsing and revalidating it. Issue #28 bounds
+//! that cache with a deterministic LRU eviction policy (see [`cache`]'s
+//! "Bound and LRU eviction" documentation): eviction only ever drops the
+//! cache's own reference, so a live [`Map`] handle is never invalidated by
+//! it. Issue #31 adds the operation lifecycle: an [`Operation`] is begun
+//! against one acquired [`Map`] handle and carries its own reset/end/
+//! release lifecycle, isolated from every other live operation or map.
+//! Issue #23 adds the first real per-node projection verdicts (see
+//! [`projection`]): each schema is indexed by `field/@path`, and
+//! [`project_node`] classifies a node relative to that reciprocal index
+//! for the classifications that need no rename metadata (same, compiled-
+//! only/stored-only, datatype-changed) while holding any rename-tagged
+//! node in the distinct [`projection::Classification::RenamePending`]
+//! state. Full rename resolution is issue #24 (leaf, successive history)
+//! and issue #25 (array-of-structures, plain-structure, cascade).
 //!
 //! All `unsafe` code is confined to the [`ffi`] module; this module,
 //! [`status`], [`schema`], [`version`], [`cache`], and [`projection`] are
@@ -80,17 +83,15 @@ impl Map {
     /// comparison and must not be interpreted as a real address by a
     /// caller.
     ///
-    /// Implementation note: today this is literally `Arc::as_ptr`, sound
-    /// only because this slice's cache never evicts or deallocates an
-    /// entry once inserted (see `cache`'s module docs), so two live `Arc`s
-    /// can never disagree on equality due to address reuse. Issue #28's
-    /// bounded LRU eviction changes that precondition -- a future
-    /// implementation backing this method must keep identities unique
-    /// for the process lifetime (e.g. a monotonic per-entry counter
-    /// stored alongside the pair) rather than relying on the pointer
-    /// once entries can be freed and reallocated.
+    /// Backed by [`cache::CachedPair::id`], a monotonic counter assigned
+    /// once per built pair, rather than the pair's address: issue #28's
+    /// bounded LRU cache can evict and later deallocate an entry, after
+    /// which a later, unrelated pair's allocation could reuse the same
+    /// address. A monotonic counter cannot alias that way, so two live
+    /// `Map`s only ever report equal identities when they share the same
+    /// still-referenced pair, evicted or not.
     pub fn cache_identity(&self) -> u64 {
-        Arc::as_ptr(&self.pair) as u64
+        self.pair.id
     }
 }
 
