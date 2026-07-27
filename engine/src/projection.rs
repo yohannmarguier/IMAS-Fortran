@@ -16,7 +16,7 @@
 //! [`DatatypeChanged`]: Classification::DatatypeChanged
 //! [`RenamePending`]: Classification::RenamePending
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 /// Metadata captured from one `<field>` element's attributes, keyed by its
 /// `path` attribute in [`FieldIndex`]. `previous_name`/`nbc_version` are
@@ -68,14 +68,51 @@ const AUTOMATIC_RENAME_DESCRIPTIONS: &[&str] =
 /// Built once per [`crate::schema::ParsedSchema`] and retained for the
 /// life of the cached pair, so classification never re-parses the XML.
 ///
-/// Alongside the by-path map, this also collects every
-/// `change_nbc_previous_name` value mentioned anywhere in this schema, in
-/// [`FieldIndex::mentions_as_previous_name`] -- see that method's doc
-/// comment for why `classify` needs it.
+/// Alongside the by-path map, this also collects automatic-rename
+/// predecessor references in [`FieldIndex::may_have_renamed_from`] -- see
+/// that method's doc comment for why `classify` needs it.
 #[derive(Debug, Default)]
 pub struct FieldIndex {
     by_path: HashMap<String, FieldMeta>,
-    previous_name_occurrences: HashSet<String>,
+    rename_references: Vec<RenameReference>,
+}
+
+/// One predecessor reference attached to an automatic rename. This is only
+/// enough to withhold a fabricated add/remove verdict; #24/#25 still own
+/// resolving the reference into its replacement path.
+#[derive(Debug)]
+struct RenameReference {
+    renamed_path: String,
+    previous_name: String,
+    cascades_to_descendants: bool,
+}
+
+impl RenameReference {
+    fn may_refer_to(&self, path: &str) -> bool {
+        if path == self.previous_name {
+            return true;
+        }
+
+        if self.cascades_to_descendants
+            && path
+                .strip_prefix(&self.previous_name)
+                .is_some_and(|suffix| suffix.starts_with('/'))
+        {
+            return true;
+        }
+
+        // A bare predecessor name is relative to the renamed field's
+        // parent. Matching that parent prevents an unrelated same-named
+        // leaf elsewhere in the schema from being withheld.
+        !self.previous_name.contains('/')
+            && path.rsplit_once('/').is_some_and(|(parent, leaf)| {
+                leaf == self.previous_name
+                    && self
+                        .renamed_path
+                        .rsplit_once('/')
+                        .is_some_and(|(renamed_parent, _)| parent == renamed_parent)
+            })
+    }
 }
 
 impl FieldIndex {
@@ -91,7 +128,7 @@ impl FieldIndex {
     /// projectable node.
     pub(crate) fn from_document(doc: &roxmltree::Document) -> Self {
         let mut by_path = HashMap::new();
-        let mut previous_name_occurrences = HashSet::new();
+        let mut rename_references = Vec::new();
         for node in doc.descendants() {
             if !node.is_element() || node.tag_name().name() != "field" {
                 continue;
@@ -103,9 +140,19 @@ impl FieldIndex {
             let carries_rename_metadata =
                 change_nbc_description.is_some_and(|d| AUTOMATIC_RENAME_DESCRIPTIONS.contains(&d));
             let previous_name = node.attribute("change_nbc_previous_name");
-            if let Some(previous_name) = previous_name {
-                previous_name_occurrences
-                    .extend(previous_name.split(',').map(|n| n.trim().to_string()));
+            if carries_rename_metadata {
+                if let Some(previous_name) = previous_name {
+                    rename_references.extend(previous_name.split(',').map(|previous_name| {
+                        RenameReference {
+                            renamed_path: path.to_string(),
+                            previous_name: previous_name.trim().to_string(),
+                            cascades_to_descendants: matches!(
+                                change_nbc_description,
+                                Some("aos_renamed" | "structure_renamed")
+                            ),
+                        }
+                    }));
+                }
             }
             by_path.insert(
                 path.to_string(),
@@ -119,7 +166,7 @@ impl FieldIndex {
         }
         FieldIndex {
             by_path,
-            previous_name_occurrences,
+            rename_references,
         }
     }
 
@@ -127,10 +174,8 @@ impl FieldIndex {
         self.by_path.get(path)
     }
 
-    /// `true` when some field anywhere in this schema carries a
-    /// `change_nbc_previous_name` (comma-separated for a successive
-    /// history) with `path` as one of its exact, verbatim components
-    /// (issue #23).
+    /// `true` when automatic rename metadata may refer to `path` (issue
+    /// #23), so `classify` must withhold an added/removed verdict.
     ///
     /// This exists so [`classify`] does not fabricate `SourceOnly` for a
     /// node that a real compiled walk would never see as "added" or
@@ -138,20 +183,16 @@ impl FieldIndex {
     /// on the post-rename field, pointing backward, so the OLD field at
     /// its OLD path carries no tag of its own -- querying it as source
     /// against the NEW schema as target would otherwise see a plain
-    /// absence and misclassify it. This check closes that gap for an
-    /// EXACT path match only. It is deliberately not a resolver: it does
-    /// not interpret a relative previous-name reference (a bare sibling
-    /// name, or a `../`-prefixed parent-relative reference) into a full
-    /// path, does not select among a successive history by version
-    /// cutoff, and does not cascade a plain-structure/array-of-structures
-    /// rename to its descendants -- all of that is issue #24 (leaf,
-    /// successive history) and issue #25 (structural cascade). A
-    /// previous-name reference that is not already a full, exact path
-    /// (e.g. a bare leaf name recorded for a rename within an otherwise
-    /// unchanged parent) is not matched here and still falls through to
-    /// [`Classification::SourceOnly`] until #24/#25 resolve it.
-    pub fn mentions_as_previous_name(&self, path: &str) -> bool {
-        self.previous_name_occurrences.contains(path)
+    /// absence and misclassify it. Besides exact matches, this recognizes a
+    /// bare predecessor name within the renamed field's unchanged parent and
+    /// descendants of a renamed structure or AoS. It deliberately does not
+    /// select a successive history by version cutoff or derive replacement
+    /// paths: #24/#25 own those decisions. This conservative check merely
+    /// retains the explicit pending state until they do.
+    pub fn may_have_renamed_from(&self, path: &str) -> bool {
+        self.rename_references
+            .iter()
+            .any(|reference| reference.may_refer_to(path))
     }
 
     /// Paths present in `self` but absent from `other`: a schema-level
@@ -181,10 +222,9 @@ pub enum Classification {
     /// for it.
     Same,
     /// Present in the source schema, absent from the target schema under
-    /// the identical path, and target does not mention `path` as an exact
-    /// `change_nbc_previous_name` match either (see
-    /// [`FieldIndex::mentions_as_previous_name`] for what that check does
-    /// and does not catch). Depending on which schema plays source for a
+    /// the identical path, and target has no automatic rename metadata that
+    /// might refer to `path` (see [`FieldIndex::may_have_renamed_from`]).
+    /// Depending on which schema plays source for a
     /// given query, this is either a compiled-only field (source is the
     /// working/compiled schema) or a stored-only field (source is the
     /// stored schema); the caller's own query direction disambiguates
@@ -225,9 +265,9 @@ pub enum Classification {
 /// field: either side carrying it is enough to withhold a same/added/
 /// removed/datatype-changed verdict (see [`Classification::RenamePending`]).
 /// When `path` is altogether absent from `target`, `target` is also
-/// checked for an exact `change_nbc_previous_name` match on `path` (see
-/// [`FieldIndex::mentions_as_previous_name`]) before concluding
-/// `SourceOnly` -- otherwise querying a renamed field by its OLD path
+/// checked for automatic rename metadata that may refer to `path` (see
+/// [`FieldIndex::may_have_renamed_from`]) before concluding `SourceOnly` --
+/// otherwise querying a renamed field by its OLD path
 /// (the non-production `PE_DIRECTION_STORED_TO_WORKING` testing
 /// direction) would fabricate an added/removed verdict purely because DD
 /// rename metadata is recorded only on the post-rename field, pointing
@@ -238,7 +278,7 @@ pub fn classify(source: &FieldIndex, target: &FieldIndex, path: &str) -> Option<
         return Some(Classification::RenamePending);
     }
     Some(match target.get(path) {
-        None if target.mentions_as_previous_name(path) => Classification::RenamePending,
+        None if target.may_have_renamed_from(path) => Classification::RenamePending,
         None => Classification::SourceOnly,
         Some(target_meta) if target_meta.carries_rename_metadata() => Classification::RenamePending,
         Some(target_meta) if target_meta.data_type() != source_meta.data_type() => {
@@ -371,7 +411,7 @@ mod tests {
     fn querying_the_old_path_of_a_renamed_field_does_not_fabricate_source_only() {
         // The tag lives only on the post-rename field ("new_name"),
         // pointing backward -- "old_name" itself carries nothing. Without
-        // `mentions_as_previous_name`, classifying from source=old (the
+        // `may_have_renamed_from`, classifying from source=old (the
         // PE_DIRECTION_STORED_TO_WORKING testing direction) would see a
         // plain absence in target and fabricate `SourceOnly` (a "removed"
         // field) even though this path is exactly the previous name of a
@@ -404,15 +444,10 @@ mod tests {
     }
 
     #[test]
-    fn mentions_as_previous_name_is_an_exact_match_only_and_does_not_resolve_a_bare_relative_name()
-    {
-        // Documents the deliberate boundary: a previous-name reference
-        // that is a bare sibling name rather than an already-full, exact
-        // path is not resolved here -- that relative-path interpretation
-        // is issue #24/#25's job. "renamed_leaf"'s own path
-        // "group/renamed_leaf" is not equal to the bare "old_leaf" its own
-        // tag records, so this does not (yet) protect a differently-named
-        // old sibling from a fabricated verdict.
+    fn a_bare_previous_name_within_the_same_parent_is_held_pending() {
+        // This does not resolve the rename. It only prevents a bare sibling
+        // predecessor name from fabricating an added/removed verdict before
+        // #24 applies actual rename semantics.
         let source =
             index(r#"<IDSs><field name="n" path="group/old_leaf" data_type="STR_0D"/></IDSs>"#);
         let target = index(
@@ -422,11 +457,42 @@ mod tests {
         );
         assert_eq!(
             classify(&source, &target, "group/old_leaf"),
+            Some(Classification::RenamePending)
+        );
+        let unrelated_source =
+            index(r#"<IDSs><field name="n" path="other/old_leaf" data_type="STR_0D"/></IDSs>"#);
+        assert_eq!(
+            classify(&unrelated_source, &target, "other/old_leaf"),
             Some(Classification::SourceOnly)
         );
-        // The bare name alone, without the "group/" prefix, IS caught,
-        // since it is what the tag literally records verbatim.
-        assert!(target.mentions_as_previous_name("old_leaf"));
+    }
+
+    #[test]
+    fn descendants_of_a_renamed_structure_or_aos_are_held_pending() {
+        let source = index(
+            r#"<IDSs>
+                 <field name="n" path="old_struct/child" data_type="INT_0D"/>
+                 <field name="n" path="old_aos/value" data_type="FLT_1D"/>
+               </IDSs>"#,
+        );
+        let target = index(
+            r#"<IDSs>
+                 <field name="n" path="new_struct" data_type="structure"
+                    change_nbc_description="structure_renamed"
+                    change_nbc_previous_name="old_struct"/>
+                 <field name="n" path="new_aos" data_type="struct_array"
+                    change_nbc_description="aos_renamed"
+                    change_nbc_previous_name="old_aos"/>
+               </IDSs>"#,
+        );
+        assert_eq!(
+            classify(&source, &target, "old_struct/child"),
+            Some(Classification::RenamePending)
+        );
+        assert_eq!(
+            classify(&source, &target, "old_aos/value"),
+            Some(Classification::RenamePending)
+        );
     }
 
     /// Durability guard for issue #23's own acceptance criterion that its

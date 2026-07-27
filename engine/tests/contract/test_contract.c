@@ -90,19 +90,12 @@
  * make this ticket's own vectors the thing that breaks.
  *
  * Note for #24/#25: querying most of these rename-tagged OLD-side paths via
- * PE_DIRECTION_STORED_TO_WORKING already reports PE_STATUS_RENAME_PENDING
- * rather than a fabricated added/removed skip, because
- * FieldIndex::mentions_as_previous_name (src/projection.rs) catches an
- * EXACT match of change_nbc_previous_name against the queried path. That
- * catches old_leaf_name, old_struct, old_aos, middle_name, and
- * orphan_container/direct_signal (all reference their previous name as a
- * full, exact path or a plain successive-history component), but NOT
- * dynamic_group/legacy_signal (its NEW-side tag records the bare sibling
- * name "legacy_signal", not the full path) or the old_struct/old_aos
- * children (cascade to descendants is not implemented). Do not read the
- * caught cases as this ticket having implemented rename resolution --
- * they still return the same explicit "awaiting #24/#25" status as the
- * uncaught ones, not a real same/rename verdict.
+ * PE_DIRECTION_STORED_TO_WORKING reports PE_STATUS_RENAME_PENDING rather
+ * than a fabricated added/removed skip. FieldIndex::may_have_renamed_from
+ * (src/projection.rs) recognizes exact predecessor paths, bare predecessor
+ * names within their unchanged parent, and descendants of renamed
+ * structures/AoSs. Do not read that conservative pending guard as rename
+ * resolution: #24/#25 still determine the actual same/rename verdict.
  */
 #define XML_FIXTURE_OLD_20_1_0                                               \
     "<IDSs><version>20.1.0</version>"                                       \
