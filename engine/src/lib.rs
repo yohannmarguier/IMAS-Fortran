@@ -9,7 +9,10 @@
 //! stored/working roles swapped, returns a handle backed by the one
 //! cached pair instead of reparsing and revalidating it. It still does
 //! not build rename maps or compute real per-node projection verdicts --
-//! see issue #23 for that.
+//! see issue #23 for that. Issue #31 adds the operation lifecycle: an
+//! [`Operation`] is begun against one acquired [`Map`] handle and carries
+//! its own reset/end/release lifecycle, isolated from every other live
+//! operation or map.
 //!
 //! All `unsafe` code is confined to the [`ffi`] module; this module,
 //! [`status`], [`schema`], [`version`], and [`cache`] are safe Rust,
@@ -24,7 +27,7 @@ pub mod status;
 pub mod version;
 
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 pub use schema::{ParsedSchema, SchemaError};
 pub use status::{PeStatus, PeVerdict};
@@ -168,17 +171,82 @@ pub fn acquire_map(
     })
 }
 
-/// Operation-scoped state. Empty today; issues #26/#27 grow this to hold
-/// per-operation projection/loss tracking without changing the ABI shape
-/// established here (an opaque pointer the caller begins/ends).
-#[derive(Debug, Default)]
+/// Operation-scoped state, begun against one acquired [`Map`] handle (issue
+/// #31). Holds an `Arc<Map>` retained at [`Operation::new`] time rather than
+/// the caller's raw `pe_map_t` pointer: cloning an `Arc` only bumps a
+/// refcount, so beginning an operation neither clones nor mutates the
+/// immutable pair data the map handle points to. This retained reference is
+/// also what lets a live operation keep working even after its own map
+/// handle is released through `pe_map_release` -- see the ordering rule
+/// documented on `ffi::pe_operation_begin`.
+///
+/// Beyond that map reference, this holds only the `ended` flag today;
+/// issues #26/#27 grow the per-operation state further (loss accumulation,
+/// dead-subtree tracking) without changing the ABI shape established here.
+/// The mutable state is guarded by a `Mutex` because the ABI hands callers
+/// a raw pointer more than one thread could hold at once -- see
+/// `ffi::pe_operation_reset`/`pe_operation_end` for the thread-safety
+/// posture this supports.
+#[derive(Debug)]
 pub struct Operation {
-    _private: (),
+    map: Arc<Map>,
+    state: Mutex<OperationState>,
+}
+
+#[derive(Debug, Default)]
+struct OperationState {
+    ended: bool,
+}
+
+/// Why an [`Operation`] lifecycle transition was refused.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum OperationError {
+    /// [`Operation::end`] already ran for this operation. It may still be
+    /// released, but not reset or ended again.
+    AlreadyEnded,
 }
 
 impl Operation {
-    pub fn new() -> Self {
-        Operation { _private: () }
+    pub fn new(map: Arc<Map>) -> Self {
+        Operation {
+            map,
+            state: Mutex::new(OperationState::default()),
+        }
+    }
+
+    /// The map this operation was begun against.
+    pub fn map(&self) -> &Arc<Map> {
+        &self.map
+    }
+
+    /// Clears operation-local state back to its post-begin state
+    /// deterministically, without evicting the cached immutable map behind
+    /// [`Operation::map`]. Today there is no per-operation state besides
+    /// the `ended` flag, which reset leaves untouched; this exists so an
+    /// operation can be reused for a fresh conversion once #26/#27 add real
+    /// loss/dead-subtree state to clear. Repeatable while the operation is
+    /// still active; refused once [`Operation::end`] has run.
+    pub fn reset(&self) -> Result<(), OperationError> {
+        let mut state = self.state.lock().unwrap();
+        if state.ended {
+            return Err(OperationError::AlreadyEnded);
+        }
+        *state = OperationState::default();
+        Ok(())
+    }
+
+    /// Finalizes operation-local state, without evicting the cached
+    /// immutable map behind [`Operation::map`]. A one-time transition: an
+    /// already-ended operation refuses a second `end`, mirroring how a
+    /// [`Map`] handle refuses a second release. An ended operation may
+    /// still be released.
+    pub fn end(&self) -> Result<(), OperationError> {
+        let mut state = self.state.lock().unwrap();
+        if state.ended {
+            return Err(OperationError::AlreadyEnded);
+        }
+        state.ended = true;
+        Ok(())
     }
 }
 
@@ -372,5 +440,95 @@ mod cache_reuse_tests {
         for map in &maps[1..] {
             assert_eq!(map.cache_identity(), identity);
         }
+    }
+}
+
+/// [`Operation`] lifecycle tests (issue #31's acceptance criteria) below
+/// the ABI: begin ties an operation to one map without touching its
+/// immutable data, reset/end/release follow the documented state machine,
+/// and simultaneous operations against the same or different maps stay
+/// isolated.
+#[cfg(test)]
+mod operation_tests {
+    use super::*;
+
+    const V10_1_0: &str = "<IDSs><version>10.1.0</version></IDSs>";
+    const V10_0_9: &str = "<IDSs><version>10.0.9</version></IDSs>";
+    const V11_1_0: &str = "<IDSs><version>11.1.0</version></IDSs>";
+    const V11_0_9: &str = "<IDSs><version>11.0.9</version></IDSs>";
+
+    #[test]
+    fn begin_retains_the_map_it_was_begun_against() {
+        let map = acquire_map(V10_1_0, "10.1.0", V10_0_9, "10.0.9").unwrap();
+        let identity = map.cache_identity();
+        let operation = Operation::new(Arc::new(map));
+        assert_eq!(operation.map().cache_identity(), identity);
+    }
+
+    #[test]
+    fn reset_is_repeatable_while_active() {
+        let map = acquire_map(V10_1_0, "10.1.0", V10_0_9, "10.0.9").unwrap();
+        let operation = Operation::new(Arc::new(map));
+        assert_eq!(operation.reset(), Ok(()));
+        assert_eq!(operation.reset(), Ok(()));
+    }
+
+    #[test]
+    fn end_is_a_one_time_transition() {
+        let map = acquire_map(V10_1_0, "10.1.0", V10_0_9, "10.0.9").unwrap();
+        let operation = Operation::new(Arc::new(map));
+        assert_eq!(operation.end(), Ok(()));
+        assert_eq!(operation.end(), Err(OperationError::AlreadyEnded));
+    }
+
+    #[test]
+    fn reset_after_end_is_refused() {
+        let map = acquire_map(V10_1_0, "10.1.0", V10_0_9, "10.0.9").unwrap();
+        let operation = Operation::new(Arc::new(map));
+        operation.end().unwrap();
+        assert_eq!(operation.reset(), Err(OperationError::AlreadyEnded));
+    }
+
+    #[test]
+    fn several_operations_against_one_map_stay_independent() {
+        let map = Arc::new(acquire_map(V10_1_0, "10.1.0", V10_0_9, "10.0.9").unwrap());
+        let first = Operation::new(map.clone());
+        let second = Operation::new(map.clone());
+
+        first.end().unwrap();
+
+        // Ending `first` must not affect `second`'s independent state.
+        assert_eq!(second.reset(), Ok(()));
+        assert_eq!(second.end(), Ok(()));
+    }
+
+    #[test]
+    fn operations_against_different_maps_stay_independent() {
+        let map_one = Arc::new(acquire_map(V10_1_0, "10.1.0", V10_0_9, "10.0.9").unwrap());
+        let map_two = Arc::new(acquire_map(V11_1_0, "11.1.0", V11_0_9, "11.0.9").unwrap());
+        let one = Operation::new(map_one.clone());
+        let two = Operation::new(map_two.clone());
+
+        assert_ne!(one.map().cache_identity(), two.map().cache_identity());
+
+        one.end().unwrap();
+        assert_eq!(two.reset(), Ok(()));
+    }
+
+    #[test]
+    fn an_operation_keeps_its_map_alive_after_the_only_other_handle_is_dropped() {
+        let map = acquire_map(V11_1_0, "11.1.0", V11_0_9, "11.0.9").unwrap();
+        let identity = map.cache_identity();
+        let operation = Operation::new(Arc::new(map));
+
+        // No other live `Map` handle remains, mirroring `pe_map_release`
+        // removing the ABI's own registry entry: the operation's retained
+        // `Arc<Map>` is the only thing keeping the pair alive, and it must
+        // still resolve correctly.
+        assert_eq!(operation.map().cache_identity(), identity);
+        assert_eq!(
+            operation.map().stored().version(),
+            DdVersion::parse("11.1.0").unwrap()
+        );
     }
 }
