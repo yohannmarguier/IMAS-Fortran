@@ -3,10 +3,11 @@
 The same-major Data Dictionary projection-engine substrate: a Rust library
 behind a narrow, stable C ABI. Full design: issue #18. This crate
 implements the skeleton scoped by issue #20, the schema-pair acquisition
-scoped by issue #21, and the process-wide cache reuse scoped by issue #22
-— not yet the real rename/projection logic.
+scoped by issue #21, the process-wide cache reuse scoped by issue #22, and
+the operation lifecycle scoped by issue #31 — not yet the real
+rename/projection logic or loss accumulation.
 
-## Scope of this slice (#20, #21, #22)
+## Scope of this slice (#20, #21, #22, #31)
 
 Implemented here:
 - Opaque ABI handles (`pe_operation_t`, `pe_map_t`).
@@ -41,6 +42,18 @@ Implemented here:
   "working" DD version. `pe_map_cache_identity` exposes an opaque token so
   a caller can prove reuse without this ABI exposing any Rust collection
   layout. See "Thread safety" below for this cache's concurrency posture.
+- Operation lifecycle tied to a map handle (#31, `pe_operation_begin` /
+  `pe_operation_reset` / `pe_operation_end` / `pe_operation_release`):
+  `pe_operation_begin` now requires a currently-live `pe_map_t` and
+  retains an `Arc` reference to it (an O(1) refcount bump, never a clone
+  of the immutable pair data or a mutation of it). `pe_operation_reset`
+  clears operation-local state back to its post-begin state and is
+  repeatable while the operation is active; `pe_operation_end` finalizes
+  it as a one-time transition; `pe_operation_release` frees the handle,
+  whether or not `pe_operation_end` ran first. Several operations against
+  one map, or against distinct maps, stay live and isolated
+  simultaneously. See "Operation/map ordering" below for the rule between
+  releasing a map handle and the operations begun against it.
 - A C contract test (`tests/contract/test_contract.c`), registered with
   CTest, that drives every capability above through the header only.
 
@@ -49,6 +62,28 @@ a `field/@path` index or real rename-map construction, bounded LRU
 eviction of the cache added here (#28), real per-node projection
 verdicts, loss accumulation, Fortran types, IMAS-Core, backend selection,
 or a Python runtime dependency.
+
+## Operation/map ordering (#31)
+
+An operation retains its own `Arc` reference to the map it was begun
+against, captured once at `pe_operation_begin` time. Because of that, this
+ABI places **no ordering requirement** between releasing a map handle and
+the lifetime of any operation begun against it: a caller may call
+`pe_map_release` before, during, or after an operation's own
+reset/end/release calls, and the operation's lifecycle remains usable
+regardless — `pe_operation_reset` and `pe_operation_end` keep working
+against its retained map. `pe_project_node_query` has its final `(map,
+operation, ...)` ABI shape and deliberately requires the same **live** map
+handle supplied to `pe_operation_begin`, so callers must retain that map
+handle until their projection queries finish. Symmetrically, releasing an
+operation handle only ever touches this ABI's own operation registry and
+never releases or otherwise invalidates the map handle it was begun against,
+or any other live operation begun against that same map (see
+`ffi::pe_operation_begin`/`pe_operation_release` and the
+`operation_retains_its_map_after_the_map_handle_is_released` test in
+`src/ffi.rs`). Every live map/operation handle also remains independently
+releasable when several operations are begun against one map, or against
+distinct maps, at the same time.
 
 ## Thread safety
 
@@ -77,6 +112,26 @@ that safety — sharding, striping, or otherwise tuning the cache under
 heavy concurrent load is explicitly out of scope for this slice (see issue
 #18's concurrency-tuning exclusion and issue #32's stress work), and may
 be revisited once #28's LRU eviction lands on top of this cache.
+
+The operation registry added by #31 (`ffi::active_operations`) follows the
+identical pattern: one process-wide `Mutex<HashMap<..>>` retaining an `Arc`
+per live `pe_operation_t`, plus a `Mutex`-guarded `ended` flag inside each
+`Operation` for its own local state. **Concurrent
+begin/reset/end/release/project_node_query calls from multiple threads are
+supported and require no external synchronization**, whether they target
+the same operation, different operations against the same map, or
+operations against different maps — the same retain-under-lock pattern
+used for maps (clone the `Arc` while holding the registry lock, then use it
+after releasing the lock) is what lets a concurrent release never
+invalidate a call already in flight. As with the map cache, this is a
+memory-safety guarantee only; this crate makes no throughput guarantee
+beyond it.
+
+Map and operation ABI handles are process-unique opaque tokens, not exposed
+Rust allocation addresses. A released token is never reused for a later
+handle, so use-after-release is deterministically rejected even after new
+maps or operations are created; the registry entries alone own the retained
+`Arc`s and are dropped on release.
 
 ## Building
 

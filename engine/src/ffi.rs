@@ -10,39 +10,72 @@
 //! (see the crate-level `#![deny(unsafe_code)]` in `lib.rs`).
 #![allow(unsafe_code)]
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::os::raw::c_char;
 use std::panic::{self, AssertUnwindSafe};
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, Once, OnceLock};
 
 use crate::status::{PeStatus, PeVerdict};
-use crate::{AcquireError, Map, MapRole, Operation};
+use crate::{AcquireError, Map, MapRole, Operation, OperationError};
 
 static INSTALL_PANIC_HOOK: Once = Once::new();
 
-/// Addresses of operation handles that this ABI has issued and not yet
-/// released. Keeping this registry lets `pe_operation_end` reject a stale,
-/// foreign, or already-ended handle before it ever turns that address back
-/// into a `Box`.
-fn active_operations() -> &'static Mutex<HashSet<usize>> {
-    static ACTIVE_OPERATIONS: OnceLock<Mutex<HashSet<usize>>> = OnceLock::new();
-    ACTIVE_OPERATIONS.get_or_init(|| Mutex::new(HashSet::new()))
+/// Monotonic, process-unique values used as opaque ABI-handle tokens. The
+/// tokens are represented by typed raw pointers for C compatibility but are
+/// never dereferenced; the registries below are their sole authority. Unlike
+/// allocation addresses, a released token cannot be recycled for a later
+/// handle, so a stale handle cannot become valid again through allocator ABA
+/// reuse.
+static NEXT_HANDLE_TOKEN: AtomicUsize = AtomicUsize::new(1);
+
+fn next_handle_token<T>() -> Option<*mut T> {
+    let token = NEXT_HANDLE_TOKEN
+        .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |current| {
+            current.checked_add(1)
+        })
+        .ok()?;
+    Some(token as *mut T)
 }
 
-/// Live map handles issued by this ABI. Besides validating a raw handle
-/// address, the registry keeps an `Arc` for each live handle so a reader can
-/// clone it while holding the mutex, then safely use the `Map` after the
-/// mutex is released even if another thread releases that handle meanwhile.
+/// Live operation handles issued by this ABI, keyed by process-unique opaque
+/// tokens. The registry keeps an `Arc` for each live handle so a reader can
+/// clone it while holding the mutex, then safely use the `Operation` after
+/// the mutex is released even if another thread releases that same handle
+/// meanwhile (issue #31).
+fn active_operations() -> &'static Mutex<HashMap<usize, Arc<Operation>>> {
+    static ACTIVE_OPERATIONS: OnceLock<Mutex<HashMap<usize, Arc<Operation>>>> = OnceLock::new();
+    ACTIVE_OPERATIONS.get_or_init(|| Mutex::new(HashMap::new()))
+}
+
+/// Live map handles issued by this ABI, keyed by the same process-unique
+/// opaque-token sequence as operations. The registry keeps an `Arc` for each
+/// live handle so a reader can clone it while holding the mutex, then safely
+/// use the `Map` after the mutex is released even if another thread releases
+/// that same handle meanwhile.
 fn active_maps() -> &'static Mutex<HashMap<usize, Arc<Map>>> {
     static ACTIVE_MAPS: OnceLock<Mutex<HashMap<usize, Arc<Map>>>> = OnceLock::new();
     ACTIVE_MAPS.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
-/// Retains the map addressed by a live ABI handle without dereferencing the
-/// raw pointer. The retained `Arc` keeps the map live after a concurrent
+/// Retains the map addressed by a live ABI token without dereferencing it.
+/// The retained `Arc` keeps the map live after a concurrent
 /// `pe_map_release` removes the caller's handle from [`active_maps`].
 fn retain_active_map(map: *const Map) -> Option<Arc<Map>> {
     active_maps().lock().unwrap().get(&(map as usize)).cloned()
+}
+
+/// Retains the operation addressed by a live ABI token without dereferencing
+/// it, mirroring [`retain_active_map`]. The
+/// retained `Arc` keeps the operation usable for the rest of the caller's
+/// call even if a concurrent `pe_operation_release` removes it from
+/// [`active_operations`] meanwhile.
+fn retain_active_operation(operation: *const Operation) -> Option<Arc<Operation>> {
+    active_operations()
+        .lock()
+        .unwrap()
+        .get(&(operation as usize))
+        .cloned()
 }
 
 /// Borrows `ptr`/`len` as `&str` for the duration of the caller's closure,
@@ -156,36 +189,94 @@ unsafe fn write_str_to_buffer(
     }
 }
 
-/// Begins operation-scoped state, foreshadowing the projection/loss state
-/// issues #26/#27 add without changing this handle shape. Returns the
-/// new handle through `out_operation`.
+/// Begins operation-scoped state against `map`, foreshadowing the
+/// projection/loss state issues #26/#27 add without changing this handle
+/// shape (issue #31). Returns the new handle through `out_operation`.
+///
+/// `map` must be a currently-live handle returned by [`pe_map_acquire`] and
+/// not yet released; a null or foreign/released `map` leaves `out_operation`
+/// unwritten. Beginning an operation only clones the `Arc` retained by
+/// `map`'s registry entry -- an O(1) refcount bump -- so it neither clones
+/// nor mutates the immutable pair data behind the map handle. That retained
+/// reference also means a live operation keeps working even after `map`
+/// itself is later passed to [`pe_map_release`]: releasing a map handle
+/// never invalidates an operation begun against it, and this ABI places no
+/// ordering requirement between the two -- a map may be released before,
+/// during, or after the lifetime of any operation begun against it.
 ///
 /// # Safety
 /// `out_operation` must be either null or a valid pointer to one writable
 /// `*mut Operation`.
 #[no_mangle]
-pub unsafe extern "C" fn pe_operation_begin(out_operation: *mut *mut Operation) -> PeStatus {
+pub unsafe extern "C" fn pe_operation_begin(
+    map: *const Map,
+    out_operation: *mut *mut Operation,
+) -> PeStatus {
     guard(|| {
         if out_operation.is_null() {
             return PeStatus::InvalidArgument;
         }
+        if map.is_null() {
+            return PeStatus::NullHandle;
+        }
+        let map = match retain_active_map(map) {
+            Some(map) => map,
+            None => return PeStatus::InvalidArgument,
+        };
 
-        let mut active = active_operations().lock().unwrap();
-        let operation = Box::into_raw(Box::new(Operation::new()));
-        active.insert(operation as usize);
+        let raw_operation = match next_handle_token() {
+            Some(token) => token,
+            None => return PeStatus::Internal,
+        };
+        let operation = Arc::new(Operation::new(map));
+        active_operations()
+            .lock()
+            .unwrap()
+            .insert(raw_operation as usize, operation);
         unsafe {
-            *out_operation = operation;
+            *out_operation = raw_operation;
         }
         PeStatus::Ok
     })
 }
 
-/// Ends operation-scoped state and releases `operation`. Never evicts the
-/// (not yet implemented) cached immutable map.
+/// Clears `operation`'s local state back to its post-begin state
+/// deterministically, without evicting the cached immutable map it was
+/// begun against or releasing the handle itself (issue #31). Repeatable
+/// while `operation` is still active; refused once [`pe_operation_end`] has
+/// run for it.
 ///
 /// # Safety
 /// A null handle returns [`PeStatus::NullHandle`]. A handle not currently
-/// owned by this ABI, including one already passed to this function, returns
+/// owned by this ABI, or one already ended, returns
+/// [`PeStatus::InvalidArgument`] without being dereferenced.
+#[no_mangle]
+pub unsafe extern "C" fn pe_operation_reset(operation: *mut Operation) -> PeStatus {
+    guard(|| {
+        if operation.is_null() {
+            return PeStatus::NullHandle;
+        }
+        let operation = match retain_active_operation(operation) {
+            Some(operation) => operation,
+            None => return PeStatus::InvalidArgument,
+        };
+        match operation.reset() {
+            Ok(()) => PeStatus::Ok,
+            Err(OperationError::AlreadyEnded) => PeStatus::InvalidArgument,
+        }
+    })
+}
+
+/// Finalizes `operation`'s local state, without evicting the cached
+/// immutable map it was begun against (issue #31). A one-time transition:
+/// ending an already-ended operation is rejected the same way as a foreign
+/// handle. Does not release the handle itself -- an ended operation must
+/// still be passed to [`pe_operation_release`] to free it, and remains
+/// valid for that call.
+///
+/// # Safety
+/// A null handle returns [`PeStatus::NullHandle`]. A handle not currently
+/// owned by this ABI, or one already ended, returns
 /// [`PeStatus::InvalidArgument`] without being dereferenced.
 #[no_mangle]
 pub unsafe extern "C" fn pe_operation_end(operation: *mut Operation) -> PeStatus {
@@ -193,16 +284,43 @@ pub unsafe extern "C" fn pe_operation_end(operation: *mut Operation) -> PeStatus
         if operation.is_null() {
             return PeStatus::NullHandle;
         }
+        let operation = match retain_active_operation(operation) {
+            Some(operation) => operation,
+            None => return PeStatus::InvalidArgument,
+        };
+        match operation.end() {
+            Ok(()) => PeStatus::Ok,
+            Err(OperationError::AlreadyEnded) => PeStatus::InvalidArgument,
+        }
+    })
+}
 
-        let was_active = active_operations()
+/// Releases an operation handle returned by [`pe_operation_begin`],
+/// whether or not [`pe_operation_end`] was called for it first. Never
+/// releases or invalidates the map handle `operation` was begun against
+/// (issue #31): the ABI's own registry entry for that map is untouched by
+/// this call, and any other live operation begun against the same map is
+/// unaffected.
+///
+/// # Safety
+/// A null handle returns [`PeStatus::NullHandle`]. A handle not currently
+/// owned by this ABI, including one already released or a foreign pointer
+/// such as a live `pe_map_t`, returns [`PeStatus::InvalidArgument`] without
+/// being dereferenced.
+#[no_mangle]
+pub unsafe extern "C" fn pe_operation_release(operation: *mut Operation) -> PeStatus {
+    guard(|| {
+        if operation.is_null() {
+            return PeStatus::NullHandle;
+        }
+
+        if active_operations()
             .lock()
             .unwrap()
-            .remove(&(operation as usize));
-        if !was_active {
+            .remove(&(operation as usize))
+            .is_none()
+        {
             return PeStatus::InvalidArgument;
-        }
-        unsafe {
-            drop(Box::from_raw(operation));
         }
         PeStatus::Ok
     })
@@ -283,9 +401,12 @@ pub unsafe extern "C" fn pe_map_acquire(
             working_claimed_version,
         ) {
             Ok(map) => {
+                let raw_map = match next_handle_token() {
+                    Some(token) => token,
+                    None => return PeStatus::Internal,
+                };
                 let mut active = active_maps().lock().unwrap();
                 let map = Arc::new(map);
-                let raw_map = Arc::into_raw(map.clone()) as *mut Map;
                 active.insert(raw_map as usize, map);
                 unsafe {
                     *out_map = raw_map;
@@ -311,12 +432,13 @@ pub unsafe extern "C" fn pe_map_release(map: *mut Map) -> PeStatus {
             return PeStatus::NullHandle;
         }
 
-        let retained = active_maps().lock().unwrap().remove(&(map as usize));
-        if retained.is_none() {
+        if active_maps()
+            .lock()
+            .unwrap()
+            .remove(&(map as usize))
+            .is_none()
+        {
             return PeStatus::InvalidArgument;
-        }
-        unsafe {
-            Arc::decrement_strong_count(map as *const Map);
         }
         PeStatus::Ok
     })
@@ -411,7 +533,14 @@ pub unsafe extern "C" fn pe_map_cache_identity(
 /// validates its inputs, records one projection-entry instrumentation
 /// tick, and always reports `PeVerdict::Same`. Issue #23 replaces the
 /// verdict computation with real rename/skip map lookups; the ABI shape
-/// (handle, borrowed path, out-verdict) does not need to change to do so.
+/// (map, operation, borrowed path, out-verdict) does not need to change to
+/// do so.
+///
+/// `map` must be the same currently-live handle passed to
+/// [`pe_operation_begin`] for `operation`; `operation` must also be live.
+/// A null handle is rejected as `PeStatus::NullHandle`; a foreign, released,
+/// or mismatched handle is rejected as `PeStatus::InvalidArgument`, without
+/// either opaque token being dereferenced (issue #31).
 ///
 /// `node_path` is borrowed for the duration of this call only; it need
 /// not be NUL-terminated since its length is given explicitly.
@@ -422,14 +551,29 @@ pub unsafe extern "C" fn pe_map_cache_identity(
 /// valid pointer to one writable `PeVerdict`.
 #[no_mangle]
 pub unsafe extern "C" fn pe_project_node_query(
+    map: *const Map,
     operation: *mut Operation,
     node_path: *const c_char,
     node_path_len: usize,
     out_verdict: *mut PeVerdict,
 ) -> PeStatus {
     guard(|| {
+        if map.is_null() {
+            return PeStatus::NullHandle;
+        }
         if operation.is_null() {
             return PeStatus::NullHandle;
+        }
+        let map = match retain_active_map(map) {
+            Some(map) => map,
+            None => return PeStatus::InvalidArgument,
+        };
+        let operation = match retain_active_operation(operation) {
+            Some(operation) => operation,
+            None => return PeStatus::InvalidArgument,
+        };
+        if !Arc::ptr_eq(&map, operation.map()) {
+            return PeStatus::InvalidArgument;
         }
         if node_path.is_null() || node_path_len == 0 {
             return PeStatus::InvalidArgument;
@@ -551,5 +695,144 @@ mod tests {
         assert_eq!(unsafe { pe_map_release(raw_map) }, PeStatus::Ok);
         assert!(retain_active_map(raw_map).is_none());
         assert_eq!(retained.stored().version().to_string(), "12.1.0");
+    }
+
+    /// Acquires a fresh map for `(stored, working)` through the raw ABI and
+    /// returns its handle, for use by the operation-lifecycle tests below.
+    fn acquire_raw_map(
+        stored: &str,
+        stored_version: &str,
+        working: &str,
+        working_version: &str,
+    ) -> *mut Map {
+        let mut raw_map = std::ptr::null_mut();
+        assert_eq!(
+            unsafe {
+                pe_map_acquire(
+                    stored.as_ptr().cast(),
+                    stored.len(),
+                    stored_version.as_ptr().cast(),
+                    stored_version.len(),
+                    working.as_ptr().cast(),
+                    working.len(),
+                    working_version.as_ptr().cast(),
+                    working_version.len(),
+                    &mut raw_map,
+                )
+            },
+            PeStatus::Ok
+        );
+        raw_map
+    }
+
+    #[test]
+    fn operation_begin_rejects_null_and_foreign_map_handles() {
+        let mut operation = std::ptr::null_mut();
+
+        assert_eq!(
+            unsafe { pe_operation_begin(std::ptr::null(), &mut operation) },
+            PeStatus::NullHandle
+        );
+        assert_eq!(
+            unsafe { pe_operation_begin(usize::MAX as *const Map, &mut operation) },
+            PeStatus::InvalidArgument
+        );
+        assert_eq!(
+            unsafe { pe_operation_begin(std::ptr::null(), std::ptr::null_mut()) },
+            PeStatus::InvalidArgument
+        );
+    }
+
+    #[test]
+    fn operation_retains_its_map_after_the_map_handle_is_released() {
+        const STORED: &str = "<IDSs><version>13.1.0</version></IDSs>";
+        const WORKING: &str = "<IDSs><version>13.0.9</version></IDSs>";
+
+        let raw_map = acquire_raw_map(STORED, "13.1.0", WORKING, "13.0.9");
+
+        let mut operation = std::ptr::null_mut();
+        assert_eq!(
+            unsafe { pe_operation_begin(raw_map, &mut operation) },
+            PeStatus::Ok
+        );
+
+        // Releasing the map handle must not invalidate the live operation
+        // begun against it: the operation retains its own `Arc<Map>`.
+        assert_eq!(unsafe { pe_map_release(raw_map) }, PeStatus::Ok);
+
+        let retained = retain_active_operation(operation).expect("operation should still be live");
+        assert_eq!(retained.map().stored().version().to_string(), "13.1.0");
+
+        assert_eq!(unsafe { pe_operation_release(operation) }, PeStatus::Ok);
+    }
+
+    #[test]
+    fn operation_reset_end_release_follow_the_documented_state_machine() {
+        const STORED: &str = "<IDSs><version>14.1.0</version></IDSs>";
+        const WORKING: &str = "<IDSs><version>14.0.9</version></IDSs>";
+
+        let raw_map = acquire_raw_map(STORED, "14.1.0", WORKING, "14.0.9");
+        let mut operation = std::ptr::null_mut();
+        assert_eq!(
+            unsafe { pe_operation_begin(raw_map, &mut operation) },
+            PeStatus::Ok
+        );
+
+        assert_eq!(unsafe { pe_operation_reset(operation) }, PeStatus::Ok);
+        assert_eq!(unsafe { pe_operation_end(operation) }, PeStatus::Ok);
+        // Reset/end refuse an already-ended operation, but the handle
+        // itself is still valid for release.
+        assert_eq!(
+            unsafe { pe_operation_reset(operation) },
+            PeStatus::InvalidArgument
+        );
+        assert_eq!(
+            unsafe { pe_operation_end(operation) },
+            PeStatus::InvalidArgument
+        );
+        assert_eq!(unsafe { pe_operation_release(operation) }, PeStatus::Ok);
+
+        // Use-after-release is rejected, not dereferenced.
+        assert_eq!(
+            unsafe { pe_operation_reset(operation) },
+            PeStatus::InvalidArgument
+        );
+        assert_eq!(
+            unsafe { pe_operation_release(operation) },
+            PeStatus::InvalidArgument
+        );
+
+        unsafe {
+            pe_map_release(raw_map);
+        }
+    }
+
+    #[test]
+    fn cross_handle_mixup_between_map_and_operation_registries_is_rejected() {
+        const STORED: &str = "<IDSs><version>15.1.0</version></IDSs>";
+        const WORKING: &str = "<IDSs><version>15.0.9</version></IDSs>";
+
+        let raw_map = acquire_raw_map(STORED, "15.1.0", WORKING, "15.0.9");
+        let mut operation = std::ptr::null_mut();
+        assert_eq!(
+            unsafe { pe_operation_begin(raw_map, &mut operation) },
+            PeStatus::Ok
+        );
+
+        // A live map handle is not a live operation handle, and vice
+        // versa: each registry only recognizes its own address space.
+        assert_eq!(
+            unsafe { pe_operation_release(raw_map as *mut Operation) },
+            PeStatus::InvalidArgument
+        );
+        assert_eq!(
+            unsafe { pe_map_release(operation as *mut Map) },
+            PeStatus::InvalidArgument
+        );
+
+        unsafe {
+            pe_operation_release(operation);
+            pe_map_release(raw_map);
+        }
     }
 }

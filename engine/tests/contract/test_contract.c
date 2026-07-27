@@ -1,5 +1,6 @@
 /*
- * C contract test for the projection-engine ABI (IMAS-Fortran #20, #21, #22).
+ * C contract test for the projection-engine ABI (IMAS-Fortran #20, #21,
+ * #22, #31).
  *
  * This is the highest seam this repo's later slices add vectors to: it
  * drives the engine only through imas_projection_engine.h, the same way
@@ -33,44 +34,269 @@
         }                                                                    \
     } while (0)
 
+/* Fixtures for pe_map_acquire (issue #21). Deliberately minimal -- field
+ * content and the real path index are out of scope here (issue #23); only
+ * the <version> element and well-formedness matter to this seam. */
+#define XML_STORED_3_39_0 "<IDSs><version>3.39.0</version></IDSs>"
+#define XML_WORKING_3_38_1 "<IDSs><version>3.38.1</version></IDSs>"
+#define XML_CROSS_MAJOR_4_0_0 "<IDSs><version>4.0.0</version></IDSs>"
+#define XML_MALFORMED "<IDSs><version>3.39.0</version>"
+#define XML_NO_VERSION_ELEMENT "<IDSs><ids/></IDSs>"
+
+/* A second, unrelated same-major pair (issue #22, #31): used to prove that
+ * a distinct pair gets a distinct cache identity from XML_STORED_3_39_0 /
+ * XML_WORKING_3_38_1 above, that the two do not affect each other, and
+ * (issue #31) that operations begun against distinct maps stay isolated. */
+#define XML_OTHER_PAIR_STORED "<IDSs><version>5.10.0</version></IDSs>"
+#define XML_OTHER_PAIR_WORKING "<IDSs><version>5.9.9</version></IDSs>"
+
+#define STR_LEN(literal) (sizeof(literal) - 1)
+
+/* Reads pe_map_version for `role` and compares it against `expected`,
+ * exercising the same query-then-fill buffer convention already covered by
+ * test_status_message_string_ownership_convention. */
+static int map_version_matches(const pe_map_t *map, pe_map_role_t role,
+                                const char *expected) {
+    size_t required_len = 0;
+    char buffer[32];
+
+    if (pe_map_version(map, role, NULL, 0, &required_len) != PE_STATUS_OK) {
+        return 0;
+    }
+    if (required_len >= sizeof(buffer)) {
+        return 0;
+    }
+    if (pe_map_version(map, role, buffer, sizeof(buffer), NULL) != PE_STATUS_OK) {
+        return 0;
+    }
+    return strcmp(buffer, expected) == 0;
+}
+
+/* Acquires the shared XML_STORED_3_39_0 / XML_WORKING_3_38_1 pair, used by
+ * every operation-lifecycle test below that just needs *some* live map
+ * handle to begin an operation against. */
+static int acquire_shared_pair(pe_map_t **out_map) {
+    return pe_map_acquire(XML_STORED_3_39_0, STR_LEN(XML_STORED_3_39_0), "3.39.0",
+                           STR_LEN("3.39.0"), XML_WORKING_3_38_1,
+                           STR_LEN(XML_WORKING_3_38_1), "3.38.1", STR_LEN("3.38.1"),
+                           out_map) == PE_STATUS_OK;
+}
+
 static int test_operation_lifecycle_and_input_validation(void) {
+    pe_map_t *map = NULL;
     pe_operation_t *operation = NULL;
 
-    CHECK(pe_operation_begin(NULL) == PE_STATUS_INVALID_ARGUMENT,
-          "begin(NULL) should be rejected");
+    CHECK(acquire_shared_pair(&map), "acquiring the shared pair should succeed");
 
-    CHECK(pe_operation_begin(&operation) == PE_STATUS_OK, "begin should succeed");
+    /* begin: requires a live map handle. */
+    CHECK(pe_operation_begin(NULL, &operation) == PE_STATUS_NULL_HANDLE,
+          "begin(NULL map) should be rejected");
+    CHECK(pe_operation_begin(map, NULL) == PE_STATUS_INVALID_ARGUMENT,
+          "begin(NULL out_operation) should be rejected");
+    CHECK(pe_operation_begin((pe_map_t *)(uintptr_t)UINTPTR_MAX, &operation) ==
+              PE_STATUS_INVALID_ARGUMENT,
+          "begin against a foreign map handle should be rejected");
+
+    CHECK(pe_operation_begin(map, &operation) == PE_STATUS_OK, "begin should succeed");
     CHECK(operation != NULL, "begin should hand back a non-null handle");
 
+    /* reset: repeatable while active. */
+    CHECK(pe_operation_reset(NULL) == PE_STATUS_NULL_HANDLE,
+          "reset(NULL) should be rejected");
+    CHECK(pe_operation_reset(operation) == PE_STATUS_OK, "reset should succeed");
+    CHECK(pe_operation_reset(operation) == PE_STATUS_OK,
+          "reset should remain repeatable while the operation is active");
+
+    /* end: a one-time transition; reset/end afterwards are refused. */
     CHECK(pe_operation_end(NULL) == PE_STATUS_NULL_HANDLE,
           "end(NULL) should be rejected");
     CHECK(pe_operation_end(operation) == PE_STATUS_OK, "end should succeed");
     CHECK(pe_operation_end(operation) == PE_STATUS_INVALID_ARGUMENT,
           "ending the same handle twice should be rejected");
+    CHECK(pe_operation_reset(operation) == PE_STATUS_INVALID_ARGUMENT,
+          "resetting an ended operation should be rejected");
 
-    printf("operation lifecycle: negative paths rejected as expected\n");
+    /* release: valid on an ended operation; use-after-release rejected. */
+    CHECK(pe_operation_release(NULL) == PE_STATUS_NULL_HANDLE,
+          "release(NULL) should be rejected");
+    CHECK(pe_operation_release(operation) == PE_STATUS_OK,
+          "releasing an ended operation should succeed");
+    CHECK(pe_operation_release(operation) == PE_STATUS_INVALID_ARGUMENT,
+          "releasing the same handle twice should be rejected");
+    CHECK(pe_operation_reset(operation) == PE_STATUS_INVALID_ARGUMENT,
+          "resetting a released handle should be rejected, not dereferenced");
+
+    pe_map_release(map);
+
+    printf("operation lifecycle: begin/reset/end/release negative paths "
+           "rejected as expected\n");
+    return 0;
+}
+
+/* A released operation token must never become a newly begun operation's
+ * handle, even after the registry has dropped the former operation. */
+static int test_released_operation_token_never_aliases_a_new_operation(void) {
+    pe_map_t *map = NULL;
+    pe_operation_t *released = NULL;
+    pe_operation_t *live = NULL;
+    pe_verdict_t verdict;
+    const char path[] = "ids/time";
+
+    CHECK(acquire_shared_pair(&map), "acquiring the shared pair should succeed");
+    CHECK(pe_operation_begin(map, &released) == PE_STATUS_OK,
+          "beginning the first operation should succeed");
+    CHECK(pe_operation_release(released) == PE_STATUS_OK,
+          "releasing the first operation should succeed");
+    CHECK(pe_operation_begin(map, &live) == PE_STATUS_OK,
+          "beginning the second operation should succeed");
+    CHECK(released != live, "a released token must not be reused by a later begin");
+
+    CHECK(pe_operation_reset(released) == PE_STATUS_INVALID_ARGUMENT,
+          "resetting a released token should remain rejected after another begin");
+    CHECK(pe_project_node_query(map, released, path, sizeof(path) - 1, &verdict) ==
+              PE_STATUS_INVALID_ARGUMENT,
+          "querying with a released token should remain rejected after another begin");
+    CHECK(pe_operation_release(released) == PE_STATUS_INVALID_ARGUMENT,
+          "releasing a released token should not release the new operation");
+    CHECK(pe_operation_reset(live) == PE_STATUS_OK,
+          "the later operation should remain live after rejected stale calls");
+
+    pe_operation_release(live);
+    pe_map_release(map);
+
+    printf("operation lifecycle: released tokens remained distinct from later begins\n");
+    return 0;
+}
+
+/* Issue #31's ordering rule: an operation retains its own reference to the
+ * map it was begun against, so releasing the map handle never invalidates
+ * a live operation, in either release order. */
+static int test_operation_survives_its_map_handle_being_released(void) {
+    pe_map_t *map = NULL;
+    pe_operation_t *operation = NULL;
+    pe_verdict_t verdict;
+    const char path[] = "ids/time";
+    CHECK(acquire_shared_pair(&map), "acquiring the shared pair should succeed");
+    CHECK(pe_operation_begin(map, &operation) == PE_STATUS_OK, "begin should succeed");
+
+    /* Release the map before the operation. Its lifecycle remains usable:
+     * the query entry itself requires a live map argument, but reset/end/
+     * release use the operation's retained reference. */
+    CHECK(pe_map_release(map) == PE_STATUS_OK, "releasing the map should succeed");
+
+    CHECK(pe_project_node_query(map, operation, path, sizeof(path) - 1, &verdict) ==
+              PE_STATUS_INVALID_ARGUMENT,
+          "querying after map release should require a still-live map handle");
+    CHECK(pe_operation_reset(operation) == PE_STATUS_OK,
+          "reset should remain usable after the map handle is released");
+    CHECK(pe_operation_end(operation) == PE_STATUS_OK,
+          "end should remain usable after the map handle is released");
+    CHECK(pe_operation_release(operation) == PE_STATUS_OK,
+          "releasing the operation should succeed");
+
+    printf("operation lifecycle: reset/end/release survived the map handle "
+           "being released first\n");
+    return 0;
+}
+
+/* Several operations against one map, and operations against different
+ * maps, stay live simultaneously without interfering (issue #31). */
+static int test_operations_stay_isolated_across_handles(void) {
+    pe_map_t *map_one = NULL;
+    pe_map_t *map_two = NULL;
+    pe_operation_t *first = NULL;
+    pe_operation_t *second = NULL;
+    pe_operation_t *third = NULL;
+
+    CHECK(acquire_shared_pair(&map_one), "acquiring the first pair should succeed");
+    CHECK(pe_map_acquire(XML_OTHER_PAIR_STORED, STR_LEN(XML_OTHER_PAIR_STORED),
+                          "5.10.0", STR_LEN("5.10.0"), XML_OTHER_PAIR_WORKING,
+                          STR_LEN(XML_OTHER_PAIR_WORKING), "5.9.9", STR_LEN("5.9.9"),
+                          &map_two) == PE_STATUS_OK,
+          "acquiring the second, unrelated pair should succeed");
+
+    /* Two operations against the same map. */
+    CHECK(pe_operation_begin(map_one, &first) == PE_STATUS_OK,
+          "beginning the first operation against map_one should succeed");
+    CHECK(pe_operation_begin(map_one, &second) == PE_STATUS_OK,
+          "beginning a second, simultaneous operation against map_one should succeed");
+    CHECK(first != second, "each begin should hand back its own independent handle");
+
+    /* One operation against a different map. */
+    CHECK(pe_operation_begin(map_two, &third) == PE_STATUS_OK,
+          "beginning an operation against map_two should succeed");
+
+    /* Ending/releasing `first` must not affect `second` (same map) or
+     * `third` (different map). */
+    CHECK(pe_operation_end(first) == PE_STATUS_OK, "ending the first operation should succeed");
+    CHECK(pe_operation_release(first) == PE_STATUS_OK,
+          "releasing the first operation should succeed");
+
+    CHECK(pe_operation_reset(second) == PE_STATUS_OK,
+          "the second operation against the same map should be unaffected");
+    CHECK(pe_operation_reset(third) == PE_STATUS_OK,
+          "the operation against the other map should be unaffected");
+
+    pe_operation_release(second);
+    pe_operation_release(third);
+    pe_map_release(map_one);
+    pe_map_release(map_two);
+
+    printf("operation lifecycle: simultaneous operations against one map "
+           "and across distinct maps stayed isolated\n");
+    return 0;
+}
+
+/* Cross-handle mix-ups (issue #31): a live pe_map_t is not a live
+ * pe_operation_t and vice versa, so passing one where the other is expected
+ * is rejected as a foreign handle rather than being dereferenced. */
+static int test_operation_and_map_handles_are_not_interchangeable(void) {
+    pe_map_t *map = NULL;
+    pe_operation_t *operation = NULL;
+
+    CHECK(acquire_shared_pair(&map), "acquiring the shared pair should succeed");
+    CHECK(pe_operation_begin(map, &operation) == PE_STATUS_OK, "begin should succeed");
+
+    CHECK(pe_operation_release((pe_operation_t *)map) == PE_STATUS_INVALID_ARGUMENT,
+          "a live map handle should not be accepted as an operation handle");
+    CHECK(pe_map_release((pe_map_t *)operation) == PE_STATUS_INVALID_ARGUMENT,
+          "a live operation handle should not be accepted as a map handle");
+
+    /* Both handles remain live and independently usable after the mix-ups
+     * above were rejected. */
+    CHECK(pe_operation_end(operation) == PE_STATUS_OK,
+          "the operation handle should be unaffected by the rejected mix-ups");
+    pe_operation_release(operation);
+    CHECK(pe_map_release(map) == PE_STATUS_OK,
+          "the map handle should be unaffected by the rejected mix-ups");
+
+    printf("operation lifecycle: cross-handle mix-ups between map and "
+           "operation registries were rejected\n");
     return 0;
 }
 
 static int test_projection_entry_instrumentation(void) {
+    pe_map_t *map = NULL;
+    pe_map_t *other_map = NULL;
     pe_operation_t *operation = NULL;
     uint64_t count = 0;
     pe_verdict_t verdict;
     const char path[] = "ids/time";
 
-    CHECK(pe_operation_begin(&operation) == PE_STATUS_OK, "begin should succeed");
+    CHECK(acquire_shared_pair(&map), "acquiring the shared pair should succeed");
+    CHECK(pe_operation_begin(map, &operation) == PE_STATUS_OK, "begin should succeed");
 
     CHECK(pe_instrumentation_reset() == PE_STATUS_OK, "reset should succeed");
     CHECK(pe_instrumentation_read(&count) == PE_STATUS_OK, "read should succeed");
     CHECK(count == 0, "counter should be zero right after reset");
 
-    CHECK(pe_project_node_query(operation, path, sizeof(path) - 1, &verdict) ==
+    CHECK(pe_project_node_query(map, operation, path, sizeof(path) - 1, &verdict) ==
               PE_STATUS_OK,
           "project_node_query should succeed on valid input");
     CHECK(verdict == PE_VERDICT_SAME,
           "this skeleton always reports the same verdict");
 
-    CHECK(pe_project_node_query(operation, path, sizeof(path) - 1, &verdict) ==
+    CHECK(pe_project_node_query(map, operation, path, sizeof(path) - 1, &verdict) ==
               PE_STATUS_OK,
           "project_node_query should succeed on valid input");
 
@@ -78,25 +304,47 @@ static int test_projection_entry_instrumentation(void) {
     CHECK(count == 2, "counter should tick once per project_node_query call");
 
     /* Negative paths: rejected without incrementing the counter. */
-    CHECK(pe_project_node_query(NULL, path, sizeof(path) - 1, &verdict) ==
+    CHECK(pe_project_node_query(NULL, operation, path, sizeof(path) - 1, &verdict) ==
+              PE_STATUS_NULL_HANDLE,
+          "project_node_query(NULL map) should be rejected");
+    CHECK(pe_project_node_query(map, NULL, path, sizeof(path) - 1, &verdict) ==
               PE_STATUS_NULL_HANDLE,
           "project_node_query(NULL operation) should be rejected");
-    CHECK(pe_project_node_query(operation, NULL, 1, &verdict) ==
+    CHECK(pe_project_node_query(map, (pe_operation_t *)map, path, sizeof(path) - 1,
+                                 &verdict) == PE_STATUS_INVALID_ARGUMENT,
+          "project_node_query(foreign operation) should be rejected");
+    CHECK(acquire_shared_pair(&other_map), "acquiring a second map should succeed");
+    CHECK(pe_project_node_query(other_map, operation, path, sizeof(path) - 1,
+                                &verdict) == PE_STATUS_INVALID_ARGUMENT,
+          "project_node_query(mismatched map) should be rejected");
+    CHECK(pe_project_node_query(map, operation, NULL, 1, &verdict) ==
               PE_STATUS_INVALID_ARGUMENT,
           "project_node_query(NULL path) should be rejected");
-    CHECK(pe_project_node_query(operation, path, 0, &verdict) ==
+    CHECK(pe_project_node_query(map, operation, path, 0, &verdict) ==
               PE_STATUS_INVALID_ARGUMENT,
           "project_node_query(zero-length path) should be rejected");
-    CHECK(pe_project_node_query(operation, path, sizeof(path) - 1, NULL) ==
+    CHECK(pe_project_node_query(map, operation, path, sizeof(path) - 1, NULL) ==
               PE_STATUS_INVALID_ARGUMENT,
           "project_node_query(NULL out_verdict) should be rejected");
     CHECK(pe_instrumentation_read(NULL) == PE_STATUS_INVALID_ARGUMENT,
           "instrumentation_read(NULL) should be rejected");
 
+    pe_map_release(other_map);
+
     CHECK(pe_instrumentation_read(&count) == PE_STATUS_OK, "read should succeed");
     CHECK(count == 2, "rejected calls must not tick the counter");
 
     CHECK(pe_operation_end(operation) == PE_STATUS_OK, "end should succeed");
+    CHECK(pe_project_node_query(map, operation, path, sizeof(path) - 1, &verdict) ==
+              PE_STATUS_OK,
+          "project_node_query should still work against an ended-but-not-"
+          "released operation");
+    CHECK(pe_operation_release(operation) == PE_STATUS_OK, "release should succeed");
+    CHECK(pe_project_node_query(map, operation, path, sizeof(path) - 1, &verdict) ==
+              PE_STATUS_INVALID_ARGUMENT,
+          "project_node_query(released operation) should be rejected");
+
+    pe_map_release(map);
 
     printf("instrumentation: reset/read deterministic, negative paths "
            "rejected without ticking the counter\n");
@@ -139,43 +387,6 @@ static int test_status_message_string_ownership_convention(void) {
 
     printf("status_message: string ownership convention verified\n");
     return 0;
-}
-
-/* Fixtures for pe_map_acquire (issue #21). Deliberately minimal -- field
- * content and the real path index are out of scope here (issue #23); only
- * the <version> element and well-formedness matter to this seam. */
-#define XML_STORED_3_39_0 "<IDSs><version>3.39.0</version></IDSs>"
-#define XML_WORKING_3_38_1 "<IDSs><version>3.38.1</version></IDSs>"
-#define XML_CROSS_MAJOR_4_0_0 "<IDSs><version>4.0.0</version></IDSs>"
-#define XML_MALFORMED "<IDSs><version>3.39.0</version>"
-#define XML_NO_VERSION_ELEMENT "<IDSs><ids/></IDSs>"
-
-/* A second, unrelated same-major pair (issue #22): only used to prove that
- * a distinct pair gets a distinct cache identity from XML_STORED_3_39_0 /
- * XML_WORKING_3_38_1 above and that the two do not affect each other. */
-#define XML_OTHER_PAIR_STORED "<IDSs><version>5.10.0</version></IDSs>"
-#define XML_OTHER_PAIR_WORKING "<IDSs><version>5.9.9</version></IDSs>"
-
-#define STR_LEN(literal) (sizeof(literal) - 1)
-
-/* Reads pe_map_version for `role` and compares it against `expected`,
- * exercising the same query-then-fill buffer convention already covered by
- * test_status_message_string_ownership_convention. */
-static int map_version_matches(const pe_map_t *map, pe_map_role_t role,
-                                const char *expected) {
-    size_t required_len = 0;
-    char buffer[32];
-
-    if (pe_map_version(map, role, NULL, 0, &required_len) != PE_STATUS_OK) {
-        return 0;
-    }
-    if (required_len >= sizeof(buffer)) {
-        return 0;
-    }
-    if (pe_map_version(map, role, buffer, sizeof(buffer), NULL) != PE_STATUS_OK) {
-        return 0;
-    }
-    return strcmp(buffer, expected) == 0;
 }
 
 static int test_map_acquire_valid_pair_and_lifecycle(void) {
@@ -345,7 +556,8 @@ static int test_map_acquire_copies_inputs_rather_than_borrowing_them(void) {
 }
 
 static int test_map_acquire_input_validation(void) {
-    pe_map_t *map = (pe_map_t *)1; /* sentinel: must stay unwritten on rejection */
+    pe_map_t *map = (pe_map_t *)(uintptr_t)UINTPTR_MAX;
+    /* Sentinel: must stay unwritten on rejection. */
 
     CHECK(pe_map_acquire(NULL, 0, "3.39.0", STR_LEN("3.39.0"), XML_WORKING_3_38_1,
                           STR_LEN(XML_WORKING_3_38_1), "3.38.1", STR_LEN("3.38.1"),
@@ -360,9 +572,10 @@ static int test_map_acquire_input_validation(void) {
                           STR_LEN(XML_WORKING_3_38_1), "3.38.1", STR_LEN("3.38.1"),
                           NULL) == PE_STATUS_INVALID_ARGUMENT,
           "a null out_map pointer should be rejected");
-    CHECK((void *)map == (void *)1, "a rejected acquire must leave out_map unwritten");
+    CHECK((void *)map == (void *)(uintptr_t)UINTPTR_MAX,
+          "a rejected acquire must leave out_map unwritten");
 
-    CHECK(pe_map_release((pe_map_t *)1) == PE_STATUS_INVALID_ARGUMENT,
+    CHECK(pe_map_release((pe_map_t *)(uintptr_t)UINTPTR_MAX) == PE_STATUS_INVALID_ARGUMENT,
           "releasing a foreign handle should be rejected, not dereferenced");
 
     CHECK(pe_map_version(NULL, PE_MAP_ROLE_STORED, NULL, 0, NULL) ==
@@ -546,6 +759,10 @@ int main(void) {
     int failures = 0;
 
     failures += test_operation_lifecycle_and_input_validation();
+    failures += test_released_operation_token_never_aliases_a_new_operation();
+    failures += test_operation_survives_its_map_handle_being_released();
+    failures += test_operations_stay_isolated_across_handles();
+    failures += test_operation_and_map_handles_are_not_interchangeable();
     failures += test_projection_entry_instrumentation();
     failures += test_status_message_string_ownership_convention();
     failures += test_map_acquire_valid_pair_and_lifecycle();

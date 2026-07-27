@@ -10,9 +10,14 @@
  * the same pair, including with the stored/working roles swapped, reuses
  * one cached immutable pair instead of reparsing or rebuilding it, while
  * still handing back an independent, separately releasable pe_map_t per
- * acquisition. Real rename-map lookups and per-node projection verdicts
- * are still not here; those land behind this same handle shape in a later
- * slice (issue #23) without breaking this contract.
+ * acquisition. Issue #31 ties pe_operation_t to an acquired pe_map_t:
+ * pe_operation_begin now requires a live map handle, an operation retains
+ * its own reference to that map so releasing the map handle never
+ * invalidates a live operation begun against it, and the lifecycle grows
+ * an explicit pe_operation_reset and pe_operation_release alongside
+ * pe_operation_end. Real rename-map lookups and per-node projection
+ * verdicts are still not here; those land behind this same handle shape in
+ * a later slice (issue #23) without breaking this contract.
  *
  * Hand-maintained, not generated: every declaration here must be kept in
  * sync with its `#[no_mangle] extern "C"` definition in `src/ffi.rs`.
@@ -81,27 +86,65 @@ typedef enum pe_verdict {
     PE_VERDICT_SKIP = 2,
 } pe_verdict_t;
 
-/* Opaque operation-scoped handle. Never dereference or inspect its
- * layout from C; it may grow fields in a later slice without notice. */
-typedef struct pe_operation pe_operation_t;
-
-/* Begins operation-scoped state and returns the new handle through
- * `out_operation`. Reserved for the projection/loss state issues #26/#27
- * add without changing this handle shape. */
-pe_status_t pe_operation_begin(pe_operation_t **out_operation);
-
-/* Ends operation-scoped state and releases `operation`. Passing NULL returns
- * PE_STATUS_NULL_HANDLE; a foreign or already-ended handle returns
- * PE_STATUS_INVALID_ARGUMENT. Does not evict any cached immutable map
- * (there is none yet in this skeleton). */
-pe_status_t pe_operation_end(pe_operation_t *operation);
-
 /* Opaque handle for one validated stored/working DD schema pair (issue
  * #21). Never dereference or inspect its layout from C. Distinct pe_map_t
  * handles may share the same underlying cached pair (issue #22); each is
  * still independently releasable, and releasing one never invalidates
- * another live handle referring to the same cached pair. */
+ * another live handle referring to the same cached pair. Forward-declared
+ * here (ahead of pe_map_acquire below) so pe_operation_begin can already
+ * reference it. */
 typedef struct pe_map pe_map_t;
+
+/* Opaque operation-scoped handle. Never dereference or inspect its
+ * layout from C; it may grow fields in a later slice without notice. */
+typedef struct pe_operation pe_operation_t;
+
+/* Begins operation-scoped state against `map` and returns the new handle
+ * through `out_operation` (issue #31). `map` must be a currently-live
+ * handle returned by pe_map_acquire and not yet released; a null `map`
+ * returns PE_STATUS_NULL_HANDLE, and a foreign or already-released `map`
+ * returns PE_STATUS_INVALID_ARGUMENT, in both cases leaving
+ * `out_operation` unwritten.
+ *
+ * Beginning an operation only retains a reference to the map's already-
+ * validated pair data; it neither clones nor mutates that immutable data.
+ * That retained reference also means a live operation keeps working even
+ * after `map` itself is later passed to pe_map_release: releasing a map
+ * handle never invalidates an operation begun against it, and this ABI
+ * places no ordering requirement between the two -- a map may be released
+ * before, during, or after the lifetime of any operation begun against it.
+ * Several operations may be begun against the same map, or against
+ * distinct maps, and remain simultaneously live without interfering with
+ * one another.
+ *
+ * Reserved for the projection/loss state issues #26/#27 add without
+ * changing this handle shape. */
+pe_status_t pe_operation_begin(const pe_map_t *map, pe_operation_t **out_operation);
+
+/* Clears `operation`'s local state back to its post-begin state
+ * deterministically, without evicting the cached immutable map it was
+ * begun against or releasing the handle itself (issue #31). Passing NULL
+ * returns PE_STATUS_NULL_HANDLE; a foreign handle, or one already ended via
+ * pe_operation_end, returns PE_STATUS_INVALID_ARGUMENT. Repeatable while
+ * `operation` remains active. */
+pe_status_t pe_operation_reset(pe_operation_t *operation);
+
+/* Finalizes `operation`'s local state, without evicting the cached
+ * immutable map it was begun against or releasing the handle itself (issue
+ * #31). Passing NULL returns PE_STATUS_NULL_HANDLE; a foreign or
+ * already-ended handle returns PE_STATUS_INVALID_ARGUMENT. An ended
+ * operation must still be passed to pe_operation_release to free it, and
+ * remains valid for that call. */
+pe_status_t pe_operation_end(pe_operation_t *operation);
+
+/* Releases an operation handle returned by pe_operation_begin, whether or
+ * not pe_operation_end was called for it first (issue #31). Passing NULL
+ * returns PE_STATUS_NULL_HANDLE; a foreign or already-released handle,
+ * including a live pe_map_t passed by mistake, returns
+ * PE_STATUS_INVALID_ARGUMENT. Never releases or invalidates the map handle
+ * `operation` was begun against, and never affects another live operation
+ * begun against the same map. */
+pe_status_t pe_operation_release(pe_operation_t *operation);
 
 /* Selects which schema in a pe_map_t pair a query addresses. */
 typedef enum pe_map_role {
@@ -191,10 +234,17 @@ pe_status_t pe_map_cache_identity(const pe_map_t *map, uint64_t *out_identity);
 
 /* Representative "project node" entry point. Placeholder: validates its
  * inputs, records one projection-entry instrumentation tick, and always
- * reports PE_VERDICT_SAME through `out_verdict`. `node_path` is borrowed
- * for the duration of this call only and need not be NUL-terminated;
- * `node_path_len` gives its length in bytes. */
+ * reports PE_VERDICT_SAME through `out_verdict`. `map` must be the same
+ * currently-live handle passed to pe_operation_begin for `operation`, and
+ * `operation` must also still be live. A null handle returns
+ * PE_STATUS_NULL_HANDLE; a foreign, released, or mismatched handle returns
+ * PE_STATUS_INVALID_ARGUMENT without either opaque handle being dereferenced
+ * (issue #31). Releasing a map does not invalidate its operation's own
+ * lifecycle, but this entry requires the caller to retain the map handle for
+ * each query. `node_path` is borrowed for the duration of this call only and
+ * need not be NUL-terminated; `node_path_len` gives its length in bytes. */
 pe_status_t pe_project_node_query(
+    const pe_map_t *map,
     pe_operation_t *operation,
     const char *node_path,
     size_t node_path_len,
