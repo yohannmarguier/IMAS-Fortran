@@ -2,11 +2,11 @@
 
 The same-major Data Dictionary projection-engine substrate: a Rust library
 behind a narrow, stable C ABI. Full design: issue #18. This crate
-implements the skeleton scoped by issue #20 plus the schema-pair
-acquisition scoped by issue #21 — not yet the real rename/projection
-logic.
+implements the skeleton scoped by issue #20, the schema-pair acquisition
+scoped by issue #21, and the process-wide cache reuse scoped by issue #22
+— not yet the real rename/projection logic.
 
-## Scope of this slice (#20, #21)
+## Scope of this slice (#20, #21, #22)
 
 Implemented here:
 - Opaque ABI handles (`pe_operation_t`, `pe_map_t`).
@@ -31,14 +31,52 @@ Implemented here:
   cross-major pair. All four input buffers are borrowed only for the
   duration of the call; the engine copies what it needs to retain (see
   `src/schema.rs`).
+- Process-wide schema-pair caching (#22, `src/cache.rs`): `pe_map_acquire`
+  reuses one validated pair for repeated acquisitions of the same
+  stored/working content, including with the roles swapped, instead of
+  reparsing or rebuilding it. Every acquisition still returns its own
+  independent, separately releasable `pe_map_t`; releasing one never
+  invalidates another live handle backed by the same cached pair, and
+  distinct pairs coexist independently with no mutable global "active" or
+  "working" DD version. `pe_map_cache_identity` exposes an opaque token so
+  a caller can prove reuse without this ABI exposing any Rust collection
+  layout. See "Thread safety" below for this cache's concurrency posture.
 - A C contract test (`tests/contract/test_contract.c`), registered with
   CTest, that drives every capability above through the header only.
 
-Deliberately **not** here (see the full #18 spec and issues #22-#28): a
-`field/@path` index or real rename-map construction, map caching/reuse
-across acquisitions, LRU eviction, real per-node projection verdicts, loss
-accumulation, Fortran types, IMAS-Core, backend selection, or a Python
-runtime dependency.
+Deliberately **not** here (see the full #18 spec and issues #23, #26-#28):
+a `field/@path` index or real rename-map construction, bounded LRU
+eviction of the cache added here (#28), real per-node projection
+verdicts, loss accumulation, Fortran types, IMAS-Core, backend selection,
+or a Python runtime dependency.
+
+## Thread safety
+
+The schema-pair cache added by #22 (`src/cache.rs`) is one process-wide
+`Mutex<HashMap<..>>`. **Concurrent acquisition from multiple threads is
+supported and requires no synchronization from the caller**: `pe_map_acquire`,
+`pe_map_release`, and `pe_map_version`/`pe_map_cache_identity` may all be
+called simultaneously from different threads for the same or different
+schema pairs. Specifically:
+
+- A cache lookup or insert holds the lock only for the HashMap operation
+  itself; the expensive XML parse/validate work runs outside the lock. Two
+  threads racing to acquire the same new pair may both pay the parse cost,
+  but only one insertion wins the shared cache slot, and every caller still
+  gets back a handle backed by that one winning entry (see `cache::insert`).
+- The cache itself always holds its own reference to a live entry, so
+  releasing one caller's `pe_map_t` can never invalidate another live
+  handle referring to the same cached pair, regardless of release order or
+  which thread releases first.
+- Cache lookup never establishes a mutable global "active" or "working" DD
+  version; multiple distinct pairs are simply independent entries in the
+  same map and do not affect one another's behaviour.
+
+This crate makes **no throughput or lock-contention guarantee** beyond
+that safety — sharding, striping, or otherwise tuning the cache under
+heavy concurrent load is explicitly out of scope for this slice (see issue
+#18's concurrency-tuning exclusion and issue #32's stress work), and may
+be revisited once #28's LRU eviction lands on top of this cache.
 
 ## Building
 

@@ -10,10 +10,10 @@
 //! (see the crate-level `#![deny(unsafe_code)]` in `lib.rs`).
 #![allow(unsafe_code)]
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::os::raw::c_char;
 use std::panic::{self, AssertUnwindSafe};
-use std::sync::{Mutex, Once, OnceLock};
+use std::sync::{Arc, Mutex, Once, OnceLock};
 
 use crate::status::{PeStatus, PeVerdict};
 use crate::{AcquireError, Map, MapRole, Operation};
@@ -29,12 +29,20 @@ fn active_operations() -> &'static Mutex<HashSet<usize>> {
     ACTIVE_OPERATIONS.get_or_init(|| Mutex::new(HashSet::new()))
 }
 
-/// Addresses of map handles that this ABI has issued and not yet released.
-/// Same rationale as [`active_operations`], applied to `pe_map_t` (issue
-/// #21).
-fn active_maps() -> &'static Mutex<HashSet<usize>> {
-    static ACTIVE_MAPS: OnceLock<Mutex<HashSet<usize>>> = OnceLock::new();
-    ACTIVE_MAPS.get_or_init(|| Mutex::new(HashSet::new()))
+/// Live map handles issued by this ABI. Besides validating a raw handle
+/// address, the registry keeps an `Arc` for each live handle so a reader can
+/// clone it while holding the mutex, then safely use the `Map` after the
+/// mutex is released even if another thread releases that handle meanwhile.
+fn active_maps() -> &'static Mutex<HashMap<usize, Arc<Map>>> {
+    static ACTIVE_MAPS: OnceLock<Mutex<HashMap<usize, Arc<Map>>>> = OnceLock::new();
+    ACTIVE_MAPS.get_or_init(|| Mutex::new(HashMap::new()))
+}
+
+/// Retains the map addressed by a live ABI handle without dereferencing the
+/// raw pointer. The retained `Arc` keeps the map live after a concurrent
+/// `pe_map_release` removes the caller's handle from [`active_maps`].
+fn retain_active_map(map: *const Map) -> Option<Arc<Map>> {
+    active_maps().lock().unwrap().get(&(map as usize)).cloned()
 }
 
 /// Borrows `ptr`/`len` as `&str` for the duration of the caller's closure,
@@ -276,10 +284,11 @@ pub unsafe extern "C" fn pe_map_acquire(
         ) {
             Ok(map) => {
                 let mut active = active_maps().lock().unwrap();
-                let map = Box::into_raw(Box::new(map));
-                active.insert(map as usize);
+                let map = Arc::new(map);
+                let raw_map = Arc::into_raw(map.clone()) as *mut Map;
+                active.insert(raw_map as usize, map);
                 unsafe {
-                    *out_map = map;
+                    *out_map = raw_map;
                 }
                 PeStatus::Ok
             }
@@ -302,12 +311,12 @@ pub unsafe extern "C" fn pe_map_release(map: *mut Map) -> PeStatus {
             return PeStatus::NullHandle;
         }
 
-        let was_active = active_maps().lock().unwrap().remove(&(map as usize));
-        if !was_active {
+        let retained = active_maps().lock().unwrap().remove(&(map as usize));
+        if retained.is_none() {
             return PeStatus::InvalidArgument;
         }
         unsafe {
-            drop(Box::from_raw(map));
+            Arc::decrement_strong_count(map as *const Map);
         }
         PeStatus::Ok
     })
@@ -341,21 +350,60 @@ pub unsafe extern "C" fn pe_map_version(
         if map.is_null() {
             return PeStatus::NullHandle;
         }
-        if !active_maps().lock().unwrap().contains(&(map as usize)) {
-            return PeStatus::InvalidArgument;
-        }
+        let map = match retain_active_map(map) {
+            Some(map) => map,
+            None => return PeStatus::InvalidArgument,
+        };
         let role = match MapRole::from_raw(role) {
             Some(role) => role,
             None => return PeStatus::InvalidArgument,
         };
 
-        let map = unsafe { &*map };
         let schema = match role {
             MapRole::Stored => map.stored(),
             MapRole::Working => map.working(),
         };
         let text = schema.version().to_string();
         unsafe { write_str_to_buffer(&text, buffer, buffer_len, required_len) }
+    })
+}
+
+/// Reads back the opaque cache identity of the pair backing `map` (issue
+/// #22): a numeric token equal for any two live `pe_map_t` handles
+/// acquired for the same underlying stored/working schema-pair content
+/// (regardless of which endpoint played which role), and different across
+/// handles backed by distinct pairs. Lets a caller -- including this
+/// crate's own contract test -- prove that reacquiring the same pair
+/// reused the process-wide cache instead of rebuilding it, without this
+/// ABI exposing any Rust `HashMap`/collection layout to do so. The value
+/// carries no meaning beyond equality comparison and must not be
+/// interpreted as a real memory address.
+///
+/// # Safety
+/// `map` must be either null or a valid, still-live handle returned by
+/// `pe_map_acquire`. `out_identity` must be either null or a valid
+/// pointer to one writable `u64`.
+#[no_mangle]
+pub unsafe extern "C" fn pe_map_cache_identity(
+    map: *const Map,
+    out_identity: *mut u64,
+) -> PeStatus {
+    guard(|| {
+        if map.is_null() {
+            return PeStatus::NullHandle;
+        }
+        let map = match retain_active_map(map) {
+            Some(map) => map,
+            None => return PeStatus::InvalidArgument,
+        };
+        if out_identity.is_null() {
+            return PeStatus::InvalidArgument;
+        }
+
+        unsafe {
+            *out_identity = map.cache_identity();
+        }
+        PeStatus::Ok
     })
 }
 
@@ -474,5 +522,34 @@ mod tests {
     fn guard_passes_through_a_normal_status() {
         let status = guard(|| PeStatus::Ok);
         assert_eq!(status, PeStatus::Ok);
+    }
+
+    #[test]
+    fn retained_map_stays_live_after_release_removes_its_raw_handle() {
+        const STORED: &str = "<IDSs><version>12.1.0</version></IDSs>";
+        const WORKING: &str = "<IDSs><version>12.0.9</version></IDSs>";
+
+        let mut raw_map = std::ptr::null_mut();
+        assert_eq!(
+            unsafe {
+                pe_map_acquire(
+                    STORED.as_ptr().cast(),
+                    STORED.len(),
+                    c"12.1.0".as_ptr(),
+                    "12.1.0".len(),
+                    WORKING.as_ptr().cast(),
+                    WORKING.len(),
+                    c"12.0.9".as_ptr(),
+                    "12.0.9".len(),
+                    &mut raw_map,
+                )
+            },
+            PeStatus::Ok
+        );
+
+        let retained = retain_active_map(raw_map).expect("new map should be live");
+        assert_eq!(unsafe { pe_map_release(raw_map) }, PeStatus::Ok);
+        assert!(retain_active_map(raw_map).is_none());
+        assert_eq!(retained.stored().version().to_string(), "12.1.0");
     }
 }
