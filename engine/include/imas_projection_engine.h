@@ -1,12 +1,14 @@
 /*
- * C ABI for the IMAS projection-engine substrate (IMAS-Fortran #18/#20).
+ * C ABI for the IMAS projection-engine substrate (IMAS-Fortran #18/#20/#21).
  *
- * Scope: this header is the skeleton contract for issue #20. It exposes
- * opaque handles, the shared status/verdict vocabulary, one string
- * ownership convention, and deterministic projection-entry
- * instrumentation. It does not yet expose XML/schema acquisition or real
- * rename-map lookups; those land behind this same handle shape in a later
- * slice (issue #21) without breaking this contract.
+ * Scope: issue #20 established opaque handles, the shared status/verdict
+ * vocabulary, one string ownership convention, and deterministic
+ * projection-entry instrumentation. Issue #21 adds the first real
+ * capability on top of that skeleton: acquiring a validated same-major
+ * stored/working DD schema pair as an opaque, releasable pe_map_t handle.
+ * Real rename-map lookups and per-node projection verdicts are still not
+ * here; those land behind this same handle shape in a later slice (issue
+ * #23) without breaking this contract.
  *
  * Hand-maintained, not generated: every declaration here must be kept in
  * sync with its `#[no_mangle] extern "C"` definition in `src/ffi.rs`.
@@ -55,9 +57,18 @@ typedef enum pe_status {
     PE_STATUS_NULL_HANDLE = 2,
     PE_STATUS_BUFFER_TOO_SMALL = 3,
     PE_STATUS_INTERNAL = 4,
+    /* Malformed XML, a missing DD version with no valid caller-supplied
+     * fallback, or a caller-claimed identity that disagrees with the
+     * parsed <version> element. Covers every pe_map_acquire failure that
+     * is not the distinct cross-major refusal below. */
+    PE_STATUS_SCHEMA_IDENTITY = 5,
+    /* The stored and working schemas each parsed and validated, but their
+     * major DD versions differ; automatic same-major projection refuses
+     * to build a map for this pair. */
+    PE_STATUS_CROSS_MAJOR = 6,
 } pe_status_t;
 
-/* Shared projection-verdict vocabulary. Until issue #21 lands real
+/* Shared projection-verdict vocabulary. Until issue #23 lands real
  * rename-map lookups, every function that reports a verdict always
  * reports PE_VERDICT_SAME. */
 typedef enum pe_verdict {
@@ -71,8 +82,8 @@ typedef enum pe_verdict {
 typedef struct pe_operation pe_operation_t;
 
 /* Begins operation-scoped state and returns the new handle through
- * `out_operation`. Reserved for the loss/dead-subtree state issue #21
- * adds without changing this handle shape. */
+ * `out_operation`. Reserved for the projection/loss state issues #26/#27
+ * add without changing this handle shape. */
 pe_status_t pe_operation_begin(pe_operation_t **out_operation);
 
 /* Ends operation-scoped state and releases `operation`. Passing NULL returns
@@ -80,6 +91,72 @@ pe_status_t pe_operation_begin(pe_operation_t **out_operation);
  * PE_STATUS_INVALID_ARGUMENT. Does not evict any cached immutable map
  * (there is none yet in this skeleton). */
 pe_status_t pe_operation_end(pe_operation_t *operation);
+
+/* Opaque handle for one validated stored/working DD schema pair (issue
+ * #21). Never dereference or inspect its layout from C. Reusing this
+ * across acquisitions for the same pair identity instead of rebuilding it
+ * is issue #22's job; today pe_map_acquire always builds a fresh one. */
+typedef struct pe_map pe_map_t;
+
+/* Selects which schema in a pe_map_t pair a query addresses. */
+typedef enum pe_map_role {
+    PE_MAP_ROLE_STORED = 0,
+    PE_MAP_ROLE_WORKING = 1,
+} pe_map_role_t;
+
+/* Acquires a validated same-major stored/working DD schema pair as an
+ * opaque, releasable pe_map_t handle (issue #21).
+ *
+ * `stored_xml`/`working_xml` are each parsed as UTF-8 XML; neither needs
+ * to be NUL-terminated since its length is given explicitly. The XML
+ * <version> element is authoritative when present, and must then agree
+ * with the corresponding `*_claimed_version` string. When the element is
+ * absent, `*_claimed_version` is used as the schema's version directly.
+ * An invalid or fabricated identity never produces a usable handle:
+ * malformed XML, a missing version with no valid fallback, or a
+ * claimed/parsed mismatch on either schema all return
+ * PE_STATUS_SCHEMA_IDENTITY and leave `out_map` unwritten. A pair that
+ * individually validates but disagrees on major version returns the
+ * distinct PE_STATUS_CROSS_MAJOR, also without writing `out_map`.
+ *
+ * `stored`/`working` are caller-assigned roles, not an ordering by DD
+ * version: the same parsing and validation runs for both regardless of
+ * which one is semantically older or curated.
+ *
+ * Input ownership: all four input buffers are borrowed for the duration
+ * of this call only. On success the engine copies the bytes it needs (the
+ * resolved version and a copy of each schema's XML source); none of the
+ * four input pointers is retained past this call returning, and the
+ * caller may free or overwrite them immediately afterwards. */
+pe_status_t pe_map_acquire(
+    const char *stored_xml,
+    size_t stored_xml_len,
+    const char *stored_claimed_version,
+    size_t stored_claimed_version_len,
+    const char *working_xml,
+    size_t working_xml_len,
+    const char *working_claimed_version,
+    size_t working_claimed_version_len,
+    pe_map_t **out_map);
+
+/* Releases a map handle returned by pe_map_acquire. Passing NULL returns
+ * PE_STATUS_NULL_HANDLE; a foreign or already-released handle returns
+ * PE_STATUS_INVALID_ARGUMENT. */
+pe_status_t pe_map_release(pe_map_t *map);
+
+/* Reads back the resolved version string ("major.minor.patch") of one
+ * schema in `map` for `role`, following the string ownership convention
+ * documented above. Exists so a caller can observe that acquisition
+ * resolved and retained each schema's version correctly and independently
+ * of the input buffers passed to pe_map_acquire. An unrecognized `role`
+ * returns PE_STATUS_INVALID_ARGUMENT rather than being coerced into a
+ * default. */
+pe_status_t pe_map_version(
+    const pe_map_t *map,
+    pe_map_role_t role,
+    char *buffer,
+    size_t buffer_len,
+    size_t *required_len);
 
 /* Representative "project node" entry point. Placeholder: validates its
  * inputs, records one projection-entry instrumentation tick, and always

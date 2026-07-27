@@ -12,3 +12,7 @@ name = "imas_projection_engine"
 crate-type = ["staticlib"]
 
 [dependencies]
+# XML well-formedness check + `<version>` lookup for issue #21. Zero-copy
+# read-only DOM parser with a declared rust-version of 1.60 (see
+# README.md#msrv), well under this crate's 1.76.0 floor.
+roxmltree = "0.21"
