@@ -1,6 +1,6 @@
 /*
  * C contract test for the projection-engine ABI (IMAS-Fortran #20, #21,
- * #22, #31).
+ * #22, #28, #31).
  *
  * This is the highest seam this repo's later slices add vectors to: it
  * drives the engine only through imas_projection_engine.h, the same way
@@ -882,6 +882,160 @@ static int test_map_cache_identity_input_validation(void) {
 }
 
 /*
+ * Bounded LRU eviction (issue #28): the cache reuse proven above never
+ * evicts in this suite's other tests because none of them acquire more
+ * than a handful of distinct pairs. The vectors below deliberately push
+ * enough *additional*, mutually distinct pairs through the cache to force
+ * real eviction, then observe the result purely through pe_map_acquire /
+ * pe_map_release / pe_map_cache_identity -- the same production ABI used
+ * everywhere else in this file -- without this suite ever inspecting the
+ * engine's internal HashMap/LRU representation.
+ *
+ * EVICTION_PROOF_PAIR_COUNT is chosen to comfortably exceed CACHE_CAPACITY
+ * (engine/src/cache.rs), including headroom for every other distinct pair
+ * this file's other tests have already put through the same process-wide
+ * cache by the time these run. If CACHE_CAPACITY ever changes, keep this
+ * constant safely above it -- this is a hand-maintained cross-reference,
+ * like the header/`src/ffi.rs` pairing documented at the top of this file,
+ * not a generated one.
+ */
+#define EVICTION_PROOF_PAIR_COUNT 100
+
+/* Builds and acquires the `index`-th of a run of mutually distinct
+ * same-major synthetic pairs used only to put eviction pressure on the
+ * cache; `index` must be unique across every call site in this file so
+ * concurrent proof vectors cannot collide with each other's pairs. */
+static int acquire_eviction_pressure_pair(int index, pe_map_t **out_map) {
+    char stored_xml[128];
+    char working_xml[128];
+    char stored_version[32];
+    char working_version[32];
+    int major = 20000 + index;
+
+    snprintf(stored_version, sizeof(stored_version), "%d.1.0", major);
+    snprintf(working_version, sizeof(working_version), "%d.0.9", major);
+    snprintf(stored_xml, sizeof(stored_xml), "<IDSs><version>%s</version></IDSs>",
+             stored_version);
+    snprintf(working_xml, sizeof(working_xml), "<IDSs><version>%s</version></IDSs>",
+             working_version);
+
+    return pe_map_acquire(stored_xml, strlen(stored_xml), stored_version,
+                           strlen(stored_version), working_xml, strlen(working_xml),
+                           working_version, strlen(working_version), out_map) == PE_STATUS_OK;
+}
+
+/* Acquiring enough distinct pairs evicts the least-recently-used entry;
+ * evicting it never invalidates a live caller handle still referencing it;
+ * and reacquiring the evicted content afterwards rebuilds a fresh, distinct
+ * cache entry rather than reusing the evicted one. */
+static int test_map_cache_eviction_evicts_the_least_recently_used_pair(void) {
+    pe_map_t *kept = NULL;
+    pe_map_t *reacquired = NULL;
+    uint64_t identity_before = 0;
+    uint64_t identity_while_live = 0;
+    uint64_t identity_after_reacquire = 0;
+    int i;
+
+    CHECK(acquire_shared_pair(&kept), "acquiring the pair to keep alive should succeed");
+    CHECK(pe_map_cache_identity(kept, &identity_before) == PE_STATUS_OK,
+          "reading the kept pair's initial cache identity should succeed");
+
+    /* Push enough distinct pairs through the cache, without ever touching
+     * `kept` again, to force it out as the least-recently-used entry. */
+    for (i = 0; i < EVICTION_PROOF_PAIR_COUNT; ++i) {
+        pe_map_t *pressure = NULL;
+        CHECK(acquire_eviction_pressure_pair(i, &pressure),
+              "acquiring an eviction-pressure pair should succeed");
+        pe_map_release(pressure);
+    }
+
+    /* Eviction must never invalidate a live caller handle: `kept` was never
+     * released, so it must still resolve exactly as it did before any
+     * eviction pressure was applied. */
+    CHECK(pe_map_cache_identity(kept, &identity_while_live) == PE_STATUS_OK,
+          "the live kept handle's cache identity should remain readable after "
+          "eviction pressure");
+    CHECK(identity_while_live == identity_before,
+          "a live handle's own cache identity must be unaffected by its cache "
+          "entry being evicted");
+    CHECK(map_version_matches(kept, PE_MAP_ROLE_STORED, "3.39.0"),
+          "the live kept handle should still resolve its version after eviction "
+          "pressure");
+
+    /* Reacquiring the exact same content now rebuilds a fresh entry instead
+     * of reusing the (evicted) cached one, and does so safely: this new
+     * acquisition succeeds and does not disturb the still-live `kept`
+     * handle from above. */
+    CHECK(acquire_shared_pair(&reacquired), "reacquiring the same pair should still succeed");
+    CHECK(pe_map_cache_identity(reacquired, &identity_after_reacquire) == PE_STATUS_OK,
+          "reading the reacquired pair's cache identity should succeed");
+    CHECK(identity_after_reacquire != identity_before,
+          "reacquiring an evicted pair should rebuild it as a fresh, distinct "
+          "cache entry");
+    CHECK(pe_map_cache_identity(kept, &identity_while_live) == PE_STATUS_OK &&
+              identity_while_live == identity_before,
+          "the original live handle must remain unaffected by the reacquisition "
+          "that rebuilt its evicted entry");
+
+    pe_map_release(reacquired);
+    pe_map_release(kept);
+
+    printf("map cache eviction: an untouched pair was evicted under pressure, its "
+           "live handle stayed valid throughout, and reacquiring it rebuilt a fresh, "
+           "independent entry\n");
+    return 0;
+}
+
+/* Reusing a cached pair updates its recency without rebuilding it: a pair
+ * reacquired periodically while unrelated eviction pressure is applied to
+ * many other distinct pairs must never itself be evicted. */
+static int test_map_cache_touching_a_pair_under_pressure_prevents_its_eviction(void) {
+    pe_map_t *touched = NULL;
+    uint64_t touched_identity = 0;
+    uint64_t identity_now = 0;
+    const int touch_every = 10;
+    int i;
+
+    CHECK(acquire_shared_pair(&touched), "acquiring the touched pair should succeed");
+    CHECK(pe_map_cache_identity(touched, &touched_identity) == PE_STATUS_OK,
+          "reading the touched pair's initial cache identity should succeed");
+    pe_map_release(touched);
+    touched = NULL;
+
+    for (i = 0; i < EVICTION_PROOF_PAIR_COUNT; ++i) {
+        pe_map_t *pressure = NULL;
+        /* Distinct index range from the previous test's pressure pairs so
+         * the two proofs cannot collide on the same synthetic content. */
+        CHECK(acquire_eviction_pressure_pair(EVICTION_PROOF_PAIR_COUNT + i, &pressure),
+              "acquiring an eviction-pressure pair should succeed");
+        pe_map_release(pressure);
+
+        if (i % touch_every == 0) {
+            CHECK(acquire_shared_pair(&touched),
+                  "reacquiring (touching) the pair mid-pressure should succeed");
+            CHECK(pe_map_cache_identity(touched, &identity_now) == PE_STATUS_OK,
+                  "reading the touched pair's cache identity should succeed");
+            CHECK(identity_now == touched_identity,
+                  "a pair reacquired often enough to stay recent must never be "
+                  "evicted by pressure on other pairs");
+            pe_map_release(touched);
+            touched = NULL;
+        }
+    }
+
+    CHECK(acquire_shared_pair(&touched), "final reacquire should succeed");
+    CHECK(pe_map_cache_identity(touched, &identity_now) == PE_STATUS_OK,
+          "reading the touched pair's final cache identity should succeed");
+    CHECK(identity_now == touched_identity,
+          "a periodically reacquired pair must never have been evicted");
+    pe_map_release(touched);
+
+    printf("map cache eviction: periodically reacquiring a pair kept it alive "
+           "under sustained eviction pressure on other pairs\n");
+    return 0;
+}
+
+/*
  * pe_project_node_query real classifications (issue #23): the four
  * rename-metadata-free vectors -- unchanged, compiled-only/stored-only
  * (both are the same SourceOnly classification, disambiguated only by
@@ -1171,6 +1325,8 @@ int main(void) {
     failures += test_map_cache_identity_reuse_with_reversed_roles();
     failures += test_map_cache_identity_distinguishes_different_pairs();
     failures += test_map_cache_identity_input_validation();
+    failures += test_map_cache_eviction_evicts_the_least_recently_used_pair();
+    failures += test_map_cache_touching_a_pair_under_pressure_prevents_its_eviction();
     failures += test_projection_unchanged_field_reports_same_in_both_directions();
     failures += test_projection_added_and_removed_fields_report_skip_in_both_directions();
     failures += test_projection_datatype_changed_field_reports_skip_in_both_directions();

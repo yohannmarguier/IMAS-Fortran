@@ -4,11 +4,12 @@ The same-major Data Dictionary projection-engine substrate: a Rust library
 behind a narrow, stable C ABI. Full design: issue #18. This crate
 implements the skeleton scoped by issue #20, the schema-pair acquisition
 scoped by issue #21, the process-wide cache reuse scoped by issue #22, the
+bounded LRU eviction policy on that cache scoped by issue #28, the
 operation lifecycle scoped by issue #31, and the rename-metadata-free
 projection classifications scoped by issue #23 — not yet real rename
 resolution (issue #24/#25) or loss accumulation (issue #27).
 
-## Scope of this slice (#20, #21, #22, #31, #23)
+## Scope of this slice (#20, #21, #22, #28, #31, #23)
 
 Implemented here:
 - Opaque ABI handles (`pe_operation_t`, `pe_map_t`).
@@ -68,6 +69,24 @@ Implemented here:
   "working" DD version. `pe_map_cache_identity` exposes an opaque token so
   a caller can prove reuse without this ABI exposing any Rust collection
   layout. See "Thread safety" below for this cache's concurrency posture.
+- Bounded LRU eviction on that cache (#28, `src/cache.rs`): the cache holds
+  at most `CACHE_CAPACITY` distinct pairs (a deliberately arbitrary,
+  documented, non-production-tuned bound — sizing/throughput tuning stays
+  out of scope per issue #18, and is issue #32's job). Reacquiring a
+  cached pair through `pe_map_acquire` marks it most-recently-used without
+  rebuilding it; acquiring enough additional distinct pairs evicts the
+  single least-recently-used entry. Eviction only ever drops the cache's
+  own reference to the immutable pair, so it can never invalidate a live
+  `pe_map_t` handle (or an `Operation` retaining one) still referencing
+  that pair — exactly as releasing another handle to the same pair
+  already could not (#22). Reacquiring evicted content afterwards rebuilds
+  it as a fresh, independent cache entry with its own new
+  `pe_map_cache_identity`, without disturbing any other live pair. Proven
+  entirely through the production ABI (`pe_map_acquire`/`pe_map_release`/
+  `pe_map_cache_identity`) in the contract test, plus Rust-only unit tests
+  against a small, locally constructed cache instance for the underlying
+  LRU mechanics (see `src/cache.rs`'s `lru_tests`) — no new ABI surface
+  was needed.
 - Operation lifecycle tied to a map handle (#31, `pe_operation_begin` /
   `pe_operation_reset` / `pe_operation_end` / `pe_operation_release`):
   `pe_operation_begin` now requires a currently-live `pe_map_t` and
@@ -84,11 +103,11 @@ Implemented here:
   CTest, that drives every capability above through the header only.
 
 Deliberately **not** here (see the full #18 spec and issues #24, #25,
-#26-#28): real rename resolution (leaf, successive history, array-of-
+#26/#27): real rename resolution (leaf, successive history, array-of-
 structures, plain-structure cascade, missing-subtree collapsing), context-
 path/timebase-path substitution, loss accumulation and enumeration,
-bounded LRU eviction of the cache added by #22, Fortran types, IMAS-Core,
-backend selection, or a Python runtime dependency.
+production cache sizing/throughput tuning (issue #32), Fortran types,
+IMAS-Core, backend selection, or a Python runtime dependency.
 
 ## Operation/map ordering (#31)
 
@@ -114,22 +133,28 @@ distinct maps, at the same time.
 
 ## Thread safety
 
-The schema-pair cache added by #22 (`src/cache.rs`) is one process-wide
-`Mutex<HashMap<..>>`. **Concurrent acquisition from multiple threads is
-supported and requires no synchronization from the caller**: `pe_map_acquire`,
-`pe_map_release`, and `pe_map_version`/`pe_map_cache_identity` may all be
-called simultaneously from different threads for the same or different
-schema pairs. Specifically:
+The schema-pair cache added by #22 and bounded by #28 (`src/cache.rs`) is
+one process-wide `Mutex<Cache>` (a `HashMap` plus a recency queue).
+**Concurrent acquisition from multiple threads is supported and requires
+no synchronization from the caller**: `pe_map_acquire`, `pe_map_release`,
+and `pe_map_version`/`pe_map_cache_identity` may all be called
+simultaneously from different threads for the same or different schema
+pairs. Specifically:
 
-- A cache lookup or insert holds the lock only for the HashMap operation
-  itself; the expensive XML parse/validate work runs outside the lock. Two
-  threads racing to acquire the same new pair may both pay the parse cost,
-  but only one insertion wins the shared cache slot, and every caller still
-  gets back a handle backed by that one winning entry (see `cache::insert`).
-- The cache itself always holds its own reference to a live entry, so
-  releasing one caller's `pe_map_t` can never invalidate another live
-  handle referring to the same cached pair, regardless of release order or
-  which thread releases first.
+- A cache lookup or insert holds the lock only for the HashMap/recency
+  operation itself; the expensive XML parse/validate work runs outside the
+  lock. Two threads racing to acquire the same new pair may both pay the
+  parse cost, but only one insertion wins the shared cache slot, and every
+  caller still gets back a handle backed by that one winning entry (see
+  `cache::insert`).
+- The cache itself always holds its own reference to a live entry (until
+  that entry is evicted under LRU pressure — #28), so releasing one
+  caller's `pe_map_t` can never invalidate another live handle referring
+  to the same cached pair, regardless of release order or which thread
+  releases first. Symmetrically, the cache evicting its own slot for an
+  entry can never invalidate a live handle either (see the "Bound and LRU
+  eviction" section above): a live `Arc` clone outside the cache keeps the
+  data alive regardless of what the cache's own map/recency queue does.
 - Cache lookup never establishes a mutable global "active" or "working" DD
   version; multiple distinct pairs are simply independent entries in the
   same map and do not affect one another's behaviour.
@@ -137,8 +162,7 @@ schema pairs. Specifically:
 This crate makes **no throughput or lock-contention guarantee** beyond
 that safety — sharding, striping, or otherwise tuning the cache under
 heavy concurrent load is explicitly out of scope for this slice (see issue
-#18's concurrency-tuning exclusion and issue #32's stress work), and may
-be revisited once #28's LRU eviction lands on top of this cache.
+#18's concurrency-tuning exclusion and issue #32's stress work).
 
 The operation registry added by #31 (`ffi::active_operations`) follows the
 identical pattern: one process-wide `Mutex<HashMap<..>>` retaining an `Arc`
