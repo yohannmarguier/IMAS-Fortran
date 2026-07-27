@@ -3,12 +3,16 @@
  *
  * Scope: issue #20 established opaque handles, the shared status/verdict
  * vocabulary, one string ownership convention, and deterministic
- * projection-entry instrumentation. Issue #21 adds the first real
+ * projection-entry instrumentation. Issue #21 added the first real
  * capability on top of that skeleton: acquiring a validated same-major
  * stored/working DD schema pair as an opaque, releasable pe_map_t handle.
- * Real rename-map lookups and per-node projection verdicts are still not
- * here; those land behind this same handle shape in a later slice (issue
- * #23) without breaking this contract.
+ * Issue #22 adds process-wide reuse of that validated pair: reacquiring
+ * the same pair, including with the stored/working roles swapped, reuses
+ * one cached immutable pair instead of reparsing or rebuilding it, while
+ * still handing back an independent, separately releasable pe_map_t per
+ * acquisition. Real rename-map lookups and per-node projection verdicts
+ * are still not here; those land behind this same handle shape in a later
+ * slice (issue #23) without breaking this contract.
  *
  * Hand-maintained, not generated: every declaration here must be kept in
  * sync with its `#[no_mangle] extern "C"` definition in `src/ffi.rs`.
@@ -93,9 +97,10 @@ pe_status_t pe_operation_begin(pe_operation_t **out_operation);
 pe_status_t pe_operation_end(pe_operation_t *operation);
 
 /* Opaque handle for one validated stored/working DD schema pair (issue
- * #21). Never dereference or inspect its layout from C. Reusing this
- * across acquisitions for the same pair identity instead of rebuilding it
- * is issue #22's job; today pe_map_acquire always builds a fresh one. */
+ * #21). Never dereference or inspect its layout from C. Distinct pe_map_t
+ * handles may share the same underlying cached pair (issue #22); each is
+ * still independently releasable, and releasing one never invalidates
+ * another live handle referring to the same cached pair. */
 typedef struct pe_map pe_map_t;
 
 /* Selects which schema in a pe_map_t pair a query addresses. */
@@ -122,6 +127,17 @@ typedef enum pe_map_role {
  * `stored`/`working` are caller-assigned roles, not an ordering by DD
  * version: the same parsing and validation runs for both regardless of
  * which one is semantically older or curated.
+ *
+ * Reacquiring the same stored/working content, including with the roles
+ * swapped, reuses the process-wide cached pair from a prior successful
+ * acquisition instead of reparsing or rebuilding it (issue #22); every
+ * acquisition still returns its own independent, separately releasable
+ * pe_map_t. Cache lookup never creates or depends on a mutable global
+ * "active" or "working" DD version, and several distinct pairs may be
+ * live at once. Concurrent calls to pe_map_acquire from multiple threads
+ * are safe and require no external synchronization (see pe_map_cache_
+ * identity below and engine/README.md's thread-safety section); this
+ * library makes no throughput guarantee beyond that safety.
  *
  * Input ownership: all four input buffers are borrowed for the duration
  * of this call only. On success the engine copies the bytes it needs (the
@@ -157,6 +173,21 @@ pe_status_t pe_map_version(
     char *buffer,
     size_t buffer_len,
     size_t *required_len);
+
+/* Reads back the opaque cache identity of the validated pair backing
+ * `map` into `out_identity` (issue #22). pe_map_acquire reuses one
+ * process-wide cached pair for repeated acquisitions of the same
+ * stored/working schema-pair content, including with the roles swapped,
+ * instead of reparsing or rebuilding it; two independently acquired
+ * pe_map_t handles backed by that same cached pair report an equal
+ * identity here, while handles backed by distinct pairs report different
+ * identities. This is the mechanism by which a caller -- including this
+ * library's own contract test -- can prove cache reuse without this ABI
+ * exposing any Rust collection layout to do so. The value carries no
+ * meaning beyond equality comparison: it must not be interpreted as a
+ * real memory address, persisted across process runs, or used to look
+ * anything up directly. */
+pe_status_t pe_map_cache_identity(const pe_map_t *map, uint64_t *out_identity);
 
 /* Representative "project node" entry point. Placeholder: validates its
  * inputs, records one projection-entry instrumentation tick, and always

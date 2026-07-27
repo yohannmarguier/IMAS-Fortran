@@ -359,6 +359,45 @@ pub unsafe extern "C" fn pe_map_version(
     })
 }
 
+/// Reads back the opaque cache identity of the pair backing `map` (issue
+/// #22): a numeric token equal for any two live `pe_map_t` handles
+/// acquired for the same underlying stored/working schema-pair content
+/// (regardless of which endpoint played which role), and different across
+/// handles backed by distinct pairs. Lets a caller -- including this
+/// crate's own contract test -- prove that reacquiring the same pair
+/// reused the process-wide cache instead of rebuilding it, without this
+/// ABI exposing any Rust `HashMap`/collection layout to do so. The value
+/// carries no meaning beyond equality comparison and must not be
+/// interpreted as a real memory address.
+///
+/// # Safety
+/// `map` must be either null or a valid, still-live handle returned by
+/// `pe_map_acquire`. `out_identity` must be either null or a valid
+/// pointer to one writable `u64`.
+#[no_mangle]
+pub unsafe extern "C" fn pe_map_cache_identity(
+    map: *const Map,
+    out_identity: *mut u64,
+) -> PeStatus {
+    guard(|| {
+        if map.is_null() {
+            return PeStatus::NullHandle;
+        }
+        if !active_maps().lock().unwrap().contains(&(map as usize)) {
+            return PeStatus::InvalidArgument;
+        }
+        if out_identity.is_null() {
+            return PeStatus::InvalidArgument;
+        }
+
+        let map = unsafe { &*map };
+        unsafe {
+            *out_identity = map.cache_identity();
+        }
+        PeStatus::Ok
+    })
+}
+
 /// Representative "project node" entry point. This is a placeholder: it
 /// validates its inputs, records one projection-entry instrumentation
 /// tick, and always reports `PeVerdict::Same`. Issue #23 replaces the

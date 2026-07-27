@@ -1,5 +1,5 @@
 /*
- * C contract test for the projection-engine ABI (IMAS-Fortran #20, #21).
+ * C contract test for the projection-engine ABI (IMAS-Fortran #20, #21, #22).
  *
  * This is the highest seam this repo's later slices add vectors to: it
  * drives the engine only through imas_projection_engine.h, the same way
@@ -149,6 +149,12 @@ static int test_status_message_string_ownership_convention(void) {
 #define XML_CROSS_MAJOR_4_0_0 "<IDSs><version>4.0.0</version></IDSs>"
 #define XML_MALFORMED "<IDSs><version>3.39.0</version>"
 #define XML_NO_VERSION_ELEMENT "<IDSs><ids/></IDSs>"
+
+/* A second, unrelated same-major pair (issue #22): only used to prove that
+ * a distinct pair gets a distinct cache identity from XML_STORED_3_39_0 /
+ * XML_WORKING_3_38_1 above and that the two do not affect each other. */
+#define XML_OTHER_PAIR_STORED "<IDSs><version>5.10.0</version></IDSs>"
+#define XML_OTHER_PAIR_WORKING "<IDSs><version>5.9.9</version></IDSs>"
 
 #define STR_LEN(literal) (sizeof(literal) - 1)
 
@@ -386,6 +392,156 @@ static int test_map_version_rejects_unrecognized_role(void) {
     return 0;
 }
 
+/* pe_map_cache_identity (issue #22): proves that pe_map_acquire reuses a
+ * process-wide cached pair across reacquisitions -- including with roles
+ * reversed -- without this ABI exposing any Rust collection layout to do
+ * so; the identity is an opaque token, compared only for equality. */
+
+static int test_map_cache_identity_reuse_across_reacquire(void) {
+    pe_map_t *first = NULL;
+    pe_map_t *second = NULL;
+    uint64_t first_identity = 0;
+    uint64_t second_identity = 0;
+
+    CHECK(pe_map_acquire(XML_STORED_3_39_0, STR_LEN(XML_STORED_3_39_0), "3.39.0",
+                          STR_LEN("3.39.0"), XML_WORKING_3_38_1,
+                          STR_LEN(XML_WORKING_3_38_1), "3.38.1", STR_LEN("3.38.1"),
+                          &first) == PE_STATUS_OK,
+          "first acquire of a pair should succeed");
+    CHECK(pe_map_acquire(XML_STORED_3_39_0, STR_LEN(XML_STORED_3_39_0), "3.39.0",
+                          STR_LEN("3.39.0"), XML_WORKING_3_38_1,
+                          STR_LEN(XML_WORKING_3_38_1), "3.38.1", STR_LEN("3.38.1"),
+                          &second) == PE_STATUS_OK,
+          "reacquiring the same pair should succeed");
+    CHECK(first != second,
+          "each acquisition should still return its own independent handle");
+
+    CHECK(pe_map_cache_identity(first, &first_identity) == PE_STATUS_OK,
+          "cache identity of the first handle should be readable");
+    CHECK(pe_map_cache_identity(second, &second_identity) == PE_STATUS_OK,
+          "cache identity of the second handle should be readable");
+    CHECK(first_identity == second_identity,
+          "reacquiring the same pair should reuse the cached entry");
+
+    /* Releasing one handle must not invalidate another live handle
+     * referring to the same cached pair. */
+    CHECK(pe_map_release(first) == PE_STATUS_OK, "releasing the first handle should succeed");
+    CHECK(map_version_matches(second, PE_MAP_ROLE_STORED, "3.39.0"),
+          "the second handle should remain usable after the first was released");
+    CHECK(pe_map_cache_identity(second, &second_identity) == PE_STATUS_OK,
+          "the second handle's cache identity should remain readable after the first "
+          "was released");
+
+    pe_map_release(second);
+
+    printf("map cache identity: reacquiring the same pair reused one cached entry, and "
+           "releasing one handle left the other independently live\n");
+    return 0;
+}
+
+static int test_map_cache_identity_reuse_with_reversed_roles(void) {
+    pe_map_t *forward = NULL;
+    pe_map_t *reversed = NULL;
+    uint64_t forward_identity = 0;
+    uint64_t reversed_identity = 0;
+
+    CHECK(pe_map_acquire(XML_STORED_3_39_0, STR_LEN(XML_STORED_3_39_0), "3.39.0",
+                          STR_LEN("3.39.0"), XML_WORKING_3_38_1,
+                          STR_LEN(XML_WORKING_3_38_1), "3.38.1", STR_LEN("3.38.1"),
+                          &forward) == PE_STATUS_OK,
+          "forward role assignment should succeed");
+    CHECK(pe_map_acquire(XML_WORKING_3_38_1, STR_LEN(XML_WORKING_3_38_1), "3.38.1",
+                          STR_LEN("3.38.1"), XML_STORED_3_39_0,
+                          STR_LEN(XML_STORED_3_39_0), "3.39.0", STR_LEN("3.39.0"),
+                          &reversed) == PE_STATUS_OK,
+          "reversed role assignment should succeed");
+
+    CHECK(pe_map_cache_identity(forward, &forward_identity) == PE_STATUS_OK,
+          "the forward handle's cache identity should be readable");
+    CHECK(pe_map_cache_identity(reversed, &reversed_identity) == PE_STATUS_OK,
+          "the reversed handle's cache identity should be readable");
+    CHECK(forward_identity == reversed_identity,
+          "reversed caller endpoint ordering should still reuse the same cached pair");
+
+    /* Stored/working roles must still resolve correctly per handle even
+     * though the underlying cached pair's identity is normalized. */
+    CHECK(map_version_matches(forward, PE_MAP_ROLE_STORED, "3.39.0") &&
+              map_version_matches(reversed, PE_MAP_ROLE_WORKING, "3.39.0"),
+          "each handle should resolve the 3.39.0 endpoint under its own requested role");
+    CHECK(map_version_matches(forward, PE_MAP_ROLE_WORKING, "3.38.1") &&
+              map_version_matches(reversed, PE_MAP_ROLE_STORED, "3.38.1"),
+          "each handle should resolve the 3.38.1 endpoint under its own requested role");
+
+    pe_map_release(forward);
+    pe_map_release(reversed);
+
+    printf("map cache identity: reversed role order reused the same cached pair while "
+           "each handle kept its own roles correct\n");
+    return 0;
+}
+
+static int test_map_cache_identity_distinguishes_different_pairs(void) {
+    pe_map_t *pair_one = NULL;
+    pe_map_t *pair_two = NULL;
+    uint64_t identity_one = 0;
+    uint64_t identity_two = 0;
+
+    CHECK(pe_map_acquire(XML_STORED_3_39_0, STR_LEN(XML_STORED_3_39_0), "3.39.0",
+                          STR_LEN("3.39.0"), XML_WORKING_3_38_1,
+                          STR_LEN(XML_WORKING_3_38_1), "3.38.1", STR_LEN("3.38.1"),
+                          &pair_one) == PE_STATUS_OK,
+          "acquiring the first pair should succeed");
+    CHECK(pe_map_acquire(XML_OTHER_PAIR_STORED, STR_LEN(XML_OTHER_PAIR_STORED), "5.10.0",
+                          STR_LEN("5.10.0"), XML_OTHER_PAIR_WORKING,
+                          STR_LEN(XML_OTHER_PAIR_WORKING), "5.9.9", STR_LEN("5.9.9"),
+                          &pair_two) == PE_STATUS_OK,
+          "acquiring a distinct pair should succeed");
+
+    CHECK(pe_map_cache_identity(pair_one, &identity_one) == PE_STATUS_OK,
+          "the first pair's cache identity should be readable");
+    CHECK(pe_map_cache_identity(pair_two, &identity_two) == PE_STATUS_OK,
+          "the second pair's cache identity should be readable");
+    CHECK(identity_one != identity_two,
+          "distinct schema pairs should not share a cache identity");
+
+    /* Releasing the first pair's handle must not disturb the second,
+     * unrelated live pair. */
+    CHECK(pe_map_release(pair_one) == PE_STATUS_OK, "releasing the first pair should succeed");
+    CHECK(map_version_matches(pair_two, PE_MAP_ROLE_STORED, "5.10.0"),
+          "the second pair should be unaffected by releasing the first pair's handle");
+
+    pe_map_release(pair_two);
+
+    printf("map cache identity: distinct schema pairs reported distinct cache "
+           "identities and did not affect each other\n");
+    return 0;
+}
+
+static int test_map_cache_identity_input_validation(void) {
+    pe_map_t *map = NULL;
+    uint64_t identity = 0;
+
+    CHECK(pe_map_cache_identity(NULL, &identity) == PE_STATUS_NULL_HANDLE,
+          "a null map handle should be rejected");
+
+    CHECK(pe_map_acquire(XML_STORED_3_39_0, STR_LEN(XML_STORED_3_39_0), "3.39.0",
+                          STR_LEN("3.39.0"), XML_WORKING_3_38_1,
+                          STR_LEN(XML_WORKING_3_38_1), "3.38.1", STR_LEN("3.38.1"),
+                          &map) == PE_STATUS_OK,
+          "acquiring a valid pair should succeed");
+
+    CHECK(pe_map_cache_identity(map, NULL) == PE_STATUS_INVALID_ARGUMENT,
+          "a null out_identity pointer should be rejected");
+
+    CHECK(pe_map_release(map) == PE_STATUS_OK, "release should succeed");
+    CHECK(pe_map_cache_identity(map, &identity) == PE_STATUS_INVALID_ARGUMENT,
+          "querying a released handle should be rejected, not dereferenced");
+
+    printf("map cache identity: null/foreign/released handle inputs rejected as "
+           "expected\n");
+    return 0;
+}
+
 int main(void) {
     int failures = 0;
 
@@ -399,6 +555,10 @@ int main(void) {
     failures += test_map_acquire_copies_inputs_rather_than_borrowing_them();
     failures += test_map_acquire_input_validation();
     failures += test_map_version_rejects_unrecognized_role();
+    failures += test_map_cache_identity_reuse_across_reacquire();
+    failures += test_map_cache_identity_reuse_with_reversed_roles();
+    failures += test_map_cache_identity_distinguishes_different_pairs();
+    failures += test_map_cache_identity_input_validation();
 
     if (failures == 0) {
         printf("contract test: all checks passed\n");
