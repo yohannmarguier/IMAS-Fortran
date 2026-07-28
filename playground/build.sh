@@ -3,7 +3,9 @@
 # Usage: ./build.sh play_magnetics.f90
 set -euo pipefail
 
-PREFIX="${IMAS_FORTRAN_PREFIX:-$HOME/.local/imas-fortran}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR" && git rev-parse --show-toplevel)"
+PREFIX="${IMAS_FORTRAN_PREFIX:-$REPO_ROOT/install}"
 SRC="${1:?usage: build.sh <file.f90>}"
 OUT="bin/$(basename "${SRC%.f90}")"
 

@@ -6,13 +6,18 @@ locally built copy of the library.
 ## One-time setup
 
 Build the library from the repo root, then install it to a local prefix
-(default `~/.local/imas-fortran`, override with `IMAS_FORTRAN_PREFIX`):
+(default `<repo root>/install`, override with `IMAS_FORTRAN_PREFIX`):
 
 ```bash
 cmake -B build
 cmake --build build -j
-cmake --install build --prefix ~/.local/imas-fortran
+cmake --install build --prefix ./install
 ```
+
+A project-local install keeps each worktree/checkout self-contained, which
+matters here since several parallel worktrees of this repo may build
+different versions of the library at once — a shared install location (e.g.
+`~/.local/imas-fortran`) would have them overwrite each other.
 
 ## Usage
 
