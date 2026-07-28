@@ -1,10 +1,15 @@
 # imas-python-fixtures
 
 Deterministic IDS fixtures generated with [imas-python](https://github.com/iterorganization/IMAS-Python)
-instead of the raw Access Layer. `equilibrium_seed.py` is the Python
-counterpart of `IMAS-Core/fixtures/equilibrium_seed.h`: same IDS, same
-DD-4.1.1 paths, same deterministic values, same FNV-1a structural hash, so a
-fixture produced by either generator hashes identically.
+instead of the raw Access Layer. `equilibrium_seed.py` writes the same
+`equilibrium` IDS content under two DD versions — 3.39.0 and 4.1.1 — chosen to
+straddle DD 4.0.0's restructuring so the pair of fixtures covers every kind of
+path difference a DD-version migration can introduce: a rename (`j_tor` ->
+`j_phi`, `b_field_tor` -> `b_field_phi`), a spelling rename
+(`mse_polarisation_angle` -> `mse_polarization_angle`), a removal
+(`ids_properties/source`, DD 3.39.0 only), and an addition
+(`global_quantities/rho_tor_boundary`, DD 4.1.1 only). Everything else is
+written identically across both versions.
 
 ## Setup
 
@@ -22,15 +27,21 @@ python equilibrium_seed.py /path/to/pulse-dir
 python equilibrium_seed.py /path/to/pulse-dir --verify
 ```
 
-This creates an HDF5 pulse (an `imas:hdf5?path=...` URI) at the given
-directory containing a single `equilibrium` IDS with:
+This creates one HDF5 pulse per DD version (an `imas:hdf5?path=...` URI) in
+`<pulse-dir>/3.39.0` and `<pulse-dir>/4.1.1`, each containing a single
+`equilibrium` IDS with:
 
 - `vacuum_toroidal_field/r0` — static scalar
+- `ids_properties/source` — DD 3.39.0 only
 - `time` — homogeneous timebase
 - `time_slice` — a 2-element AOS, each with `profiles_1d/psi`,
-  `global_quantities/ip`, `constraints/ip/measured`, `constraints/ip/weight`
+  `profiles_1d/{j_tor,j_phi}`, `global_quantities/ip`,
+  `global_quantities/magnetic_axis/{b_field_tor,b_field_phi}`,
+  `global_quantities/rho_tor_boundary` (DD 4.1.1 only),
+  `constraints/ip/measured`, `constraints/ip/weight`,
+  `constraints/{mse_polarisation_angle,mse_polarization_angle}[0]/measured`
 
-`--verify` reads the fixture back and checks the observed structural hash
+`--verify` reads each fixture back and checks its observed structural hash
 against `expected_hash()`.
 
 Programmatic use:
@@ -38,6 +49,8 @@ Programmatic use:
 ```python
 import equilibrium_seed as seed
 
-seed.write("imas:hdf5?path=./testdb")
-assert seed.read_and_hash("imas:hdf5?path=./testdb") == seed.expected_hash()
+for dd_version, schema in seed.SCHEMAS.items():
+    uri = f"imas:hdf5?path=./testdb/{dd_version}"
+    seed.write(uri, schema)
+    assert seed.read_and_hash(uri, schema) == seed.expected_hash(schema)
 ```
