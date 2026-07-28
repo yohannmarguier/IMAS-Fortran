@@ -38,11 +38,11 @@ pub enum PeStatus {
     /// `projection::Classification::RenamePending`.
     RenamePending = 7,
     /// A field carrying `leaf_renamed` metadata (issue #24) has a
-    /// `change_nbc_version`/`change_nbc_previous_name` history that is not
-    /// a well-formed, aligned, strictly-ascending comma-separated list --
-    /// unequal entry counts, an unparseable version, or entries out of
-    /// semantic order. The engine refuses to guess a resolution in this
-    /// case rather than fabricate a mapping from ambiguous metadata. See
+    /// `change_nbc_version`/`change_nbc_previous_name` history that is
+    /// malformed or ambiguous -- unequal entry counts, an unparseable
+    /// version, entries out of semantic order, or more than one leaf field
+    /// resolving to the same predecessor. The engine refuses to guess a
+    /// resolution in these cases rather than fabricate a mapping. See
     /// `projection::RenameHistoryError`.
     RenameHistoryMalformed = 8,
 }

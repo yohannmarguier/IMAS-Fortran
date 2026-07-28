@@ -46,8 +46,9 @@ Implemented here:
     by caller-assigned stored/working role) and selects the previous name
     associated with the first history entry whose version is strictly
     greater than the older endpoint -- history predating that gap is
-    ignored. A malformed history (misaligned comma counts, an unparseable
-    version, or non-ascending order) reports the distinct
+    ignored. A malformed or ambiguous history (misaligned comma counts, an
+    unparseable version, non-ascending order, or multiple leaf fields
+    resolving to the same predecessor) reports the distinct
     `PE_STATUS_RENAME_HISTORY_MALFORMED` rather than fabricating a mapping.
     A datatype change coinciding with a resolved rename still reports
     `PE_VERDICT_SKIP`: no semantic conversion callback is ever consulted.

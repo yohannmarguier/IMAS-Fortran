@@ -1518,6 +1518,48 @@ static int test_projection_malformed_rename_history_is_rejected_deterministicall
 }
 
 /*
+ * Issue #24 parity vector: two leaf_renamed fields selecting the same
+ * predecessor make the reverse lookup ambiguous. The engine must reject the
+ * query rather than choose whichever metadata entry it happened to visit
+ * first and fabricate a projected path.
+ */
+#define XML_AMBIGUOUS_HISTORY_OLD                                             \
+    "<IDSs><version>80.1.0</version>"                                       \
+    "<field name=\"n\" path=\"shared_old\" data_type=\"STR_0D\"/></IDSs>"
+#define XML_AMBIGUOUS_HISTORY_NEW                                             \
+    "<IDSs><version>80.2.0</version>"                                       \
+    "<field name=\"n\" path=\"first_new\" data_type=\"STR_0D\" "        \
+    "change_nbc_version=\"80.2.0\" change_nbc_description=\"leaf_renamed\" " \
+    "change_nbc_previous_name=\"shared_old\"/>"                            \
+    "<field name=\"n\" path=\"second_new\" data_type=\"STR_0D\" "       \
+    "change_nbc_version=\"80.2.0\" change_nbc_description=\"leaf_renamed\" " \
+    "change_nbc_previous_name=\"shared_old\"/></IDSs>"
+
+static int test_projection_ambiguous_leaf_predecessor_is_rejected(void) {
+    pe_map_t *map = NULL;
+    pe_operation_t *operation = NULL;
+    pe_verdict_t verdict = PE_VERDICT_SAME;
+    const char path[] = "shared_old";
+
+    CHECK(pe_map_acquire(XML_AMBIGUOUS_HISTORY_OLD, STR_LEN(XML_AMBIGUOUS_HISTORY_OLD),
+                          "80.1.0", STR_LEN("80.1.0"), XML_AMBIGUOUS_HISTORY_NEW,
+                          STR_LEN(XML_AMBIGUOUS_HISTORY_NEW), "80.2.0",
+                          STR_LEN("80.2.0"), &map) == PE_STATUS_OK,
+          "acquiring the ambiguous-predecessor pair should succeed");
+    CHECK(pe_operation_begin(map, &operation) == PE_STATUS_OK, "begin should succeed");
+    CHECK(query(map, operation, PE_DIRECTION_STORED_TO_WORKING, path, sizeof(path) - 1,
+                &verdict) == PE_STATUS_RENAME_HISTORY_MALFORMED,
+          "two leaf histories resolving to one predecessor must be rejected, not mapped");
+    CHECK(verdict == PE_VERDICT_SAME,
+          "an ambiguous predecessor result must leave out_verdict unwritten");
+    pe_operation_release(operation);
+    pe_map_release(map);
+
+    printf("project_node_query: ambiguous leaf predecessor was rejected deterministically\n");
+    return 0;
+}
+
+/*
  * Issue #24 parity vector (issue #18's "every datatype change is an
  * automatic-seam skip" rule, extended to the resolved-rename case): a
  * leaf_renamed field whose two sides also differ in data_type reports the
@@ -1757,6 +1799,7 @@ int main(void) {
     failures += test_projection_shared_fixture_rename_bearing_fields_report_rename_pending();
     failures += test_projection_successive_rename_history_resolves_across_a_multi_release_gap();
     failures += test_projection_malformed_rename_history_is_rejected_deterministically();
+    failures += test_projection_ambiguous_leaf_predecessor_is_rejected();
     failures += test_projection_datatype_change_after_rename_still_reports_skip();
     failures += test_projection_single_leaf_rename_resolves_in_both_directions();
     failures += test_projection_shared_fixture_leaf_and_successive_rename_features_resolve();

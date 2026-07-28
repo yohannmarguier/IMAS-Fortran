@@ -555,9 +555,9 @@ pub unsafe extern "C" fn pe_map_cache_identity(
 ///   resolved by issue #25 -- the distinct `PE_STATUS_RENAME_PENDING`,
 ///   `out_verdict` and `projected_path_*` left untouched;
 /// - a `leaf_renamed` field whose `change_nbc_version`/
-///   `change_nbc_previous_name` history is malformed (issue #24) -- the
-///   distinct `PE_STATUS_RENAME_HISTORY_MALFORMED`, `out_verdict` and
-///   `projected_path_*` left untouched;
+///   `change_nbc_previous_name` history is malformed or ambiguous (issue
+///   #24) -- the distinct `PE_STATUS_RENAME_HISTORY_MALFORMED`,
+///   `out_verdict` and `projected_path_*` left untouched;
 /// - a `node_path` unknown to the selected source schema -- rejected as
 ///   `PE_STATUS_INVALID_ARGUMENT`, `out_verdict` and `projected_path_*`
 ///   left untouched, since a real compiled walk only ever queries paths it

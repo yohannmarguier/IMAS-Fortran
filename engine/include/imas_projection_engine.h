@@ -101,12 +101,12 @@ typedef enum pe_status {
      * real PE_VERDICT_RENAME instead. */
     PE_STATUS_RENAME_PENDING = 7,
     /* A leaf_renamed field's change_nbc_version/change_nbc_previous_name
-     * history is not a well-formed, aligned, strictly-ascending
-     * comma-separated list -- unequal entry counts, an unparseable
-     * version, or entries out of semantic order (issue #24). The engine
-     * refuses to guess a resolution in this case rather than fabricate a
-     * mapping from ambiguous metadata; out_verdict and the projected-path
-     * output are left unwritten. */
+     * history is malformed or ambiguous -- unequal entry counts, an
+     * unparseable version, entries out of semantic order, or more than one
+     * leaf field resolving to the same predecessor (issue #24). The engine
+     * refuses to guess a resolution in these cases rather than fabricate a
+     * mapping; out_verdict and the projected-path output are left
+     * unwritten. */
     PE_STATUS_RENAME_HISTORY_MALFORMED = 8,
 } pe_status_t;
 
@@ -313,7 +313,7 @@ typedef enum pe_direction {
  *    resolved by issue #25 -- PE_STATUS_RENAME_PENDING, `out_verdict` and
  *    `projected_path_*` left untouched;
  *  - a leaf_renamed field whose change_nbc_version/change_nbc_previous_name
- *    history is malformed (issue #24) -- the distinct
+ *    history is malformed or ambiguous (issue #24) -- the distinct
  *    PE_STATUS_RENAME_HISTORY_MALFORMED, `out_verdict` and
  *    `projected_path_*` left untouched;
  *  - a `node_path` unknown to the selected source schema -- rejected as

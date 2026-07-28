@@ -66,6 +66,10 @@ pub enum RenameHistoryError {
     /// The `change_nbc_version` entries are not in strictly ascending
     /// semantic order (issue #13's ordering-validation portability rule).
     NotStrictlyAscending,
+    /// More than one `leaf_renamed` field resolves to the same predecessor
+    /// path at the requested endpoint, so choosing either would fabricate a
+    /// mapping.
+    AmbiguousPredecessor,
 }
 
 /// Metadata captured from one `<field>` element's attributes, keyed by its
@@ -335,6 +339,7 @@ impl FieldIndex {
         queried_path: &str,
         older_endpoint: DdVersion,
     ) -> Result<Option<(&str, &FieldMeta)>, RenameHistoryError> {
+        let mut resolved = None;
         for new_path in &self.leaf_tagged {
             let meta = self
                 .by_path
@@ -343,11 +348,14 @@ impl FieldIndex {
             let history = meta.rename_history()?;
             if let Some(old_path) = leaf_old_path_at(new_path, &history, older_endpoint) {
                 if old_path == queried_path {
-                    return Ok(Some((new_path.as_str(), meta)));
+                    if resolved.is_some() {
+                        return Err(RenameHistoryError::AmbiguousPredecessor);
+                    }
+                    resolved = Some((new_path.as_str(), meta));
                 }
             }
         }
-        Ok(None)
+        Ok(resolved)
     }
 }
 
@@ -939,6 +947,25 @@ mod tests {
         assert_eq!(
             classify(&old, &new, "clean_old", v("0.5.0")),
             Err(RenameHistoryError::ShapeMismatch)
+        );
+    }
+
+    #[test]
+    fn duplicate_leaf_predecessors_are_rejected_deterministically() {
+        let old = index(r#"<IDSs><field name="n" path="shared_old" data_type="STR_0D"/></IDSs>"#);
+        let new = index(
+            r#"<IDSs>
+                 <field name="n" path="first_new" data_type="STR_0D"
+                    change_nbc_version="1.0.0" change_nbc_description="leaf_renamed"
+                    change_nbc_previous_name="shared_old"/>
+                 <field name="n" path="second_new" data_type="STR_0D"
+                    change_nbc_version="1.0.0" change_nbc_description="leaf_renamed"
+                    change_nbc_previous_name="shared_old"/>
+               </IDSs>"#,
+        );
+        assert_eq!(
+            classify(&old, &new, "shared_old", v("0.5.0")),
+            Err(RenameHistoryError::AmbiguousPredecessor)
         );
     }
 }
