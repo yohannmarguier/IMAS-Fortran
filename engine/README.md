@@ -5,51 +5,70 @@ behind a narrow, stable C ABI. Full design: issue #18. This crate
 implements the skeleton scoped by issue #20, the schema-pair acquisition
 scoped by issue #21, the process-wide cache reuse scoped by issue #22, the
 bounded LRU eviction policy on that cache scoped by issue #28, the
-operation lifecycle scoped by issue #31, and the rename-metadata-free
-projection classifications scoped by issue #23 — not yet real rename
-resolution (issue #24/#25) or loss accumulation (issue #27).
+operation lifecycle scoped by issue #31, the rename-metadata-free projection
+classifications scoped by issue #23, and `leaf_renamed` resolution (including
+comma-separated successive histories) scoped by issue #24 — not yet
+`aos_renamed`/`structure_renamed` resolution (issue #25) or loss accumulation
+(issue #27).
 
-## Scope of this slice (#20, #21, #22, #28, #31, #23)
+## Scope of this slice (#20, #21, #22, #28, #31, #23, #24)
 
 Implemented here:
 - Opaque ABI handles (`pe_operation_t`, `pe_map_t`).
 - Shared status (`pe_status_t`) and projection-verdict (`pe_verdict_t`)
   vocabulary, including the `PE_STATUS_SCHEMA_IDENTITY` and
-  `PE_STATUS_CROSS_MAJOR` statuses added by #21, and the
-  `PE_STATUS_RENAME_PENDING` status added by #23.
+  `PE_STATUS_CROSS_MAJOR` statuses added by #21, the
+  `PE_STATUS_RENAME_PENDING` status added by #23, and the
+  `PE_STATUS_RENAME_HISTORY_MALFORMED` status added by #24.
 - One returned-string ownership convention (caller-provided buffer +
   required-length query), demonstrated by `pe_status_message` and reused
-  by `pe_map_version`.
+  by `pe_map_version` and, for a resolved rename's projected path, by
+  `pe_project_node_query` itself.
 - Deterministic reset/read projection-entry instrumentation
   (`pe_instrumentation_reset` / `pe_instrumentation_read`).
-- `pe_project_node_query` (#23, `src/projection.rs`): each schema in a
+- `pe_project_node_query` (#23/#24, `src/projection.rs`): each schema in a
   `pe_map_t` is indexed once by its `field/@path` attribute
   (`ParsedSchema::field_index`, built alongside XML parsing). Given an
   explicit `pe_direction_t` selecting which schema plays source for that
-  call, the query classifies `node_path` against the reciprocal index for
-  the classifications that need no rename history:
-  - unchanged (same path, matching `data_type`, no rename metadata) --
-    `PE_VERDICT_SAME`;
-  - compiled-only, stored-only (present in source, absent from target), or
-    a datatype change (present in both, differing `data_type`) -- both
-    report `PE_VERDICT_SKIP`, disambiguated only by which schema
+  call, the query classifies `node_path` against the reciprocal index:
+  - unchanged (same path, matching `data_type`, no rename metadata
+    applies) -- `PE_VERDICT_SAME`;
+  - compiled-only, stored-only (present in source, absent from target,
+    directly or after rename resolution), or a datatype change (present in
+    both, directly or via a resolved rename, with differing `data_type`)
+    -- both report `PE_VERDICT_SKIP`, disambiguated only by which schema
     `direction` selected as source;
+  - a resolved `leaf_renamed` field (#24), including a comma-separated
+    successive history -- `PE_VERDICT_RENAME`, with the projected path on
+    the other schema returned via three trailing parameters following the
+    same caller-provided-buffer convention as every other returned string.
+    Resolution orders the pair's two endpoints by semantic DD version (not
+    by caller-assigned stored/working role) and selects the previous name
+    associated with the first history entry whose version is strictly
+    greater than the older endpoint -- history predating that gap is
+    ignored. A malformed or ambiguous history (misaligned comma counts, an
+    unparseable version, non-ascending order, or multiple leaf fields
+    resolving to the same predecessor) reports the distinct
+    `PE_STATUS_RENAME_HISTORY_MALFORMED` rather than fabricating a mapping.
+    A datatype change coinciding with a resolved rename still reports
+    `PE_VERDICT_SKIP`: no semantic conversion callback is ever consulted.
   - a node whose own field, or the identically-pathed field on the other
-    schema, carries automatic rename metadata (`change_nbc_description` of
-    `leaf_renamed`, `aos_renamed`, or `structure_renamed`) -- the distinct
-    `PE_STATUS_RENAME_PENDING`, so it is never folded into a fabricated
-    added/removed/same verdict. Full resolution is issue #24 (leaf
-    renames, successive history) and issue #25 (array-of-structures,
-    plain-structure renames, cascade).
+    schema, carries `aos_renamed`/`structure_renamed` metadata -- the
+    distinct `PE_STATUS_RENAME_PENDING`, so it is never folded into a
+    fabricated added/removed/same verdict. Full resolution is issue #25
+    (array-of-structures, plain-structure renames, cascade).
   - a `node_path` unknown to the selected source schema --
     `PE_STATUS_INVALID_ARGUMENT`, since a real compiled walk only ever
     queries paths it already knows belong to its own schema.
   The contract test's shared nine-feature synthetic fixture pair (see its
   own doc comment in `tests/contract/test_contract.c`) carries every
-  feature #18 names, including the five rename-bearing ones this ticket
-  does not activate; only the four rename-metadata-free vectors above are
-  asserted here so #24/#25 remain free to give the other five real
-  verdicts without breaking this ticket's own vectors.
+  feature #18 names. Issue #23 asserted only the four rename-metadata-free
+  vectors; #24 now activates four of the remaining five rename-bearing
+  features (leaf rename, successive history, the renamed time-dependent
+  node, and the missing-parent-with-reachable-descendant node -- all
+  mechanically `leaf_renamed`), leaving the two `aos_renamed`/
+  `structure_renamed` features (plain-structure and array-of-structures
+  rename) pending issue #25.
 - `pe_map_acquire` / `pe_map_release` / `pe_map_version` (#21): given
   stored and working DD XML documents plus their claimed identities,
   parses both with `roxmltree`, resolves each schema's DD version (the
@@ -102,12 +121,17 @@ Implemented here:
 - A C contract test (`tests/contract/test_contract.c`), registered with
   CTest, that drives every capability above through the header only.
 
-Deliberately **not** here (see the full #18 spec and issues #24, #25,
-#26/#27): real rename resolution (leaf, successive history, array-of-
-structures, plain-structure cascade, missing-subtree collapsing), context-
-path/timebase-path substitution, loss accumulation and enumeration,
-production cache sizing/throughput tuning (issue #32), Fortran types,
-IMAS-Core, backend selection, or a Python runtime dependency.
+Deliberately **not** here (see the full #18 spec and issues #25, #26/#27):
+`aos_renamed`/`structure_renamed` resolution (array-of-structures,
+plain-structure cascade, missing-subtree collapsing); a *distinct*
+context-path vs. timebase-path substitution pair for any rename kind --
+issue #24's resolved leaf rename returns exactly one projected path, which
+happens to be sufficient for the shared fixture's own renamed time-dependent
+node (feature 8) only because that field's timebase field is itself unrenamed
+on both sides, not because this ABI has a separate timebase-path substitution
+mechanism; loss accumulation and enumeration; production cache
+sizing/throughput tuning (issue #32); Fortran types; IMAS-Core, backend
+selection, or a Python runtime dependency.
 
 ## Operation/map ordering (#31)
 

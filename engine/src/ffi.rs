@@ -530,24 +530,38 @@ pub unsafe extern "C" fn pe_map_cache_identity(
 }
 
 /// Projects `node_path`, read from whichever schema `direction` selects as
-/// source, against the other schema in `map` (issue #23). Records one
+/// source, against the other schema in `map` (issues #23, #24). Records one
 /// projection-entry instrumentation tick whenever every handle/argument
 /// validation below passes, regardless of the classification outcome.
 ///
 /// Reports through `out_verdict`/return status:
-/// - unchanged (present in both, matching `data_type`, no rename metadata)
-///   -- `PE_STATUS_OK`, `PE_VERDICT_SAME`;
+/// - unchanged (present in both, matching `data_type`, no rename metadata
+///   applies) -- `PE_STATUS_OK`, `PE_VERDICT_SAME`, `projected_path_*`
+///   left untouched (no replacement string is needed);
 /// - compiled-only or stored-only (present in source, absent from target,
-///   no rename metadata), or a datatype change (present in both, differing
-///   `data_type`, no rename metadata) -- `PE_STATUS_OK`, `PE_VERDICT_SKIP`;
+///   no rename metadata resolves to it), or a datatype change (present in
+///   both, directly or via a resolved rename, with differing `data_type`)
+///   -- `PE_STATUS_OK`, `PE_VERDICT_SKIP`, `projected_path_*` left
+///   untouched;
+/// - a resolved `leaf_renamed` field (issue #24) -- `PE_STATUS_OK`,
+///   `PE_VERDICT_RENAME`, with the projected path on the other schema
+///   written to `projected_path_buffer` following the buffer convention
+///   documented on [`write_str_to_buffer`] (an undersized buffer reports
+///   the distinct `PE_STATUS_BUFFER_TOO_SMALL`, with `out_verdict` still
+///   written since the classification itself is not in question, only the
+///   buffer size);
 /// - a node whose own field, or the identically-pathed field on the other
-///   side, carries automatic rename metadata not yet resolved by issue
-///   #24/#25 -- the distinct `PE_STATUS_RENAME_PENDING`, `out_verdict` left
-///   unwritten;
+///   side, carries `aos_renamed`/`structure_renamed` metadata not yet
+///   resolved by issue #25 -- the distinct `PE_STATUS_RENAME_PENDING`,
+///   `out_verdict` and `projected_path_*` left untouched;
+/// - a `leaf_renamed` field whose `change_nbc_version`/
+///   `change_nbc_previous_name` history is malformed or ambiguous (issue
+///   #24) -- the distinct `PE_STATUS_RENAME_HISTORY_MALFORMED`,
+///   `out_verdict` and `projected_path_*` left untouched;
 /// - a `node_path` unknown to the selected source schema -- rejected as
-///   `PE_STATUS_INVALID_ARGUMENT`, `out_verdict` left unwritten, since a
-///   real compiled walk only ever queries paths it already knows belong to
-///   its own schema.
+///   `PE_STATUS_INVALID_ARGUMENT`, `out_verdict` and `projected_path_*`
+///   left untouched, since a real compiled walk only ever queries paths it
+///   already knows belong to its own schema.
 ///
 /// `map` must be the same currently-live handle passed to
 /// [`pe_operation_begin`] for `operation`; `operation` must also be live.
@@ -563,7 +577,10 @@ pub unsafe extern "C" fn pe_map_cache_identity(
 /// # Safety
 /// `node_path` must be either null or a valid pointer to at least
 /// `node_path_len` readable bytes. `out_verdict` must be either null or a
-/// valid pointer to one writable `PeVerdict`.
+/// valid pointer to one writable `PeVerdict`. `projected_path_buffer` must
+/// be either null or a valid pointer to at least `projected_path_buffer_len`
+/// writable bytes. `projected_path_required_len` must be either null or a
+/// valid pointer to one writable `usize`.
 #[no_mangle]
 pub unsafe extern "C" fn pe_project_node_query(
     map: *const Map,
@@ -572,6 +589,9 @@ pub unsafe extern "C" fn pe_project_node_query(
     node_path: *const c_char,
     node_path_len: usize,
     out_verdict: *mut PeVerdict,
+    projected_path_buffer: *mut c_char,
+    projected_path_buffer_len: usize,
+    projected_path_required_len: *mut usize,
 ) -> PeStatus {
     guard(|| {
         if map.is_null() {
@@ -604,19 +624,33 @@ pub unsafe extern "C" fn pe_project_node_query(
         }
 
         match crate::project_node(&map, direction, node_path) {
-            None => PeStatus::InvalidArgument,
-            Some(Classification::RenamePending) => PeStatus::RenamePending,
-            Some(Classification::Same) => {
+            Err(_) => PeStatus::RenameHistoryMalformed,
+            Ok(None) => PeStatus::InvalidArgument,
+            Ok(Some(Classification::RenamePending)) => PeStatus::RenamePending,
+            Ok(Some(Classification::Same)) => {
                 unsafe {
                     *out_verdict = PeVerdict::Same;
                 }
                 PeStatus::Ok
             }
-            Some(Classification::SourceOnly | Classification::DatatypeChanged) => {
+            Ok(Some(Classification::SourceOnly | Classification::DatatypeChanged)) => {
                 unsafe {
                     *out_verdict = PeVerdict::Skip;
                 }
                 PeStatus::Ok
+            }
+            Ok(Some(Classification::Renamed(projected_path))) => {
+                unsafe {
+                    *out_verdict = PeVerdict::Rename;
+                }
+                unsafe {
+                    write_str_to_buffer(
+                        &projected_path,
+                        projected_path_buffer,
+                        projected_path_buffer_len,
+                        projected_path_required_len,
+                    )
+                }
             }
         }
     })

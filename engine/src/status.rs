@@ -27,16 +27,24 @@ pub enum PeStatus {
     /// not pair". Introduced by issue #21.
     CrossMajor = 6,
     /// The queried node's own field, or the identically-pathed field on
-    /// the other schema, carries automatic rename metadata
-    /// (`change_nbc_description` of `leaf_renamed`, `aos_renamed`, or
-    /// `structure_renamed`). Resolving that metadata into a real verdict
-    /// is issue #24 (leaf renames, successive history) and issue #25
-    /// (array-of-structures/plain-structure renames); until each lands,
-    /// this distinct status is the explicit "awaiting rename resolution"
-    /// state so such a node is never reported as a fabricated `same`,
-    /// `skip`, or `rename` verdict. Introduced by issue #23. See
+    /// the other schema, carries `aos_renamed` or `structure_renamed`
+    /// metadata (`change_nbc_description`). Resolving that metadata into a
+    /// real verdict is issue #25 (array-of-structures/plain-structure
+    /// renames); until it lands, this distinct status is the explicit
+    /// "awaiting rename resolution" state so such a node is never reported
+    /// as a fabricated `same`, `skip`, or `rename` verdict. Introduced by
+    /// issue #23; no longer reported for `leaf_renamed` metadata, which
+    /// issue #24 resolves into a real verdict instead. See
     /// `projection::Classification::RenamePending`.
     RenamePending = 7,
+    /// A field carrying `leaf_renamed` metadata (issue #24) has a
+    /// `change_nbc_version`/`change_nbc_previous_name` history that is
+    /// malformed or ambiguous -- unequal entry counts, an unparseable
+    /// version, entries out of semantic order, or more than one leaf field
+    /// resolving to the same predecessor. The engine refuses to guess a
+    /// resolution in these cases rather than fabricate a mapping. See
+    /// `projection::RenameHistoryError`.
+    RenameHistoryMalformed = 8,
 }
 
 impl PeStatus {
@@ -53,6 +61,7 @@ impl PeStatus {
             5 => Some(PeStatus::SchemaIdentity),
             6 => Some(PeStatus::CrossMajor),
             7 => Some(PeStatus::RenamePending),
+            8 => Some(PeStatus::RenameHistoryMalformed),
             _ => None,
         }
     }
@@ -70,6 +79,7 @@ impl PeStatus {
             PeStatus::SchemaIdentity => "schema identity invalid",
             PeStatus::CrossMajor => "cross-major pair rejected",
             PeStatus::RenamePending => "rename resolution not yet supported",
+            PeStatus::RenameHistoryMalformed => "rename history malformed",
         }
     }
 }
@@ -97,6 +107,10 @@ mod tests {
         assert_eq!(PeStatus::from_raw(5), Some(PeStatus::SchemaIdentity));
         assert_eq!(PeStatus::from_raw(6), Some(PeStatus::CrossMajor));
         assert_eq!(PeStatus::from_raw(7), Some(PeStatus::RenamePending));
+        assert_eq!(
+            PeStatus::from_raw(8),
+            Some(PeStatus::RenameHistoryMalformed)
+        );
     }
 
     #[test]
@@ -128,6 +142,7 @@ mod tests {
             PeStatus::SchemaIdentity,
             PeStatus::CrossMajor,
             PeStatus::RenamePending,
+            PeStatus::RenameHistoryMalformed,
         ] {
             let lower = status.message().to_lowercase();
             for word in FORBIDDEN {
