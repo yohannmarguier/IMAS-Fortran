@@ -18,7 +18,7 @@ program play_magnetics
      magnetics_out%time(i) = 0.1 * i
   end do
 
-  print *, 'Putting magnetics IDS...'
+  print *, 'Putting magnetics IDS...'can
   call ids_put(idx, 'magnetics', magnetics_out)
 
   print *, 'Getting magnetics IDS back...'

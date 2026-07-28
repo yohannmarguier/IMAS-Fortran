@@ -27,6 +27,12 @@ cd playground
 ./bin/play_magnetics
 ```
 
+`play_equilibrium.f90` reads the checked-in DD 4.1.1 equilibrium fixture
+(`imas-python-fixtures/fixtures/dd-4.1.1`, HDF5 backend) and prints every field
+`equilibrium_seed.py` writes — it needs an install built with `DD_VERSION=4.1.1`
+and `AL_BACKEND_HDF5=ON`, and must be run from `playground/` since the fixture
+path is relative.
+
 Add new `.f90` files here and build them the same way. `ids_routines` is the
 main module to `use`; see `examples/` at the repo root for more usage patterns
 (put/get, slices, validation, identifiers, ...).
