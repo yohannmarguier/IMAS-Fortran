@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Grammar for IMAS Data Dictionary conversion maps.
+
+  A map describes the relationship between one IDS as it exists in two DD
+  versions. It is direction-neutral: the two versions are named `left` and
+  `right`, never `from`/`to`, so a single document drives conversion both ways.
+
+  This XSD checks grammar, vocabularies and attribute uniqueness only.
+  Semantic rules that XSD 1.0 cannot express (which attributes are required
+  for which `rel`, glob overlap, coverage correctness, inventory completeness)
+  are enforced by validate.py.
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           elementFormDefault="unqualified">
+
+  <!-- ==================== vocabularies ==================== -->
+
+  <!--
+    Structural relationship between a left path and a right path.
+    Stated without direction: the engine derives the action from rel+direction.
+      identical   same path both sides
+      renamed     1:1 path change
+      moved       subtree relocated to a different parent
+      merged      n left paths -> 1 right path (needs precedence)
+      split       1 left path -> n right paths
+      retyped     same path, different data type / container shape
+      redefined   same path, but the value means something different
+      left_only   exists in left version only
+      right_only  exists in right version only
+  -->
+  <xs:simpleType name="relType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="identical"/>
+      <xs:enumeration value="renamed"/>
+      <xs:enumeration value="moved"/>
+      <xs:enumeration value="merged"/>
+      <xs:enumeration value="split"/>
+      <xs:enumeration value="retyped"/>
+      <xs:enumeration value="redefined"/>
+      <xs:enumeration value="left_only"/>
+      <xs:enumeration value="right_only"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!--
+    How much the engine can trust the conversion, per direction.
+      exact          value survives unchanged (or via an exactly invertible op)
+      approximate    value survives but is numerically degraded
+      lossy          some data is discarded; conversion proceeds with a warning
+      unmappable     conversion cannot be performed; engine must report and skip
+  -->
+  <xs:simpleType name="fidelityType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="exact"/>
+      <xs:enumeration value="approximate"/>
+      <xs:enumeration value="lossy"/>
+      <xs:enumeration value="unmappable"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- Where a rule came from, so derived rules can be regenerated safely. -->
+  <xs:simpleType name="provenanceType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="derived"/>   <!-- computed from DD path sets -->
+      <xs:enumeration value="mcp"/>       <!-- taken from imas-dd MCP output -->
+      <xs:enumeration value="manual"/>    <!-- hand-authored judgement -->
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- IDS-relative path, slash separated, no leading or trailing slash.
+       May be a glob whose single leading `**/` binds the same prefix on both
+       sides of the rule. -->
+  <xs:simpleType name="pathType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="(\*\*/)?[A-Za-z0-9_]+(/[A-Za-z0-9_]+)*"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="yesNo">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="yes"/>
+      <xs:enumeration value="no"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- ==================== shared building blocks ==================== -->
+
+  <xs:complexType name="fidelityElem">
+    <xs:attribute name="forward" type="fidelityType" use="required"/>
+    <xs:attribute name="reverse" type="fidelityType" use="required"/>
+    <xs:attribute name="reason" type="xs:string"/>
+  </xs:complexType>
+
+  <!-- One contributing left path of a `merged` rule, or one produced right
+       path of a `split` rule. Lower precedence number wins. -->
+  <xs:complexType name="fromElem">
+    <xs:attribute name="left" type="pathType"/>
+    <xs:attribute name="right" type="pathType"/>
+    <xs:attribute name="precedence" type="xs:positiveInteger"/>
+    <xs:attribute name="deprecated" type="yesNo"/>
+    <xs:attribute name="note" type="xs:string"/>
+  </xs:complexType>
+
+  <xs:complexType name="ruleType">
+    <xs:sequence>
+      <!-- contributing / produced paths for merged and split -->
+      <xs:element name="from" type="fromElem" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="fidelity" type="fidelityElem"/>
+      <xs:element name="note" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+
+    <xs:attribute name="id" type="xs:ID"/>
+    <xs:attribute name="rel" type="relType" use="required"/>
+
+    <!-- explicit paths -->
+    <xs:attribute name="left" type="pathType"/>
+    <xs:attribute name="right" type="pathType"/>
+
+    <!-- glob form: `**/` binds the same prefix on both sides.
+         Matches whole path segments, e.g. `**/j_tor` -> `**/j_phi`. -->
+    <xs:attribute name="left-glob" type="pathType"/>
+    <xs:attribute name="right-glob" type="pathType"/>
+
+    <!-- suffix form: matches any path whose FINAL SEGMENT ends with this text.
+         Needed where DD4 changed a leaf-name suffix rather than a segment,
+         e.g. `chi_squared_error_index`. -->
+    <xs:attribute name="left-suffix" type="xs:string"/>
+    <xs:attribute name="right-suffix" type="xs:string"/>
+
+    <!-- claim the named path and all of its descendants -->
+    <xs:attribute name="subtree" type="yesNo"/>
+
+    <!-- retyped: container shape change, e.g. "int_1d:struct_array" -->
+    <xs:attribute name="shape" type="xs:string"/>
+    <!-- retyped: child element carrying the value on the struct side -->
+    <xs:attribute name="key" type="xs:string"/>
+
+    <xs:attribute name="reason" type="xs:string"/>
+    <xs:attribute name="source" type="provenanceType"/>
+
+    <!-- set when this rule encodes a human judgement that should be reviewed -->
+    <xs:attribute name="decision" type="yesNo"/>
+  </xs:complexType>
+
+  <!-- ==================== transforms ==================== -->
+
+  <!--
+    Value transforms, kept separate from structural rules because the two are
+    orthogonal: a value can be relocated, rescaled, both, or neither. Keying
+    transforms on the RIGHT path means a structural rule and a transform never
+    compete to claim the same path.
+  -->
+  <xs:complexType name="flipElem">
+    <xs:attribute name="path" type="pathType" use="required"/>
+    <xs:attribute name="note" type="xs:string"/>
+  </xs:complexType>
+
+  <xs:complexType name="cocosElem">
+    <xs:sequence>
+      <!-- multiply by -1; exactly invertible in IEEE-754 (sign bit only) -->
+      <xs:element name="flip" type="flipElem" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="from" type="xs:integer" use="required"/>
+    <xs:attribute name="to" type="xs:integer" use="required"/>
+  </xs:complexType>
+
+  <!-- Multiplicative rescale. Powers of ten do NOT round-trip exactly in
+       binary floating point, so such rules must declare approximate. -->
+  <xs:complexType name="scaleElem">
+    <xs:sequence>
+      <xs:element name="fidelity" type="fidelityElem"/>
+    </xs:sequence>
+    <xs:attribute name="path" type="pathType" use="required"/>
+    <xs:attribute name="factor" type="xs:double" use="required"/>
+    <xs:attribute name="left-units" type="xs:string"/>
+    <xs:attribute name="right-units" type="xs:string"/>
+  </xs:complexType>
+
+  <!-- Same path, incomparable value: no factor exists. -->
+  <xs:complexType name="redefineElem">
+    <xs:sequence>
+      <xs:element name="fidelity" type="fidelityElem"/>
+      <xs:element name="note" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute name="path" type="pathType"/>
+    <xs:attribute name="glob" type="pathType"/>
+    <xs:attribute name="left-units" type="xs:string"/>
+    <xs:attribute name="right-units" type="xs:string"/>
+  </xs:complexType>
+
+  <xs:complexType name="transformsType">
+    <xs:sequence>
+      <xs:element name="cocos" type="cocosElem" minOccurs="0"/>
+      <xs:element name="scale" type="scaleElem" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="redefine" type="redefineElem" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- ==================== document structure ==================== -->
+
+  <xs:complexType name="sideType">
+    <xs:attribute name="id" use="required">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="left"/>
+          <xs:enumeration value="right"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="dd" type="xs:string" use="required"/>
+    <xs:attribute name="cocos" type="xs:integer"/>
+    <!-- path list for this side, used by validate.py to prove full coverage -->
+    <xs:attribute name="inventory" type="xs:string"/>
+  </xs:complexType>
+
+  <!-- Generated by validate.py: worst fidelity within a subtree, per
+       direction. Never hand-edit; it is recomputed and compared on every run. -->
+  <xs:complexType name="coverageType">
+    <xs:attribute name="scope" type="xs:string" use="required"/>
+    <xs:attribute name="forward" type="fidelityType" use="required"/>
+    <xs:attribute name="reverse" type="fidelityType" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="includeType">
+    <xs:attribute name="href" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <!-- Fallback for paths present in both inventories that no rule claims. -->
+  <xs:complexType name="defaultType">
+    <xs:attribute name="rel" type="relType" use="required"/>
+  </xs:complexType>
+
+  <xs:element name="ids-map">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="side" type="sideType" minOccurs="2" maxOccurs="2"/>
+        <xs:element name="include" type="includeType" minOccurs="0" maxOccurs="unbounded"/>
+        <xs:element name="default" type="defaultType" minOccurs="0"/>
+        <xs:element name="coverage" type="coverageType" minOccurs="0" maxOccurs="unbounded"/>
+        <xs:element name="rules" minOccurs="0">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="rule" type="ruleType" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="transforms" type="transformsType" minOccurs="0"/>
+      </xs:sequence>
+      <xs:attribute name="ids" type="xs:string" use="required"/>
+      <xs:attribute name="format-version" type="xs:string" use="required"/>
+    </xs:complexType>
+
+    <!-- A path may be claimed at most once per side. This is what stops the
+         same COCOS sign flip being applied twice. -->
+    <xs:unique name="uniqueLeft">
+      <xs:selector xpath="rules/rule"/>
+      <xs:field xpath="@left"/>
+    </xs:unique>
+    <xs:unique name="uniqueRight">
+      <xs:selector xpath="rules/rule"/>
+      <xs:field xpath="@right"/>
+    </xs:unique>
+    <xs:unique name="uniqueFlip">
+      <xs:selector xpath="transforms/cocos/flip"/>
+      <xs:field xpath="@path"/>
+    </xs:unique>
+  </xs:element>
+
+  <!-- Reusable rule set, pulled in by <include>. Holds rules that hold across
+       many IDSs so they are written once, not copied 84 times. -->
+  <xs:element name="rule-set">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="rule" type="ruleType" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+      <xs:attribute name="name" type="xs:string" use="required"/>
+      <xs:attribute name="applies-to" type="xs:string"/>
+      <xs:attribute name="format-version" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+
+</xs:schema>

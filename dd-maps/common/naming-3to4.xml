@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Systematic DD 3.x -> 4.x naming changes that hold across many IDSs.
+
+  Two families:
+
+  1. Toroidal-component renaming: `_tor` -> `_phi` on field and current
+     components, aligning DD names with the COCOS coordinate labels.
+
+     IMPORTANT: DD 3.39.0 is a TRANSITIONAL version that ships the old and the
+     new name side by side, with the old one marked obsolescent. So these are
+     not renames in the 3.39.0 -> 4.1.1 step — both `j_tor` and `j_phi` exist
+     on the left, and only `j_phi` exists on the right. That makes them MERGES
+     with a precedence, not renames, and the merge is lossy forward whenever
+     both left paths are populated with different values.
+
+     Because the surviving name already exists on both sides, these merges are
+     declared per-IDS (they need the target path spelled out) rather than here.
+     This file carries only the cases where the old name is the ONLY name on the
+     left, which are true renames.
+
+  2. British -> American spelling, applied uniformly by DD4.
+-->
+<rule-set name="naming-3to4" applies-to="*" format-version="1">
+
+  <!-- ========== spelling ========== -->
+
+  <rule id="spell-magnetisation" rel="renamed"
+        left-glob="**/magnetisation_r" right-glob="**/magnetization_r"
+        subtree="yes" source="derived" reason="spelling_en_to_us">
+    <fidelity forward="exact" reverse="exact"/>
+  </rule>
+
+  <rule id="spell-magnetisation-z" rel="renamed"
+        left-glob="**/magnetisation_z" right-glob="**/magnetization_z"
+        subtree="yes" source="derived" reason="spelling_en_to_us">
+    <fidelity forward="exact" reverse="exact"/>
+  </rule>
+
+  <rule id="spell-polarisation" rel="renamed"
+        left-glob="**/mse_polarisation_angle" right-glob="**/mse_polarization_angle"
+        subtree="yes" source="derived" reason="spelling_en_to_us">
+    <fidelity forward="exact" reverse="exact"/>
+  </rule>
+
+  <!-- ========== component renaming ========== -->
+
+  <rule id="rename-bpol-probe" rel="renamed"
+        left-glob="**/bpol_probe" right-glob="**/b_field_pol_probe"
+        subtree="yes" source="derived" reason="dd4_field_naming">
+    <fidelity forward="exact" reverse="exact"/>
+    <note>Abbreviation expanded; no DD3 counterpart under the new name.</note>
+  </rule>
+
+</rule-set>

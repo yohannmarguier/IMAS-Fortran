@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  DD 3.x -> 4.x dropped the per-node error metadata triplet.
+
+  In equilibrium alone this accounts for 630 removed paths; across all 84 IDSs
+  it is the single largest source of path removals in the 3->4 transition. It is
+  one decision, so it is one rule set, included by every per-IDS map rather
+  than restated in each.
+
+  NOTE: the path inventories under ../inventory/ are produced by the imas-dd MCP
+  server, which excludes error metadata from its listings. These rules therefore
+  cannot be checked against the inventories by validate.py — they are carried
+  here for the conversion engine, which does see those nodes in real data.
+-->
+<rule-set name="error-model-3to4" applies-to="*" format-version="1">
+
+  <rule id="err-index" rel="left_only" left-suffix="_error_index" source="mcp"
+        reason="dd4_error_model">
+    <fidelity forward="lossy" reverse="unmappable"
+              reason="DD4 has no per-node error index; nothing to rebuild it from"/>
+    <note>Matches any leaf whose name ends with the DD3 error-triplet suffix.</note>
+  </rule>
+
+  <rule id="err-upper" rel="left_only" left-suffix="_error_upper" source="mcp"
+        reason="dd4_error_model">
+    <fidelity forward="lossy" reverse="unmappable"/>
+  </rule>
+
+  <rule id="err-lower" rel="left_only" left-suffix="_error_lower" source="mcp"
+        reason="dd4_error_model">
+    <fidelity forward="lossy" reverse="unmappable"/>
+  </rule>
+
+</rule-set>
