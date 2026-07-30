@@ -94,6 +94,40 @@ Current state for equilibrium: 53 rules (7 from includes) covering 585 left and
 455 right paths, 32 COCOS sign flips, 4 redefinitions. Two rules are flagged
 `decision="yes"` and need a physicist — `validate.py` prints them.
 
+### A path existing in only one version is not the same as `left_only`
+
+This trips people up, so `validate.py --list-rules` reports it explicitly. Of the
+186 paths present only in 3.39.0:
+
+| Explained by | Count |
+|---|---:|
+| `left_only` — genuinely no DD4 counterpart | 110 |
+| `merged` — obsolescent alias folded into its modern twin | 35 |
+| `renamed` — same quantity, new spelling | 29 |
+| `moved` — relocated into `boundary` | 12 |
+
+Only 59% are real removals. A set difference says a path *disappeared*; the `rel`
+says *why*, which is the only thing an engine can act on. Reserving
+`left_only`/`right_only` for paths with genuinely no counterpart is what stops
+this map from degenerating into the flat `path_removed` list that makes the
+imas-dd migration guide unusable.
+
+### Rules are not paths
+
+Three different `left_only` counts are all correct, so `validate.py` now labels
+each one:
+
+| Count | What it is |
+|---:|---|
+| 23 | `rel="left_only"` occurrences in `equilibrium/3.39.0--4.1.1.xml` |
+| 26 | `left_only` **rules** after `<include>` resolution (+3 from `error-model-3to4.xml`) |
+| 110 | v3 inventory **paths** those rules claim |
+
+`subtree="yes"` is what separates the last two: `drop-timeslice-ggd-grid` claims
+38 paths on its own, `drop-boundary-separatrix` 32,
+`drop-boundary-secondary-separatrix` 12. Sixteen rules claim exactly one path,
+and the three error-model rules claim none (see the inventory limitation above).
+
 ## What the imas-dd MCP server does and does not give you
 
 The map was derived from the MCP path sets, not from its migration guide. The
@@ -123,10 +157,47 @@ ships old and new names side by side** (`j_tor` *and* `j_phi`, `b_tor` *and*
 not renames in this step — they are **merges**, lossy forward whenever both DD3
 names hold different values.
 
-The inventories under `inventory/` come from the MCP server, which excludes error
-metadata and `ids_properties`/`code` subtrees. The `error-model-3to4.xml` rules
-therefore cannot be checked against them; they are carried for the engine, which
-does see those nodes in real data.
+## Known limitation: the inventories are incomplete
+
+> **The inventories under `inventory/` under-report the DD by roughly 12%, so
+> the coverage guarantee currently holds against the inventory, not against the
+> Data Dictionary.** Regenerating them from `IDSDef.xml` is the first thing to
+> fix.
+
+They were transcribed from `list_dd_paths` output, which omits more than it
+documents. Cross-checking the 4.1.1 inventory against this repo's own
+`equilibrium.xml` (DD 4.1.2.dev22) shows all 455 transcribed paths are real —
+nothing fabricated — but the DD has 520 comparable paths. The 65 missing:
+
+| Omitted | Count | Example |
+|---|---:|---|
+| `identifier/name` | 12 | `grids_ggd/grid/identifier/name` |
+| `identifier/description` | 12 | `grids_ggd/grid/identifier/description` |
+| `constraints/*/sigma` | 20 | `time_slice/constraints/ip/sigma` |
+| `constraints/*/source` | 20 | `time_slice/constraints/ip/source` |
+| other | 1 | `time_slice/profiles_1d/triangularity` |
+
+`list_dd_paths` reports `identifier/index` but not its sibling `name` and
+`description` leaves, and drops `sigma`/`source` on constraint structures. It is
+internally inconsistent about this: the migration guide for the same range *does*
+mention `constraints/j_tor/source`. The single `profiles_1d/triangularity` may
+instead be a genuine 4.1.1 → 4.1.2.dev22 addition; that cannot be distinguished
+without the 4.1.1 DD itself.
+
+Consequence: a conversion engine driven by this map would silently skip those
+paths. `sigma` in particular is real uncertainty data.
+
+The fix is to generate inventories from `IDSDef.xml`, which is the source the
+engine will read anyway — every `<field>` element carries a `path` attribute, so
+extraction is a few lines. It needs the 3.39.0 and 4.1.1 DD checkouts; only
+4.1.2.dev22 is present in this repo today. Apply the same two filters used here
+(`_error_(index|upper|lower)$`, and the `ids_properties`/`code` subtrees) to keep
+the `<default rel="identical"/>` semantics unchanged, or drop the filters and add
+explicit rules for those subtrees.
+
+Separately, `error-model-3to4.xml`'s rules cannot be checked against the
+inventories at all, since error metadata is filtered out. They are carried for the
+engine, which does see those nodes in real data.
 
 ## Scaling
 

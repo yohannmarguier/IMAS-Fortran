@@ -107,6 +107,69 @@ class Rule:
         return self._match(path, self.right, self.right_glob, self.right_suffix,
                            self.from_right)
 
+    # -- target resolution ------------------------------------------------
+
+    def _anchor(self, path, explicit, glob, extra):
+        """Split `path` into (matched_anchor, remainder) for this rule.
+
+        The anchor is the part the rule names; the remainder is everything
+        below it. Reattaching the remainder to the other side is how one rule
+        converts a whole family of paths.
+        """
+        for cand in list(extra) + ([explicit] if explicit else []):
+            if path == cand:
+                return cand, ""
+            if self.subtree and path.startswith(cand + "/"):
+                return cand, path[len(cand):]
+        if glob and glob.startswith("**/"):
+            tail = glob[3:]
+            if path == tail:
+                return "", ""
+            if path.endswith("/" + tail):
+                return path[:-len(tail) - 1], ""
+            if self.subtree:
+                needle = "/" + tail + "/"
+                idx = path.find(needle)
+                if idx != -1:
+                    return path[:idx], path[idx + 1 + len(tail):]
+                if path.startswith(tail + "/"):
+                    return "", path[len(tail):]
+        return None, None
+
+    def targets(self, path, direction):
+        """Where `path` goes in the other version. Returns a list, because
+        `split` produces several. Empty list means the value is dropped."""
+        if direction == "forward":
+            anchor, rest = self._anchor(path, self.left, self.left_glob,
+                                        self.from_left)
+            named, named_glob, alts = self.right, self.right_glob, self.from_right
+        else:
+            anchor, rest = self._anchor(path, self.right, self.right_glob,
+                                        self.from_right)
+            named, named_glob, alts = self.left, self.left_glob, self.from_left
+
+        if anchor is None:                       # suffix rules only
+            return [path] if self.rel == "identical" else []
+
+        drop = ("left_only" if direction == "forward" else "right_only")
+        if self.rel == drop:
+            return []
+
+        def build(target_anchor):
+            if named_glob and named_glob.startswith("**/"):
+                tail = named_glob[3:]
+                return (anchor + "/" + tail if anchor else tail) + rest
+            return (target_anchor or "") + rest
+
+        if self.rel == "split" and direction == "forward":
+            return [build(a) for a in alts]
+        if self.rel == "split" and direction == "reverse":
+            return [build(named)]
+        if self.rel == "merged" and direction == "reverse":
+            # only the highest-precedence source is written back
+            return [build(alts[0] if alts else named)]
+        return [build(named)]
+
 
 def load_rules(map_path: Path):
     """Parse the map plus every <include>, returning (root, tree, rules)."""
@@ -190,6 +253,16 @@ def main() -> int:
     ap.add_argument("map", type=Path)
     ap.add_argument("--write-coverage", action="store_true",
                     help="rewrite the generated <coverage> elements in place")
+    ap.add_argument("--list-rules", action="store_true",
+                    help="list every rule with the number of paths it claims, "
+                         "and explain each version-exclusive path by its rel")
+    ap.add_argument("--explain", metavar="PATH",
+                    help="show the full engine lookup for one IDS-relative "
+                         "path: matching rule, target path(s), transform and "
+                         "fidelity, in both directions")
+    ap.add_argument("--expand", metavar="RULE_ID",
+                    help="show every path a single rule converts, with the "
+                         "target it produces")
     args = ap.parse_args()
 
     map_path = args.map.resolve()
@@ -213,8 +286,18 @@ def main() -> int:
     print(f"   in both: {len(left_set & right_set)}  "
           f"left-only: {len(left_set - right_set)}  "
           f"right-only: {len(right_set - left_set)}")
-    print(f"-- rules: {len(rules)} "
-          f"({sum(1 for r in rules if r.origin != map_path.name)} from includes)")
+    n_inc = sum(1 for r in rules if r.origin != map_path.name)
+    print(f"-- rules: {len(rules)} ({len(rules) - n_inc} in this file, "
+          f"{n_inc} pulled in by <include>)")
+    by_rel = {}
+    for r in rules:
+        by_rel.setdefault(r.rel, []).append(r)
+    # Rule count, NOT path count: subtree="yes" expands one rule into a family,
+    # so these numbers are deliberately far smaller than the path totals below.
+    for rel in sorted(by_rel, key=lambda k: -len(by_rel[k])):
+        own = sum(1 for r in by_rel[rel] if r.origin == map_path.name)
+        extra = "" if own == len(by_rel[rel]) else f" ({own} here + {len(by_rel[rel]) - own} included)"
+        print(f"   {len(by_rel[rel]):3d} {rel} rules{extra}")
 
     # 2. coverage ------------------------------------------------------
     print("-- coverage")
@@ -270,6 +353,103 @@ def main() -> int:
                   f"multiple rules - precedence is undefined:")
             for p, ids in amb[:15]:
                 print(f"    {p}  <- {', '.join(ids)}")
+
+    flip_set = {f.get("path") for f in root.findall("transforms/cocos/flip")}
+    redefine_set = {rd.get("path") or rd.get("glob")
+                    for rd in root.findall("transforms/redefine")}
+
+    def explain(path, direction):
+        """One engine lookup, printed. Mirrors what a conversion engine does."""
+        claims = lclaims if direction == "forward" else rclaims
+        inv = left_set if direction == "forward" else right_set
+        side = (left_side, right_side) if direction == "forward" \
+            else (right_side, left_side)
+        print(f"  {direction}: {side[0].get('dd')} -> {side[1].get('dd')}")
+        if path not in inv:
+            print(f"    path not in the {side[0].get('dd')} inventory")
+            return
+        rule = claims.get(path)
+        if rule is None:
+            print(f"    rule      <default rel=\"{default_rel}\">")
+            print(f"    target    {path}")
+            fid = "exact"
+        else:
+            anchor, rest = rule._anchor(
+                path, rule.left if direction == "forward" else rule.right,
+                rule.left_glob if direction == "forward" else rule.right_glob,
+                rule.from_left if direction == "forward" else rule.from_right)
+            print(f"    rule      [{rule.id}] rel=\"{rule.rel}\""
+                  + (" subtree" if rule.subtree else ""))
+            if anchor is not None and rest:
+                print(f"    anchor    {anchor or '(glob prefix)'}"
+                      f"   + remainder {rest}")
+            tgts = rule.targets(path, direction)
+            if not tgts:
+                print(f"    target    (none - value is dropped)")
+            for t in tgts:
+                print(f"    target    {t}")
+            fid = rule.forward if direction == "forward" else rule.reverse
+        tgts = [path] if rule is None else rule.targets(path, direction)
+        for t in tgts:
+            key = t if direction == "forward" else path
+            if key in flip_set:
+                print(f"    transform x -1  (COCOS 11->17, on {key})")
+            if key in redefine_set:
+                print(f"    transform REDEFINED units, no factor exists")
+                fid = "unmappable"
+        verdict = {"exact": "copy it",
+                   "approximate": "copy, warn about precision",
+                   "lossy": "convert, but warn - data is discarded",
+                   "unmappable": "REFUSE - engine must report and skip"}
+        print(f"    fidelity  {fid}  -> {verdict.get(fid, '?')}")
+
+    if args.explain:
+        print(f"-- lookup for {args.explain}")
+        explain(args.explain, "forward")
+        explain(args.explain, "reverse")
+
+    if args.expand:
+        target_rule = next((r for r in rules if r.id == args.expand), None)
+        if target_rule is None:
+            print(f"-- no rule with id \"{args.expand}\"")
+        else:
+            claimed = [p for p, rr in lclaims.items() if rr is target_rule]
+            print(f"-- rule [{target_rule.id}] rel=\"{target_rule.rel}\""
+                  f"{' subtree' if target_rule.subtree else ''} converts "
+                  f"{len(claimed)} left path(s):")
+            for p in sorted(claimed):
+                tg = target_rule.targets(p, "forward")
+                arrow = " -> ".join(tg) if tg else "(dropped)"
+                print(f"    {p}\n      -> {arrow}")
+
+    if args.list_rules:
+        print("-- each rule, and how many INVENTORY PATHS it claims "
+              "(L=left, R=right)")
+        for rel in sorted(by_rel, key=lambda k: -len(by_rel[k])):
+            npl = sum(1 for p, rr in lclaims.items() if rr and rr.rel == rel)
+            npr = sum(1 for p, rr in rclaims.items() if rr and rr.rel == rel)
+            print(f"  rel=\"{rel}\": {len(by_rel[rel])} rules "
+                  f"-> {npl} left paths, {npr} right paths")
+            for r in by_rel[rel]:
+                nl = sum(1 for p, rr in lclaims.items() if rr is r)
+                nr = sum(1 for p, rr in rclaims.items() if rr is r)
+                target = (r.left or r.right or r.left_glob or r.right_glob
+                          or r.left_suffix or r.right_suffix or "?")
+                origin = "" if r.origin == map_path.name else f"  [{r.origin}]"
+                print(f"    L{nl:4d} R{nr:4d}  {r.id:38s} {target}{origin}")
+
+        # "present in only one version" is NOT the same as left_only/right_only:
+        # renames, moves and merges also produce version-exclusive paths.
+        for label, excl, claims in (
+                ("only in " + left_side.get("dd"), left_set - right_set, lclaims),
+                ("only in " + right_side.get("dd"), right_set - left_set, rclaims)):
+            agg = {}
+            for p in excl:
+                rel = claims[p].rel if claims[p] else "(default)"
+                agg[rel] = agg.get(rel, 0) + 1
+            print(f"-- {len(excl)} paths {label}, by the rel that explains them")
+            for rel, n in sorted(agg.items(), key=lambda kv: -kv[1]):
+                print(f"    {n:4d}  {rel}")
 
     # transforms must target paths that exist on the right
     print("-- transforms")

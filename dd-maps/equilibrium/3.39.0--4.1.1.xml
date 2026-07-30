@@ -236,17 +236,14 @@
       <fidelity forward="lossy" reverse="unmappable"/>
     </rule>
 
-    <rule id="drop-coordinate-system-metric" rel="left_only"
-          left-glob="**/coordinate_system/g11_covariant" source="derived"
+    <!-- The twelve explicit g_ij metric components were obsolescent in 3.39.0.
+         DD4 carries the metric via tensor_covariant / tensor_contravariant,
+         which are identical on both sides. Listed one per rule so each is
+         visible to a reviewer rather than hidden behind a wildcard. -->
+    <rule id="drop-g11-cov" rel="left_only" left="time_slice/coordinate_system/g11_covariant" source="derived"
           reason="obsolescent_in_dd3">
       <fidelity forward="lossy" reverse="unmappable"/>
-      <note>The twelve explicit g_ij components were obsolescent in 3.39.0;
-            DD4 carries the metric via tensor_covariant / tensor_contravariant,
-            which are identical on both sides.</note>
     </rule>
-
-    <!-- The remaining eleven g_ij components. Listed individually so each is
-         visible to a reviewer rather than hidden behind a wildcard. -->
     <rule id="drop-g11-contra" rel="left_only" left="time_slice/coordinate_system/g11_contravariant" source="derived">
       <fidelity forward="lossy" reverse="unmappable"/>
     </rule>
