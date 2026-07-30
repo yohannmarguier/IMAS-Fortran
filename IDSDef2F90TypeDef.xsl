@@ -71,6 +71,12 @@ Possible way to extend the types to single precision floats, c_int, etc
   integer(ids_int), parameter :: al_dd_minor_version = <xsl:value-of select="$DD_MINOR"/>
   integer(ids_int), parameter :: al_dd_patch_version = <xsl:value-of select="$DD_PATCH"/>
 
+  ! Base IDS type. Declared here, in the DD-version-independent module, so that
+  ! every IDS type extends the same base type and shared polymorphic code (e.g.
+  ! ids_serialize, declared as class(IDS_base)) accepts any IDS.
+  type, abstract :: IDS_base
+  end type
+
 contains
 
   logical function ids_is_valid_int(in)
@@ -111,11 +117,7 @@ end module ids_types
 <xsl:result-document href="ids_utilities.f90">
 module ids_utilities    ! declare the set of types common to all sub-trees
 
-use ids_types
-
-<!-- Base IDS type -->
-type, abstract :: IDS_base
-end type
+use ids_types  ! re-exports IDS_base to consumers of this module
 
 <!-- Declare utilities types -->
 <xsl:apply-templates select="/IDSs/utilities" mode="module"/> <!-- Original IDS structure -->
