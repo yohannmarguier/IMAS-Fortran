@@ -4,7 +4,10 @@ fortran/
 makefile-gen
 idsroutines
 /build
+/build-*
 /install
+/install-*
+/testdb
 CMakeUserPresets.json
 doc/code_samples/tutorial/testdb*
 doc/code_samples/tutorial/*.o

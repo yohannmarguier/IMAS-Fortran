@@ -13,6 +13,18 @@ option( AL_PLUGINS "Enable plugin framework for tests and examples" OFF )
 option( AL_HLI_DOCS "Build the Sphinx-based High Level Interface documentation" OFF )
 option( AL_DOCS_ONLY "Don't build anything, except the Sphinx-based High Level Interface documentation" OFF )
 
+# Note: AL_IDS_SUBSET is also shared, but needs to be set before the first
+# project() call (it picks the default install prefix), so it is declared in the
+# top-level CMakeLists.txt next to AL_DOWNLOAD_DEPENDENCIES.
+if( AL_IDS_SUBSET AND AL_EXAMPLES )
+  # examples/ is hand-written against ~8 specific IDSs, so most of it cannot
+  # compile against a subset build.
+  message( STATUS
+    "AL_IDS_SUBSET is set: setting AL_EXAMPLES=OFF "
+    "(examples are hand-written against IDSs outside the subset)" )
+  set( AL_EXAMPLES OFF CACHE BOOL "Build and test examples" FORCE )
+endif()
+
 # Saxon XSLT processor has been replaced with Python saxonche
 # No longer need to find SaxonHE - saxonche is installed automatically via pip in virtual environments
 

@@ -21,6 +21,25 @@ endif()
 set( AL_CORE_GIT_REPOSITORY "https://github.com/iterorganization/IMAS-Core.git" CACHE STRING "Git repository of AL-core" )
 set( AL_CORE_VERSION "main" CACHE STRING "Git commit/tag/branch of AL-core" )
 
+# Restrict the build to a subset of the Data Dictionary's IDSs, e.g.
+# `-D AL_IDS_SUBSET=equilibrium`. Empty (the default) builds every IDS.
+# IDSDef.xml is pruned before any source is generated (see ALBuildDataDictionary),
+# which is what makes the build shorter when iterating on the generator itself.
+# Declared here rather than in ALCommonConfig because the install prefix below has
+# to be chosen before the first project() call - al-core's, via FetchContent.
+set( AL_IDS_SUBSET "" CACHE STRING
+  "Semicolon-separated list of IDSs to build; empty builds all of them" )
+if( AL_IDS_SUBSET AND NOT DEFINED CACHE{CMAKE_INSTALL_PREFIX} )
+  # A subset build's library is named after the DD version, so it is
+  # indistinguishable from a full build's. Keep it out of the default prefix,
+  # where it would sit next to (and shadow) a complete installation.
+  string( REPLACE ";" "-" _AL_SUBSET_SUFFIX "${AL_IDS_SUBSET}" )
+  set( CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/install-${_AL_SUBSET_SUFFIX}"
+    CACHE PATH "Install path prefix" )
+  message( STATUS "AL_IDS_SUBSET is set: default install prefix is ${CMAKE_INSTALL_PREFIX}" )
+  unset( _AL_SUBSET_SUFFIX )
+endif()
+
 include(FetchContent)
 
 # Load dependency

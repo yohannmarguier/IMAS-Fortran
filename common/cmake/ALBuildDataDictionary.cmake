@@ -282,12 +282,46 @@ else()
   # Populate IDSDEF filename
   set( IDSDEF "${data-dictionary_SOURCE_DIR}/IDSDef.xml" )
 
-  # Install IDSDEF (needed for some applications and for UDA backend)
-  get_filename_component( REAL_IDSDEF ${IDSDEF} REALPATH )
-  install( FILES ${REAL_IDSDEF} DESTINATION include RENAME IDSDef.xml )
+  # IDSDEF is installed below, once AL_IDS_SUBSET has had a chance to replace it
+  set( _INSTALL_IDSDEF TRUE )
 
   # Populate identifier source xmls
   file( GLOB DD_IDENTIFIER_FILES "${data-dictionary_SOURCE_DIR}/*/*_identifier.xml" "${data-dictionary_SOURCE_DIR}/schemas/*/*_identifier.xml" )
+endif()
+
+# Optionally reduce the Data Dictionary to a subset of its IDSs (AL_IDS_SUBSET).
+# Done here, on the XML, so that everything downstream follows automatically:
+# IDS_NAMES, both generators, the generated test suite and the installed IDSDef.xml
+# all read IDSDEF.
+
+if( AL_IDS_SUBSET )
+  set( filter_idss_file ${CMAKE_SOURCE_DIR}/common/filter_idss.xsl )
+  set( _FULL_IDSDEF "${IDSDEF}" )
+  set( IDSDEF "${CMAKE_CURRENT_BINARY_DIR}/IDSDef-subset.xml" )
+  # Pass the list as one comma-separated argument: CMake would split a
+  # semicolon-separated string into separate command line arguments.
+  string( REPLACE ";" "," _KEEP_IDSS "${AL_IDS_SUBSET}" )
+  execute_process( COMMAND
+    ${_VENV_PYTHON} "${AL_LOCAL_XSLTPROC_SCRIPT}"
+      -xsl ${filter_idss_file}
+      -s ${_FULL_IDSDEF}
+      -o ${IDSDEF}
+      keep=${_KEEP_IDSS}
+    RESULT_VARIABLE _XSLT_RESULT
+    ERROR_VARIABLE _XSLT_ERROR
+  )
+  if( _XSLT_RESULT )
+    message( FATAL_ERROR "Failed to reduce the Data Dictionary to '${_KEEP_IDSS}': ${_XSLT_ERROR}" )
+  endif()
+  message( STATUS "Reduced Data Dictionary written to ${IDSDEF}" )
+  set( filter_idss_file )  # unset temporary var
+  set( _KEEP_IDSS )
+endif()
+
+if( _INSTALL_IDSDEF )
+  # Install IDSDEF (needed for some applications and for UDA backend)
+  get_filename_component( REAL_IDSDEF ${IDSDEF} REALPATH )
+  install( FILES ${REAL_IDSDEF} DESTINATION include RENAME IDSDef.xml )
 endif()
 
 # Find out which IDSs exist and populate IDS_NAMES
@@ -314,6 +348,22 @@ else()
   message(FATAL_ERROR "IDS names output file not created")
 endif()
 set( list_idss_file )  # unset temporary var
+
+# Catch a misspelled AL_IDS_SUBSET here rather than as a confusing missing-module
+# error thousands of lines into the Fortran compilation.
+if( AL_IDS_SUBSET )
+  foreach( _WANTED_IDS IN LISTS AL_IDS_SUBSET )
+    if( NOT _WANTED_IDS IN_LIST IDS_NAMES )
+      message( FATAL_ERROR
+        "AL_IDS_SUBSET requests '${_WANTED_IDS}', which is not an IDS of this "
+        "Data Dictionary (${_FULL_IDSDEF})." )
+    endif()
+  endforeach()
+  list( LENGTH IDS_NAMES _N_IDSS )
+  message( STATUS "Building ${_N_IDSS} of the Data Dictionary's IDSs: ${IDS_NAMES}" )
+  unset( _WANTED_IDS )
+  unset( _N_IDSS )
+endif()
 
 # DD version
 set( dd_version_file ${CMAKE_SOURCE_DIR}/common/dd_version.xsl )
