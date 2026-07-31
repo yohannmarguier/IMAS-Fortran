@@ -195,14 +195,10 @@ module ids_utilities
   module procedure get_max_occurrences_<xsl:value-of select="@name"/>
 </xsl:template>
 
-<xsl:template match="utilities" mode="module">
-  <xsl:for-each select="./field[@data_type='structure' or @data_type='struct_array']">
-    <xsl:variable name="this-type" select="local:structtypename(.)"/>
-    type <xsl:value-of select="local:ids-type($this-type)"/> !<xsl:value-of select="local:commentstring(@documentation)"/>
-    <xsl:apply-templates select="./field" mode="declare_field"/>
+<xsl:template match="utilities" mode="module"><xsl:text>&#10;</xsl:text><xsl:for-each select="./field[@data_type='structure' or @data_type='struct_array']"><xsl:variable name="this-type" select="local:structtypename(.)"/><xsl:value-of select="local:declaration-with-comment(
+      concat('    type ', local:ids-type($this-type)), string(@documentation))"/><xsl:apply-templates select="./field" mode="declare_field"/><xsl:text>
     end type
-  </xsl:for-each>
-</xsl:template>
+</xsl:text><xsl:choose><xsl:when test="position() = last()"><xsl:text>&#32;&#32;</xsl:text></xsl:when><xsl:otherwise><xsl:text>&#32;&#32;&#10;</xsl:text></xsl:otherwise></xsl:choose></xsl:for-each></xsl:template>
 
 
 
@@ -247,9 +243,17 @@ module ids_utilities
     </xsl:apply-templates>
   </xsl:for-each>
 
-  ! ***********  <xsl:value-of select="@name"/> IDS 
-  type, extends(IDS_base) :: <xsl:value-of select="local:ids-type(string(@name))"/> !<xsl:value-of select="local:commentstring(@documentation)"/>
-    logical, private :: c_data = .FALSE. ! Fortran specific metadata telling whether the IDS has been populated from C allocated data (LL) or not
+  ! ***********  <xsl:value-of select="@name"/> IDS <xsl:text>
+</xsl:text><xsl:value-of select="local:declaration-with-comment(
+    concat('  type, extends(IDS_base) :: ', local:ids-type(string(@name))),
+    string(@documentation))"/>
+  <xsl:choose>
+    <xsl:when test="$SUFFIX = ''"><xsl:text>
+    logical, private :: c_data = .FALSE. ! Fortran specific metadata telling whether the IDS has been populated from C allocated data (LL) or not</xsl:text></xsl:when>
+    <xsl:otherwise><xsl:text>
+    logical, private :: c_data = .FALSE.
+      ! Fortran specific metadata telling whether the IDS has been populated from C allocated data (LL) or not</xsl:text></xsl:otherwise>
+  </xsl:choose>
     integer, private :: max_occurrence = <xsl:value-of select="@maxoccur"/>! Maximum occurrence allowed as defined in the DD
     character(len = 50), private :: ids_name = '<xsl:value-of select="@name"/>'
     <xsl:apply-templates select="./field" mode="declare_field"/>
@@ -443,83 +447,116 @@ module <xsl:value-of select="local:schemas-module-base(string(@name))"/>
 
 
 <xsl:template match="field" mode="declare_field">
-  <xsl:choose>
+  <xsl:variable name="declaration" as="xs:string?">
+    <xsl:choose>
     <xsl:when test="@data_type='structure'">
-      type(<xsl:value-of select="local:ids-type(string(@structure_reference))"/>) :: <xsl:value-of select="@name"/> !<xsl:value-of select="local:commentstring(@documentation)"/>
+      <xsl:sequence select="concat('      type(',
+        local:ids-type(local:structtypename(.)), ') :: ', string(@name))"/>
     </xsl:when>
 
     <xsl:when test="@data_type='struct_array'">
-      type(<xsl:value-of select="local:ids-type(string(@structure_reference))"/>), pointer :: <xsl:value-of select="@name"/>(:) => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
+      <xsl:sequence select="concat('      type(',
+        local:ids-type(local:structtypename(.)), '), pointer :: ', string(@name),
+        '(:) =&gt; null()')"/>
     </xsl:when>
 
     <xsl:when test="@data_type='str_type' or @data_type='str_1d_type' or @data_type='STR_0D' or @data_type='STR_1D'">
-      character(len=ids_string_length), dimension(:), pointer :: <xsl:value-of select="@name"/> => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
+      <xsl:sequence select="concat(
+        '      character(len=ids_string_length), dimension(:), pointer :: ',
+        string(@name), ' =&gt; null()')"/>
     </xsl:when>
 
     <xsl:when test="@data_type='int_type' or @data_type='INT_0D'">
-      integer(ids_int) :: <xsl:value-of select="@name"/>=ids_int_invalid !<xsl:value-of select="local:commentstring(@documentation)"/>
+      <xsl:sequence select="concat('      integer(ids_int) :: ', string(@name),
+        '=ids_int_invalid')"/>
     </xsl:when>
     <xsl:when test="@data_type='flt_type' or @data_type='FLT_0D'">
-      real(ids_real) :: <xsl:value-of select="@name"/>=ids_real_invalid !<xsl:value-of select="local:commentstring(@documentation)"/>
+      <xsl:sequence select="concat('      real(ids_real) :: ', string(@name),
+        '=ids_real_invalid')"/>
     </xsl:when>
     <xsl:when test="@data_type='cpx_type' or @data_type='CPX_0D'">
-      complex(ids_real) :: <xsl:value-of select="@name"/>=ids_complex_invalid !<xsl:value-of select="local:commentstring(@documentation)"/>
+      <xsl:sequence select="concat('      complex(ids_real) :: ', string(@name),
+        '=ids_complex_invalid')"/>
     </xsl:when>
 
     <xsl:when test="@data_type='int_1d_type' or @data_type='INT_1D'">
-      integer(ids_int), pointer :: <xsl:value-of select="@name"/>(:) => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
+      <xsl:sequence select="concat('      integer(ids_int), pointer :: ', string(@name),
+        '(:) =&gt; null()')"/>
     </xsl:when>
     <xsl:when test="@data_type='flt_1d_type' or @data_type='FLT_1D'">
-      real(ids_real), pointer :: <xsl:value-of select="@name"/>(:) => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
+      <xsl:sequence select="concat('      real(ids_real), pointer :: ', string(@name),
+        '(:) =&gt; null()')"/>
     </xsl:when>
     <xsl:when test="@data_type='cpx_1d_type' or @data_type='CPX_1D'">
-      complex(ids_real), pointer :: <xsl:value-of select="@name"/>(:) => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
+      <xsl:sequence select="concat('      complex(ids_real), pointer :: ', string(@name),
+        '(:) =&gt; null()')"/>
     </xsl:when>
 
     <xsl:when test="@data_type='int_2d_type' or @data_type='INT_2D'">
-      integer(ids_int), pointer :: <xsl:value-of select="@name"/>(:,:) => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
+      <xsl:sequence select="concat('      integer(ids_int), pointer :: ', string(@name),
+        '(:,:) =&gt; null()')"/>
     </xsl:when>
     <xsl:when test="@data_type='flt_2d_type' or @data_type='FLT_2D'">
-      real(ids_real), pointer :: <xsl:value-of select="@name"/>(:,:) => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
+      <xsl:sequence select="concat('      real(ids_real), pointer :: ', string(@name),
+        '(:,:) =&gt; null()')"/>
     </xsl:when>
     <xsl:when test="@data_type='cpx_2d_type' or @data_type='CPX_2D'">
-      complex(ids_real), pointer :: <xsl:value-of select="@name"/>(:,:) => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
+      <xsl:sequence select="concat('      complex(ids_real), pointer :: ', string(@name),
+        '(:,:) =&gt; null()')"/>
     </xsl:when>
 
     <xsl:when test="@data_type='FLT_3D'">
-      real(ids_real), pointer :: <xsl:value-of select="@name"/>(:,:,:) => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
+      <xsl:sequence select="concat('      real(ids_real), pointer :: ', string(@name),
+        '(:,:,:) =&gt; null()')"/>
     </xsl:when>
     <xsl:when test="@data_type='INT_3D'">
-      integer(ids_int), pointer :: <xsl:value-of select="@name"/>(:,:,:) => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
+      <xsl:sequence select="concat('      integer(ids_int), pointer :: ', string(@name),
+        '(:,:,:) =&gt; null()')"/>
     </xsl:when>
     <xsl:when test="@data_type='cpx_3d_type' or @data_type='CPX_3D'">
-      complex(ids_real), pointer :: <xsl:value-of select="@name"/>(:,:,:) => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
+      <xsl:sequence select="concat('      complex(ids_real), pointer :: ', string(@name),
+        '(:,:,:) =&gt; null()')"/>
     </xsl:when>
 
     <xsl:when test="@data_type='FLT_4D'">
-      real(ids_real), pointer :: <xsl:value-of select="@name"/>(:,:,:,:) => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
+      <xsl:sequence select="concat('      real(ids_real), pointer :: ', string(@name),
+        '(:,:,:,:) =&gt; null()')"/>
     </xsl:when>
     <xsl:when test="@data_type='CPX_4D'">
-      complex(ids_real), pointer :: <xsl:value-of select="@name"/>(:,:,:,:) => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
+      <xsl:sequence select="concat('      complex(ids_real), pointer :: ', string(@name),
+        '(:,:,:,:) =&gt; null()')"/>
     </xsl:when>
 
     <xsl:when test="@data_type='FLT_5D'">
-      real(ids_real), pointer :: <xsl:value-of select="@name"/>(:,:,:,:,:) => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
+      <xsl:sequence select="concat('      real(ids_real), pointer :: ', string(@name),
+        '(:,:,:,:,:) =&gt; null()')"/>
     </xsl:when>
     <xsl:when test="@data_type='CPX_5D'">
-      complex(ids_real), pointer :: <xsl:value-of select="@name"/>(:,:,:,:,:) => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
+      <xsl:sequence select="concat('      complex(ids_real), pointer :: ', string(@name),
+        '(:,:,:,:,:) =&gt; null()')"/>
     </xsl:when>
 
     <xsl:when test="@data_type='FLT_6D'">
-      real(ids_real), pointer :: <xsl:value-of select="@name"/>(:,:,:,:,:,:) => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
+      <xsl:sequence select="concat('      real(ids_real), pointer :: ', string(@name),
+        '(:,:,:,:,:,:) =&gt; null()')"/>
     </xsl:when>
     <xsl:when test="@data_type='CPX_6D'">
-      complex(ids_real), pointer :: <xsl:value-of select="@name"/>(:,:,:,:,:,:) => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
+      <xsl:sequence select="concat('      complex(ids_real), pointer :: ', string(@name),
+        '(:,:,:,:,:,:) =&gt; null()')"/>
     </xsl:when>
     <xsl:otherwise>
-      ERROR
+      <xsl:sequence select="()"/>
     </xsl:otherwise>
-  </xsl:choose>  
+    </xsl:choose>
+  </xsl:variable>
+  <xsl:choose>
+    <xsl:when test="exists($declaration)">
+      <xsl:text>&#10;</xsl:text><xsl:value-of select="local:declaration-with-comment(
+        $declaration, string(@documentation))"/>
+    </xsl:when>
+    <xsl:otherwise>      ERROR
+    </xsl:otherwise>
+  </xsl:choose>
 </xsl:template>
 
 

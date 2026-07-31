@@ -30,9 +30,9 @@
   through local:ids-type, the same function IDSDef2F90TypeDef.xsl calls when it
   declares those types, so neither the 'ids_' prefix nor the suffix - including the
   shortening it applies to an overlong base name - can drift between a declaration
-  and a reference. What local:ids-type is handed still comes from two independent
-  code paths, though: local:structtypename there, the inline structure_reference/self
-  choice on $this-type here. They agree today; collapsing them is a separate change.
+  and a reference. Every structure_reference/self choice also goes through
+  local:structtypename, so both generators derive the Data Dictionary type at the
+  same seam.
 
   Not suffixed here: generic interface names (ids_put, ids_get, ids_put_struct,
   ids_deallocate) and specific procedure names, which stay bare so that Fortran
@@ -68,13 +68,13 @@
         <xsl:value-of select="$result"/>-->
 </xsl:function>
 <xsl:key name="unique-structures-by-type" match="field[@data_type='structure' or @data_type='struct_array']" 
-         use="if (@structure_reference='self') then @name else @structure_reference" />
+         use="local:structtypename(.)" />
 <xsl:key name="unique-structures-by-name" match="field[@data_type='structure' or @data_type='struct_array']" 
          use="@name" />
 <xsl:key name="unique-structures-combined" match="field[@data_type='structure' or @data_type='struct_array']" 
-         use="concat(if (@structure_reference='self') then @name else @structure_reference, '|', @name)" />
+         use="concat(local:structtypename(.), '|', @name)" />
 <xsl:key name="unique-structures-by-ids" match="field[@data_type='structure' or @data_type='struct_array']" 
-         use="concat(if (@structure_reference='self') then @name else @structure_reference, '|', ancestor::IDS/@name)" />
+         use="concat(local:structtypename(.), '|', ancestor::IDS/@name)" />
 <xsl:key name="utilities-fields" match="/IDSs/utilities/field" use="@name" />
 
 <xsl:template match="/IDSs">
@@ -717,16 +717,7 @@ module <xsl:value-of select="local:versioned-name('utilities_deallocate_struct')
 
 interface ids_deallocate_struct
   <xsl:for-each select="/IDSs/utilities/field[@data_type='structure' or @data_type='struct_array']">
-  <xsl:variable name="this-type">
-    <xsl:choose>
-      <xsl:when test="@structure_reference='self'">
-        <xsl:value-of select="@name"/>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:value-of select="@structure_reference"/>
-      </xsl:otherwise>
-    </xsl:choose>
-  </xsl:variable>
+  <xsl:variable name="this-type" select="local:structtypename(.)"/>
   module procedure ids_deallocate_struct_<xsl:value-of select="local:unique_name($this-type)"/>
   </xsl:for-each>
 end interface
@@ -735,16 +726,7 @@ end interface
 
 <xsl:for-each select="/IDSs/utilities//field[@data_type='structure' or @data_type='struct_array']">
   <xsl:variable name="this-name" select="@name"/>
-  <xsl:variable name="this-type">
-    <xsl:choose>
-      <xsl:when test="@structure_reference='self'">
-        <xsl:value-of select="@name"/>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:value-of select="@structure_reference"/>
-      </xsl:otherwise>
-    </xsl:choose>
-  </xsl:variable>
+  <xsl:variable name="this-type" select="local:structtypename(.)"/>
   <xsl:if test="generate-id() = generate-id(key('unique-structures-by-type', $this-type)[1])">
 
 subroutine ids_deallocate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(struct_in,  c_data)
@@ -788,16 +770,7 @@ end interface
 interface ids_deallocate_struct
   <xsl:for-each select=".//field[@data_type='structure' or @data_type='struct_array']">
     <xsl:variable name="this-name" select="@name"/>
-    <xsl:variable name="this-type">
-      <xsl:choose>
-        <xsl:when test="@structure_reference='self'">
-          <xsl:value-of select="@name"/>
-        </xsl:when>
-        <xsl:otherwise>
-          <xsl:value-of select="@structure_reference"/>
-        </xsl:otherwise>
-      </xsl:choose>
-    </xsl:variable>
+    <xsl:variable name="this-type" select="local:structtypename(.)"/>
     <xsl:variable name="this-ids" select="ancestor::IDS/@name"/>
     <xsl:if test="not (preceding::field[@structure_reference=$this-type and ancestor::IDS/@name=$this-ids] or /IDSs/utilities/field/@name=$this-type)">
   module procedure ids_deallocate_struct_<xsl:value-of select="local:unique_name($this-type)"/>
@@ -828,16 +801,7 @@ end subroutine ids_deallocate_struct_<xsl:value-of select="local:unique_name(@na
 
 <xsl:for-each select=".//field[@data_type='structure' or @data_type='struct_array']">
   <xsl:variable name="this-name" select="@name"/>
-  <xsl:variable name="this-type">
-    <xsl:choose>
-      <xsl:when test="@structure_reference='self'">
-        <xsl:value-of select="@name"/>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:value-of select="@structure_reference"/>
-      </xsl:otherwise>
-    </xsl:choose>
-  </xsl:variable>
+  <xsl:variable name="this-type" select="local:structtypename(.)"/>
   <xsl:variable name="this-ids" select="ancestor::IDS/@name"/>
   <xsl:if test="not (preceding::field[@structure_reference=$this-type and ancestor::IDS/@name=$this-ids] or /IDSs/utilities/field/@name=$this-type)">
 
@@ -873,16 +837,7 @@ module <xsl:value-of select="local:versioned-name('utilities_copy_struct')"/>
 
 interface ids_copy
   <xsl:for-each select="/IDSs/utilities/field[@data_type='structure' or @data_type='struct_array']">
-  <xsl:variable name="this-type">
-    <xsl:choose>
-      <xsl:when test="@structure_reference='self'">
-        <xsl:value-of select="@name"/>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:value-of select="@structure_reference"/>
-      </xsl:otherwise>
-    </xsl:choose>
-  </xsl:variable>
+  <xsl:variable name="this-type" select="local:structtypename(.)"/>
   module procedure ids_copy_struct_<xsl:value-of select="local:unique_name($this-type)"/>
   </xsl:for-each>
 end interface    
@@ -891,16 +846,7 @@ end interface
 
 <xsl:for-each select="/IDSs/utilities//field[@data_type='structure' or @data_type='struct_array']">
   <xsl:variable name="this-name" select="@name"/>
-  <xsl:variable name="this-type">
-    <xsl:choose>
-      <xsl:when test="@structure_reference='self'">
-        <xsl:value-of select="@name"/>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:value-of select="@structure_reference"/>
-      </xsl:otherwise>
-    </xsl:choose>
-  </xsl:variable>
+  <xsl:variable name="this-type" select="local:structtypename(.)"/>
   <xsl:if test="not (preceding::field[@structure_reference=$this-type or @name=$this-type])">
 
 subroutine ids_copy_struct_<xsl:value-of select="local:unique_name($this-type)"/>(struct_in,  struct_out)
@@ -941,16 +887,7 @@ interface ids_copy
   module procedure ids_copy_struct_<xsl:value-of select="local:unique_name(@name)"/>
   <xsl:for-each select=".//field[@data_type='structure' or @data_type='struct_array']">
     <xsl:variable name="this-name" select="@name"/>
-    <xsl:variable name="this-type">
-      <xsl:choose>
-        <xsl:when test="@structure_reference='self'">
-          <xsl:value-of select="@name"/>
-        </xsl:when>
-        <xsl:otherwise>
-          <xsl:value-of select="@structure_reference"/>
-        </xsl:otherwise>
-      </xsl:choose>
-    </xsl:variable>
+    <xsl:variable name="this-type" select="local:structtypename(.)"/>
     <!--<xsl:variable name="this-type" select="@structure_reference"/>-->
     <xsl:variable name="this-ids" select="ancestor::IDS/@name"/>
     <xsl:if test="not (preceding::field[@structure_reference=$this-type and ancestor::IDS/@name=$this-ids] or /IDSs/utilities/field/@name=$this-type)">
@@ -980,16 +917,7 @@ end subroutine ids_copy_struct_<xsl:value-of select="local:unique_name(@name)"/>
 
 <xsl:for-each select=".//field[@data_type='structure' or @data_type='struct_array']">
   <xsl:variable name="this-name" select="@name"/>
-  <xsl:variable name="this-type">
-    <xsl:choose>
-      <xsl:when test="@structure_reference='self'">
-        <xsl:value-of select="@name"/>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:value-of select="@structure_reference"/>
-      </xsl:otherwise>
-    </xsl:choose>
-  </xsl:variable>
+  <xsl:variable name="this-type" select="local:structtypename(.)"/>
   <xsl:variable name="this-ids" select="ancestor::IDS/@name"/>
   <xsl:if test="not (preceding::field[@structure_reference=$this-type and ancestor::IDS/@name=$this-ids] or /IDSs/utilities/field/@name=$this-type)">
 
@@ -1026,16 +954,7 @@ module <xsl:value-of select="local:versioned-name('utilities_put_struct')"/>
 
 interface ids_put_struct
   <xsl:for-each select="/IDSs/utilities/field[@data_type='structure' or @data_type='struct_array']">  
-    <xsl:variable name="this-type">
-      <xsl:choose>
-        <xsl:when test="@structure_reference='self'">
-          <xsl:value-of select="@name"/>
-        </xsl:when>
-        <xsl:otherwise>
-          <xsl:value-of select="@structure_reference"/>
-        </xsl:otherwise>
-      </xsl:choose>
-      </xsl:variable>
+    <xsl:variable name="this-type" select="local:structtypename(.)"/>
       module procedure put_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>
   </xsl:for-each>
 end interface
@@ -1046,16 +965,7 @@ end interface
 
 <xsl:for-each select="/IDSs/utilities//field[@data_type='structure' or @data_type='struct_array']">
   <xsl:variable name="this-name" select="@name"/>
-  <xsl:variable name="this-type">
-    <xsl:choose>
-      <xsl:when test="@structure_reference='self'">
-        <xsl:value-of select="@name"/>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:value-of select="@structure_reference"/>
-      </xsl:otherwise>
-    </xsl:choose>
-  </xsl:variable>
+  <xsl:variable name="this-type" select="local:structtypename(.)"/>
   <xsl:if test="not (preceding::field[@structure_reference=$this-type or @name=$this-type])">
 
 subroutine put_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>(ctx, name, path, struct, timemode, timedparent, retstatus)
@@ -1118,16 +1028,7 @@ end interface
 
 interface ids_put_struct
   <xsl:for-each select=".//field[@data_type='structure' or @data_type='struct_array']">
-    <xsl:variable name="this-type">
-      <xsl:choose>
-        <xsl:when test="@structure_reference='self'">
-          <xsl:value-of select="@name"/>
-        </xsl:when>
-        <xsl:otherwise>
-          <xsl:value-of select="@structure_reference"/>
-        </xsl:otherwise>
-      </xsl:choose>
-    </xsl:variable>
+    <xsl:variable name="this-type" select="local:structtypename(.)"/>
     <xsl:variable name="this-ids" select="ancestor::IDS/@name"/>
     <xsl:if test="not (preceding::field[@structure_reference=$this-type and ancestor::IDS/@name=$this-ids] or /IDSs/utilities/field/@name=$this-type)">
   module procedure put_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>
@@ -1251,16 +1152,7 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
 end subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
 
 <xsl:for-each select=".//field[@data_type='structure' or @data_type='struct_array']">
-  <xsl:variable name="this-type">
-    <xsl:choose>
-      <xsl:when test="@structure_reference='self'">
-        <xsl:value-of select="@name"/>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:value-of select="@structure_reference"/>
-      </xsl:otherwise>
-    </xsl:choose>
-  </xsl:variable>
+  <xsl:variable name="this-type" select="local:structtypename(.)"/>
   <xsl:variable name="this-ids" select="ancestor::IDS/@name"/>
   <xsl:if test="not (preceding::field[@structure_reference=$this-type and ancestor::IDS/@name=$this-ids] or /IDSs/utilities/field/@name=$this-type)">
 subroutine put_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>(ctx, name, path, struct, timemode, timedparent, retstatus)
@@ -1306,16 +1198,7 @@ module <xsl:value-of select="local:versioned-name('utilities_put_slice_struct')"
 
 interface ids_put_slice_struct
   <xsl:for-each select="/IDSs/utilities/field[@data_type='structure' or @data_type='struct_array']">  
-    <xsl:variable name="this-type">
-      <xsl:choose>
-        <xsl:when test="@structure_reference='self'">
-          <xsl:value-of select="@name"/>
-        </xsl:when>
-        <xsl:otherwise>
-          <xsl:value-of select="@structure_reference"/>
-        </xsl:otherwise>
-      </xsl:choose>
-      </xsl:variable>
+    <xsl:variable name="this-type" select="local:structtypename(.)"/>
       module procedure put_slice_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>
   </xsl:for-each>
 end interface
@@ -1326,16 +1209,7 @@ end interface
 
 <xsl:for-each select="/IDSs/utilities//field[@data_type='structure' or @data_type='struct_array']">
   <xsl:variable name="this-name" select="@name"/>
-  <xsl:variable name="this-type">
-    <xsl:choose>
-      <xsl:when test="@structure_reference='self'">
-        <xsl:value-of select="@name"/>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:value-of select="@structure_reference"/>
-      </xsl:otherwise>
-    </xsl:choose>
-  </xsl:variable>
+  <xsl:variable name="this-type" select="local:structtypename(.)"/>
   <xsl:if test="not (preceding::field[@structure_reference=$this-type or @name=$this-type])">
 
 subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>(ctx, name, path, struct, timemode, timedparent, retstatus)
@@ -1387,16 +1261,7 @@ end interface
 
 interface ids_put_slice_struct
   <xsl:for-each select=".//field[@data_type='structure' or @data_type='struct_array']">
-    <xsl:variable name="this-type">
-      <xsl:choose>
-        <xsl:when test="@structure_reference='self'">
-          <xsl:value-of select="@name"/>
-        </xsl:when>
-        <xsl:otherwise>
-          <xsl:value-of select="@structure_reference"/>
-        </xsl:otherwise>
-      </xsl:choose>
-    </xsl:variable>
+    <xsl:variable name="this-type" select="local:structtypename(.)"/>
     <xsl:variable name="this-ids" select="ancestor::IDS/@name"/>
     <xsl:if test="not (preceding::field[@structure_reference=$this-type and ancestor::IDS/@name=$this-ids] or /IDSs/utilities/field/@name=$this-type)">
   module procedure put_slice_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>
@@ -1562,16 +1427,7 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
 end subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
 
 <xsl:for-each select=".//field[@data_type='structure' or @data_type='struct_array']">
-  <xsl:variable name="this-type">
-    <xsl:choose>
-      <xsl:when test="@structure_reference='self'">
-        <xsl:value-of select="@name"/>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:value-of select="@structure_reference"/>
-      </xsl:otherwise>
-    </xsl:choose>
-  </xsl:variable>
+  <xsl:variable name="this-type" select="local:structtypename(.)"/>
   <xsl:variable name="this-ids" select="ancestor::IDS/@name"/>
   <xsl:if test="not (preceding::field[@structure_reference=$this-type and ancestor::IDS/@name=$this-ids] or /IDSs/utilities/field/@name=$this-type)">
 subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>(ctx, name, path, struct, timemode, timedparent, retstatus)
@@ -1620,16 +1476,7 @@ module <xsl:value-of select="local:versioned-name('utilities_get_struct')"/>
 
 interface ids_get_struct
   <xsl:for-each select="/IDSs/utilities/field[@data_type='structure' or @data_type='struct_array']">  
-    <xsl:variable name="this-type">
-      <xsl:choose>
-        <xsl:when test="@structure_reference='self'">
-          <xsl:value-of select="@name"/>
-        </xsl:when>
-        <xsl:otherwise>
-          <xsl:value-of select="@structure_reference"/>
-        </xsl:otherwise>
-      </xsl:choose>
-      </xsl:variable>
+    <xsl:variable name="this-type" select="local:structtypename(.)"/>
       module procedure get_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>
   </xsl:for-each>
 end interface
@@ -1640,16 +1487,7 @@ end interface
 
 <xsl:for-each select="/IDSs/utilities//field[@data_type='structure' or @data_type='struct_array']">
   <xsl:variable name="this-name" select="@name"/>
-  <xsl:variable name="this-type">
-    <xsl:choose>
-      <xsl:when test="@structure_reference='self'">
-        <xsl:value-of select="@name"/>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:value-of select="@structure_reference"/>
-      </xsl:otherwise>
-    </xsl:choose>
-  </xsl:variable>
+  <xsl:variable name="this-type" select="local:structtypename(.)"/>
   <xsl:if test="not (preceding::field[@structure_reference=$this-type or @name=$this-type])">
 
 subroutine get_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>(ctx, path, struct, timemode, timedparent, retstatus)
@@ -1703,16 +1541,7 @@ use <xsl:value-of select="local:versioned-name('utilities_validate_struct')"/>
 interface ids_validate
   module procedure validate_struct_ids_<xsl:value-of select="local:unique_name(@name)"/> <!-- interface procedure for the whole IDS -->
   <xsl:for-each select=".//field[@data_type='structure' or @data_type='struct_array']"> <!-- interface procedure for all sub structures-->
-  <xsl:variable name="this-type">
-    <xsl:choose>
-      <xsl:when test="@structure_reference='self'">
-        <xsl:value-of select="@name"/>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:value-of select="@structure_reference"/>
-      </xsl:otherwise>
-    </xsl:choose>
-  </xsl:variable>
+  <xsl:variable name="this-type" select="local:structtypename(.)"/>
   <xsl:if test="contains($descendent-definitions,concat('subroutine ids_validate_struct_',local:unique_name($this-type),'('))">
   <xsl:if test="not (preceding::field[@structure_reference=$this-type] or /IDSs/utilities/field/@name=$this-type)">
           module procedure ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>
@@ -2085,16 +1914,7 @@ use ids_types
 
 interface ids_validate
   <xsl:for-each select=".//field[@data_type='structure' or @data_type='struct_array']">
-  <xsl:variable name="this-type">
-    <xsl:choose>
-      <xsl:when test="@structure_reference='self'">
-        <xsl:value-of select="@name"/>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:value-of select="@structure_reference"/>
-      </xsl:otherwise>
-    </xsl:choose>
-  </xsl:variable>
+  <xsl:variable name="this-type" select="local:structtypename(.)"/>
   <xsl:variable name="procedure-content">
   <xsl:apply-templates select="." mode="VALIDATE_UTILITIES_DEFINITION"/>
   </xsl:variable>
@@ -2213,16 +2033,7 @@ end module
 
 <xsl:template match="field" mode="VALIDATE_UTILITIES_DEFINITION">
 <xsl:variable name="this-name" select="@name"/>
-  <xsl:variable name="this-type">
-    <xsl:choose>
-      <xsl:when test="@structure_reference='self'">
-        <xsl:value-of select="@name"/>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:value-of select="@structure_reference"/>
-      </xsl:otherwise>
-    </xsl:choose>
-  </xsl:variable>
+  <xsl:variable name="this-type" select="local:structtypename(.)"/>
   <xsl:variable name ="utilities_definition_content"> 
     <!-- call ids_validate for each field of this structure-->
     <xsl:apply-templates select="field" mode="VALIDATE_CHILD_UTILITIES"/>
@@ -2410,16 +2221,7 @@ or @data_type='cpx_1d_type' or @data_type='CPX_1D') and contains(@path_doc,$cont
 </xsl:template> 
 
 <xsl:template match="field" mode="VALIDATE_CHILD_UTILITIES">
-<xsl:variable name="this-type">
-    <xsl:choose>
-      <xsl:when test="@structure_reference='self'">
-        <xsl:value-of select="@name"/>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:value-of select="@structure_reference"/>
-      </xsl:otherwise>
-    </xsl:choose>
-  </xsl:variable>
+<xsl:variable name="this-type" select="local:structtypename(.)"/>
 <xsl:variable name="definition_content">
   <xsl:variable name="is_first_occurrence" select="generate-id() = generate-id(key('unique-structures-by-type', $this-type)[1])"/>
   <xsl:choose>
@@ -2565,16 +2367,7 @@ or @data_type='cpx_1d_type' or @data_type='CPX_1D') and contains(@path_doc,$cont
 <xsl:template match="field" mode="VALIDATE_CHILD">
 <xsl:param name="descendent-definitions"/>
 <xsl:param name="older-definitions"/>
-<xsl:variable name="this-type">
-    <xsl:choose>
-      <xsl:when test="@structure_reference='self'">
-        <xsl:value-of select="@name"/>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:value-of select="@structure_reference"/>
-      </xsl:otherwise>
-    </xsl:choose>
-  </xsl:variable>
+<xsl:variable name="this-type" select="local:structtypename(.)"/>
   <xsl:variable name="text-uri" as="xs:string" select="unparsed-text('file:utilities_validate_struct.f90')"/>
   <xsl:variable name= "ids-validate-struct-definition-content">
    <xsl:if test="/IDSs/utilities/field/@name=$this-type and contains($text-uri,concat('subroutine ids_validate_struct_',local:unique_name($this-type),'('))">
@@ -2835,16 +2628,7 @@ end if
 
 <xsl:template match="field[@data_type='struct_array' or @data_type='structure']" mode="VALIDATE_DEFINITIONS">
 <xsl:param name="older-definitions"/>
-  <xsl:variable name="this-type">
-    <xsl:choose>
-      <xsl:when test="@structure_reference='self'">
-        <xsl:value-of select="@name"/>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:value-of select="@structure_reference"/>
-      </xsl:otherwise>
-    </xsl:choose>
-  </xsl:variable>
+  <xsl:variable name="this-type" select="local:structtypename(.)"/>
   <xsl:variable name="descendent-definitions">
   <xsl:apply-templates select="field[@data_type='structure' or @data_type='struct_array'][1]" mode="VALIDATE_FAMILY_DEFINITIONS">
   <xsl:with-param name="older-definitions" select="$older-definitions"/>
@@ -3762,16 +3546,7 @@ end interface
 
 interface ids_get_struct
   <xsl:for-each select=".//field[@data_type='structure' or @data_type='struct_array']">
-    <xsl:variable name="this-type">
-      <xsl:choose>
-        <xsl:when test="@structure_reference='self'">
-          <xsl:value-of select="@name"/>
-        </xsl:when>
-        <xsl:otherwise>
-          <xsl:value-of select="@structure_reference"/>
-        </xsl:otherwise>
-      </xsl:choose>
-    </xsl:variable>
+    <xsl:variable name="this-type" select="local:structtypename(.)"/>
     <xsl:variable name="this-ids" select="ancestor::IDS/@name"/>
     <xsl:if test="not (preceding::field[@structure_reference=$this-type and ancestor::IDS/@name=$this-ids] or /IDSs/utilities/field/@name=$this-type)">
   module procedure get_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>
@@ -3983,16 +3758,7 @@ use <xsl:value-of select="local:schemas-module(string(@name))"/>
 end subroutine get_sample_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
 
 <xsl:for-each select=".//field[@data_type='structure' or @data_type='struct_array']">
-  <xsl:variable name="this-type">
-    <xsl:choose>
-      <xsl:when test="@structure_reference='self'">
-        <xsl:value-of select="@name"/>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:value-of select="@structure_reference"/>
-      </xsl:otherwise>
-    </xsl:choose>
-  </xsl:variable>
+  <xsl:variable name="this-type" select="local:structtypename(.)"/>
   <xsl:variable name="this-ids" select="ancestor::IDS/@name"/>
   <xsl:if test="not (preceding::field[@structure_reference=$this-type and ancestor::IDS/@name=$this-ids] or /IDSs/utilities/field/@name=$this-type)">
 subroutine get_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>(ctx, path, struct, timemode, timedparent, retstatus)
@@ -4497,16 +4263,7 @@ end module
 
   <!-- Array of structure -->
   <xsl:when test="@data_type='struct_array' and $contextvar!='aosctx'">
-    <xsl:variable name="this-type">
-      <xsl:choose>
-        <xsl:when test="@structure_reference='self'">
-          <xsl:value-of select="local:unique_name(@name)"/>
-        </xsl:when>
-        <xsl:otherwise>
-          <xsl:value-of select="local:unique_name(@structure_reference)"/>
-        </xsl:otherwise>
-      </xsl:choose>
-    </xsl:variable>
+    <xsl:variable name="this-type" select="local:unique_name(local:structtypename(.))"/>
     ! Put <xsl:value-of select="@name"/>
     if (<xsl:if test="@type='dynamic'">(timemode.NE.IDS_TIME_MODE_INDEPENDENT) .AND. </xsl:if>associated(<xsl:value-of select="$fieldvar"/>)) then
        aoslen = size(<xsl:value-of select="$fieldvar"/>)
@@ -4548,16 +4305,7 @@ end module
 
   <!-- Structure -->
   <xsl:when test="@data_type='structure' or (@data_type='struct_array' and $contextvar='aosctx')">
-    <xsl:variable name="this-type">
-      <xsl:choose>
-        <xsl:when test="@structure_reference='self'">
-          <xsl:value-of select="local:unique_name(@name)"/>
-        </xsl:when>
-        <xsl:otherwise>
-          <xsl:value-of select="local:unique_name(@structure_reference)"/>
-        </xsl:otherwise>
-      </xsl:choose>
-    </xsl:variable>
+    <xsl:variable name="this-type" select="local:unique_name(local:structtypename(.))"/>
     ! Put <xsl:value-of select="@name"/>
     call put_<xsl:if test="$slice='yes'">slice_</xsl:if>struct_ids_<xsl:value-of select="$this-type"/>(<xsl:value-of select="$contextvar"/>, name, &amp;
     <xsl:choose>
@@ -5039,16 +4787,7 @@ end module
 
   <!-- Array of structure -->
   <xsl:when test="@data_type='struct_array' and $contextvar!='aosctx'">
-    <xsl:variable name="this-type">
-      <xsl:choose>
-        <xsl:when test="@structure_reference='self'">
-          <xsl:value-of select="local:unique_name(@name)"/>
-        </xsl:when>
-        <xsl:otherwise>
-          <xsl:value-of select="local:unique_name(@structure_reference)"/>
-        </xsl:otherwise>
-      </xsl:choose>
-    </xsl:variable>
+    <xsl:variable name="this-type" select="local:unique_name(local:structtypename(.))"/>
     ! Get <xsl:value-of select="@name"/>
     <xsl:choose>
       <xsl:when test="@type='dynamic'">
@@ -5087,16 +4826,7 @@ end module
 
   <!-- Structure -->
   <xsl:when test="@data_type='structure' or (@data_type='struct_array' and $contextvar='aosctx')">
-    <xsl:variable name="this-type">
-      <xsl:choose>
-        <xsl:when test="@structure_reference='self'">
-          <xsl:value-of select="local:unique_name(@name)"/>
-        </xsl:when>
-        <xsl:otherwise>
-          <xsl:value-of select="local:unique_name(@structure_reference)"/>
-        </xsl:otherwise>
-      </xsl:choose>
-    </xsl:variable>
+    <xsl:variable name="this-type" select="local:unique_name(local:structtypename(.))"/>
     <xsl:variable name="closectx">
       <xsl:choose>
         <xsl:when test="@data_type='structure'">

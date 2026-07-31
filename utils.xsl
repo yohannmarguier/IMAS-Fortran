@@ -270,6 +270,37 @@ end module
 </xsl:text>
   </xsl:template>
 
+  <!-- Emit a declaration and its Data Dictionary documentation without letting the
+       version suffix push generated Fortran past 132 columns.  The historical
+       unsuffixed spelling deliberately keeps using local:commentstring so SUFFIX=''
+       remains byte-for-byte identical.  Versioned declarations put an overlong
+       comment on following Fortran comment lines, where the complete prefix is known
+       and each line can be bounded independently. -->
+  <xsl:function name="local:declaration-with-comment" as="xs:string">
+    <xsl:param name="declaration" as="xs:string"/>
+    <xsl:param name="documentation" as="xs:string"/>
+    <xsl:variable name="inline" as="xs:string"
+      select="concat($declaration, ' !', $documentation)"/>
+    <xsl:sequence select="if ($SUFFIX = '')
+                          then concat($declaration, ' !', local:commentstring($documentation))
+                          else if (string-length($inline) le 132)
+                          then $inline
+                          else concat($declaration, '&#10;',
+                                      local:wrapped-comment($documentation, '      ! '))"/>
+  </xsl:function>
+
+  <!-- Wrap one Fortran comment to the space left after its prefix. -->
+  <xsl:function name="local:wrapped-comment" as="xs:string">
+    <xsl:param name="comment" as="xs:string"/>
+    <xsl:param name="prefix" as="xs:string"/>
+    <xsl:variable name="width" as="xs:integer" select="132 - string-length($prefix)"/>
+    <xsl:sequence select="if (string-length($comment) le $width)
+                          then concat($prefix, $comment)
+                          else concat($prefix, substring($comment, 1, $width), '&#10;',
+                                      local:wrapped-comment(
+                                        substring($comment, $width + 1), $prefix))"/>
+  </xsl:function>
+
   <!-- function that truncate strings to 132 chars and adding '...' to mark the truncation -->
   <xsl:function name="local:truncatestring" as="xs:string">
     <xsl:param name="longstring" as="xs:string"/>
