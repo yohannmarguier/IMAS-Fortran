@@ -61,6 +61,19 @@
     <xsl:sequence select="local:versioned-name(concat('ids_schemas_', $ids))"/>
   </xsl:function>
 
+  <!-- The Fortran derived type a Data Dictionary type name maps to. Same reason as
+       the two module names above: IDSDef2F90TypeDef.xsl declares these types and
+       IDSDef2F90Routines.xsl declares variables of them, so the 'ids_' prefix and
+       the version suffix are spelled once, here.
+
+       Takes the Data Dictionary type name - what local:structtypename returns for a
+       structure or struct_array field, or an IDS's own @name - not an already
+       prefixed one. -->
+  <xsl:function name="local:ids-type" as="xs:string">
+    <xsl:param name="dd-type" as="xs:string"/>
+    <xsl:sequence select="local:versioned-name(concat('ids_', $dd-type))"/>
+  </xsl:function>
+
   <!--
     A Fortran identifier is limited to 63 characters (F2003 and later, enforced by
     gfortran). Retain the entire version suffix and shorten only an overlong base
@@ -76,10 +89,13 @@
   -->
   <xsl:template name="check_versioned_names">
     <xsl:variable name="max-length" as="xs:integer" select="63"/>
-    <!-- Every name either generator puts through local:versioned-name.
-         local:structtypename is the same function they call, so the type half of
-         this list cannot drift from what it is guarding; the module half is spelled
-         out, since the routine module names are built inline at their use sites. -->
+    <!-- Every name either generator puts through local:versioned-name, as base names:
+         this template appends the suffix itself, below, so it cannot call
+         local:ids-type - hence the one further copy of the 'ids_' prefix here.
+         local:structtypename is the same function the generators call, so the type
+         half of this list cannot drift from what it is guarding; the module half is
+         spelled out, since the routine module names are built inline at their use
+         sites. -->
     <xsl:variable name="routine-module-kinds" as="xs:string*"
       select="('_put_struct', '_put_slice_struct', '_get_struct', '_get_slice_struct',
                '_delete', '_copy_struct', '_deallocate_struct', '_validate_struct')"/>

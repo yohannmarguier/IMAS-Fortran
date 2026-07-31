@@ -9,8 +9,11 @@
 <xsl:param name="AL_GIT_DESCRIBE" as="xs:string" required="yes"/>
 
 <!-- SUFFIX and local:versioned-name are declared in utils.xsl, included below and
-     shared with IDSDef2F90Routines.xsl: the two generators must spell the module
-     names they exchange (ids_utilities, ids_schemas_<ids>) identically. -->
+     shared with IDSDef2F90Routines.xsl: the two generators must spell the names they
+     exchange identically. The modules go through local:utilities-module and
+     local:schemas-module, the derived types declared here through local:ids-type -
+     which is also what the other generator's type(...) declarations and its
+     `only:` rename clauses call. -->
 
 <xsl:variable name="version_regex" select="'^([0-9]+)\.([0-9]+)\.([0-9]+)([+-].*)?$'"/>
 <xsl:variable name="DD_MAJOR" as="xs:integer" select="xs:integer(replace($DD_GIT_DESCRIBE, $version_regex, '$1'))"/>
@@ -161,7 +164,7 @@ end module ! end of the utilities module
 <xsl:template match="utilities" mode="module">
   <xsl:for-each select="./field[@data_type='structure' or @data_type='struct_array']">
     <xsl:variable name="this-type" select="local:structtypename(.)"/>
-    type <xsl:value-of select="local:versioned-name(concat('ids_', $this-type))"/> !<xsl:value-of select="local:commentstring(@documentation)"/>
+    type <xsl:value-of select="local:ids-type($this-type)"/> !<xsl:value-of select="local:commentstring(@documentation)"/>
     <xsl:apply-templates select="./field" mode="declare_field"/>
     end type
   </xsl:for-each>
@@ -211,7 +214,7 @@ end module ! end of the utilities module
   </xsl:for-each>
 
   ! ***********  <xsl:value-of select="@name"/> IDS 
-  type, extends(IDS_base) :: <xsl:value-of select="local:versioned-name(concat('ids_', string(@name)))"/> !<xsl:value-of select="local:commentstring(@documentation)"/>
+  type, extends(IDS_base) :: <xsl:value-of select="local:ids-type(string(@name))"/> !<xsl:value-of select="local:commentstring(@documentation)"/>
     logical, private :: c_data = .FALSE. ! Fortran specific metadata telling whether the IDS has been populated from C allocated data (LL) or not
     integer, private :: max_occurrence = <xsl:value-of select="@maxoccur"/>! Maximum occurrence allowed as defined in the DD
     character(len = 50), private :: ids_name = '<xsl:value-of select="@name"/>'
@@ -223,18 +226,18 @@ end module ! end of the utilities module
   contains 
 
     subroutine set_c_data_<xsl:value-of select="@name"/>(ids, bool)
-    type(<xsl:value-of select="local:versioned-name(concat('ids_', string(@name)))"/>), intent(inout) :: ids
+    type(<xsl:value-of select="local:ids-type(string(@name))"/>), intent(inout) :: ids
     logical, intent(in) :: bool
     ids%c_data = bool
   end subroutine
   subroutine is_c_data_<xsl:value-of select="@name"/>(ids, bool)
-    type(<xsl:value-of select="local:versioned-name(concat('ids_', string(@name)))"/>), intent(in) :: ids
+    type(<xsl:value-of select="local:ids-type(string(@name))"/>), intent(in) :: ids
     logical, intent(out) :: bool
     bool = ids%c_data
   end subroutine
 
   subroutine check_name_<xsl:value-of select="@name"/>(ids, name, retstatus)
-  class(<xsl:value-of select="local:versioned-name(concat('ids_', string(@name)))"/>), intent(in) :: ids
+  class(<xsl:value-of select="local:ids-type(string(@name))"/>), intent(in) :: ids
   character*(*), intent(in) :: name
   integer, intent(out) :: retstatus
   integer :: slash_index
@@ -249,7 +252,7 @@ end module ! end of the utilities module
 
 
 function get_max_occurrences_<xsl:value-of select="@name"/>(ids)
-    type(<xsl:value-of select="local:versioned-name(concat('ids_', string(@name)))"/>), intent(in) :: ids
+    type(<xsl:value-of select="local:ids-type(string(@name))"/>), intent(in) :: ids
     integer :: get_max_occurrences_<xsl:value-of select="@name"/>
     get_max_occurrences_<xsl:value-of select="@name"/> = ids%max_occurrence
   end function
@@ -257,7 +260,7 @@ function get_max_occurrences_<xsl:value-of select="@name"/>(ids)
 function ids_is_defined_<xsl:value-of select="@name"/>(ids) result(is_defined)
 
     use al_defs
-    type(<xsl:value-of select="local:versioned-name(concat('ids_', string(@name)))"/>), intent(in) :: ids
+    type(<xsl:value-of select="local:ids-type(string(@name))"/>), intent(in) :: ids
     logical :: is_defined
     integer :: time_mode
 
@@ -289,12 +292,12 @@ function ids_is_defined_<xsl:value-of select="@name"/>(ids) result(is_defined)
 
 <xsl:template match="IDS" mode="sbrt_c_data">
   subroutine set_c_data_<xsl:value-of select="@name"/>(ids, bool)
-    type(<xsl:value-of select="local:versioned-name(concat('ids_', string(@name)))"/>), intent(inout) :: ids
+    type(<xsl:value-of select="local:ids-type(string(@name))"/>), intent(inout) :: ids
     logical, intent(in) :: bool
     ids%c_data = bool
   end subroutine
   subroutine is_c_data_<xsl:value-of select="@name"/>(ids, bool)
-    type(<xsl:value-of select="local:versioned-name(concat('ids_', string(@name)))"/>), intent(in) :: ids
+    type(<xsl:value-of select="local:ids-type(string(@name))"/>), intent(in) :: ids
     logical, intent(out) :: bool
     bool = ids%c_data
   end subroutine
@@ -302,7 +305,7 @@ function ids_is_defined_<xsl:value-of select="@name"/>(ids) result(is_defined)
 
 <xsl:template match="IDS" mode="sbrt_max_occurrences">
   function get_max_occurrences_<xsl:value-of select="@name"/>(ids)
-    type(<xsl:value-of select="local:versioned-name(concat('ids_', string(@name)))"/>), intent(in) :: ids
+    type(<xsl:value-of select="local:ids-type(string(@name))"/>), intent(in) :: ids
     integer :: get_max_occurrences_<xsl:value-of select="@name"/>
     get_max_occurrences_<xsl:value-of select="@name"/> = ids%max_occurrence
   end function
@@ -345,7 +348,7 @@ function ids_is_defined_<xsl:value-of select="@name"/>(ids) result(is_defined)
   <xsl:param name="this-type"/>
   <xsl:param name="this-ids"/>
   <xsl:param name="this-name"/>
-  type :: <xsl:value-of select="local:versioned-name(concat('ids_', $this-type))"/>
+  type :: <xsl:value-of select="local:ids-type($this-type)"/>
   <xsl:for-each select="./field">
     <xsl:apply-templates select="." mode="declare_field"/>
   </xsl:for-each>
@@ -357,11 +360,11 @@ function ids_is_defined_<xsl:value-of select="@name"/>(ids) result(is_defined)
 <xsl:template match="field" mode="declare_field">
   <xsl:choose>
     <xsl:when test="@data_type='structure'">
-      type(<xsl:value-of select="local:versioned-name(concat('ids_', string(@structure_reference)))"/>) :: <xsl:value-of select="@name"/> !<xsl:value-of select="local:commentstring(@documentation)"/>
+      type(<xsl:value-of select="local:ids-type(string(@structure_reference))"/>) :: <xsl:value-of select="@name"/> !<xsl:value-of select="local:commentstring(@documentation)"/>
     </xsl:when>
 
     <xsl:when test="@data_type='struct_array'">
-      type(<xsl:value-of select="local:versioned-name(concat('ids_', string(@structure_reference)))"/>), pointer :: <xsl:value-of select="@name"/>(:) => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
+      type(<xsl:value-of select="local:ids-type(string(@structure_reference))"/>), pointer :: <xsl:value-of select="@name"/>(:) => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
     </xsl:when>
 
     <xsl:when test="@data_type='str_type' or @data_type='str_1d_type' or @data_type='STR_0D' or @data_type='STR_1D'">

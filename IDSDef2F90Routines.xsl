@@ -12,11 +12,22 @@
   shared with IDSDef2F90TypeDef.xsl, which must spell ids_utilities and
   ids_schemas_<ids> exactly as the use statements here do.
 
-  This stylesheet applies the suffix to module names and module references only:
-  the per-IDS routine modules, the shared utilities_*_struct modules and the
-  aggregate ids_schemas module, plus every use statement naming a suffixable
-  module - including the ones inside ids_routines, which keeps its own bare name
-  but must reach the suffixed modules underneath it.
+  This stylesheet applies the suffix to two families of names.
+
+  Module names and module references: the per-IDS routine modules, the shared
+  utilities_*_struct modules and the aggregate ids_schemas module, plus every use
+  statement naming a suffixable module - including the ones inside ids_routines,
+  which keeps its own bare name but must reach the suffixed modules underneath it.
+
+  Derived type references: every type(ids_...) declaration, the class is (ids_...)
+  guards in the serialize/deserialize select-type blocks, and the type half of the
+  `use ids_utilities<SUFFIX>, only: ids_<type>` rename clauses. All of them go
+  through local:ids-type, the same function IDSDef2F90TypeDef.xsl calls when it
+  declares those types, so neither the 'ids_' prefix nor the suffix - including the
+  shortening it applies to an overlong base name - can drift between a declaration
+  and a reference. What local:ids-type is handed still comes from two independent
+  code paths, though: local:structtypename there, the inline structure_reference/self
+  choice on $this-type here. They agree today; collapsing them is a separate change.
 
   Not suffixed here: generic interface names (ids_put, ids_get, ids_put_struct,
   ids_deallocate) and specific procedure names, which stay bare so that Fortran
@@ -24,11 +35,6 @@
   argument type; the ids_routines module name; and result-document file names,
   including the utilities_validate_struct.f90 that mode="VALIDATE_2" reads back
   with unparsed-text.
-
-  Still unsuffixed and therefore still incomplete: the type references, i.e. the
-  ids_<type> half of `use ids_utilities<SUFFIX>, only: ids_<type>` and every
-  type(...) declaration. Those are the next step; a non-empty SUFFIX does not
-  produce a compilable library yet.
 
   A note on the <xsl:text> elements that now wrap a few newlines. Turning a
   literal `module foo` into `module <xsl:value-of/>` splits the surrounding text
@@ -296,7 +302,7 @@ subroutine ids_serialize(ids_in, buffer, protocol)
   ! I think if we implement an object-oriented ids_in->put the select type here becomes unnecessary
   select type (ids_in)
   <xsl:for-each select="IDS">
-  class is (ids_<xsl:value-of select="@name"/>)
+  class is (<xsl:value-of select="local:ids-type(string(@name))"/>)
     call ids_put(pulsectx, '<xsl:value-of select="@name"/>', ids_in)
   </xsl:for-each>
   class default
@@ -420,7 +426,7 @@ subroutine ids_deserialize(buffer, ids_out)
   ! I think if we implement an object-oriented ids_in->put the select type here becomes unnecessary
   select type (ids_out)
   <xsl:for-each select="IDS">
-  class is (ids_<xsl:value-of select="@name"/>)
+  class is (<xsl:value-of select="local:ids-type(string(@name))"/>)
     call ids_get(pulsectx, '<xsl:value-of select="@name"/>', ids_out)
   </xsl:for-each>
   class default
@@ -578,7 +584,7 @@ subroutine ids_delete_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx
   implicit none
   character*(*) :: IDSpath
   integer(ids_int) :: pulsectx, opctx, status
-  type(ids_<xsl:value-of select="@name"/>) :: IDS
+  type(<xsl:value-of select="local:ids-type(string(@name))"/>) :: IDS
 
   call al_begin_global_action(pulsectx, IDSpath, WRITE_OP, opctx, status)
   if (status.ne.0) then
@@ -642,12 +648,12 @@ subroutine ids_deallocate_struct_<xsl:value-of select="local:unique_name($this-t
   use al_low_level_wrap
   use, intrinsic :: ISO_C_BINDING, only: C_LOC
   use ids_types
-  use <xsl:value-of select="local:utilities-module()"/>, only: ids_<xsl:value-of select="$this-type"/>
+  use <xsl:value-of select="local:utilities-module()"/>, only: <xsl:value-of select="local:ids-type($this-type)"/>
   implicit none
 
   integer(ids_int) :: i
   logical, intent(in) :: c_data
-  type(ids_<xsl:value-of select="$this-type"/>) :: struct_in
+  type(<xsl:value-of select="local:ids-type($this-type)"/>) :: struct_in
 
   <xsl:apply-templates select="./field" mode="DEALLOCATE_FIELD">
     <xsl:with-param name="idxpath" select="''"/>
@@ -707,7 +713,7 @@ subroutine ids_deallocate_struct_<xsl:value-of select="local:unique_name(@name)"
 
   integer(ids_int) :: i
   logical :: c_data
-  type(ids_<xsl:value-of select="@name"/>) :: struct_in
+  type(<xsl:value-of select="local:ids-type(string(@name))"/>) :: struct_in
 
   call is_c_data(struct_in, c_data)
 
@@ -740,7 +746,7 @@ subroutine ids_deallocate_struct_<xsl:value-of select="local:unique_name($this-t
 
   integer(ids_int) :: i
   logical, intent(in) :: c_data
-  type(ids_<xsl:value-of select="$this-type"/>) :: struct_in
+  type(<xsl:value-of select="local:ids-type($this-type)"/>) :: struct_in
 
   <xsl:apply-templates select="./field" mode="DEALLOCATE_FIELD">
     <xsl:with-param name="idxpath" select="''"/>
@@ -798,12 +804,12 @@ subroutine ids_copy_struct_<xsl:value-of select="local:unique_name($this-type)"/
   ! Copies all fields of struct_in to struct_out
   ! Assumes that struct_in is a single instance of a given structure
   use ids_types
-  use <xsl:value-of select="local:utilities-module()"/>, only: ids_<xsl:value-of select="$this-type"/>
+  use <xsl:value-of select="local:utilities-module()"/>, only: <xsl:value-of select="local:ids-type($this-type)"/>
   implicit none
 
   integer(ids_int) :: i
 
-  type(ids_<xsl:value-of select="$this-type"/>) :: struct_in, struct_out
+  type(<xsl:value-of select="local:ids-type($this-type)"/>) :: struct_in, struct_out
 
   <xsl:apply-templates select="./field" mode="COPY_FIELD">
     <xsl:with-param name="idxpath" select="''"/>
@@ -861,7 +867,7 @@ subroutine ids_copy_struct_<xsl:value-of select="local:unique_name(@name)"/>(str
 
   integer(ids_int) :: i
 
-  type(ids_<xsl:value-of select="@name"/>) :: struct_in, struct_out
+  type(<xsl:value-of select="local:ids-type(string(@name))"/>) :: struct_in, struct_out
 
   <xsl:apply-templates select="./field" mode="COPY_FIELD">
     <xsl:with-param name="idxpath" select="''"/>
@@ -892,7 +898,7 @@ subroutine ids_copy_struct_<xsl:value-of select="local:unique_name($this-type)"/
 
   integer(ids_int) :: i
 
-  type(ids_<xsl:value-of select="$this-type"/>) :: struct_in, struct_out
+  type(<xsl:value-of select="local:ids-type($this-type)"/>) :: struct_in, struct_out
 
   <xsl:apply-templates select="./field" mode="COPY_FIELD">
     <xsl:with-param name="idxpath" select="''"/>
@@ -951,13 +957,13 @@ end interface
 
 subroutine put_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>(ctx, name, path, struct, timemode, timedparent, retstatus)
   use ids_types
-  use <xsl:value-of select="local:utilities-module()"/>, only: ids_<xsl:value-of select="$this-type"/>
+  use <xsl:value-of select="local:utilities-module()"/>, only: <xsl:value-of select="local:ids-type($this-type)"/>
   use al_low_level_wrap
   implicit none
 
   integer(ids_int), intent(in) :: ctx
   character*(*), intent(in) :: name, path
-  type(ids_<xsl:value-of select="$this-type"/>), intent(inout) :: struct
+  type(<xsl:value-of select="local:ids-type($this-type)"/>), intent(inout) :: struct
   logical, intent(in) :: timedparent
   integer, intent(in) :: timemode
   integer(ids_int), intent(out) :: retstatus
@@ -1050,7 +1056,7 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   </xsl:if>-->
   character*(*), intent(in) :: name
   integer(ids_int) :: pulsectx, opctx, aosctx
-  type(ids_<xsl:value-of select="@name"/>) :: IDS
+  type(<xsl:value-of select="local:ids-type(string(@name))"/>) :: IDS
   ! internal variables declaration
   logical :: timedparent
   integer :: timemode
@@ -1161,7 +1167,7 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>
 
   integer(ids_int), intent(in) :: ctx
   character*(*), intent(in) :: name, path
-  type(ids_<xsl:value-of select="$this-type"/>), intent(inout) :: struct      
+  type(<xsl:value-of select="local:ids-type($this-type)"/>), intent(inout) :: struct      
   logical, intent(in) :: timedparent
   integer, intent(in) :: timemode 
   integer(ids_int), intent(out) :: retstatus
@@ -1231,13 +1237,13 @@ end interface
 
 subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>(ctx, name, path, struct, timemode, timedparent, retstatus)
   use ids_types
-  use <xsl:value-of select="local:utilities-module()"/>, only: ids_<xsl:value-of select="$this-type"/>
+  use <xsl:value-of select="local:utilities-module()"/>, only: <xsl:value-of select="local:ids-type($this-type)"/>
   use al_low_level_wrap
   implicit none
 
   integer(ids_int), intent(in) :: ctx
   character*(*), intent(in) :: name, path
-  type(ids_<xsl:value-of select="$this-type"/>), intent(inout) :: struct
+  type(<xsl:value-of select="local:ids-type($this-type)"/>), intent(inout) :: struct
   logical, intent(in) :: timedparent
   integer, intent(in) :: timemode
   integer(ids_int), intent(out) :: retstatus
@@ -1318,7 +1324,7 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   </xsl:if>-->
   character*(*) :: name
   integer(ids_int) :: pulsectx, opctx, aosctx
-  type(ids_<xsl:value-of select="@name"/>) :: IDS
+  type(<xsl:value-of select="local:ids-type(string(@name))"/>) :: IDS
   ! internal variables declaration
   logical :: timedparent
   integer :: timemode, storedtimemode
@@ -1472,7 +1478,7 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name($this-ty
 
   integer(ids_int), intent(in) :: ctx
   character*(*), intent(in) :: name, path
-  type(ids_<xsl:value-of select="$this-type"/>), intent(inout) :: struct      
+  type(<xsl:value-of select="local:ids-type($this-type)"/>), intent(inout) :: struct      
   logical, intent(in) :: timedparent
   integer, intent(in) :: timemode
   integer(ids_int), intent(out) :: retstatus
@@ -1545,13 +1551,13 @@ end interface
 
 subroutine get_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>(ctx, path, struct, timemode, timedparent, retstatus)
   use ids_types
-  use <xsl:value-of select="local:utilities-module()"/>, only: ids_<xsl:value-of select="$this-type"/>
+  use <xsl:value-of select="local:utilities-module()"/>, only: <xsl:value-of select="local:ids-type($this-type)"/>
   use al_low_level_wrap
   implicit none
 
   integer(ids_int), intent(in) :: ctx
   character*(*), intent(in) :: path
-  type(ids_<xsl:value-of select="$this-type"/>), intent(inout) :: struct
+  type(<xsl:value-of select="local:ids-type($this-type)"/>), intent(inout) :: struct
   logical, intent(in) :: timedparent
   integer, intent(in) :: timemode
   integer(ids_int), intent(out) :: retstatus
@@ -1618,7 +1624,7 @@ subroutine validate_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
   use <xsl:value-of select="local:schemas-module(string(@name))"/>
   use al_low_level_wrap, only: IDS_TIME_MODE_HOMOGENEOUS, IDS_TIME_MODE_HETEROGENEOUS, IDS_TIME_MODE_INDEPENDENT
   implicit none
-  type(ids_<xsl:value-of select="@name"/>), intent(in) :: ids
+  type(<xsl:value-of select="local:ids-type(string(@name))"/>), intent(in) :: ids
   integer(ids_int), intent(out), optional :: status
   character(:), allocatable, intent(out) :: err_msg
 
@@ -2132,10 +2138,10 @@ end module
   !--- validation of <xsl:value-of select="$this-type"/>
   !-----------------------------------------------------------------------
   subroutine ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(ids, ids_name, status, err_msg, ids_time_mode, ids_time_size)
-    use <xsl:value-of select="local:utilities-module()"/>, only: ids_<xsl:value-of select="$this-type"/>
+    use <xsl:value-of select="local:utilities-module()"/>, only: <xsl:value-of select="local:ids-type($this-type)"/>
     use al_low_level_wrap, only: IDS_TIME_MODE_HOMOGENEOUS, IDS_TIME_MODE_HETEROGENEOUS, IDS_TIME_MODE_INDEPENDENT
     implicit none
-    type(ids_<xsl:value-of select="$this-type"/>), intent(in) :: ids
+    type(<xsl:value-of select="local:ids-type($this-type)"/>), intent(in) :: ids
     character(len=*),  intent(in) :: ids_name
     integer(ids_int), intent(out), optional :: status
     character(:), allocatable, intent(out) :: err_msg
@@ -2764,7 +2770,7 @@ end if
     use <xsl:value-of select="local:schemas-module(string(ancestor::IDS/@name))"/>
     use al_low_level_wrap, only: IDS_TIME_MODE_HOMOGENEOUS, IDS_TIME_MODE_HETEROGENEOUS, IDS_TIME_MODE_INDEPENDENT
     implicit none
-    type(ids_<xsl:value-of select="$this-type"/>), intent(in) :: ids
+    type(<xsl:value-of select="local:ids-type($this-type)"/>), intent(in) :: ids
     character(len=*),  intent(in) :: ids_name
     integer(ids_int), intent(out), optional :: status
     character(:), allocatable, intent(out) :: err_msg
@@ -3685,7 +3691,7 @@ subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   integer(ids_int) :: status = 0
   character*(*) :: name
   integer(ids_int) :: pulsectx, opctx, aosctx
-  type(ids_<xsl:value-of select="@name"/>) :: IDS
+  type(<xsl:value-of select="local:ids-type(string(@name))"/>) :: IDS
   ! internal variables declaration
   logical :: timedparent
   integer(ids_int) :: aoslen, i, lenstring
@@ -3758,7 +3764,7 @@ use <xsl:value-of select="local:schemas-module(string(@name))"/>
   integer(ids_int), intent(in) :: interp
   real(ids_real), intent(in) ::  tmin, tmax
   real(ids_real) , intent(in), dimension(:) :: dtime
-  type(ids_<xsl:value-of select="@name"/>) :: IDS
+  type(<xsl:value-of select="local:ids-type(string(@name))"/>) :: IDS
   !--- local variables ---
   integer(ids_int) :: status = 0
   integer :: storedtimemode = IDS_TIME_MODE_UNKNOWN
@@ -3893,7 +3899,7 @@ subroutine get_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>
 
   integer(ids_int), intent(in) :: ctx
   character*(*), intent(in) :: path
-  type(ids_<xsl:value-of select="$this-type"/>), intent(inout) :: struct      
+  type(<xsl:value-of select="local:ids-type($this-type)"/>), intent(inout) :: struct      
   logical, intent(in) :: timedparent
   integer, intent(in) :: timemode
   integer(ids_int), intent(out) :: retstatus
@@ -3949,7 +3955,7 @@ subroutine get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   real(ids_real), intent(in) :: twant
   integer(ids_int), intent(in) :: interpol
   integer(ids_int) :: pulsectx, opctx, aosctx
-  type(ids_<xsl:value-of select="@name"/>) :: IDS
+  type(<xsl:value-of select="local:ids-type(string(@name))"/>) :: IDS
 
 <xsl:choose>
   <xsl:when test="@type='constant'">
