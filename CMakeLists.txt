@@ -129,6 +129,26 @@ foreach( IDS_NAME IN LISTS IDS_NAMES )
   list( APPEND GENERATED_SOURCES "${GENERATED_SRC_DIR}/${IDS_NAME}_schema.f90" )
 endforeach()
 
+# The alias layer: bare, unsuffixed spellings of everything the suffixed sources above
+# declare, so that code written against a single-version build compiles unchanged. Both
+# generators emit it only when SUFFIX is non-empty - with an empty suffix the sources
+# above are already bare and an alias module would be a duplicate - so this list is
+# conditional on exactly the same thing, and no file appears here that is not written.
+if( DD_MODULE_SUFFIX )
+  list( APPEND GENERATED_SOURCES
+    "${GENERATED_SRC_DIR}/alias_ids_utilities.f90"
+    "${GENERATED_SRC_DIR}/alias_ids_schemas.f90"
+    "${GENERATED_SRC_DIR}/alias_ids_routines.f90"
+    "${GENERATED_SRC_DIR}/alias_utilities_struct.f90"
+  )
+  foreach( IDS_NAME IN LISTS IDS_NAMES )
+    list( APPEND GENERATED_SOURCES
+      "${GENERATED_SRC_DIR}/alias_${IDS_NAME}_schema.f90"
+      "${GENERATED_SRC_DIR}/alias_${IDS_NAME}_routines.f90"
+    )
+  endforeach()
+endif()
+
 # Note: saxonche is provided by dd_build_env (set up in ALBuildDataDictionary)
 # _VENV_PYTHON points to that environment and is used for all XSLT transformations
 
@@ -144,6 +164,7 @@ add_custom_command(
       -o ${GENERATED_SRC_DIR}/routines_output.xml
       DD_GIT_DESCRIBE=${DD_VERSION}
       AL_GIT_DESCRIBE=${FULL_VERSION}
+      SUFFIX=${DD_MODULE_SUFFIX}
   # Generate schema files with IDSDef2F90TypeDef.xsl
   COMMAND 
     ${_VENV_PYTHON} "${AL_LOCAL_XSLTPROC_SCRIPT}"
@@ -152,6 +173,7 @@ add_custom_command(
       -o ${GENERATED_SRC_DIR}/schemas_output.xml
       DD_GIT_DESCRIBE=${DD_VERSION}
       AL_GIT_DESCRIBE=${FULL_VERSION}
+      SUFFIX=${DD_MODULE_SUFFIX}
   # Create/update our dummy file
   COMMAND ${CMAKE_COMMAND} -E touch ${GENERATED_SRC_DIR}/dummy.txt
   # utils.xsl is included by both generators (it declares SUFFIX and the shared
@@ -289,6 +311,11 @@ install( CODE
 
 if( AL_TESTS )
   add_subdirectory( tests/generator )
+  if( DD_MODULE_SUFFIX )
+    # Needs both spellings of a name to exist, so it only makes sense once the generated
+    # names carry a version suffix and the alias layer has restored the bare ones.
+    add_subdirectory( tests/alias )
+  endif()
 endif()
 
 if( AL_EXAMPLES )

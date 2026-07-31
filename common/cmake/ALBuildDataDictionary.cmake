@@ -5,6 +5,8 @@
 #   IDS_NAMES         List of IDSs that are available in the data dictionary
 #   DD_VERSION        Version of the data dictionary
 #   DD_SAFE_VERSION   DD version, safe to use as linker symbol
+#   DD_MODULE_SUFFIX  DD version as a Fortran identifier suffix (e.g. _v4_1_1), which
+#                     every generated module and derived type name carries
 
 if( AL_DOCS_ONLY )
   return()
@@ -387,4 +389,22 @@ else()
   message(FATAL_ERROR "DD version output file not created")
 endif()
 string( REGEX REPLACE "[+-]" "_" DD_SAFE_VERSION "${DD_VERSION}" )
+
+# Fortran module/type suffix naming this DD version: 4.1.1 -> _v4_1_1,
+# 4.1.2.dev22+gbae60dd5f -> _v4_1_2_dev22_gbae60dd5f.
+#
+# DD_SAFE_VERSION above is not usable for this: it only replaces + and -, so its
+# dots survive and the result is not a legal Fortran identifier. Replace every
+# character that cannot appear in one, and lead with 'v' so the suffix cannot start
+# the identifier with a digit if it is ever used on its own.
+string( REGEX REPLACE "[^A-Za-z0-9]+" "_" DD_MODULE_SUFFIX "${DD_VERSION}" )
+string( REGEX REPLACE "^_+|_+$" "" DD_MODULE_SUFFIX "${DD_MODULE_SUFFIX}" )
+if( NOT DD_MODULE_SUFFIX )
+  message( FATAL_ERROR
+    "Could not derive a Fortran identifier suffix from the Data Dictionary version "
+    "'${DD_VERSION}' extracted from ${IDSDEF}." )
+endif()
+set( DD_MODULE_SUFFIX "_v${DD_MODULE_SUFFIX}" )
+message( STATUS "Data Dictionary ${DD_VERSION}: generated names carry the suffix ${DD_MODULE_SUFFIX}" )
+
 set( dd_version_file )  # unset temporary var

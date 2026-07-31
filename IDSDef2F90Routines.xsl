@@ -15,9 +15,14 @@
   This stylesheet applies the suffix to two families of names.
 
   Module names and module references: the per-IDS routine modules, the shared
-  utilities_*_struct modules and the aggregate ids_schemas module, plus every use
-  statement naming a suffixable module - including the ones inside ids_routines,
-  which keeps its own bare name but must reach the suffixed modules underneath it.
+  utilities_*_struct modules, the aggregate ids_schemas module and the ids_routines
+  front door, plus every use statement naming a suffixable module.
+
+  The front door is suffixed like the rest, which is what makes ids_routines_v4_1_1
+  a module a user can name explicitly. Its bare spelling, ids_routines, is what the
+  alias layer emits, so a program that has always written `use ids_routines` reaches
+  the default version and sees every name bare. With an empty SUFFIX the two are one
+  module and the output is unchanged.
 
   Derived type references: every type(ids_...) declaration, the class is (ids_...)
   guards in the serialize/deserialize select-type blocks, and the type half of the
@@ -32,9 +37,9 @@
   Not suffixed here: generic interface names (ids_put, ids_get, ids_put_struct,
   ids_deallocate) and specific procedure names, which stay bare so that Fortran
   merges two versions' same-named generics into one and dispatches on the
-  argument type; the ids_routines module name; and result-document file names,
-  including the utilities_validate_struct.f90 that mode="VALIDATE_2" reads back
-  with unparsed-text.
+  argument type; and result-document file names, including the
+  utilities_validate_struct.f90 that mode="VALIDATE_2" reads back with
+  unparsed-text.
 
   A note on the <xsl:text> elements that now wrap a few newlines. Turning a
   literal `module foo` into `module <xsl:value-of/>` splits the surrounding text
@@ -84,7 +89,7 @@
   end module
   </xsl:result-document>
   <xsl:result-document href="ids_routines.f90">
-module ids_routines
+module <xsl:value-of select="local:versioned-name('ids_routines')"/>
 use <xsl:value-of select="local:versioned-name('ids_schemas')"/>
 use al_low_level_wrap
 use <xsl:value-of select="local:versioned-name('utilities_copy_struct')"/>
@@ -556,8 +561,54 @@ end module
 <xsl:apply-templates select="IDS" mode="delete"/>
 
 <xsl:apply-templates select="/IDSs/utilities" mode="VALIDATE_UTILITIES"/>
-<xsl:apply-templates select="IDS" mode="validate_struct"/> 
+<xsl:apply-templates select="IDS" mode="validate_struct"/>
 
+<!-- The alias layer's half of this generator: bare spellings of the front door, of
+     the aggregate schema module and of every routine module. Emitted only when there
+     is a suffix to hide - with an empty SUFFIX the modules above are already bare,
+     and an unsuffixed build's output directory stays free of files nothing compiles. -->
+<xsl:if test="$SUFFIX != ''">
+  <xsl:result-document href="alias_ids_routines.f90">
+<xsl:text>! Alias layer: `use ids_routines` reaches the default Data Dictionary version
+! (</xsl:text><xsl:value-of select="$DD_GIT_DESCRIBE"/><xsl:text>) and sees every module and every type under its bare spelling,
+! which is what an existing program written against a single-version build expects.
+module ids_routines
+  use </xsl:text><xsl:value-of select="local:versioned-name('ids_routines')"/><xsl:text>  ! the shared procedures, and this version under its suffixed spellings
+  use ids_schemas    ! bare spellings of every IDS type
+  use ids_utilities  ! bare spellings of every utilities type
+end module
+</xsl:text>
+  </xsl:result-document>
+  <xsl:result-document href="alias_ids_schemas.f90">
+<xsl:text>! Alias layer: the bare spelling of the aggregate schema module. Built from the bare
+! per-IDS schema modules rather than from the suffixed aggregate, since it is the bare
+! type names it exists to provide.
+module ids_schemas
+</xsl:text><xsl:for-each select="IDS"><xsl:text>  use ids_schemas_</xsl:text><xsl:value-of select="@name"/><xsl:text>
+</xsl:text></xsl:for-each><xsl:text>end module
+</xsl:text>
+  </xsl:result-document>
+  <xsl:result-document href="alias_utilities_struct.f90">
+<xsl:text>! Alias layer: bare spellings of the shared utilities routine modules.
+</xsl:text><xsl:for-each select="$utilities-routine-module-kinds"><xsl:call-template name="alias_module">
+      <xsl:with-param name="base" select="concat('utilities', .)"/>
+    </xsl:call-template></xsl:for-each>
+  </xsl:result-document>
+  <xsl:apply-templates select="IDS" mode="alias_routines"/>
+</xsl:if>
+
+</xsl:template>
+
+<!-- Alias layer: bare spellings of one IDS's eight routine modules. Nothing needs
+     renaming here - these modules export procedures and generic interfaces, and
+     neither carries a version suffix - so each is a plain re-export. -->
+<xsl:template match="IDS" mode="alias_routines">
+  <xsl:result-document href="alias_{@name}_routines.f90">
+<xsl:text>! Alias layer: bare spellings of the </xsl:text><xsl:value-of select="@name"/><xsl:text> routine modules.
+</xsl:text><xsl:variable name="ids" select="string(@name)"/><xsl:for-each select="$ids-routine-module-kinds"><xsl:call-template name="alias_module">
+      <xsl:with-param name="base" select="concat($ids, .)"/>
+    </xsl:call-template></xsl:for-each>
+  </xsl:result-document>
 </xsl:template>
 
 

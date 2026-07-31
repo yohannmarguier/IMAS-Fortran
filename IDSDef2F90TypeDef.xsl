@@ -141,7 +141,30 @@ end module ! end of the utilities module
 
 <!-- ======================= ====   Begin : declare schema  ==== =====================-->
 
-  <xsl:apply-templates select="IDS" mode="declare_in_file"/>  
+  <xsl:apply-templates select="IDS" mode="declare_in_file"/>
+
+<!-- ======================= ====   Begin : alias layer  ==== =====================-->
+<!-- Only worth emitting when there is a suffix to hide: with an empty SUFFIX the
+     modules above already carry the bare names, and an alias module of the same
+     name would be a duplicate. Skipping it is also what keeps an unsuffixed
+     build's output directory free of files nothing compiles. -->
+  <xsl:if test="$SUFFIX != ''">
+    <xsl:result-document href="alias_ids_utilities.f90">
+! Alias layer: the bare, unsuffixed spelling of every utilities type of the default
+! Data Dictionary version (<xsl:value-of select="$DD_GIT_DESCRIBE"/>).
+module ids_utilities
+  use ids_types  ! the kind parameters and IDS_base, which the `only:` renames below would otherwise hide
+  use <xsl:value-of select="local:utilities-module()"/>  ! everything, under its suffixed spelling
+<xsl:for-each select="distinct-values(
+        for $f in /IDSs/utilities/field[@data_type='structure' or @data_type='struct_array']
+          return local:structtypename($f))"><xsl:call-template name="alias_type_use">
+        <xsl:with-param name="module-base" select="'ids_utilities'"/>
+        <xsl:with-param name="dd-type" select="."/>
+      </xsl:call-template></xsl:for-each>end module
+</xsl:result-document>
+    <xsl:apply-templates select="IDS" mode="alias_in_file"/>
+  </xsl:if>
+<!-- ======================= ====   End : alias layer  ==== =====================-->
 
 </xsl:template>
 <!-- ============================  End : declare schema ========================= -->
@@ -290,6 +313,35 @@ function ids_is_defined_<xsl:value-of select="@name"/>(ids) result(is_defined)
 </xsl:result-document>
 </xsl:template>
 
+<!-- The bare spelling of one IDS's schema module.
+
+     The type list comes from mode="declare_struct_recurse" with $emit='alias', i.e.
+     from the very recursion that decides which types the module above declares -
+     including its "has this type already been declared?" guard. An alias for a type
+     that module does not declare, or a missing alias for one it does, is a compile
+     error, so the two lists have to be produced by one code path rather than two
+     that agree today. -->
+<xsl:template match="IDS" mode="alias_in_file">
+  <xsl:result-document href="alias_{@name}_schema.f90">
+module <xsl:value-of select="local:schemas-module-base(string(@name))"/>
+  use ids_types  ! the kind parameters and IDS_base, which the `only:` renames below would otherwise hide
+  use ids_utilities  ! the bare spelling of the utilities types this IDS's fields are declared with
+  use <xsl:value-of select="local:schemas-module(string(@name))"/>  ! everything, under its suffixed spelling
+<xsl:variable name="this-ids" select="@name"/>
+<xsl:for-each select="./field[@data_type='structure' or @data_type='struct_array']">
+    <xsl:apply-templates select="." mode="declare_struct_recurse">
+      <xsl:with-param name="this-type" select="local:structtypename(.)"/>
+      <xsl:with-param name="this-ids" select="$this-ids"/>
+      <xsl:with-param name="this-name" select="@name"/>
+      <xsl:with-param name="emit" select="'alias'" tunnel="yes"/>
+    </xsl:apply-templates>
+  </xsl:for-each><xsl:call-template name="alias_type_use">
+    <xsl:with-param name="module-base" select="local:schemas-module-base(string(@name))"/>
+    <xsl:with-param name="dd-type" select="string(@name)"/>
+  </xsl:call-template>end module
+</xsl:result-document>
+</xsl:template>
+
 <xsl:template match="IDS" mode="sbrt_c_data">
   subroutine set_c_data_<xsl:value-of select="@name"/>(ids, bool)
     type(<xsl:value-of select="local:ids-type(string(@name))"/>), intent(inout) :: ids
@@ -315,10 +367,22 @@ function ids_is_defined_<xsl:value-of select="@name"/>(ids) result(is_defined)
 
 <!-- browse substructures recursively -->
 <!-- make sure structures are declared before being used -->
+<!-- $emit selects what to do with each type this recursion reaches: declare it
+     ('declare', the default) or emit the alias layer's rename for it ('alias'). It
+     is a tunnel parameter so that only the two ends of the recursion mention it.
+
+     A flag rather than a second mode on purpose. What must not drift is the "has
+     this type been declared already?" test below: it decides which types the schema
+     module contains, and the alias layer has to name exactly those - one too few and
+     a bare name is missing, one too many and it renames a type that does not exist.
+     Two modes would mean two copies of that test. Modes cannot be chosen
+     dynamically, and mode="#current" cannot help either, since it is the leaf
+     template that has to differ while the recursion around it stays shared. -->
 <xsl:template match="field" mode="declare_struct_recurse">
   <xsl:param name="this-type"/>
   <xsl:param name="this-ids"/>
   <xsl:param name="this-name"/>
+  <xsl:param name="emit" as="xs:string" select="'declare'" tunnel="yes"/>
 
   <xsl:if test="descendant::field[(@data_type='structure' or @data_type='struct_array')]">
     <xsl:for-each select="./field[@data_type='structure' or @data_type='struct_array']">
@@ -333,11 +397,21 @@ function ids_is_defined_<xsl:value-of select="@name"/>(ids) result(is_defined)
   </xsl:if>  
 
   <xsl:if test="not(preceding::field[@structure_reference=$this-type and ancestor::IDS/@name=$this-ids] or /IDSs/utilities/field/@name=$this-type)">
-    <xsl:apply-templates select="." mode="declare_struct">
-      <xsl:with-param name="this-type" select="$this-type"/>
-      <xsl:with-param name="this-ids" select="$this-ids"/>
-      <xsl:with-param name="this-name" select="$this-name"/>
-    </xsl:apply-templates>
+    <xsl:choose>
+      <xsl:when test="$emit = 'alias'">
+        <xsl:call-template name="alias_type_use">
+          <xsl:with-param name="module-base" select="local:schemas-module-base(string($this-ids))"/>
+          <xsl:with-param name="dd-type" select="$this-type"/>
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:apply-templates select="." mode="declare_struct">
+          <xsl:with-param name="this-type" select="$this-type"/>
+          <xsl:with-param name="this-ids" select="$this-ids"/>
+          <xsl:with-param name="this-name" select="$this-name"/>
+        </xsl:apply-templates>
+      </xsl:otherwise>
+    </xsl:choose>
   </xsl:if>
 
 </xsl:template>

@@ -22,11 +22,15 @@
     Deliberately NOT suffixed: the ids_types module and everything it declares
     (the kinds, the invalid values, the abstract IDS_base type) and the
     al_defs/al_low_level_wrap wrapper layer - those are DD-version-independent
-    and shared by every version; the ids_routines front door, which keeps its
-    bare name while its use statements reach the suffixed modules underneath;
-    generic interface names and specific procedure names, so that a generic can
-    merge specifics from two versions and dispatch on type; and anything inside
-    a string literal, since those carry Data Dictionary paths.
+    and shared by every version; generic interface names and specific procedure
+    names, so that a generic can merge specifics from two versions and dispatch
+    on type; and anything inside a string literal, since those carry Data
+    Dictionary paths.
+
+    The ids_routines front door IS suffixed, which is what gives a user a module
+    naming the default version explicitly. Its bare spelling comes from the alias
+    layer (see below), so `use ids_routines` still reaches the default version and
+    sees every name bare.
 
     One thing this parameter does not do on its own: the .f90 file names are
     unsuffixed, so each version must be generated into its own directory.
@@ -58,7 +62,15 @@
 
   <xsl:function name="local:schemas-module" as="xs:string">
     <xsl:param name="ids" as="xs:string"/>
-    <xsl:sequence select="local:versioned-name(concat('ids_schemas_', $ids))"/>
+    <xsl:sequence select="local:versioned-name(local:schemas-module-base($ids))"/>
+  </xsl:function>
+
+  <!-- The same module name without the version suffix: the bare spelling the alias
+       layer declares for it. Same reason as local:ids-type-base below - one place
+       spells 'ids_schemas_', for both spellings. -->
+  <xsl:function name="local:schemas-module-base" as="xs:string">
+    <xsl:param name="ids" as="xs:string"/>
+    <xsl:sequence select="concat('ids_schemas_', $ids)"/>
   </xsl:function>
 
   <!-- The Fortran derived type a Data Dictionary type name maps to. Same reason as
@@ -71,8 +83,37 @@
        prefixed one. -->
   <xsl:function name="local:ids-type" as="xs:string">
     <xsl:param name="dd-type" as="xs:string"/>
-    <xsl:sequence select="local:versioned-name(concat('ids_', $dd-type))"/>
+    <xsl:sequence select="local:versioned-name(local:ids-type-base($dd-type))"/>
   </xsl:function>
+
+  <!-- The same derived type name without the version suffix: the base name
+       local:versioned-name is handed, and therefore the bare spelling the alias
+       layer declares for it. Split out of local:ids-type so that the 'ids_' prefix
+       is written once for both spellings. -->
+  <xsl:function name="local:ids-type-base" as="xs:string">
+    <xsl:param name="dd-type" as="xs:string"/>
+    <xsl:sequence select="concat('ids_', $dd-type)"/>
+  </xsl:function>
+
+  <!-- The per-IDS routine modules IDSDef2F90Routines.xsl emits, as name suffixes to
+       an IDS name. The utilities half of that generator emits six of the eight; the
+       two missing ones are checked anyway (see check_versioned_names) because a
+       guard over a superset of the emitted names cannot let a bad name through. -->
+  <xsl:variable name="ids-routine-module-kinds" as="xs:string*"
+    select="('_put_struct', '_put_slice_struct', '_get_struct', '_get_slice_struct',
+             '_delete', '_copy_struct', '_deallocate_struct', '_validate_struct')"/>
+
+  <!-- The same list for the utilities half, which is the per-IDS list less the two
+       kinds that half does not emit: slicing a get and deleting are per-IDS
+       operations, so there is no utilities_get_slice_struct or utilities_delete.
+       Expressed as a filter rather than a second list so that the relationship
+       between the two is visible and a new routine kind cannot be added to one and
+       forgotten in the other.
+
+       The alias layer needs this exact set, not a superset: a bare module that
+       re-exports a module nobody emitted does not compile. -->
+  <xsl:variable name="utilities-routine-module-kinds" as="xs:string*"
+    select="$ids-routine-module-kinds[. != '_get_slice_struct' and . != '_delete']"/>
 
   <!--
     A Fortran identifier is limited to 63 characters (F2003 and later, enforced by
@@ -90,25 +131,23 @@
   <xsl:template name="check_versioned_names">
     <xsl:variable name="max-length" as="xs:integer" select="63"/>
     <!-- Every name either generator puts through local:versioned-name, as base names:
-         this template appends the suffix itself, below, so it cannot call
-         local:ids-type - hence the one further copy of the 'ids_' prefix here.
-         local:structtypename is the same function the generators call, so the type
+         this template appends the suffix itself, below, so it goes through
+         local:ids-type-base rather than local:ids-type. local:structtypename and
+         local:ids-type-base are the same functions the generators call, so the type
          half of this list cannot drift from what it is guarding; the module half is
          spelled out, since the routine module names are built inline at their use
          sites. -->
-    <xsl:variable name="routine-module-kinds" as="xs:string*"
-      select="('_put_struct', '_put_slice_struct', '_get_struct', '_get_slice_struct',
-               '_delete', '_copy_struct', '_deallocate_struct', '_validate_struct')"/>
     <xsl:variable name="base-names" as="xs:string*"
       select="(for $f in //field[@data_type='structure' or @data_type='struct_array']
-                 return concat('ids_', local:structtypename($f)),
-               for $i in /IDSs/IDS return concat('ids_', string($i/@name)),
-               for $i in /IDSs/IDS return concat('ids_schemas_', string($i/@name)),
+                 return local:ids-type-base(local:structtypename($f)),
+               for $i in /IDSs/IDS return local:ids-type-base(string($i/@name)),
+               for $i in /IDSs/IDS return local:schemas-module-base(string($i/@name)),
                'ids_utilities',
                'ids_schemas',
-               for $k in $routine-module-kinds return concat('utilities', $k),
+               'ids_routines',
+               for $k in $ids-routine-module-kinds return concat('utilities', $k),
                for $i in /IDSs/IDS return
-                 for $k in $routine-module-kinds return concat(string($i/@name), $k))"/>
+                 for $k in $ids-routine-module-kinds return concat(string($i/@name), $k))"/>
     <xsl:if test="string-length($SUFFIX) ge $max-length">
       <xsl:message terminate="yes">
 SUFFIX '<xsl:value-of select="$SUFFIX"/>' is <xsl:value-of select="string-length($SUFFIX)"/> characters; it must leave room for at least one base-name character within the <xsl:value-of select="$max-length"/>-character Fortran identifier limit.
@@ -124,6 +163,64 @@ SUFFIX '<xsl:value-of select="$SUFFIX"/>' would make generated Fortran identifie
 <xsl:for-each select="$collisions">  <xsl:value-of select="."/>
 </xsl:for-each></xsl:message>
     </xsl:if>
+  </xsl:template>
+
+  <!--
+    THE ALIAS LAYER
+
+    With a non-empty SUFFIX every module and every derived type whose spelling
+    depends on the Data Dictionary version is named for that version. The alias
+    layer gives each of them its bare, unsuffixed spelling back, as the *default*
+    version: `ids_equilibrium` is not a second type, it is a second spelling of
+    `ids_equilibrium_v4_1_1`. That is what lets existing programs, the generated
+    test suite and the identifiers library compile with no source change.
+
+    Two shapes, one per kind of module.
+
+    A module that exports only procedures (the routine modules) needs nothing but a
+    plain re-export: procedure and generic interface names are never suffixed, so
+    they already arrive bare. That is local:alias_module.
+
+    A module that declares derived types (the utilities module, the per-IDS schema
+    modules) needs one `only:` rename per type, and a plain `use` of the same module
+    on top so that everything else it exports - the generic interfaces, the kind
+    parameters it re-exports from ids_types - still comes through. Emitting the plain
+    `use` is what makes coverage of the non-type half automatic rather than a list
+    that can fall behind. That is alias_type_use, called once per type inside a
+    module the caller opens itself.
+
+    Nothing suffixed depends on anything in this layer, so the whole bare surface can
+    be re-pointed at a different version by regenerating it alone.
+  -->
+
+  <!-- A bare module that re-exports its suffixed counterpart wholesale. $base is the
+       bare spelling by construction: it is the name local:versioned-name is handed. -->
+  <xsl:template name="alias_module">
+    <xsl:param name="base" as="xs:string"/>
+    <xsl:text>module </xsl:text><xsl:value-of select="$base"/><xsl:text>
+  use </xsl:text><xsl:value-of select="local:versioned-name($base)"/><xsl:text>
+end module
+</xsl:text>
+  </xsl:template>
+
+  <!-- One `use <module>, only: <bare type> => <suffixed type>` statement.
+
+       Split over two lines on purpose: the longest Data Dictionary type name is 57
+       characters and its suffixed form can reach the full 63, which together with
+       the module name would run past Fortran's 132-column limit. Two lines fit any
+       name the 63-character identifier limit allows. -->
+  <xsl:template name="alias_type_use">
+    <xsl:param name="module-base" as="xs:string"/>
+    <xsl:param name="dd-type" as="xs:string"/>
+    <xsl:text>  use </xsl:text>
+    <xsl:value-of select="local:versioned-name($module-base)"/>
+    <xsl:text>, only: </xsl:text>
+    <xsl:value-of select="local:ids-type-base($dd-type)"/>
+    <xsl:text> &amp;
+       =&gt; </xsl:text>
+    <xsl:value-of select="local:ids-type($dd-type)"/>
+    <xsl:text>
+</xsl:text>
   </xsl:template>
 
   <!-- function that truncate strings to 132 chars and adding '...' to mark the truncation -->
