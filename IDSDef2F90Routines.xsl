@@ -7,6 +7,18 @@
 <xsl:param name="DD_GIT_DESCRIBE" as="xs:string" required="yes"/>
 <xsl:param name="AL_GIT_DESCRIBE" as="xs:string" required="yes"/>
 
+<!--
+  SUFFIX - accepted so that both generators take the same parameter, but not yet
+  applied here. IDSDef2F90TypeDef.xsl suffixes the module and derived type names
+  it emits; this stylesheet still spells them unsuffixed (use ids_schemas_<ids>,
+  use ids_utilities, only: ids_<type>), so a non-empty value would generate
+  routines that name types nobody declared.
+
+  Rather than emit a library that cannot compile, refuse the value. Delete this
+  check as part of applying SUFFIX to this generator.
+-->
+<xsl:param name="SUFFIX" as="xs:string" select="''"/>
+
 <xsl:function name="local:unique_name" as="xs:string">
   <!-- Provides pseudo-unique 16 characters reference to arbitrary long field name  -->
   <xsl:param name="FullName" as="xs:string"/>
@@ -33,6 +45,12 @@
 <xsl:key name="utilities-fields" match="/IDSs/utilities/field" use="@name" />
 
 <xsl:template match="/IDSs">
+  <xsl:if test="$SUFFIX != ''">
+    <xsl:message terminate="yes">
+SUFFIX '<xsl:value-of select="$SUFFIX"/>' was passed to IDSDef2F90Routines.xsl, which does not apply it yet.
+The generated routines would reference unsuffixed module and type names that IDSDef2F90TypeDef.xsl no longer emits.
+</xsl:message>
+  </xsl:if>
   <xsl:result-document href="ids_schemas.f90">
   module ids_schemas
   <xsl:for-each select="IDS">
