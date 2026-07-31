@@ -77,6 +77,17 @@
          use="concat(if (@structure_reference='self') then @name else @structure_reference, '|', ancestor::IDS/@name)" />
 <xsl:key name="utilities-fields" match="/IDSs/utilities/field" use="@name" />
 
+<xsl:template name="front_door_imports">
+use <xsl:value-of select="local:versioned-name('ids_schemas')"/>
+use al_low_level_wrap
+use <xsl:value-of select="local:versioned-name('utilities_copy_struct')"/>
+use <xsl:value-of select="local:versioned-name('utilities_deallocate_struct')"/><xsl:text>
+</xsl:text><xsl:for-each select="IDS"><xsl:text>
+</xsl:text><xsl:variable name="ids" select="string(@name)"/><xsl:for-each select="$ids-routine-module-kinds"><xsl:text>use </xsl:text><xsl:value-of select="local:versioned-name(concat($ids, .))"/><xsl:text>
+</xsl:text></xsl:for-each></xsl:for-each><xsl:text>
+</xsl:text>
+</xsl:template>
+
 <xsl:template match="/IDSs">
   <xsl:call-template name="check_generator_parameters"/>
   <xsl:if test="$SUFFIX != ''">
@@ -105,22 +116,7 @@
   <xsl:when test="$is-default-version">
   <xsl:result-document href="ids_routines.f90">
 module <xsl:value-of select="local:versioned-name('ids_routines')"/>
-use <xsl:value-of select="local:versioned-name('ids_schemas')"/>
-use al_low_level_wrap
-use <xsl:value-of select="local:versioned-name('utilities_copy_struct')"/>
-use <xsl:value-of select="local:versioned-name('utilities_deallocate_struct')"/><xsl:text>
-</xsl:text><!--use specific_validate_struct--><xsl:text>
-
-</xsl:text><xsl:for-each select="IDS">
-use <xsl:value-of select="local:versioned-name(concat(string(@name), '_put_struct'))"/>
-use <xsl:value-of select="local:versioned-name(concat(string(@name), '_put_slice_struct'))"/>
-use <xsl:value-of select="local:versioned-name(concat(string(@name), '_get_struct'))"/>
-use <xsl:value-of select="local:versioned-name(concat(string(@name), '_get_slice_struct'))"/>
-use <xsl:value-of select="local:versioned-name(concat(string(@name), '_delete'))"/>
-use <xsl:value-of select="local:versioned-name(concat(string(@name), '_copy_struct'))"/>
-use <xsl:value-of select="local:versioned-name(concat(string(@name), '_deallocate_struct'))"/>
-use <xsl:value-of select="local:versioned-name(concat(string(@name), '_validate_struct'))"/><xsl:text>
-</xsl:text></xsl:for-each>
+<xsl:call-template name="front_door_imports"/>
 
 #if defined(__INTEL_COMPILER)
 use ifport, only : getpid  ! required for getpid() in ifort
@@ -272,6 +268,7 @@ subroutine ids_serialize(ids_in, buffer, protocol)
   character(STRMAXLEN):: filename
   CHARACTER(len=255) :: BUFFER_IMAS_AL_SERIALIZER_TMP_DIR
   CHARACTER(len=:), ALLOCATABLE :: IMAS_AL_SERIALIZER_TMP_DIR
+  logical :: ids_selected
   
   my_protocol = DEFAULT_SERIALIZER_PROTOCOL
   if (present(protocol)) my_protocol = protocol
@@ -320,17 +317,22 @@ subroutine ids_serialize(ids_in, buffer, protocol)
 
   ! Put IDS to serialization backend
   ! I think if we implement an object-oriented ids_in->put the select type here becomes unnecessary
+  ids_selected = .false.
   select type (ids_in)
   <xsl:for-each select="IDS">
   class is (<xsl:value-of select="local:ids-type(string(@name))"/>)
+    ids_selected = .true.
     call ids_put(pulsectx, '<xsl:value-of select="@name"/>', ids_in)
   </xsl:for-each>
   class default
     write(*,*) "SERIALIZE: ERROR selecting IDS type"
   end select
-    
+
   ! Retrieve serialized IDS from the backend
-  if (my_protocol .eq. ASCII_SERIALIZER_PROTOCOL) then
+  if (.not. ids_selected) then
+    if (allocated(buffer)) deallocate(buffer)
+    allocate(buffer(0))
+  else if (my_protocol .eq. ASCII_SERIALIZER_PROTOCOL) then
     ! Read from file
     unit = get_file_unit()
     open(unit=unit, file=fname, action='read', status='old', form='unformatted', access='stream')
@@ -575,16 +577,9 @@ end module
 ! ids_deserialize, which the default version alone supports: their select-type carries a
 ! hardcoded list of the default version's concrete types, so an IDS of this version
 ! reaches the `class default` branch. Do not pass one: that branch prints
-! "SERIALIZE: ERROR selecting IDS type" and then falls through into the retrieval of a
-! buffer that was never written, which crashes.
+! "SERIALIZE: ERROR selecting IDS type" and returns an empty buffer.
 module </xsl:text><xsl:value-of select="local:versioned-name('ids_routines')"/><xsl:text>
-use </xsl:text><xsl:value-of select="local:versioned-name('ids_schemas')"/><xsl:text>
-use al_low_level_wrap
-use </xsl:text><xsl:value-of select="local:versioned-name('utilities_copy_struct')"/><xsl:text>
-use </xsl:text><xsl:value-of select="local:versioned-name('utilities_deallocate_struct')"/><xsl:text>
-</xsl:text><xsl:for-each select="IDS"><xsl:text>
-</xsl:text><xsl:variable name="ids" select="string(@name)"/><xsl:for-each select="$ids-routine-module-kinds"><xsl:text>use </xsl:text><xsl:value-of select="local:versioned-name(concat($ids, .))"/><xsl:text>
-</xsl:text></xsl:for-each></xsl:for-each><xsl:text>
+</xsl:text><xsl:call-template name="front_door_imports"/><xsl:text>
 end module </xsl:text><xsl:value-of select="local:versioned-name('ids_routines')"/><xsl:text>
 </xsl:text>
   </xsl:result-document>
@@ -1270,7 +1265,7 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>
 
   integer(ids_int), intent(in) :: ctx
   character*(*), intent(in) :: name, path
-  type(<xsl:value-of select="local:ids-type($this-type)"/>), intent(inout) :: struct      
+  type(<xsl:value-of select="local:ids-type($this-type)"/>), intent(inout) :: struct
   logical, intent(in) :: timedparent
   integer, intent(in) :: timemode 
   integer(ids_int), intent(out) :: retstatus
@@ -1581,7 +1576,7 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name($this-ty
 
   integer(ids_int), intent(in) :: ctx
   character*(*), intent(in) :: name, path
-  type(<xsl:value-of select="local:ids-type($this-type)"/>), intent(inout) :: struct      
+  type(<xsl:value-of select="local:ids-type($this-type)"/>), intent(inout) :: struct
   logical, intent(in) :: timedparent
   integer, intent(in) :: timemode
   integer(ids_int), intent(out) :: retstatus
@@ -4002,7 +3997,7 @@ subroutine get_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>
 
   integer(ids_int), intent(in) :: ctx
   character*(*), intent(in) :: path
-  type(<xsl:value-of select="local:ids-type($this-type)"/>), intent(inout) :: struct      
+  type(<xsl:value-of select="local:ids-type($this-type)"/>), intent(inout) :: struct
   logical, intent(in) :: timedparent
   integer, intent(in) :: timemode
   integer(ids_int), intent(out) :: retstatus

@@ -25,3 +25,23 @@ add_test( NAME al-fortran-test-alias COMMAND al-fortran-test-alias )
 set_tests_properties( al-fortran-test-alias PROPERTIES
   FAIL_REGULAR_EXPRESSION "[Ee][Rr][Rr][Oo][Rr]"
 )
+
+# The serializer intentionally supports only the default DD version. A second-version
+# IDS must report that limitation and return an empty buffer rather than reading an
+# unwritten backend buffer.
+if( AL_SECOND_DD_IDSDEF )
+  configure_file( unsupported_serialization_test.f90.in
+    unsupported_serialization_test.f90 @ONLY )
+
+  add_executable( al-fortran-test-unsupported-serialization
+    ${CMAKE_CURRENT_BINARY_DIR}/unsupported_serialization_test.f90 )
+  target_link_libraries( al-fortran-test-unsupported-serialization al-fortran )
+  add_dependencies( al-fortran-test-unsupported-serialization
+    al-fortran-sources${SECOND_DD_MODULE_SUFFIX} )
+  add_dependencies( al-fortran-tests al-fortran-test-unsupported-serialization )
+
+  add_test( NAME al-fortran-test-unsupported-serialization
+    COMMAND al-fortran-test-unsupported-serialization )
+  set_tests_properties( al-fortran-test-unsupported-serialization PROPERTIES
+    PASS_REGULAR_EXPRESSION "SERIALIZE: ERROR selecting IDS type" )
+endif()
