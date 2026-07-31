@@ -54,6 +54,17 @@
     </xsl:choose>
   </xsl:function>
   
+  <!-- function that gives the Data Dictionary type name a structure or struct_array field
+       declares: its structure_reference, except for the 'self' sentinel, which means the
+       field defines its own type and so is named after the field. Prepend 'ids_' for the
+       Fortran spelling. -->
+  <xsl:function name="local:structtypename" as="xs:string">
+    <xsl:param name="field" as="element()"/>
+    <xsl:sequence select="if ($field/@structure_reference = 'self')
+                          then string($field/@name)
+                          else string($field/@structure_reference)"/>
+  </xsl:function>
+
   <!-- function that breaks long strings for comments that respects the 132 chars limit of the Fortran standard -->
   <xsl:function name="local:commentstring" as="xs:string">
     <xsl:param name="longstring" as="xs:string"/>

@@ -53,13 +53,13 @@
   Skipped entirely when SUFFIX is empty: the unsuffixed names are what the DD
   has always produced, and they already fit.
 -->
-<xsl:template name="check-name-lengths">
+<xsl:template name="check_name_lengths">
   <xsl:variable name="max-length" as="xs:integer" select="63"/>
+  <!-- Names the templates below emit. local:structtypename is the same function
+       they call, so this list cannot drift from what it is guarding. -->
   <xsl:variable name="generated-names" as="xs:string*"
     select="(for $f in //field[@data_type='structure' or @data_type='struct_array']
-               return concat('ids_', if ($f/@structure_reference = 'self')
-                                     then string($f/@name)
-                                     else string($f/@structure_reference)),
+               return concat('ids_', local:structtypename($f)),
              for $i in /IDSs/IDS return concat('ids_', string($i/@name)),
              for $i in /IDSs/IDS return concat('ids_schemas_', string($i/@name)),
              'ids_utilities')"/>
@@ -80,7 +80,7 @@ SUFFIX '<xsl:value-of select="$SUFFIX"/>' is <xsl:value-of select="string-length
 
 <xsl:template match="/IDSs">
   <xsl:if test="$SUFFIX != ''">
-    <xsl:call-template name="check-name-lengths"/>
+    <xsl:call-template name="check_name_lengths"/>
   </xsl:if>
   <xsl:result-document href="ids_types.f90">
 ! IDS FORTRAN 90 type definitions
@@ -210,16 +210,7 @@ end module ! end of the utilities module
 
 <xsl:template match="utilities" mode="module">
   <xsl:for-each select="./field[@data_type='structure' or @data_type='struct_array']">
-    <xsl:variable name="this-type">
-      <xsl:choose>
-        <xsl:when test="@structure_reference='self'">
-          <xsl:value-of select="@name"/>
-        </xsl:when>
-        <xsl:otherwise>
-          <xsl:value-of select="@structure_reference"/>
-        </xsl:otherwise>
-      </xsl:choose>
-    </xsl:variable>
+    <xsl:variable name="this-type" select="local:structtypename(.)"/>
     type ids_<xsl:value-of select="$this-type"/><xsl:value-of select="$SUFFIX"/> !<xsl:value-of select="local:commentstring(@documentation)"/>
     <xsl:apply-templates select="./field" mode="declare_field"/>
     end type
@@ -261,16 +252,7 @@ end module ! end of the utilities module
   <xsl:variable name="this-ids" select="@name"/>
   <xsl:for-each select="./field[@data_type='structure' or @data_type='struct_array']">
     <xsl:variable name="this-name" select="@name"/>
-    <xsl:variable name="this-type">
-      <xsl:choose>
-        <xsl:when test="@structure_reference='self'">
-          <xsl:value-of select="@name"/>
-        </xsl:when>
-        <xsl:otherwise>
-          <xsl:value-of select="@structure_reference"/>
-        </xsl:otherwise>
-      </xsl:choose>
-    </xsl:variable>
+    <xsl:variable name="this-type" select="local:structtypename(.)"/>
     <xsl:apply-templates select="." mode="declare_struct_recurse">
       <xsl:with-param name="this-type" select="$this-type"/>
       <xsl:with-param name="this-ids" select="$this-ids"/>
@@ -387,16 +369,7 @@ function ids_is_defined_<xsl:value-of select="@name"/>(ids) result(is_defined)
 
   <xsl:if test="descendant::field[(@data_type='structure' or @data_type='struct_array')]">
     <xsl:for-each select="./field[@data_type='structure' or @data_type='struct_array']">
-      <xsl:variable name="this-type">
-        <xsl:choose>
-          <xsl:when test="@structure_reference='self'">
-            <xsl:value-of select="@name"/>
-          </xsl:when>
-          <xsl:otherwise>
-            <xsl:value-of select="@structure_reference"/>
-          </xsl:otherwise>
-        </xsl:choose>
-      </xsl:variable>
+      <xsl:variable name="this-type" select="local:structtypename(.)"/>
       <xsl:variable name="this-name" select="@name"/>
       <xsl:apply-templates select="." mode="declare_struct_recurse">
         <xsl:with-param name="this-type" select="$this-type"/>
