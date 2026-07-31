@@ -11,8 +11,8 @@
 <!--
   SUFFIX - appended to every module name and every derived type name whose
   spelling depends on the Data Dictionary version, so that two DD versions can
-  be compiled into one build (e.g. SUFFIX='_v411' yields ids_utilities_v411,
-  ids_schemas_equilibrium_v411, ids_equilibrium_v411).
+  be compiled into one build (e.g. SUFFIX='_v4_1_1' yields ids_utilities_v4_1_1,
+  ids_schemas_equilibrium_v4_1_1, ids_equilibrium_v4_1_1).
 
   Defaults to the empty string, which reproduces the historical, unsuffixed
   spellings byte for byte.
@@ -30,6 +30,22 @@
 -->
 <xsl:param name="SUFFIX" as="xs:string" select="''"/>
 
+<!--
+  Keep the version suffix intact even when appending it would exceed Fortran's
+  63-character identifier limit. Unsuffixed output takes the first branch and
+  is therefore unchanged byte for byte.
+-->
+<xsl:function name="local:versioned-name" as="xs:string">
+  <xsl:param name="base" as="xs:string"/>
+  <xsl:variable name="available" as="xs:integer" select="63 - string-length($SUFFIX)"/>
+  <xsl:sequence select="if ($SUFFIX = '' or string-length($base) le $available)
+                        then concat($base, $SUFFIX)
+                        else if ($available lt 8)
+                        then concat(substring($base, 1, $available), $SUFFIX)
+                        else concat(substring($base, 1, $available - 7), '_',
+                                    substring($base, string-length($base) - 5), $SUFFIX)"/>
+</xsl:function>
+
 <xsl:variable name="version_regex" select="'^([0-9]+)\.([0-9]+)\.([0-9]+)([+-].*)?$'"/>
 <xsl:variable name="DD_MAJOR" as="xs:integer" select="xs:integer(replace($DD_GIT_DESCRIBE, $version_regex, '$1'))"/>
 <xsl:variable name="DD_MINOR" as="xs:integer" select="xs:integer(replace($DD_GIT_DESCRIBE, $version_regex, '$2'))"/>
@@ -45,42 +61,43 @@
 
 <!--
   A Fortran identifier is limited to 63 characters (F2003 and later, enforced by
-  gfortran). The longest names the Data Dictionary produces leave very little
-  headroom, so a suffix that is a few characters too long turns into a wall of
-  "Name at (1) is too long" errors in a generated file of several hundred
-  thousand lines. Check it up front instead, and name the offenders.
+  gfortran). Retain the entire version suffix and shorten only an overlong base
+  name. Reject a suffix that leaves no room for a base name, or a dictionary
+  whose shortened names collide.
 
   Skipped entirely when SUFFIX is empty: the unsuffixed names are what the DD
   has always produced, and they already fit.
 -->
-<xsl:template name="check_name_lengths">
+<xsl:template name="check_versioned_names">
   <xsl:variable name="max-length" as="xs:integer" select="63"/>
   <!-- Names the templates below emit. local:structtypename is the same function
        they call, so this list cannot drift from what it is guarding. -->
-  <xsl:variable name="generated-names" as="xs:string*"
+  <xsl:variable name="base-names" as="xs:string*"
     select="(for $f in //field[@data_type='structure' or @data_type='struct_array']
                return concat('ids_', local:structtypename($f)),
              for $i in /IDSs/IDS return concat('ids_', string($i/@name)),
              for $i in /IDSs/IDS return concat('ids_schemas_', string($i/@name)),
              'ids_utilities')"/>
-  <xsl:variable name="too-long" as="xs:string*"
-    select="distinct-values($generated-names[string-length(concat(., $SUFFIX)) gt $max-length])"/>
-  <xsl:if test="exists($too-long)">
-    <!-- max((0, ...)) so a base name that is already over the limit, with or
-         without a suffix, cannot report a negative allowance. -->
-    <xsl:variable name="headroom" as="xs:integer"
-      select="max((0, $max-length - max(for $n in $generated-names return string-length($n))))"/>
+  <xsl:if test="string-length($SUFFIX) ge $max-length">
     <xsl:message terminate="yes">
-SUFFIX '<xsl:value-of select="$SUFFIX"/>' is <xsl:value-of select="string-length($SUFFIX)"/> characters; at most <xsl:value-of select="$headroom"/> will fit.
-<xsl:value-of select="count($too-long)"/> generated name(s) would exceed the <xsl:value-of select="$max-length"/>-character Fortran identifier limit:
-<xsl:for-each select="$too-long">  <xsl:value-of select="concat(., $SUFFIX)"/> (<xsl:value-of select="string-length(concat(., $SUFFIX))"/>)
+SUFFIX '<xsl:value-of select="$SUFFIX"/>' is <xsl:value-of select="string-length($SUFFIX)"/> characters; it must leave room for at least one base-name character within the <xsl:value-of select="$max-length"/>-character Fortran identifier limit.
+</xsl:message>
+  </xsl:if>
+  <xsl:variable name="versioned-names" as="xs:string*"
+    select="for $name in distinct-values($base-names) return local:versioned-name($name)"/>
+  <xsl:variable name="collisions" as="xs:string*"
+    select="distinct-values($versioned-names[count(index-of($versioned-names, .)) gt 1])"/>
+  <xsl:if test="exists($collisions)">
+    <xsl:message terminate="yes">
+SUFFIX '<xsl:value-of select="$SUFFIX"/>' would make generated Fortran identifiers collide:
+<xsl:for-each select="$collisions">  <xsl:value-of select="."/>
 </xsl:for-each></xsl:message>
   </xsl:if>
 </xsl:template>
 
 <xsl:template match="/IDSs">
   <xsl:if test="$SUFFIX != ''">
-    <xsl:call-template name="check_name_lengths"/>
+    <xsl:call-template name="check_versioned_names"/>
   </xsl:if>
   <xsl:result-document href="ids_types.f90">
 ! IDS FORTRAN 90 type definitions
@@ -175,7 +192,7 @@ end module ids_types
 <!-- ======================= ====   Begin : Common Utility definition ==== =====================-->
 </xsl:result-document>
 <xsl:result-document href="ids_utilities.f90">
-module ids_utilities<xsl:value-of select="$SUFFIX"/>    ! declare the set of types common to all sub-trees
+module <xsl:value-of select="local:versioned-name('ids_utilities')"/>    ! declare the set of types common to all sub-trees
 
 use ids_types  ! re-exports IDS_base to consumers of this module
 
@@ -211,7 +228,7 @@ end module ! end of the utilities module
 <xsl:template match="utilities" mode="module">
   <xsl:for-each select="./field[@data_type='structure' or @data_type='struct_array']">
     <xsl:variable name="this-type" select="local:structtypename(.)"/>
-    type ids_<xsl:value-of select="$this-type"/><xsl:value-of select="$SUFFIX"/> !<xsl:value-of select="local:commentstring(@documentation)"/>
+    type <xsl:value-of select="local:versioned-name(concat('ids_', $this-type))"/> !<xsl:value-of select="local:commentstring(@documentation)"/>
     <xsl:apply-templates select="./field" mode="declare_field"/>
     end type
   </xsl:for-each>
@@ -225,9 +242,9 @@ end module ! end of the utilities module
 
 <xsl:template match="IDS" mode="declare_in_file">
   <xsl:result-document href="{@name}_schema.f90">
-    module ids_schemas_<xsl:value-of select="@name"/><xsl:value-of select="$SUFFIX"/>
+    module <xsl:value-of select="local:versioned-name(concat('ids_schemas_', string(@name)))"/>
     use ids_types
-    use ids_utilities<xsl:value-of select="$SUFFIX"/>
+    use <xsl:value-of select="local:versioned-name('ids_utilities')"/>
     
     implicit none
 
@@ -261,7 +278,7 @@ end module ! end of the utilities module
   </xsl:for-each>
 
   ! ***********  <xsl:value-of select="@name"/> IDS 
-  type, extends(IDS_base) :: ids_<xsl:value-of select="@name"/><xsl:value-of select="$SUFFIX"/> !<xsl:value-of select="local:commentstring(@documentation)"/>
+  type, extends(IDS_base) :: <xsl:value-of select="local:versioned-name(concat('ids_', string(@name)))"/> !<xsl:value-of select="local:commentstring(@documentation)"/>
     logical, private :: c_data = .FALSE. ! Fortran specific metadata telling whether the IDS has been populated from C allocated data (LL) or not
     integer, private :: max_occurrence = <xsl:value-of select="@maxoccur"/>! Maximum occurrence allowed as defined in the DD
     character(len = 50), private :: ids_name = '<xsl:value-of select="@name"/>'
@@ -273,18 +290,18 @@ end module ! end of the utilities module
   contains 
 
     subroutine set_c_data_<xsl:value-of select="@name"/>(ids, bool)
-    type(ids_<xsl:value-of select="@name"/><xsl:value-of select="$SUFFIX"/>), intent(inout) :: ids
+    type(<xsl:value-of select="local:versioned-name(concat('ids_', string(@name)))"/>), intent(inout) :: ids
     logical, intent(in) :: bool
     ids%c_data = bool
   end subroutine
   subroutine is_c_data_<xsl:value-of select="@name"/>(ids, bool)
-    type(ids_<xsl:value-of select="@name"/><xsl:value-of select="$SUFFIX"/>), intent(in) :: ids
+    type(<xsl:value-of select="local:versioned-name(concat('ids_', string(@name)))"/>), intent(in) :: ids
     logical, intent(out) :: bool
     bool = ids%c_data
   end subroutine
 
   subroutine check_name_<xsl:value-of select="@name"/>(ids, name, retstatus)
-  class(ids_<xsl:value-of select="@name"/><xsl:value-of select="$SUFFIX"/>), intent(in) :: ids
+  class(<xsl:value-of select="local:versioned-name(concat('ids_', string(@name)))"/>), intent(in) :: ids
   character*(*), intent(in) :: name
   integer, intent(out) :: retstatus
   integer :: slash_index
@@ -299,7 +316,7 @@ end module ! end of the utilities module
 
 
 function get_max_occurrences_<xsl:value-of select="@name"/>(ids)
-    type(ids_<xsl:value-of select="@name"/><xsl:value-of select="$SUFFIX"/>), intent(in) :: ids
+    type(<xsl:value-of select="local:versioned-name(concat('ids_', string(@name)))"/>), intent(in) :: ids
     integer :: get_max_occurrences_<xsl:value-of select="@name"/>
     get_max_occurrences_<xsl:value-of select="@name"/> = ids%max_occurrence
   end function
@@ -307,7 +324,7 @@ function get_max_occurrences_<xsl:value-of select="@name"/>(ids)
 function ids_is_defined_<xsl:value-of select="@name"/>(ids) result(is_defined)
 
     use al_defs
-    type(ids_<xsl:value-of select="@name"/><xsl:value-of select="$SUFFIX"/>), intent(in) :: ids
+    type(<xsl:value-of select="local:versioned-name(concat('ids_', string(@name)))"/>), intent(in) :: ids
     logical :: is_defined
     integer :: time_mode
 
@@ -339,12 +356,12 @@ function ids_is_defined_<xsl:value-of select="@name"/>(ids) result(is_defined)
 
 <xsl:template match="IDS" mode="sbrt_c_data">
   subroutine set_c_data_<xsl:value-of select="@name"/>(ids, bool)
-    type(ids_<xsl:value-of select="@name"/><xsl:value-of select="$SUFFIX"/>), intent(inout) :: ids
+    type(<xsl:value-of select="local:versioned-name(concat('ids_', string(@name)))"/>), intent(inout) :: ids
     logical, intent(in) :: bool
     ids%c_data = bool
   end subroutine
   subroutine is_c_data_<xsl:value-of select="@name"/>(ids, bool)
-    type(ids_<xsl:value-of select="@name"/><xsl:value-of select="$SUFFIX"/>), intent(in) :: ids
+    type(<xsl:value-of select="local:versioned-name(concat('ids_', string(@name)))"/>), intent(in) :: ids
     logical, intent(out) :: bool
     bool = ids%c_data
   end subroutine
@@ -352,7 +369,7 @@ function ids_is_defined_<xsl:value-of select="@name"/>(ids) result(is_defined)
 
 <xsl:template match="IDS" mode="sbrt_max_occurrences">
   function get_max_occurrences_<xsl:value-of select="@name"/>(ids)
-    type(ids_<xsl:value-of select="@name"/><xsl:value-of select="$SUFFIX"/>), intent(in) :: ids
+    type(<xsl:value-of select="local:versioned-name(concat('ids_', string(@name)))"/>), intent(in) :: ids
     integer :: get_max_occurrences_<xsl:value-of select="@name"/>
     get_max_occurrences_<xsl:value-of select="@name"/> = ids%max_occurrence
   end function
@@ -395,7 +412,7 @@ function ids_is_defined_<xsl:value-of select="@name"/>(ids) result(is_defined)
   <xsl:param name="this-type"/>
   <xsl:param name="this-ids"/>
   <xsl:param name="this-name"/>
-  type :: ids_<xsl:value-of select="$this-type"/><xsl:value-of select="$SUFFIX"/>
+  type :: <xsl:value-of select="local:versioned-name(concat('ids_', $this-type))"/>
   <xsl:for-each select="./field">
     <xsl:apply-templates select="." mode="declare_field"/>
   </xsl:for-each>
@@ -407,11 +424,11 @@ function ids_is_defined_<xsl:value-of select="@name"/>(ids) result(is_defined)
 <xsl:template match="field" mode="declare_field">
   <xsl:choose>
     <xsl:when test="@data_type='structure'">
-      type(ids_<xsl:value-of select="@structure_reference"/><xsl:value-of select="$SUFFIX"/>) :: <xsl:value-of select="@name"/> !<xsl:value-of select="local:commentstring(@documentation)"/>
+      type(<xsl:value-of select="local:versioned-name(concat('ids_', string(@structure_reference)))"/>) :: <xsl:value-of select="@name"/> !<xsl:value-of select="local:commentstring(@documentation)"/>
     </xsl:when>
 
     <xsl:when test="@data_type='struct_array'">
-      type(ids_<xsl:value-of select="@structure_reference"/><xsl:value-of select="$SUFFIX"/>), pointer :: <xsl:value-of select="@name"/>(:) => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
+      type(<xsl:value-of select="local:versioned-name(concat('ids_', string(@structure_reference)))"/>), pointer :: <xsl:value-of select="@name"/>(:) => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
     </xsl:when>
 
     <xsl:when test="@data_type='str_type' or @data_type='str_1d_type' or @data_type='STR_0D' or @data_type='STR_1D'">
