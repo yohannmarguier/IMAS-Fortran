@@ -32,9 +32,15 @@
      it guards the names both generators emit rather than only this one's. -->
 
 <xsl:template match="/IDSs">
+  <xsl:call-template name="check_generator_parameters"/>
   <xsl:if test="$SUFFIX != ''">
     <xsl:call-template name="check_versioned_names"/>
   </xsl:if>
+  <!-- ids_types is Data Dictionary-version-independent and shared by every version, so
+       only the default version's run emits it. A second version's run would emit a
+       duplicate module - and one whose compile-time DD version constants disagree with
+       the first, which is why those constants report the default version (see #45). -->
+  <xsl:if test="$is-default-version">
   <xsl:result-document href="ids_types.f90">
 ! IDS FORTRAN 90 type definitions
 ! Contains the type definition of all IDSs
@@ -127,6 +133,7 @@ end module ids_types
 <!-- -->
 <!-- ======================= ====   Begin : Common Utility definition ==== =====================-->
 </xsl:result-document>
+  </xsl:if><!-- end of the default version's ids_types.f90 -->
 <xsl:result-document href="ids_utilities.f90">
 module <xsl:value-of select="local:utilities-module()"/>    ! declare the set of types common to all sub-trees
 
@@ -147,8 +154,12 @@ end module ! end of the utilities module
 <!-- Only worth emitting when there is a suffix to hide: with an empty SUFFIX the
      modules above already carry the bare names, and an alias module of the same
      name would be a duplicate. Skipping it is also what keeps an unsuffixed
-     build's output directory free of files nothing compiles. -->
-  <xsl:if test="$SUFFIX != ''">
+     build's output directory free of files nothing compiles.
+
+     And only from the default version's run: the bare spellings are what makes one
+     version the default, so a second version emitting them would be a duplicate
+     module rather than a second opinion. -->
+  <xsl:if test="$SUFFIX != '' and $is-default-version">
     <xsl:result-document href="alias_ids_utilities.f90">
 ! Alias layer: the bare, unsuffixed spelling of every utilities type of the default
 ! Data Dictionary version (<xsl:value-of select="$DD_GIT_DESCRIBE"/>).

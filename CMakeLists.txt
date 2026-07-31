@@ -29,15 +29,85 @@ set( AL_CORE_VERSION "main" CACHE STRING "Git commit/tag/branch of AL-core" )
 # to be chosen before the first project() call - al-core's, via FetchContent.
 set( AL_IDS_SUBSET "" CACHE STRING
   "Semicolon-separated list of IDSs to build; empty builds all of them" )
-if( AL_IDS_SUBSET AND NOT DEFINED CACHE{CMAKE_INSTALL_PREFIX} )
-  # A subset build's library is named after the DD version, so it is
-  # indistinguishable from a full build's. Keep it out of the default prefix,
-  # where it would sit next to (and shadow) a complete installation.
-  string( REPLACE ";" "-" _AL_SUBSET_SUFFIX "${AL_IDS_SUBSET}" )
-  set( CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/install-${_AL_SUBSET_SUFFIX}"
-    CACHE PATH "Install path prefix" )
-  message( STATUS "AL_IDS_SUBSET is set: default install prefix is ${CMAKE_INSTALL_PREFIX}" )
-  unset( _AL_SUBSET_SUFFIX )
+
+# Compile a second Data Dictionary version into the same library, alongside the one
+# DD_VERSION selects. Takes a filesystem path to an already-built IDSDef.xml; empty
+# (the default) is today's single-version build, unchanged in every respect.
+#
+# This one variable is the whole opt-in: the second version's version string, the
+# Fortran name suffix its modules and types carry, and the version it stamps into the
+# data it writes are all derived from that file (see ALBuildDataDictionary), so the
+# generated code cannot disagree with the dictionary it was generated from - which a
+# separately supplied version string could.
+#
+# Building the file takes well under a second in a Data Dictionary checkout:
+#   xsltproc.py -xsl dd_data_dictionary.xml.xsl -s dd_data_dictionary.xml.xsd \
+#               -o IDSDef.xml DD_GIT_DESCRIBE=<version>
+# Doing it for the user needs a second clone of the Data Dictionary and is out of
+# scope here (see issue #45).
+#
+# Declared next to AL_IDS_SUBSET for the same reason: it moves the default install
+# prefix, which has to be chosen before the first project() call - al-core's, via
+# FetchContent.
+set( AL_SECOND_DD_IDSDEF "" CACHE FILEPATH
+  "Path to a pre-built IDSDef.xml of a second Data Dictionary version to compile into the same library; empty builds one version" )
+if( AL_SECOND_DD_IDSDEF )
+  # Resolve to an absolute path, against the source directory, before anything reads it.
+  # A relative path would mean two different files: `if( EXISTS )` here is only
+  # well-defined for a full path, and the generator commands below run with their output
+  # directory as the working directory, so they would resolve it somewhere else again.
+  # Written back to the cache so that what a configured build reports is the file it
+  # actually read.
+  get_filename_component( AL_SECOND_DD_IDSDEF "${AL_SECOND_DD_IDSDEF}" ABSOLUTE
+    BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}" )
+  set( AL_SECOND_DD_IDSDEF "${AL_SECOND_DD_IDSDEF}" CACHE FILEPATH
+    "Path to a pre-built IDSDef.xml of a second Data Dictionary version to compile into the same library; empty builds one version"
+    FORCE )
+  if( NOT EXISTS "${AL_SECOND_DD_IDSDEF}" )
+    message( FATAL_ERROR
+      "AL_SECOND_DD_IDSDEF is '${AL_SECOND_DD_IDSDEF}', which does not exist. It must "
+      "be the path to an already-built IDSDef.xml of the second Data Dictionary version." )
+  endif()
+endif()
+
+if( NOT DEFINED CACHE{CMAKE_INSTALL_PREFIX} )
+  # Two different builds can produce a library the default prefix cannot tell apart:
+  # the library is named after the DD version alone, so a subset build looks like a
+  # full one and a two-version build looks like a single-version one. Neither may sit
+  # in the default prefix, where it would shadow a complete installation - and
+  # install() never removes stale module files, so a partial overwrite is worse than
+  # a wrong-looking one.
+  #
+  # Both facts change what ends up installed and neither subsumes the other, so they
+  # compose rather than take precedence: `-D AL_IDS_SUBSET=equilibrium
+  # -D AL_SECOND_DD_IDSDEF=...` installs to install-equilibrium-two-dd, which is
+  # distinct from a single-version subset build's install-equilibrium. That pair is
+  # the normal configuration for this feature, not a corner case.
+  set( _AL_PREFIX_TAGS "" )
+  set( _AL_PREFIX_REASONS "" )
+  if( AL_IDS_SUBSET )
+    string( REPLACE ";" "-" _AL_SUBSET_TAG "${AL_IDS_SUBSET}" )
+    list( APPEND _AL_PREFIX_TAGS "${_AL_SUBSET_TAG}" )
+    list( APPEND _AL_PREFIX_REASONS "AL_IDS_SUBSET" )
+    unset( _AL_SUBSET_TAG )
+  endif()
+  if( AL_SECOND_DD_IDSDEF )
+    # A fixed tag rather than the second version's number: the version comes out of
+    # the XML, which needs a Python venv that does not exist yet at this point.
+    list( APPEND _AL_PREFIX_TAGS "two-dd" )
+    list( APPEND _AL_PREFIX_REASONS "AL_SECOND_DD_IDSDEF" )
+  endif()
+  if( _AL_PREFIX_TAGS )
+    list( JOIN _AL_PREFIX_TAGS "-" _AL_PREFIX_SUFFIX )
+    list( JOIN _AL_PREFIX_REASONS " and " _AL_PREFIX_REASONS )
+    set( CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/install-${_AL_PREFIX_SUFFIX}"
+      CACHE PATH "Install path prefix" )
+    message( STATUS
+      "${_AL_PREFIX_REASONS} is set: default install prefix is ${CMAKE_INSTALL_PREFIX}" )
+    unset( _AL_PREFIX_SUFFIX )
+  endif()
+  unset( _AL_PREFIX_TAGS )
+  unset( _AL_PREFIX_REASONS )
 endif()
 
 include(FetchContent)
@@ -95,22 +165,6 @@ endif()
 # Generate sources
 ################################################################################
 
-set( GENERATED_SRC_DIR "${CMAKE_CURRENT_BINARY_DIR}/src" )
-file( MAKE_DIRECTORY ${GENERATED_SRC_DIR} )
-
-# Generated source files
-set( GENERATED_SOURCES
-  "${GENERATED_SRC_DIR}/ids_routines.f90"
-  "${GENERATED_SRC_DIR}/ids_schemas.f90"
-  "${GENERATED_SRC_DIR}/ids_types.f90"
-  "${GENERATED_SRC_DIR}/ids_utilities.f90"
-  "${GENERATED_SRC_DIR}/utilities_copy_struct.f90"
-  "${GENERATED_SRC_DIR}/utilities_deallocate_struct.f90"
-  "${GENERATED_SRC_DIR}/utilities_get_struct.f90"
-  "${GENERATED_SRC_DIR}/utilities_put_slice_struct.f90"
-  "${GENERATED_SRC_DIR}/utilities_put_struct.f90"
-  "${GENERATED_SRC_DIR}/utilities_validate_struct.f90"
-)
 # Names of routines that generate separate source files
 set( ROUTINES
   copy_struct
@@ -122,78 +176,162 @@ set( ROUTINES
   put_slice
   validate
 )
-foreach( IDS_NAME IN LISTS IDS_NAMES )
-  foreach( ROUTINE IN LISTS ROUTINES )
-      list( APPEND GENERATED_SOURCES "${GENERATED_SRC_DIR}/${IDS_NAME}_${ROUTINE}.f90" )
-  endforeach()
-  list( APPEND GENERATED_SOURCES "${GENERATED_SRC_DIR}/${IDS_NAME}_schema.f90" )
-endforeach()
 
-# The alias layer: bare, unsuffixed spellings of everything the suffixed sources above
-# declare, so that code written against a single-version build compiles unchanged. Both
-# generators emit it only when SUFFIX is non-empty - with an empty suffix the sources
-# above are already bare and an alias module would be a duplicate - so this list is
-# conditional on exactly the same thing, and no file appears here that is not written.
-if( DD_MODULE_SUFFIX )
-  list( APPEND GENERATED_SOURCES
-    "${GENERATED_SRC_DIR}/alias_ids_utilities.f90"
-    "${GENERATED_SRC_DIR}/alias_ids_schemas.f90"
-    "${GENERATED_SRC_DIR}/alias_ids_routines.f90"
-    "${GENERATED_SRC_DIR}/alias_utilities_struct.f90"
-  )
-  foreach( IDS_NAME IN LISTS IDS_NAMES )
-    list( APPEND GENERATED_SOURCES
-      "${GENERATED_SRC_DIR}/alias_${IDS_NAME}_schema.f90"
-      "${GENERATED_SRC_DIR}/alias_${IDS_NAME}_routines.f90"
-    )
-  endforeach()
-endif()
-
+# Generate one Data Dictionary version's Fortran sources into its own directory.
+#
+# Called once per version - twice when AL_SECOND_DD_IDSDEF is set - with everything that
+# differs between the two runs passed in: the dictionary to read, the version stamped
+# into the data the generated code writes, the suffix its module and type names carry,
+# and whether this is the default version, which is what decides who emits the shared
+# ids_types module, the alias layer and the front door's procedures (see utils.xsl).
+#
+# Each version needs its own directory because the emitted file names carry no suffix:
+# equilibrium_put.f90 is equilibrium_put.f90 in either version. That also makes the two
+# versions' output easy to diff.
+#
+# Sets <SOURCES_VAR> to the sources it will generate and declares <TARGET> as the target
+# that generates them. Every file it lists is a file the generator writes - that is what
+# the list is for. The converse holds only as far as IDS_NAMES: a dictionary defining IDSs
+# the primary does not would also write sources for those, and they would sit in SRC_DIR
+# uncompiled. AL_IDS_SUBSET, which applies to both versions, is what keeps the two sets
+# equal in practice.
+#
 # Note: saxonche is provided by dd_build_env (set up in ALBuildDataDictionary)
 # _VENV_PYTHON points to that environment and is used for all XSLT transformations
+function( al_generate_dd_version SRC_DIR )
+  cmake_parse_arguments( PARSE_ARGV 1 GEN
+    "" "IDSDEF;VERSION;SUFFIX;IS_DEFAULT;TARGET;SOURCES_VAR" "" )
+  file( MAKE_DIRECTORY ${SRC_DIR} )
 
-add_custom_command(
-  # Use a dummy output file: when listing all actual output files (which are
-  # source files of target `al-fortran`), they would be re-created with every build.
-  OUTPUT ${GENERATED_SRC_DIR}/dummy.txt
-  # Generate routine files with IDSDef2F90Routines.xsl
-  COMMAND 
-    ${_VENV_PYTHON} "${AL_LOCAL_XSLTPROC_SCRIPT}"
-      -xsl ${CMAKE_CURRENT_SOURCE_DIR}/IDSDef2F90Routines.xsl
-      -s ${IDSDEF}
-      -o ${GENERATED_SRC_DIR}/routines_output.xml
-      DD_GIT_DESCRIBE=${DD_VERSION}
-      AL_GIT_DESCRIBE=${FULL_VERSION}
-      SUFFIX=${DD_MODULE_SUFFIX}
-  # Generate schema files with IDSDef2F90TypeDef.xsl
-  COMMAND 
-    ${_VENV_PYTHON} "${AL_LOCAL_XSLTPROC_SCRIPT}"
-      -xsl ${CMAKE_CURRENT_SOURCE_DIR}/IDSDef2F90TypeDef.xsl
-      -s ${IDSDEF}
-      -o ${GENERATED_SRC_DIR}/schemas_output.xml
-      DD_GIT_DESCRIBE=${DD_VERSION}
-      AL_GIT_DESCRIBE=${FULL_VERSION}
-      SUFFIX=${DD_MODULE_SUFFIX}
-  # Create/update our dummy file
-  COMMAND ${CMAKE_COMMAND} -E touch ${GENERATED_SRC_DIR}/dummy.txt
-  # utils.xsl is included by both generators (it declares SUFFIX and the shared
-  # naming functions), so editing it must re-run them too.
-  DEPENDS IDSDef2F90Routines.xsl IDSDef2F90TypeDef.xsl utils.xsl ${IDSDEF}
-  WORKING_DIRECTORY ${GENERATED_SRC_DIR}
-)
-add_custom_target( al-fortran-sources
-  COMMAND ${CMAKE_COMMAND} -E echo ""
-  DEPENDS ${GENERATED_SRC_DIR}/dummy.txt
-  # Actually these are results of the custom_command above, but with this trick
-  # we don't rebuild it always (only when IDSDef.xml or the xslts have changed)
-  BYPRODUCTS ${GENERATED_SOURCES}
+  set( _sources
+    "${SRC_DIR}/ids_routines.f90"
+    "${SRC_DIR}/ids_schemas.f90"
+    "${SRC_DIR}/ids_utilities.f90"
+    "${SRC_DIR}/utilities_copy_struct.f90"
+    "${SRC_DIR}/utilities_deallocate_struct.f90"
+    "${SRC_DIR}/utilities_get_struct.f90"
+    "${SRC_DIR}/utilities_put_slice_struct.f90"
+    "${SRC_DIR}/utilities_put_struct.f90"
+    "${SRC_DIR}/utilities_validate_struct.f90"
+  )
+  # ids_types holds the kinds, the invalid markers and the abstract IDS base type: one
+  # module for the whole library, DD-version-independent, so only the default version's
+  # run emits it. Both versions' IDS types extend that one base type, which is what lets
+  # shared polymorphic code accept either.
+  if( GEN_IS_DEFAULT STREQUAL "yes" )
+    list( APPEND _sources "${SRC_DIR}/ids_types.f90" )
+  endif()
+  foreach( IDS_NAME IN LISTS IDS_NAMES )
+    foreach( ROUTINE IN LISTS ROUTINES )
+      list( APPEND _sources "${SRC_DIR}/${IDS_NAME}_${ROUTINE}.f90" )
+    endforeach()
+    list( APPEND _sources "${SRC_DIR}/${IDS_NAME}_schema.f90" )
+  endforeach()
+
+  # The alias layer: bare, unsuffixed spellings of everything the suffixed sources above
+  # declare, so that code written against a single-version build compiles unchanged. Both
+  # generators emit it only when SUFFIX is non-empty and this is the default version -
+  # with an empty suffix the sources above are already bare and an alias module would be
+  # a duplicate, and the bare names can only mean one version - so this list is
+  # conditional on exactly the same thing, and no file appears here that is not written.
+  if( GEN_SUFFIX AND GEN_IS_DEFAULT STREQUAL "yes" )
+    list( APPEND _sources
+      "${SRC_DIR}/alias_ids_utilities.f90"
+      "${SRC_DIR}/alias_ids_schemas.f90"
+      "${SRC_DIR}/alias_ids_routines.f90"
+      "${SRC_DIR}/alias_utilities_struct.f90"
+    )
+    foreach( IDS_NAME IN LISTS IDS_NAMES )
+      list( APPEND _sources
+        "${SRC_DIR}/alias_${IDS_NAME}_schema.f90"
+        "${SRC_DIR}/alias_${IDS_NAME}_routines.f90"
+      )
+    endforeach()
+  endif()
+
+  add_custom_command(
+    # Use a dummy output file: when listing all actual output files (which are
+    # source files of target `al-fortran`), they would be re-created with every build.
+    OUTPUT ${SRC_DIR}/dummy.txt
+    # Generate routine files with IDSDef2F90Routines.xsl
+    COMMAND
+      ${_VENV_PYTHON} "${AL_LOCAL_XSLTPROC_SCRIPT}"
+        -xsl ${CMAKE_CURRENT_SOURCE_DIR}/IDSDef2F90Routines.xsl
+        -s ${GEN_IDSDEF}
+        -o ${SRC_DIR}/routines_output.xml
+        DD_GIT_DESCRIBE=${GEN_VERSION}
+        AL_GIT_DESCRIBE=${FULL_VERSION}
+        SUFFIX=${GEN_SUFFIX}
+        IS_DEFAULT_VERSION=${GEN_IS_DEFAULT}
+    # Generate schema files with IDSDef2F90TypeDef.xsl
+    COMMAND
+      ${_VENV_PYTHON} "${AL_LOCAL_XSLTPROC_SCRIPT}"
+        -xsl ${CMAKE_CURRENT_SOURCE_DIR}/IDSDef2F90TypeDef.xsl
+        -s ${GEN_IDSDEF}
+        -o ${SRC_DIR}/schemas_output.xml
+        DD_GIT_DESCRIBE=${GEN_VERSION}
+        AL_GIT_DESCRIBE=${FULL_VERSION}
+        SUFFIX=${GEN_SUFFIX}
+        IS_DEFAULT_VERSION=${GEN_IS_DEFAULT}
+    # Create/update our dummy file
+    COMMAND ${CMAKE_COMMAND} -E touch ${SRC_DIR}/dummy.txt
+    # utils.xsl is included by both generators (it declares SUFFIX and the shared
+    # naming functions), so editing it must re-run them too.
+    DEPENDS IDSDef2F90Routines.xsl IDSDef2F90TypeDef.xsl utils.xsl ${GEN_IDSDEF}
+    # The routines generator reads back the utilities_validate_struct.f90 it has just
+    # written, by a path relative to the working directory, so each version must run in
+    # its own output directory to read its own.
+    WORKING_DIRECTORY ${SRC_DIR}
+  )
+  add_custom_target( ${GEN_TARGET}
+    COMMAND ${CMAKE_COMMAND} -E echo ""
+    DEPENDS ${SRC_DIR}/dummy.txt
+    # Actually these are results of the custom_command above, but with this trick
+    # we don't rebuild it always (only when IDSDef.xml or the xslts have changed)
+    BYPRODUCTS ${_sources}
+  )
+
+  set( ${GEN_SOURCES_VAR} ${_sources} PARENT_SCOPE )
+endfunction()
+
+set( GENERATED_SRC_DIR "${CMAKE_CURRENT_BINARY_DIR}/src" )
+al_generate_dd_version( ${GENERATED_SRC_DIR}
+  IDSDEF ${IDSDEF}
+  VERSION ${DD_VERSION}
+  SUFFIX ${DD_MODULE_SUFFIX}
+  IS_DEFAULT yes
+  TARGET al-fortran-sources
+  SOURCES_VAR GENERATED_SOURCES
 )
 
 set( SOURCES ${GENERATED_SOURCES} )
-list( APPEND SOURCES 
+list( APPEND SOURCES
   wrapper/al_defs.f90
   wrapper/al_low_level_wrap.f90
 )
+
+# The targets that generate Fortran sources for al-fortran - one per DD version.
+set( AL_SOURCE_TARGETS al-fortran-sources )
+
+# The second Data Dictionary version, when one is configured. Its sources join the same
+# library target: the dependency graph runs shared -> both versions -> shared (both
+# versions' modules use ids_types and the wrapper layer, and the default version's front
+# door reaches its own modules), so splitting the versions into separate targets would
+# need the shared code split into further targets to break a cycle. CMake's Fortran
+# module scanner orders the compilation across the two source directories unaided.
+if( AL_SECOND_DD_IDSDEF )
+  set( SECOND_GENERATED_SRC_DIR "${CMAKE_CURRENT_BINARY_DIR}/src${SECOND_DD_MODULE_SUFFIX}" )
+  al_generate_dd_version( ${SECOND_GENERATED_SRC_DIR}
+    IDSDEF ${SECOND_IDSDEF}
+    VERSION ${SECOND_DD_VERSION}
+    SUFFIX ${SECOND_DD_MODULE_SUFFIX}
+    IS_DEFAULT no
+    TARGET al-fortran-sources${SECOND_DD_MODULE_SUFFIX}
+    SOURCES_VAR SECOND_GENERATED_SOURCES
+  )
+  list( APPEND SOURCES ${SECOND_GENERATED_SOURCES} )
+  list( APPEND AL_SOURCE_TARGETS al-fortran-sources${SECOND_DD_MODULE_SUFFIX} )
+endif()
 
 
 # Generate sources (identifiers)
@@ -239,7 +377,7 @@ endforeach()
 ################################################################################
 
 add_library( al-fortran ${SOURCES} )
-add_dependencies( al-fortran al-fortran-sources )
+add_dependencies( al-fortran ${AL_SOURCE_TARGETS} )
 
 if( CMAKE_Fortran_COMPILER_ID STREQUAL "NAG" )
   # Work around NAG compiler not wanting to link against libal.so.x.y.z

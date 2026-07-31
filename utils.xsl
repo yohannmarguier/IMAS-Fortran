@@ -38,6 +38,53 @@
   <xsl:param name="SUFFIX" as="xs:string" select="''"/>
 
   <!--
+    IS_DEFAULT_VERSION - 'yes' (the default) or 'no'. Says which of two roles this
+    generator run plays when a build compiles more than one Data Dictionary version
+    into one library.
+
+    'yes': this run owns everything there is exactly one of. The
+    DD-version-independent ids_types module, and the alias layer that makes the bare,
+    unsuffixed spellings mean *this* version. Its front door carries the shared
+    procedures, including the serialization pair, which is why serialization is
+    limited to this version - and limited loudly: ids_serialize prints
+    "SERIALIZE: ERROR selecting IDS type" for any other version's IDS and then crashes
+    reading back a buffer nothing wrote.
+
+    'no': this run adds a version alongside it. It emits its own suffixed modules and
+    nothing else: no ids_types (there is one, and it is shared), no alias layer (the
+    bare names are already taken), and a front door that is re-exports only - no
+    procedures, so it cannot make a procedure name ambiguous for a program that uses
+    two front doors at once.
+
+    A run with IS_DEFAULT_VERSION='no' must have a non-empty SUFFIX, or every module
+    it emits collides with the default version's.
+  -->
+  <xsl:param name="IS_DEFAULT_VERSION" as="xs:string" select="'yes'"/>
+
+  <xsl:variable name="is-default-version" as="xs:boolean"
+    select="$IS_DEFAULT_VERSION = 'yes'"/>
+
+  <!--
+    Reject a parameter combination that would otherwise be discovered as a duplicate
+    module thousands of lines into the Fortran compilation, or - worse, for a
+    misspelled IS_DEFAULT_VERSION - as a silently missing ids_types module. Called by
+    both generators, unconditionally: unlike check_versioned_names below, this has to
+    run for an unsuffixed run too.
+  -->
+  <xsl:template name="check_generator_parameters">
+    <xsl:if test="not($IS_DEFAULT_VERSION = ('yes', 'no'))">
+      <xsl:message terminate="yes">
+IS_DEFAULT_VERSION is '<xsl:value-of select="$IS_DEFAULT_VERSION"/>'; it must be 'yes' or 'no'.
+</xsl:message>
+    </xsl:if>
+    <xsl:if test="not($is-default-version) and $SUFFIX = ''">
+      <xsl:message terminate="yes">
+IS_DEFAULT_VERSION='no' needs a non-empty SUFFIX: without one, every module this run emits has the same name as the default version's.
+</xsl:message>
+    </xsl:if>
+  </xsl:template>
+
+  <!--
     Keep the version suffix intact even when appending it would exceed Fortran's
     63-character identifier limit. Unsuffixed output takes the first branch and
     is therefore unchanged byte for byte.

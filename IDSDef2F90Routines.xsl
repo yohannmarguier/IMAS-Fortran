@@ -78,6 +78,7 @@
 <xsl:key name="utilities-fields" match="/IDSs/utilities/field" use="@name" />
 
 <xsl:template match="/IDSs">
+  <xsl:call-template name="check_generator_parameters"/>
   <xsl:if test="$SUFFIX != ''">
     <xsl:call-template name="check_versioned_names"/>
   </xsl:if>
@@ -88,6 +89,20 @@
   </xsl:for-each>  
   end module
   </xsl:result-document>
+  <!-- THE FRONT DOOR
+       Two shapes, chosen by IS_DEFAULT_VERSION (see utils.xsl).
+
+       The default version's front door is the one below, unchanged: this version's
+       modules, plus the six procedures that exist once for the whole library. Four of
+       them identify their IDS by character string and are version-agnostic; the other
+       two, ids_serialize/ids_deserialize, are the library's only polymorphic entry
+       point and carry a hardcoded list of concrete type names, which is why
+       serialization is limited to the default version.
+
+       A second version's front door is the re-export-only one in the otherwise branch.
+       Same file name - the two versions generate into separate directories. -->
+  <xsl:choose>
+  <xsl:when test="$is-default-version">
   <xsl:result-document href="ids_routines.f90">
 module <xsl:value-of select="local:versioned-name('ids_routines')"/>
 use <xsl:value-of select="local:versioned-name('ids_schemas')"/>
@@ -540,6 +555,41 @@ end function get_file_unit
 
 end module
 </xsl:result-document>
+  </xsl:when><!-- end of the default version's front door -->
+  <xsl:otherwise>
+  <xsl:result-document href="ids_routines.f90">
+<xsl:text>! Front door for Data Dictionary version </xsl:text><xsl:value-of select="$DD_GIT_DESCRIBE"/><xsl:text>: one use statement bringing in
+! everything this version offers, so that a program need not know the library's module
+! structure.
+!
+! Re-exports only, deliberately: no procedure is declared here, so a program that uses
+! this front door and the default version's at once cannot get an ambiguous procedure
+! name. The generic names (ids_put, ids_get, ...) arrive bare from both and merge into
+! one generic that dispatches on the type of the IDS passed, which is what makes the
+! version implicit at a call site.
+!
+! Not here, and only in the default version's front door: the six shared procedures.
+! Four of them (list_all_occurrences, ids_get_times, ...) identify their IDS by character
+! string and so are version-agnostic - `use </xsl:text><xsl:value-of select="local:versioned-name('ids_routines')"/><xsl:text>` is not the
+! way to reach them, `use ids_routines` is. The other two are ids_serialize and
+! ids_deserialize, which the default version alone supports: their select-type carries a
+! hardcoded list of the default version's concrete types, so an IDS of this version
+! reaches the `class default` branch. Do not pass one: that branch prints
+! "SERIALIZE: ERROR selecting IDS type" and then falls through into the retrieval of a
+! buffer that was never written, which crashes.
+module </xsl:text><xsl:value-of select="local:versioned-name('ids_routines')"/><xsl:text>
+use </xsl:text><xsl:value-of select="local:versioned-name('ids_schemas')"/><xsl:text>
+use al_low_level_wrap
+use </xsl:text><xsl:value-of select="local:versioned-name('utilities_copy_struct')"/><xsl:text>
+use </xsl:text><xsl:value-of select="local:versioned-name('utilities_deallocate_struct')"/><xsl:text>
+</xsl:text><xsl:for-each select="IDS"><xsl:text>
+</xsl:text><xsl:variable name="ids" select="string(@name)"/><xsl:for-each select="$ids-routine-module-kinds"><xsl:text>use </xsl:text><xsl:value-of select="local:versioned-name(concat($ids, .))"/><xsl:text>
+</xsl:text></xsl:for-each></xsl:for-each><xsl:text>
+end module </xsl:text><xsl:value-of select="local:versioned-name('ids_routines')"/><xsl:text>
+</xsl:text>
+  </xsl:result-document>
+  </xsl:otherwise>
+  </xsl:choose><!-- end of the front door, either shape -->
 
 <xsl:apply-templates select="/IDSs/utilities" mode="deallocate_struct"/> 
 <xsl:apply-templates select="IDS" mode="deallocate_struct"/> 
@@ -566,8 +616,10 @@ end module
 <!-- The alias layer's half of this generator: bare spellings of the front door, of
      the aggregate schema module and of every routine module. Emitted only when there
      is a suffix to hide - with an empty SUFFIX the modules above are already bare,
-     and an unsuffixed build's output directory stays free of files nothing compiles. -->
-<xsl:if test="$SUFFIX != ''">
+     and an unsuffixed build's output directory stays free of files nothing compiles -
+     and only by the default version's run, since the bare names are exactly what
+     makes that version the default. -->
+<xsl:if test="$SUFFIX != '' and $is-default-version">
   <xsl:result-document href="alias_ids_routines.f90">
 <xsl:text>! Alias layer: `use ids_routines` reaches the default Data Dictionary version
 ! (</xsl:text><xsl:value-of select="$DD_GIT_DESCRIBE"/><xsl:text>) and sees every module and every type under its bare spelling,
