@@ -8,43 +8,9 @@
 <xsl:param name="DD_GIT_DESCRIBE" as="xs:string" required="yes"/>
 <xsl:param name="AL_GIT_DESCRIBE" as="xs:string" required="yes"/>
 
-<!--
-  SUFFIX - appended to every module name and every derived type name whose
-  spelling depends on the Data Dictionary version, so that two DD versions can
-  be compiled into one build (e.g. SUFFIX='_v4_1_1' yields ids_utilities_v4_1_1,
-  ids_schemas_equilibrium_v4_1_1, ids_equilibrium_v4_1_1).
-
-  Defaults to the empty string, which reproduces the historical, unsuffixed
-  spellings byte for byte.
-
-  Deliberately NOT suffixed: the ids_types module and everything it declares
-  (the kinds, the invalid values, the abstract IDS_base type) - those are
-  DD-version-independent and shared by every version; procedure names; and
-  anything inside a string literal, since those carry Data Dictionary paths.
-
-  Two things this parameter does not do on its own:
-   - the .f90 file names are unsuffixed, so each version must be generated into
-     its own directory;
-   - IDSDef2F90Routines.xsl does not apply SUFFIX yet, so a non-empty value here
-     produces types no generated routine can name.
--->
-<xsl:param name="SUFFIX" as="xs:string" select="''"/>
-
-<!--
-  Keep the version suffix intact even when appending it would exceed Fortran's
-  63-character identifier limit. Unsuffixed output takes the first branch and
-  is therefore unchanged byte for byte.
--->
-<xsl:function name="local:versioned-name" as="xs:string">
-  <xsl:param name="base" as="xs:string"/>
-  <xsl:variable name="available" as="xs:integer" select="63 - string-length($SUFFIX)"/>
-  <xsl:sequence select="if ($SUFFIX = '' or string-length($base) le $available)
-                        then concat($base, $SUFFIX)
-                        else if ($available lt 8)
-                        then concat(substring($base, 1, $available), $SUFFIX)
-                        else concat(substring($base, 1, $available - 7), '_',
-                                    substring($base, string-length($base) - 5), $SUFFIX)"/>
-</xsl:function>
+<!-- SUFFIX and local:versioned-name are declared in utils.xsl, included below and
+     shared with IDSDef2F90Routines.xsl: the two generators must spell the module
+     names they exchange (ids_utilities, ids_schemas_<ids>) identically. -->
 
 <xsl:variable name="version_regex" select="'^([0-9]+)\.([0-9]+)\.([0-9]+)([+-].*)?$'"/>
 <xsl:variable name="DD_MAJOR" as="xs:integer" select="xs:integer(replace($DD_GIT_DESCRIBE, $version_regex, '$1'))"/>
@@ -59,41 +25,8 @@
 <xsl:include href="utils.xsl"/>
 
 
-<!--
-  A Fortran identifier is limited to 63 characters (F2003 and later, enforced by
-  gfortran). Retain the entire version suffix and shorten only an overlong base
-  name. Reject a suffix that leaves no room for a base name, or a dictionary
-  whose shortened names collide.
-
-  Skipped entirely when SUFFIX is empty: the unsuffixed names are what the DD
-  has always produced, and they already fit.
--->
-<xsl:template name="check_versioned_names">
-  <xsl:variable name="max-length" as="xs:integer" select="63"/>
-  <!-- Names the templates below emit. local:structtypename is the same function
-       they call, so this list cannot drift from what it is guarding. -->
-  <xsl:variable name="base-names" as="xs:string*"
-    select="(for $f in //field[@data_type='structure' or @data_type='struct_array']
-               return concat('ids_', local:structtypename($f)),
-             for $i in /IDSs/IDS return concat('ids_', string($i/@name)),
-             for $i in /IDSs/IDS return concat('ids_schemas_', string($i/@name)),
-             'ids_utilities')"/>
-  <xsl:if test="string-length($SUFFIX) ge $max-length">
-    <xsl:message terminate="yes">
-SUFFIX '<xsl:value-of select="$SUFFIX"/>' is <xsl:value-of select="string-length($SUFFIX)"/> characters; it must leave room for at least one base-name character within the <xsl:value-of select="$max-length"/>-character Fortran identifier limit.
-</xsl:message>
-  </xsl:if>
-  <xsl:variable name="versioned-names" as="xs:string*"
-    select="for $name in distinct-values($base-names) return local:versioned-name($name)"/>
-  <xsl:variable name="collisions" as="xs:string*"
-    select="distinct-values($versioned-names[count(index-of($versioned-names, .)) gt 1])"/>
-  <xsl:if test="exists($collisions)">
-    <xsl:message terminate="yes">
-SUFFIX '<xsl:value-of select="$SUFFIX"/>' would make generated Fortran identifiers collide:
-<xsl:for-each select="$collisions">  <xsl:value-of select="."/>
-</xsl:for-each></xsl:message>
-  </xsl:if>
-</xsl:template>
+<!-- check_versioned_names lives in utils.xsl, next to local:versioned-name, so that
+     it guards the names both generators emit rather than only this one's. -->
 
 <xsl:template match="/IDSs">
   <xsl:if test="$SUFFIX != ''">
@@ -192,7 +125,7 @@ end module ids_types
 <!-- ======================= ====   Begin : Common Utility definition ==== =====================-->
 </xsl:result-document>
 <xsl:result-document href="ids_utilities.f90">
-module <xsl:value-of select="local:versioned-name('ids_utilities')"/>    ! declare the set of types common to all sub-trees
+module <xsl:value-of select="local:utilities-module()"/>    ! declare the set of types common to all sub-trees
 
 use ids_types  ! re-exports IDS_base to consumers of this module
 
@@ -242,9 +175,9 @@ end module ! end of the utilities module
 
 <xsl:template match="IDS" mode="declare_in_file">
   <xsl:result-document href="{@name}_schema.f90">
-    module <xsl:value-of select="local:versioned-name(concat('ids_schemas_', string(@name)))"/>
+    module <xsl:value-of select="local:schemas-module(string(@name))"/>
     use ids_types
-    use <xsl:value-of select="local:versioned-name('ids_utilities')"/>
+    use <xsl:value-of select="local:utilities-module()"/>
     
     implicit none
 

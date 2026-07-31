@@ -154,7 +154,9 @@ add_custom_command(
       AL_GIT_DESCRIBE=${FULL_VERSION}
   # Create/update our dummy file
   COMMAND ${CMAKE_COMMAND} -E touch ${GENERATED_SRC_DIR}/dummy.txt
-  DEPENDS IDSDef2F90Routines.xsl IDSDef2F90TypeDef.xsl ${IDSDEF}
+  # utils.xsl is included by both generators (it declares SUFFIX and the shared
+  # naming functions), so editing it must re-run them too.
+  DEPENDS IDSDef2F90Routines.xsl IDSDef2F90TypeDef.xsl utils.xsl ${IDSDEF}
   WORKING_DIRECTORY ${GENERATED_SRC_DIR}
 )
 add_custom_target( al-fortran-sources

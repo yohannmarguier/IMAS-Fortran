@@ -8,16 +8,38 @@
 <xsl:param name="AL_GIT_DESCRIBE" as="xs:string" required="yes"/>
 
 <!--
-  SUFFIX - accepted so that both generators take the same parameter, but not yet
-  applied here. IDSDef2F90TypeDef.xsl suffixes the module and derived type names
-  it emits; this stylesheet still spells them unsuffixed (use ids_schemas_<ids>,
-  use ids_utilities, only: ids_<type>), so a non-empty value would generate
-  routines that name types nobody declared.
+  SUFFIX and local:versioned-name are declared in utils.xsl, included below and
+  shared with IDSDef2F90TypeDef.xsl, which must spell ids_utilities and
+  ids_schemas_<ids> exactly as the use statements here do.
 
-  Rather than emit a library that cannot compile, refuse the value. Delete this
-  check as part of applying SUFFIX to this generator.
+  This stylesheet applies the suffix to module names and module references only:
+  the per-IDS routine modules, the shared utilities_*_struct modules and the
+  aggregate ids_schemas module, plus every use statement naming a suffixable
+  module - including the ones inside ids_routines, which keeps its own bare name
+  but must reach the suffixed modules underneath it.
+
+  Not suffixed here: generic interface names (ids_put, ids_get, ids_put_struct,
+  ids_deallocate) and specific procedure names, which stay bare so that Fortran
+  merges two versions' same-named generics into one and dispatches on the
+  argument type; the ids_routines module name; and result-document file names,
+  including the utilities_validate_struct.f90 that mode="VALIDATE_2" reads back
+  with unparsed-text.
+
+  Still unsuffixed and therefore still incomplete: the type references, i.e. the
+  ids_<type> half of `use ids_utilities<SUFFIX>, only: ids_<type>` and every
+  type(...) declaration. Those are the next step; a non-empty SUFFIX does not
+  produce a compilable library yet.
+
+  A note on the <xsl:text> elements that now wrap a few newlines. Turning a
+  literal `module foo` into `module <xsl:value-of/>` splits the surrounding text
+  node, and the trailing part can end up whitespace-only - which XSLT strips from
+  the stylesheet, silently swallowing the newline that ended the emitted Fortran
+  line. Four places needed the newline made explicit to keep the unsuffixed
+  output byte for byte identical; the rest are followed by more literal text and
+  were unaffected.
 -->
-<xsl:param name="SUFFIX" as="xs:string" select="''"/>
+
+<xsl:include href="utils.xsl"/>
 
 <xsl:function name="local:unique_name" as="xs:string">
   <!-- Provides pseudo-unique 16 characters reference to arbitrary long field name  -->
@@ -46,36 +68,33 @@
 
 <xsl:template match="/IDSs">
   <xsl:if test="$SUFFIX != ''">
-    <xsl:message terminate="yes">
-SUFFIX '<xsl:value-of select="$SUFFIX"/>' was passed to IDSDef2F90Routines.xsl, which does not apply it yet.
-The generated routines would reference unsuffixed module and type names that IDSDef2F90TypeDef.xsl no longer emits.
-</xsl:message>
+    <xsl:call-template name="check_versioned_names"/>
   </xsl:if>
   <xsl:result-document href="ids_schemas.f90">
-  module ids_schemas
-  <xsl:for-each select="IDS">
-  use ids_schemas_<xsl:value-of select="@name"/>
+  module <xsl:value-of select="local:versioned-name('ids_schemas')"/><xsl:text>
+  </xsl:text><xsl:for-each select="IDS">
+  use <xsl:value-of select="local:schemas-module(string(@name))"/>
   </xsl:for-each>  
   end module
   </xsl:result-document>
   <xsl:result-document href="ids_routines.f90">
 module ids_routines
-use ids_schemas
+use <xsl:value-of select="local:versioned-name('ids_schemas')"/>
 use al_low_level_wrap
-use utilities_copy_struct
-use utilities_deallocate_struct
-<!--use specific_validate_struct-->
+use <xsl:value-of select="local:versioned-name('utilities_copy_struct')"/>
+use <xsl:value-of select="local:versioned-name('utilities_deallocate_struct')"/><xsl:text>
+</xsl:text><!--use specific_validate_struct--><xsl:text>
 
-<xsl:for-each select="IDS">
-use <xsl:value-of select="@name"/>_put_struct
-use <xsl:value-of select="@name"/>_put_slice_struct
-use <xsl:value-of select="@name"/>_get_struct
-use <xsl:value-of select="@name"/>_get_slice_struct
-use <xsl:value-of select="@name"/>_delete
-use <xsl:value-of select="@name"/>_copy_struct
-use <xsl:value-of select="@name"/>_deallocate_struct
-use <xsl:value-of select="@name"/>_validate_struct
-</xsl:for-each>
+</xsl:text><xsl:for-each select="IDS">
+use <xsl:value-of select="local:versioned-name(concat(string(@name), '_put_struct'))"/>
+use <xsl:value-of select="local:versioned-name(concat(string(@name), '_put_slice_struct'))"/>
+use <xsl:value-of select="local:versioned-name(concat(string(@name), '_get_struct'))"/>
+use <xsl:value-of select="local:versioned-name(concat(string(@name), '_get_slice_struct'))"/>
+use <xsl:value-of select="local:versioned-name(concat(string(@name), '_delete'))"/>
+use <xsl:value-of select="local:versioned-name(concat(string(@name), '_copy_struct'))"/>
+use <xsl:value-of select="local:versioned-name(concat(string(@name), '_deallocate_struct'))"/>
+use <xsl:value-of select="local:versioned-name(concat(string(@name), '_validate_struct'))"/><xsl:text>
+</xsl:text></xsl:for-each>
 
 #if defined(__INTEL_COMPILER)
 use ifport, only : getpid  ! required for getpid() in ifort
@@ -543,7 +562,7 @@ end module
 <!--+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
 <xsl:template match="IDS" mode="delete">
   <xsl:result-document href="{@name}_delete.f90">
-module <xsl:value-of select="@name"/>_delete
+module <xsl:value-of select="local:versioned-name(concat(string(@name), '_delete'))"/>
 
 ! Declaration of the generic IDS DELETE routine
 interface ids_delete
@@ -554,7 +573,7 @@ contains
 
 !!!!!! Routine to DELETE the IDS
 subroutine ids_delete_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, IDSpath, IDS)  <!-- systematic calls to the low level delete_data routine. The IDS input argument is added just for the interface to identify the relevant IDS type -->
-  use ids_schemas_<xsl:value-of select="@name"/>
+  use <xsl:value-of select="local:schemas-module(string(@name))"/>
   use al_low_level_wrap
   implicit none
   character*(*) :: IDSpath
@@ -572,7 +591,8 @@ subroutine ids_delete_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx
 
 end subroutine ids_delete_<xsl:value-of select="local:unique_name(@name)"/>
 
-end module <xsl:value-of select="@name"/>_delete
+end module <xsl:value-of select="local:versioned-name(concat(string(@name), '_delete'))"/><xsl:text>
+  </xsl:text>
   </xsl:result-document>
 </xsl:template>
 
@@ -584,7 +604,7 @@ end module <xsl:value-of select="@name"/>_delete
 <!--+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
 <xsl:template match="utilities" mode="deallocate_struct">
   <xsl:result-document href="utilities_deallocate_struct.f90">
-module utilities_deallocate_struct
+module <xsl:value-of select="local:versioned-name('utilities_deallocate_struct')"/>
 
 interface ids_deallocate_struct
   <xsl:for-each select="/IDSs/utilities/field[@data_type='structure' or @data_type='struct_array']">
@@ -622,7 +642,7 @@ subroutine ids_deallocate_struct_<xsl:value-of select="local:unique_name($this-t
   use al_low_level_wrap
   use, intrinsic :: ISO_C_BINDING, only: C_LOC
   use ids_types
-  use ids_utilities, only: ids_<xsl:value-of select="$this-type"/>
+  use <xsl:value-of select="local:utilities-module()"/>, only: ids_<xsl:value-of select="$this-type"/>
   implicit none
 
   integer(ids_int) :: i
@@ -648,9 +668,9 @@ end module
 <!--+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
 <xsl:template match="IDS" mode="deallocate_struct">
   <xsl:result-document href="{@name}_deallocate_struct.f90">
-module <xsl:value-of select="@name"/>_deallocate_struct
+module <xsl:value-of select="local:versioned-name(concat(string(@name), '_deallocate_struct'))"/>
 
-use utilities_deallocate_struct
+use <xsl:value-of select="local:versioned-name('utilities_deallocate_struct')"/>
 
 interface ids_deallocate
   module procedure ids_deallocate_struct_<xsl:value-of select="local:unique_name(@name)"/> <!-- subroutine for the whole IDS -->
@@ -682,7 +702,7 @@ end interface
 subroutine ids_deallocate_struct_<xsl:value-of select="local:unique_name(@name)"/>(struct_in)
   use al_low_level_wrap
   use, intrinsic :: ISO_C_BINDING, only: C_LOC
-  use ids_schemas_<xsl:value-of select="@name"/>
+  use <xsl:value-of select="local:schemas-module(string(@name))"/>
   implicit none
 
   integer(ids_int) :: i
@@ -715,7 +735,7 @@ end subroutine ids_deallocate_struct_<xsl:value-of select="local:unique_name(@na
 subroutine ids_deallocate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(struct_in,  c_data)
   use al_low_level_wrap
   use, intrinsic :: ISO_C_BINDING, only: C_LOC
-  use ids_schemas_<xsl:value-of select="ancestor::IDS/@name"/>
+  use <xsl:value-of select="local:schemas-module(string(ancestor::IDS/@name))"/>
   implicit none
 
   integer(ids_int) :: i
@@ -740,7 +760,7 @@ end module
 <!--+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
 <xsl:template match="utilities" mode="copy_struct">
   <xsl:result-document href="utilities_copy_struct.f90">
-module utilities_copy_struct
+module <xsl:value-of select="local:versioned-name('utilities_copy_struct')"/>
 
 interface ids_copy
   <xsl:for-each select="/IDSs/utilities/field[@data_type='structure' or @data_type='struct_array']">
@@ -778,7 +798,7 @@ subroutine ids_copy_struct_<xsl:value-of select="local:unique_name($this-type)"/
   ! Copies all fields of struct_in to struct_out
   ! Assumes that struct_in is a single instance of a given structure
   use ids_types
-  use ids_utilities, only: ids_<xsl:value-of select="$this-type"/>
+  use <xsl:value-of select="local:utilities-module()"/>, only: ids_<xsl:value-of select="$this-type"/>
   implicit none
 
   integer(ids_int) :: i
@@ -804,9 +824,9 @@ end module
 <!--+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
 <xsl:template match="IDS" mode="copy_struct">
   <xsl:result-document href="{@name}_copy_struct.f90">
-module <xsl:value-of select="@name"/>_copy_struct
+module <xsl:value-of select="local:versioned-name(concat(string(@name), '_copy_struct'))"/>
 
-use utilities_copy_struct
+use <xsl:value-of select="local:versioned-name('utilities_copy_struct')"/>
 
 interface ids_copy 
   module procedure ids_copy_struct_<xsl:value-of select="local:unique_name(@name)"/>
@@ -836,7 +856,7 @@ end interface
 subroutine ids_copy_struct_<xsl:value-of select="local:unique_name(@name)"/>(struct_in, struct_out)
   ! Copies all fields of struct_in to struct_out
   ! Assumes that struct_in is a single instance of a given structure
-  use ids_schemas_<xsl:value-of select="@name"/>
+  use <xsl:value-of select="local:schemas-module(string(@name))"/>
   implicit none
 
   integer(ids_int) :: i
@@ -867,7 +887,7 @@ end subroutine ids_copy_struct_<xsl:value-of select="local:unique_name(@name)"/>
 subroutine ids_copy_struct_<xsl:value-of select="local:unique_name($this-type)"/>(struct_in,  struct_out)
   ! Copies all fields of struct_in to struct_out
   ! Assumes that struct_in is a single instance of a given structure
-  use ids_schemas_<xsl:value-of select="ancestor::IDS/@name"/>
+  use <xsl:value-of select="local:schemas-module(string(ancestor::IDS/@name))"/>
   implicit none
 
   integer(ids_int) :: i
@@ -893,7 +913,7 @@ end module
 <!--+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
 <xsl:template match="utilities" mode="put_struct">
   <xsl:result-document href="utilities_put_struct.f90">
-module utilities_put_struct
+module <xsl:value-of select="local:versioned-name('utilities_put_struct')"/>
 
 interface ids_put_struct
   <xsl:for-each select="/IDSs/utilities/field[@data_type='structure' or @data_type='struct_array']">  
@@ -931,7 +951,7 @@ end interface
 
 subroutine put_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>(ctx, name, path, struct, timemode, timedparent, retstatus)
   use ids_types
-  use ids_utilities, only: ids_<xsl:value-of select="$this-type"/>
+  use <xsl:value-of select="local:utilities-module()"/>, only: ids_<xsl:value-of select="$this-type"/>
   use al_low_level_wrap
   implicit none
 
@@ -979,9 +999,9 @@ end module
 <!--+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
 <xsl:template match="IDS" mode="put_struct">
   <xsl:result-document href="{@name}_put.f90">
-module <xsl:value-of select="@name"/>_put_struct
+module <xsl:value-of select="local:versioned-name(concat(string(@name), '_put_struct'))"/>
 
-use utilities_put_struct
+use <xsl:value-of select="local:versioned-name('utilities_put_struct')"/>
 
 interface ids_put
   module procedure put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/> <!-- subroutine for the whole IDS -->
@@ -1013,10 +1033,10 @@ end interface
 <!-- subroutine for the whole IDS -->
 !!! Routines to PUT the full IDS !!!
 subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS, retstatus, verbose)
-  use ids_schemas_<xsl:value-of select="@name"/>
-  use <xsl:value-of select="@name"/>_validate_struct
+  use <xsl:value-of select="local:schemas-module(string(@name))"/>
+  use <xsl:value-of select="local:versioned-name(concat(string(@name), '_validate_struct'))"/>
   use al_low_level_wrap
-  use <xsl:value-of select="@name"/>_delete
+  use <xsl:value-of select="local:versioned-name(concat(string(@name), '_delete'))"/>
   <!--<xsl:if test="@specific_validation_rules='yes'">
          use specific_validate_struct
   </xsl:if>-->
@@ -1135,7 +1155,7 @@ end subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
   <xsl:variable name="this-ids" select="ancestor::IDS/@name"/>
   <xsl:if test="not (preceding::field[@structure_reference=$this-type and ancestor::IDS/@name=$this-ids] or /IDSs/utilities/field/@name=$this-type)">
 subroutine put_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>(ctx, name, path, struct, timemode, timedparent, retstatus)
-  use ids_schemas_<xsl:value-of select="ancestor::IDS/@name"/>
+  use <xsl:value-of select="local:schemas-module(string(ancestor::IDS/@name))"/>
   use al_low_level_wrap
   implicit none
 
@@ -1173,7 +1193,7 @@ end module
 <!--+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
 <xsl:template match="utilities" mode="put_slice_struct">
   <xsl:result-document href="utilities_put_slice_struct.f90">
-module utilities_put_slice_struct
+module <xsl:value-of select="local:versioned-name('utilities_put_slice_struct')"/>
 
 interface ids_put_slice_struct
   <xsl:for-each select="/IDSs/utilities/field[@data_type='structure' or @data_type='struct_array']">  
@@ -1211,7 +1231,7 @@ end interface
 
 subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>(ctx, name, path, struct, timemode, timedparent, retstatus)
   use ids_types
-  use ids_utilities, only: ids_<xsl:value-of select="$this-type"/>
+  use <xsl:value-of select="local:utilities-module()"/>, only: ids_<xsl:value-of select="$this-type"/>
   use al_low_level_wrap
   implicit none
 
@@ -1248,9 +1268,9 @@ end module
 <!--+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
 <xsl:template match="IDS" mode="put_slice_struct">
   <xsl:result-document href="{@name}_put_slice.f90">
-module <xsl:value-of select="@name"/>_put_slice_struct
+module <xsl:value-of select="local:versioned-name(concat(string(@name), '_put_slice_struct'))"/>
 
-use utilities_put_slice_struct
+use <xsl:value-of select="local:versioned-name('utilities_put_slice_struct')"/>
 
 interface ids_put_slice
   module procedure put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/> <!-- subroutine for the whole IDS -->
@@ -1280,10 +1300,10 @@ end interface
 <!-- subroutine for the whole IDS -->
 !!! Routines to PUT_SLICE one time slice of an IDS !!!
 subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS, retstatus, verbose)
-  use ids_schemas_<xsl:value-of select="@name"/>
-  use <xsl:value-of select="@name"/>_validate_struct
+  use <xsl:value-of select="local:schemas-module(string(@name))"/>
+  use <xsl:value-of select="local:versioned-name(concat(string(@name), '_validate_struct'))"/>
   use al_low_level_wrap
-  use <xsl:value-of select="@name"/>_put_struct
+  use <xsl:value-of select="local:versioned-name(concat(string(@name), '_put_struct'))"/>
   <!--<xsl:if test="@specific_validation_rules='yes'">
          use specific_validate_struct
   </xsl:if>-->
@@ -1446,7 +1466,7 @@ end subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@nam
   <xsl:variable name="this-ids" select="ancestor::IDS/@name"/>
   <xsl:if test="not (preceding::field[@structure_reference=$this-type and ancestor::IDS/@name=$this-ids] or /IDSs/utilities/field/@name=$this-type)">
 subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>(ctx, name, path, struct, timemode, timedparent, retstatus)
-  use ids_schemas_<xsl:value-of select="ancestor::IDS/@name"/>
+  use <xsl:value-of select="local:schemas-module(string(ancestor::IDS/@name))"/>
   use al_low_level_wrap
   implicit none
 
@@ -1487,7 +1507,7 @@ end module
 <!--+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
 <xsl:template match="utilities" mode="get_struct">
   <xsl:result-document href="utilities_get_struct.f90">
-module utilities_get_struct
+module <xsl:value-of select="local:versioned-name('utilities_get_struct')"/>
 
 interface ids_get_struct
   <xsl:for-each select="/IDSs/utilities/field[@data_type='structure' or @data_type='struct_array']">  
@@ -1525,7 +1545,7 @@ end interface
 
 subroutine get_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>(ctx, path, struct, timemode, timedparent, retstatus)
   use ids_types
-  use ids_utilities, only: ids_<xsl:value-of select="$this-type"/>
+  use <xsl:value-of select="local:utilities-module()"/>, only: ids_<xsl:value-of select="$this-type"/>
   use al_low_level_wrap
   implicit none
 
@@ -1567,9 +1587,9 @@ end module
   </xsl:apply-templates>
 </xsl:variable>
 
-module <xsl:value-of select="@name"/>_validate_struct
+module <xsl:value-of select="local:versioned-name(concat(string(@name), '_validate_struct'))"/>
 
-use utilities_validate_struct
+use <xsl:value-of select="local:versioned-name('utilities_validate_struct')"/>
 
 interface ids_validate
   module procedure validate_struct_ids_<xsl:value-of select="local:unique_name(@name)"/> <!-- interface procedure for the whole IDS -->
@@ -1595,7 +1615,7 @@ end interface
 contains
 
 subroutine validate_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(ids, status, err_msg)
-  use ids_schemas_<xsl:value-of select="@name"/>
+  use <xsl:value-of select="local:schemas-module(string(@name))"/>
   use al_low_level_wrap, only: IDS_TIME_MODE_HOMOGENEOUS, IDS_TIME_MODE_HETEROGENEOUS, IDS_TIME_MODE_INDEPENDENT
   implicit none
   type(ids_<xsl:value-of select="@name"/>), intent(in) :: ids
@@ -1950,7 +1970,7 @@ end module
 
 <xsl:template match="utilities" mode="VALIDATE_UTILITIES">
 <xsl:result-document href="utilities_validate_struct.f90">
-module utilities_validate_struct
+module <xsl:value-of select="local:versioned-name('utilities_validate_struct')"/>
 
 use ids_types
 
@@ -2112,7 +2132,7 @@ end module
   !--- validation of <xsl:value-of select="$this-type"/>
   !-----------------------------------------------------------------------
   subroutine ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(ids, ids_name, status, err_msg, ids_time_mode, ids_time_size)
-    use ids_utilities, only: ids_<xsl:value-of select="$this-type"/>
+    use <xsl:value-of select="local:utilities-module()"/>, only: ids_<xsl:value-of select="$this-type"/>
     use al_low_level_wrap, only: IDS_TIME_MODE_HOMOGENEOUS, IDS_TIME_MODE_HETEROGENEOUS, IDS_TIME_MODE_INDEPENDENT
     implicit none
     type(ids_<xsl:value-of select="$this-type"/>), intent(in) :: ids
@@ -2741,7 +2761,7 @@ end if
   !--- validation of <xsl:value-of select="$this-type"/>
   !-----------------------------------------------------------------------
   subroutine ids_validate_struct_<xsl:value-of select="local:unique_name($this-type)"/>(ids, ids_name, status, err_msg, ids_time_mode, ids_time_size)
-    use ids_schemas_<xsl:value-of select="ancestor::IDS/@name"/>
+    use <xsl:value-of select="local:schemas-module(string(ancestor::IDS/@name))"/>
     use al_low_level_wrap, only: IDS_TIME_MODE_HOMOGENEOUS, IDS_TIME_MODE_HETEROGENEOUS, IDS_TIME_MODE_INDEPENDENT
     implicit none
     type(ids_<xsl:value-of select="$this-type"/>), intent(in) :: ids
@@ -3619,9 +3639,9 @@ end if
 <!--+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
 <xsl:template match="IDS" mode="get_struct">
   <xsl:result-document href="{@name}_get.f90">
-module <xsl:value-of select="@name"/>_get_struct
+module <xsl:value-of select="local:versioned-name(concat(string(@name), '_get_struct'))"/>
 
-use utilities_get_struct
+use <xsl:value-of select="local:versioned-name('utilities_get_struct')"/>
 
 interface ids_get
   module procedure get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/> <!-- subroutine for the whole IDS -->
@@ -3657,7 +3677,7 @@ end interface
 <!-- subroutine for the whole IDS -->
 !!! Routines to GET the full IDS !!!
 subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS, retstatus)
-  use ids_schemas_<xsl:value-of select="@name"/>
+  use <xsl:value-of select="local:schemas-module(string(@name))"/>
   use al_low_level_wrap
   implicit none
 
@@ -3729,7 +3749,7 @@ end subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
 
 
 subroutine get_sample_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS,  tmin, tmax, dtime, interp, retstatus)
-use ids_schemas_<xsl:value-of select="@name"/>
+use <xsl:value-of select="local:schemas-module(string(@name))"/>
   use al_low_level_wrap
   implicit none
   integer(ids_int), intent(out), optional :: retstatus
@@ -3867,7 +3887,7 @@ end subroutine get_sample_struct_ids_<xsl:value-of select="local:unique_name(@na
   <xsl:variable name="this-ids" select="ancestor::IDS/@name"/>
   <xsl:if test="not (preceding::field[@structure_reference=$this-type and ancestor::IDS/@name=$this-ids] or /IDSs/utilities/field/@name=$this-type)">
 subroutine get_struct_ids_<xsl:value-of select="local:unique_name($this-type)"/>(ctx, path, struct, timemode, timedparent, retstatus)
-  use ids_schemas_<xsl:value-of select="ancestor::IDS/@name"/>
+  use <xsl:value-of select="local:schemas-module(string(ancestor::IDS/@name))"/>
   use al_low_level_wrap
   implicit none
 
@@ -3905,10 +3925,10 @@ end module
 <!--+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
 <xsl:template match="IDS" mode="get_slice_struct">
   <xsl:result-document href="{@name}_get_slice.f90">
-module <xsl:value-of select="@name"/>_get_slice_struct
+module <xsl:value-of select="local:versioned-name(concat(string(@name), '_get_slice_struct'))"/>
 
-use utilities_get_struct
-use <xsl:value-of select="@name"/>_get_struct
+use <xsl:value-of select="local:versioned-name('utilities_get_struct')"/>
+use <xsl:value-of select="local:versioned-name(concat(string(@name), '_get_struct'))"/>
 
 interface ids_get_slice
   module procedure get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/> <!-- subroutine for the whole IDS -->
@@ -3919,7 +3939,7 @@ end interface
 <!-- subroutine for the whole IDS -->
 !!! Routines to GET one time slice of an IDS, with time interpolation !!!
 subroutine get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS, twant, interpol, retstatus)
-  use ids_schemas_<xsl:value-of select="@name"/>
+  use <xsl:value-of select="local:schemas-module(string(@name))"/>
   use al_low_level_wrap
   implicit none
 
