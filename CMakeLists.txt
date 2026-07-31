@@ -454,6 +454,11 @@ if( AL_TESTS )
     # names carry a version suffix and the alias layer has restored the bare ones.
     add_subdirectory( tests/alias )
   endif()
+  if( AL_SECOND_DD_IDSDEF )
+    # Reads and writes both Data Dictionary versions through the public front doors, so
+    # there has to be a second version to read and write.
+    add_subdirectory( tests/two_dd )
+  endif()
 endif()
 
 if( AL_EXAMPLES )
