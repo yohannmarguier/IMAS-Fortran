@@ -1,0 +1,558 @@
+! Two Data Dictionary versions in one library, read and written for real.
+!
+! The build compiles two Data Dictionary versions into one al-fortran: the version
+! DD_VERSION selects (the default one, whose names are also spelled bare) and the one
+! AL_SECOND_DD_IDSDEF supplies. This program is the acceptance test for that claim. It
+! reads the checked-in equilibrium fixture of each version, asserts on fields that exist
+! in that version *only*, writes each IDS back to its own data entry, and reads the two
+! entries back to check that each carries its own Data Dictionary version stamp - which
+! is what makes the two halves demonstrably distinct on disk rather than one version
+! wearing two names.
+!
+! It reaches the library only through its public front doors, `use ids_routines` and
+! `use ids_routines@SECOND_DD_MODULE_SUFFIX@`: no generated module internals, and no
+! assertion on the text of generated sources. Every check exits non-zero on failure; no
+! outcome here depends on a human reading the console.
+!
+! The expected values mirror imas-python-fixtures/equilibrium_seed.py, which wrote the
+! fixture pair: the same physical content in both versions, in the two versions'
+! conventions and spellings. So the fields asserted below are exactly the DD 3 -> DD 4
+! difference - a field moved into a structure, the renames, the COCOS 11 -> 17 sign
+! flips, the unchanged controls, and the trap that one renamed field still exists in
+! DD 4.1.1 but is obsolescent and must be empty.
+!
+! Generated from two_dd_versions_test.f90.in.
+
+program two_dd_versions_test
+  ! The default version, bare-spelled, plus the shared procedures that only this front
+  ! door carries - including the version-agnostic ones exercised at the end.
+  use ids_routines
+  ! The second version. Re-exports only, so nothing here is ambiguous between the two.
+  use ids_routines@SECOND_DD_MODULE_SUFFIX@
+  implicit none
+
+  ! Configured by CMake. The two fixtures are copies of imas-python-fixtures/fixtures/,
+  ! the two write targets are this test's own directories.
+  character(*), parameter :: DEFAULT_VERSION = '@DD_VERSION@'
+  character(*), parameter :: SECOND_VERSION = '@SECOND_DD_VERSION@'
+  character(*), parameter :: DEFAULT_FIXTURE = 'imas:hdf5?path=@TWO_DD_FIXTURE_DEFAULT@'
+  character(*), parameter :: SECOND_FIXTURE = 'imas:hdf5?path=@TWO_DD_FIXTURE_SECOND@'
+  character(*), parameter :: DEFAULT_ENTRY = 'imas:hdf5?path=@TWO_DD_ENTRY_DEFAULT@'
+  character(*), parameter :: SECOND_ENTRY = 'imas:hdf5?path=@TWO_DD_ENTRY_SECOND@'
+
+  character(*), parameter :: FIXTURE_SOURCE = 'equilibrium_seed fixture'
+  ! Written over each IDS's version stamp before it is put, so that the stamp read back
+  ! can only have come from the put path itself and not from the fixture that happened
+  ! to carry the right one already.
+  character(*), parameter :: SCRIBBLE = 'not-a-data-dictionary-version'
+  integer, parameter :: SLICES = 2
+  ! The values below are written and read as doubles and are not computed on, so this is
+  ! a guard against a formatting round trip, not an error budget.
+  real(ids_real), parameter :: TOLERANCE = 1.0e-12_ids_real
+
+  integer :: failed_checks
+  type(ids_equilibrium) :: eq_default, eq_default_back
+  type(ids_equilibrium@SECOND_DD_MODULE_SUFFIX@) :: eq_second, eq_second_back
+
+  failed_checks = 0
+
+  call report_compile_time_versions()
+
+  ! 1. and 2. - each version's fixture, read with that version's routines.
+  call read_ids(DEFAULT_FIXTURE, eq_default)
+  call check_default_version_only(eq_default)
+
+  call read_ids_second(SECOND_FIXTURE, eq_second)
+  call check_second_version_only(eq_second)
+
+  call check_one_physical_content(eq_default, eq_second)
+
+  ! 3. - each version to its own data entry.
+  call write_ids(DEFAULT_ENTRY, eq_default)
+  call write_ids_second(SECOND_ENTRY, eq_second)
+
+  ! 4. - and back, to see whose version each entry says it holds.
+  call read_ids(DEFAULT_ENTRY, eq_default_back)
+  call check(version_stamp(eq_default_back%ids_properties%version_put%data_dictionary) &
+       == DEFAULT_VERSION, &
+       'the entry written by the default version is stamped '//DEFAULT_VERSION// &
+       ', found '//version_stamp(eq_default_back%ids_properties%version_put%data_dictionary))
+
+  call read_ids_second(SECOND_ENTRY, eq_second_back)
+  call check(version_stamp(eq_second_back%ids_properties%version_put%data_dictionary) &
+       == SECOND_VERSION, &
+       'the entry written by the second version is stamped '//SECOND_VERSION// &
+       ', found '//version_stamp(eq_second_back%ids_properties%version_put%data_dictionary))
+
+  ! A routine that names its IDS with a character string is version-agnostic by
+  ! construction: it is one of the shared procedures, there is one of it, and it is
+  ! reached without selecting a version. Run over both entries with no change.
+  call check_times_version_agnostically(DEFAULT_ENTRY, DEFAULT_VERSION)
+  call check_times_version_agnostically(SECOND_ENTRY, SECOND_VERSION)
+
+  call ids_deallocate(eq_default)
+  call ids_deallocate(eq_default_back)
+  call ids_deallocate(eq_second)
+  call ids_deallocate(eq_second_back)
+
+  if (failed_checks /= 0) then
+    write(*,'(a,i0,a)') ' ERROR: ', failed_checks, ' check(s) failed'
+    error stop 1
+  end if
+  write(*,'(a)') ' All two-version checks passed'
+
+contains
+
+  ! ---------------------------------------------------------------- expected values
+
+  ! What equilibrium_seed.py's slice_values() wrote, in the DD 3.39.0 (COCOS 11) sign
+  ! convention; `slice` is 1-based here, `i` zero-based there.
+  !
+  ! Two of these take a sign, because the field they describe is spelled one way in one
+  ! version and the other way in the other, so the DD 4.1.1 expectation can only be stated
+  ! as the sign-flipped DD 3.39.0 one. Where both versions spell a sign-flipped field the
+  ! same way, check_one_physical_content compares the two fixtures against each other
+  ! instead and no sign is needed here.
+
+  function expected_psi(slice) result(psi)
+    integer, intent(in) :: slice
+    real(ids_real) :: psi(4)
+    integer :: r
+    psi = [(0.25_ids_real + r + 10.0_ids_real * (slice - 1), r = 0, 3)]
+  end function
+
+  function expected_f_df_dpsi(slice) result(f_df_dpsi)
+    integer, intent(in) :: slice
+    real(ids_real) :: f_df_dpsi(4)
+    integer :: r
+    f_df_dpsi = [(-1.5_ids_real - r - 0.5_ids_real * (slice - 1), r = 0, 3)]
+  end function
+
+  function expected_j_tor(slice, sign) result(j_tor)
+    integer, intent(in) :: slice
+    real(ids_real), intent(in) :: sign
+    real(ids_real) :: j_tor(4)
+    integer :: r
+    j_tor = [(sign * (1.0e6_ids_real + 1.0e5_ids_real * r &
+                      + 1.0e4_ids_real * (slice - 1)), r = 0, 3)]
+  end function
+
+  function expected_b_field_tor_2d(slice) result(b)
+    integer, intent(in) :: slice
+    real(ids_real) :: b(2, 3)
+    integer :: r, c
+    do r = 1, 2
+      do c = 1, 3
+        b(r, c) = 3.1_ids_real + (r - 1) + 0.1_ids_real * (c - 1) + (slice - 1)
+      end do
+    end do
+  end function
+
+  real(ids_real) function expected_ip(slice)
+    integer, intent(in) :: slice
+    expected_ip = 15.0e6_ids_real + 1.0e5_ids_real * (slice - 1)
+  end function
+
+  real(ids_real) function expected_ip_measured(slice)
+    integer, intent(in) :: slice
+    expected_ip_measured = 15.1e6_ids_real + 1.0e5_ids_real * (slice - 1)
+  end function
+
+  real(ids_real) function expected_psi_axis(slice, sign)
+    integer, intent(in) :: slice
+    real(ids_real), intent(in) :: sign
+    expected_psi_axis = sign * (-0.75_ids_real - 0.05_ids_real * (slice - 1))
+  end function
+
+  real(ids_real) function expected_beta_normal(slice)
+    integer, intent(in) :: slice
+    expected_beta_normal = 1.8_ids_real + 0.1_ids_real * (slice - 1)
+  end function
+
+  real(ids_real) function expected_b_field_tor_axis(slice)
+    integer, intent(in) :: slice
+    expected_b_field_tor_axis = 5.2_ids_real + 0.1_ids_real * (slice - 1)
+  end function
+
+  real(ids_real) function expected_bpol_probe_measured(slice)
+    integer, intent(in) :: slice
+    expected_bpol_probe_measured = 0.42_ids_real + 0.01_ids_real * (slice - 1)
+  end function
+
+  real(ids_real) function expected_chi_squared_r(slice)
+    integer, intent(in) :: slice
+    expected_chi_squared_r = 0.05_ids_real + 0.01_ids_real * (slice - 1)
+  end function
+
+  ! ------------------------------------------------- what only one version can express
+
+  ! Every field below exists in the default version's dictionary and not in the second
+  ! version's, so this routine could not be written against the second version at all -
+  ! it would not compile. That, and the values, is the assertion.
+  subroutine check_default_version_only(eq)
+    type(ids_equilibrium), intent(in) :: eq
+    integer :: slice
+    logical :: fields_present
+    real(ids_real), parameter :: FLIPPED = -1.0_ids_real
+
+    ! Each array of structures is checked before it is indexed, here and in the loop
+    ! below: a fixture that lost one should fail a check, not walk off a null pointer.
+    fields_present = associated(eq%ids_properties%provenance%node)
+    if (fields_present) fields_present = size(eq%ids_properties%provenance%node) > 0
+    if (fields_present) fields_present = associated(eq%ids_properties%provenance%node(1)%reference)
+    if (fields_present) fields_present = associated(eq%ids_properties%provenance%node(1)%reference(1)%name)
+    call check(fields_present, &
+         'DD 4 only: ids_properties/provenance/node, which replaced ids_properties/source')
+    if (fields_present) then
+      call check(trim(eq%ids_properties%provenance%node(1)%reference(1)%name(1)) &
+           == FIXTURE_SOURCE, &
+           'DD 4 only: provenance/node/reference/name carries the source string')
+    end if
+
+    ! Two slices with different values per slice, so a slice mix-up below is visible.
+    call check(associated(eq%time_slice), 'the default version fixture has time slices')
+    if (.not. associated(eq%time_slice)) return
+    call check(size(eq%time_slice) == SLICES, 'the default version fixture has two slices')
+    do slice = 1, min(SLICES, size(eq%time_slice))
+      fields_present = associated(eq%time_slice(slice)%profiles_2d) .and. &
+           associated(eq%time_slice(slice)%constraints%b_field_pol_probe)
+      call check(fields_present, &
+           'the default version fixture slice has its profiles_2d and probe arrays', slice)
+      if (.not. fields_present) cycle
+      call check_array(eq%time_slice(slice)%profiles_1d%j_phi, &
+           expected_j_tor(slice, FLIPPED), &
+           'DD 4 only: profiles_1d/j_phi (was j_tor), sign flipped', slice)
+      call check_real(eq%time_slice(slice)%global_quantities%psi_magnetic_axis, &
+           expected_psi_axis(slice, FLIPPED), &
+           'DD 4 only: global_quantities/psi_magnetic_axis (was psi_axis), sign flipped', slice)
+      call check_real(eq%time_slice(slice)%global_quantities%beta_tor_norm, &
+           expected_beta_normal(slice), &
+           'DD 4 only: global_quantities/beta_tor_norm (was beta_normal)', slice)
+      call check_real(eq%time_slice(slice)%global_quantities%magnetic_axis%b_field_phi, &
+           expected_b_field_tor_axis(slice), &
+           'DD 4 only: global_quantities/magnetic_axis/b_field_phi (was b_field_tor)', slice)
+      call check_array_2d(eq%time_slice(slice)%profiles_2d(1)%b_field_phi, &
+           expected_b_field_tor_2d(slice), &
+           'DD 4 only: profiles_2d/b_field_phi (was b_field_tor)', slice)
+      call check_real(eq%time_slice(slice)%constraints%b_field_pol_probe(1)%measured, &
+           expected_bpol_probe_measured(slice), &
+           'DD 4 only: constraints/b_field_pol_probe (was bpol_probe)', slice)
+      ! The trap: psi_axis survives into DD 4.1.1 as an obsolescent node, and the live
+      ! one is psi_magnetic_axis, checked above. Reading the obsolescent one is how a
+      ! program silently gets nothing.
+      call check(eq%time_slice(slice)%global_quantities%psi_axis == ids_real_invalid, &
+           'DD 4 only trap: the obsolescent global_quantities/psi_axis is empty', slice)
+    end do
+  end subroutine
+
+  ! The mirror image: fields the second version's dictionary has and the default one does
+  ! not. Same argument - this routine cannot be written against the default version.
+  subroutine check_second_version_only(eq)
+    type(ids_equilibrium@SECOND_DD_MODULE_SUFFIX@), intent(in) :: eq
+    integer :: slice
+    logical :: fields_present
+    real(ids_real), parameter :: AS_WRITTEN = 1.0_ids_real
+
+    fields_present = associated(eq%ids_properties%source)
+    if (fields_present) fields_present = size(eq%ids_properties%source) > 0
+    call check(fields_present, 'DD 3 only: ids_properties/source, removed in DD 4')
+    if (fields_present) then
+      call check(trim(eq%ids_properties%source(1)) == FIXTURE_SOURCE, &
+           'DD 3 only: ids_properties/source carries the source string')
+    end if
+
+    call check(associated(eq%time_slice), 'the second version fixture has time slices')
+    if (.not. associated(eq%time_slice)) return
+    call check(size(eq%time_slice) == SLICES, 'the second version fixture has two slices')
+    do slice = 1, min(SLICES, size(eq%time_slice))
+      fields_present = associated(eq%time_slice(slice)%profiles_2d) .and. &
+           associated(eq%time_slice(slice)%constraints%bpol_probe)
+      call check(fields_present, &
+           'the second version fixture slice has its profiles_2d and probe arrays', slice)
+      if (.not. fields_present) cycle
+      call check_array(eq%time_slice(slice)%profiles_1d%j_tor, &
+           expected_j_tor(slice, AS_WRITTEN), &
+           'DD 3 only: profiles_1d/j_tor (renamed to j_phi in DD 4)', slice)
+      call check_real(eq%time_slice(slice)%global_quantities%psi_axis, &
+           expected_psi_axis(slice, AS_WRITTEN), &
+           'DD 3: global_quantities/psi_axis, the live node here', slice)
+      call check_real(eq%time_slice(slice)%global_quantities%beta_normal, &
+           expected_beta_normal(slice), &
+           'DD 3 only: global_quantities/beta_normal (renamed to beta_tor_norm)', slice)
+      call check_real(eq%time_slice(slice)%global_quantities%magnetic_axis%b_field_tor, &
+           expected_b_field_tor_axis(slice), &
+           'DD 3 only: global_quantities/magnetic_axis/b_field_tor (renamed to b_field_phi)', slice)
+      call check_array_2d(eq%time_slice(slice)%profiles_2d(1)%b_field_tor, &
+           expected_b_field_tor_2d(slice), &
+           'DD 3 only: profiles_2d/b_field_tor (renamed to b_field_phi)', slice)
+      call check_real(eq%time_slice(slice)%constraints%bpol_probe(1)%measured, &
+           expected_bpol_probe_measured(slice), &
+           'DD 3 only: constraints/bpol_probe (renamed to b_field_pol_probe)', slice)
+    end do
+  end subroutine
+
+  ! One physical equilibrium, two dictionaries: the fields that both versions spell the
+  ! same way must agree, and the sign-flipped ones must disagree by exactly a sign. Both
+  ! IDSs are in scope at once here, which a single-version build cannot do.
+  subroutine check_one_physical_content(eq4, eq3)
+    type(ids_equilibrium), intent(in) :: eq4
+    type(ids_equilibrium@SECOND_DD_MODULE_SUFFIX@), intent(in) :: eq3
+    integer :: slice, slices_to_compare
+    logical :: fields_present
+
+    call check_real(eq4%vacuum_toroidal_field%r0, eq3%vacuum_toroidal_field%r0, &
+         'unchanged control: vacuum_toroidal_field/r0 agrees across the two versions')
+    call check_array(eq4%vacuum_toroidal_field%b0, eq3%vacuum_toroidal_field%b0, &
+         'unchanged control: vacuum_toroidal_field/b0 agrees across the two versions')
+    call check_array(eq4%time, eq3%time, 'time agrees across the two versions')
+
+    ! Both fixtures' slice counts were checked above; compare as far as both go.
+    slices_to_compare = 0
+    if (associated(eq4%time_slice) .and. associated(eq3%time_slice)) &
+      slices_to_compare = min(SLICES, size(eq4%time_slice), size(eq3%time_slice))
+    do slice = 1, slices_to_compare
+      fields_present = associated(eq4%time_slice(slice)%constraints%strike_point) .and. &
+           associated(eq3%time_slice(slice)%constraints%strike_point)
+      call check(fields_present, &
+           'both fixtures'' slices have their strike_point arrays', slice)
+      if (.not. fields_present) cycle
+      call check_array(eq4%time_slice(slice)%profiles_1d%psi, &
+           -eq3%time_slice(slice)%profiles_1d%psi, &
+           'COCOS 11 -> 17: profiles_1d/psi is the negation of the DD 3 value', slice)
+      call check_array(eq4%time_slice(slice)%profiles_1d%f_df_dpsi, &
+           -eq3%time_slice(slice)%profiles_1d%f_df_dpsi, &
+           'COCOS 11 -> 17: profiles_1d/f_df_dpsi is the negation of the DD 3 value', slice)
+      call check_real(eq4%time_slice(slice)%global_quantities%ip, &
+           -eq3%time_slice(slice)%global_quantities%ip, &
+           'COCOS 11 -> 17: global_quantities/ip is the negation of the DD 3 value', slice)
+      call check_real(eq4%time_slice(slice)%constraints%ip%measured, &
+           -eq3%time_slice(slice)%constraints%ip%measured, &
+           'COCOS 11 -> 17: constraints/ip/measured is the negation of the DD 3 value', slice)
+      ! Units changed from m to m^-2 between the versions, the value did not.
+      call check_real(eq4%time_slice(slice)%constraints%strike_point(1)%chi_squared_r, &
+           eq3%time_slice(slice)%constraints%strike_point(1)%chi_squared_r, &
+           'restrung units only: constraints/strike_point/chi_squared_r is unchanged', slice)
+      ! And the fixture's own numbers, so that "they agree" is not two versions agreeing
+      ! on the wrong thing.
+      call check_real(eq3%time_slice(slice)%global_quantities%ip, &
+           expected_ip(slice), 'DD 3 global_quantities/ip', slice)
+      call check_real(eq3%time_slice(slice)%constraints%ip%measured, &
+           expected_ip_measured(slice), 'DD 3 constraints/ip/measured', slice)
+      call check_array(eq3%time_slice(slice)%profiles_1d%psi, &
+           expected_psi(slice), 'DD 3 profiles_1d/psi', slice)
+      call check_array(eq3%time_slice(slice)%profiles_1d%f_df_dpsi, &
+           expected_f_df_dpsi(slice), 'DD 3 profiles_1d/f_df_dpsi', slice)
+      call check_real(eq3%time_slice(slice)%constraints%strike_point(1)%chi_squared_r, &
+           expected_chi_squared_r(slice), 'DD 3 constraints/strike_point/chi_squared_r', slice)
+    end do
+  end subroutine
+
+  ! ----------------------------------------------------------------- read, write, stamp
+
+  ! ids_get and ids_put are generic and unsuffixed in both versions, so which version
+  ! runs is decided by the type of the IDS passed, not by the call. That is why the two
+  ! pairs of routines below differ only in a declaration - and they stay two routines
+  ! rather than one generic, because internal procedures cannot be merged into a generic
+  ! interface.
+
+  subroutine read_ids(uri, eq)
+    character(*), intent(in) :: uri
+    type(ids_equilibrium), intent(inout) :: eq
+    integer :: idx, status
+    call open_entry(uri, OPEN_PULSE, idx)
+    call ids_get(idx, 'equilibrium', eq, status)
+    if (status /= 0) call fatal('ids_get from '//uri, status)
+    call imas_close(idx)
+  end subroutine
+
+  subroutine read_ids_second(uri, eq)
+    character(*), intent(in) :: uri
+    type(ids_equilibrium@SECOND_DD_MODULE_SUFFIX@), intent(inout) :: eq
+    integer :: idx, status
+    call open_entry(uri, OPEN_PULSE, idx)
+    call ids_get(idx, 'equilibrium', eq, status)
+    if (status /= 0) call fatal('ids_get from '//uri, status)
+    call imas_close(idx)
+  end subroutine
+
+  subroutine write_ids(uri, eq)
+    character(*), intent(in) :: uri
+    type(ids_equilibrium), intent(inout) :: eq
+    integer :: idx, status
+    call scribble_over(eq%ids_properties%version_put%data_dictionary)
+    call open_entry(uri, FORCE_CREATE_PULSE, idx)
+    call ids_put(idx, 'equilibrium', eq, status)
+    if (status /= 0) call fatal('ids_put to '//uri, status)
+    call imas_close(idx)
+  end subroutine
+
+  subroutine write_ids_second(uri, eq)
+    character(*), intent(in) :: uri
+    type(ids_equilibrium@SECOND_DD_MODULE_SUFFIX@), intent(inout) :: eq
+    integer :: idx, status
+    call scribble_over(eq%ids_properties%version_put%data_dictionary)
+    call open_entry(uri, FORCE_CREATE_PULSE, idx)
+    call ids_put(idx, 'equilibrium', eq, status)
+    if (status /= 0) call fatal('ids_put to '//uri, status)
+    call imas_close(idx)
+  end subroutine
+
+  subroutine open_entry(uri, mode, idx)
+    character(*), intent(in) :: uri
+    integer, intent(in) :: mode
+    integer, intent(out) :: idx
+    integer :: status
+    character(:), allocatable :: message
+    call imas_open(uri, mode, idx, status, message)
+    if (status /= 0) call fatal('imas_open '//uri//': '//message, status)
+  end subroutine
+
+  ! Put a value in the version stamp that no version could have written, before the IDS
+  ! is put. The stamp read back afterwards is then evidence about the put path alone: the
+  ! fixtures already carry their own version, so leaving it in place would let an
+  ! implementation that echoed the IDS back pass this test.
+  subroutine scribble_over(stamp)
+    character(len=ids_string_length), pointer, intent(inout) :: stamp(:)
+    if (.not. associated(stamp)) allocate(stamp(1))
+    stamp(1) = SCRIBBLE
+  end subroutine
+
+  function version_stamp(stamp) result(version)
+    character(len=ids_string_length), pointer, intent(in) :: stamp(:)
+    character(:), allocatable :: version
+    if (associated(stamp) .and. size(stamp) > 0) then
+      version = trim(stamp(1))
+    else
+      version = '<unstamped>'
+    end if
+  end function
+
+  ! ------------------------------------------------------------ version-agnostic access
+
+  ! ids_get_times names its IDS with a character string, so it has nothing to dispatch on
+  ! and nothing to select: one procedure, in the shared front door, reading either
+  ! version's entry. A program written this way stays version-agnostic in a two-version
+  ! build - which is the point of not suffixing the shared procedures.
+  subroutine check_times_version_agnostically(uri, dd_version)
+    character(*), intent(in) :: uri
+    character(*), intent(in) :: dd_version
+    integer :: idx
+    real(ids_real), pointer :: time(:) => null()
+
+    call open_entry(uri, OPEN_PULSE, idx)
+    call ids_get_times(idx, 'equilibrium', time)
+    call imas_close(idx)
+
+    call check(associated(time), 'version-agnostic ids_get_times reads the DD '//dd_version//' entry')
+    if (associated(time)) then
+      call check_array(time, [1.0_ids_real, 1.5_ids_real], &
+           'version-agnostic ids_get_times returns the DD '//dd_version//' entry''s two times')
+      ! Not deallocated: the low level associates this pointer with memory it owns.
+      nullify(time)
+    end if
+  end subroutine
+
+  ! ----------------------------------------------------------------- reporting, checks
+
+  ! The compile-time version constants live in ids_types, which is shared and carries no
+  ! version suffix, so there is exactly one of them and it reports the default version.
+  ! A program that asks the library which Data Dictionary it was built against gets that
+  ! answer whichever version's IDSs it is handling - a known cost of keeping those
+  ! constants shared, printed here rather than left to be discovered.
+  subroutine report_compile_time_versions()
+    write(*,'(a)') ' Data Dictionary versions compiled into this library:'
+    write(*,'(a)') '   default : '//DEFAULT_VERSION// &
+         '  (use ids_routines, or ids_routines@DD_MODULE_SUFFIX@)'
+    write(*,'(a)') '   second  : '//SECOND_VERSION// &
+         '  (use ids_routines@SECOND_DD_MODULE_SUFFIX@)'
+    write(*,'(a)') ' Compile-time constants, from the shared ids_types module:'
+    write(*,'(a)') '   al_dd_version : '//al_dd_version
+    write(*,'(a,i0,a,i0,a,i0)') '   al_dd_major_version : ', al_dd_major_version, &
+         ', al_dd_minor_version : ', al_dd_minor_version, &
+         ', al_dd_patch_version : ', al_dd_patch_version
+    write(*,'(a)') ' These report the default version for both versions'' IDSs - handling a'
+    write(*,'(a)') ' DD '//SECOND_VERSION//' IDS does not change them. The second version has no'
+    write(*,'(a)') ' compile-time constant of its own.'
+    call check(al_dd_version == DEFAULT_VERSION, &
+         'al_dd_version is the default version, '//DEFAULT_VERSION)
+  end subroutine
+
+  ! `slice` labels the check with the time slice it is about, since every per-slice check
+  ! below is made twice with different values.
+  subroutine check(condition, what, slice)
+    logical, intent(in) :: condition
+    character(*), intent(in) :: what
+    integer, intent(in), optional :: slice
+    if (condition) then
+      write(*,'(a)') '   ok    : '//labelled(what, slice)
+    else
+      write(*,'(a)') '   ERROR : '//labelled(what, slice)
+      failed_checks = failed_checks + 1
+    end if
+  end subroutine
+
+  subroutine check_real(got, want, what, slice)
+    real(ids_real), intent(in) :: got, want
+    character(*), intent(in) :: what
+    integer, intent(in), optional :: slice
+    call check(close_enough(got, want), what, slice)
+    if (.not. close_enough(got, want)) then
+      write(*,'(a,es22.14,a,es22.14)') '           got ', got, ', want ', want
+    end if
+  end subroutine
+
+  subroutine check_array(got, want, what, slice)
+    real(ids_real), intent(in) :: got(:), want(:)
+    character(*), intent(in) :: what
+    integer, intent(in), optional :: slice
+    logical :: ok
+    ok = size(got) == size(want)
+    if (ok) ok = all(close_enough(got, want))
+    call check(ok, what, slice)
+    if (.not. ok) then
+      write(*,*) '           got ', got
+      write(*,*) '           want', want
+    end if
+  end subroutine
+
+  subroutine check_array_2d(got, want, what, slice)
+    real(ids_real), intent(in) :: got(:,:), want(:,:)
+    character(*), intent(in) :: what
+    integer, intent(in), optional :: slice
+    logical :: ok
+    ok = all(shape(got) == shape(want))
+    if (ok) ok = all(close_enough(got, want))
+    call check(ok, what, slice)
+    if (.not. ok) then
+      write(*,*) '           got ', got
+      write(*,*) '           want', want
+    end if
+  end subroutine
+
+  ! Elemental, so the scalar, rank-1 and rank-2 checks above all state the tolerance
+  ! exactly once, here.
+  elemental logical function close_enough(got, want)
+    real(ids_real), intent(in) :: got, want
+    close_enough = abs(got - want) <= TOLERANCE * max(1.0_ids_real, abs(want))
+  end function
+
+  function labelled(what, slice) result(label)
+    character(*), intent(in) :: what
+    integer, intent(in), optional :: slice
+    character(:), allocatable :: label
+    character(len=16) :: number
+    label = what
+    if (present(slice)) then
+      write(number,'(i0)') slice
+      label = what//' [time_slice '//trim(number)//']'
+    end if
+  end function
+
+  subroutine fatal(what, status)
+    character(*), intent(in) :: what
+    integer, intent(in) :: status
+    write(*,'(a,i0)') ' ERROR: '//what//', status = ', status
+    error stop 1
+  end subroutine
+
+end program two_dd_versions_test

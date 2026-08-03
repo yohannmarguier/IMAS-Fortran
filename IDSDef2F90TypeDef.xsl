@@ -8,6 +8,13 @@
 <xsl:param name="DD_GIT_DESCRIBE" as="xs:string" required="yes"/>
 <xsl:param name="AL_GIT_DESCRIBE" as="xs:string" required="yes"/>
 
+<!-- SUFFIX and local:versioned-name are declared in utils.xsl, included below and
+     shared with IDSDef2F90Routines.xsl: the two generators must spell the names they
+     exchange identically. The modules go through local:utilities-module and
+     local:schemas-module, the derived types declared here through local:ids-type -
+     which is also what the other generator's type(...) declarations and its
+     `only:` rename clauses call. -->
+
 <xsl:variable name="version_regex" select="'^([0-9]+)\.([0-9]+)\.([0-9]+)([+-].*)?$'"/>
 <xsl:variable name="DD_MAJOR" as="xs:integer" select="xs:integer(replace($DD_GIT_DESCRIBE, $version_regex, '$1'))"/>
 <xsl:variable name="DD_MINOR" as="xs:integer" select="xs:integer(replace($DD_GIT_DESCRIBE, $version_regex, '$2'))"/>
@@ -21,7 +28,19 @@
 <xsl:include href="utils.xsl"/>
 
 
+<!-- check_versioned_names lives in utils.xsl, next to local:versioned-name, so that
+     it guards the names both generators emit rather than only this one's. -->
+
 <xsl:template match="/IDSs">
+  <xsl:call-template name="check_generator_parameters"/>
+  <xsl:if test="$SUFFIX != ''">
+    <xsl:call-template name="check_versioned_names"/>
+  </xsl:if>
+  <!-- ids_types is Data Dictionary-version-independent and shared by every version, so
+       only the default version's run emits it. A second version's run would emit a
+       duplicate module - and one whose compile-time DD version constants disagree with
+       the first, which is why those constants report the default version (see #45). -->
+  <xsl:if test="$is-default-version">
   <xsl:result-document href="ids_types.f90">
 ! IDS FORTRAN 90 type definitions
 ! Contains the type definition of all IDSs
@@ -114,8 +133,9 @@ end module ids_types
 <!-- -->
 <!-- ======================= ====   Begin : Common Utility definition ==== =====================-->
 </xsl:result-document>
+  </xsl:if><!-- end of the default version's ids_types.f90 -->
 <xsl:result-document href="ids_utilities.f90">
-module ids_utilities    ! declare the set of types common to all sub-trees
+module <xsl:value-of select="local:utilities-module()"/>    ! declare the set of types common to all sub-trees
 
 use ids_types  ! re-exports IDS_base to consumers of this module
 
@@ -128,7 +148,34 @@ end module ! end of the utilities module
 
 <!-- ======================= ====   Begin : declare schema  ==== =====================-->
 
-  <xsl:apply-templates select="IDS" mode="declare_in_file"/>  
+  <xsl:apply-templates select="IDS" mode="declare_in_file"/>
+
+<!-- ======================= ====   Begin : alias layer  ==== =====================-->
+<!-- Only worth emitting when there is a suffix to hide: with an empty SUFFIX the
+     modules above already carry the bare names, and an alias module of the same
+     name would be a duplicate. Skipping it is also what keeps an unsuffixed
+     build's output directory free of files nothing compiles.
+
+     And only from the default version's run: the bare spellings are what makes one
+     version the default, so a second version emitting them would be a duplicate
+     module rather than a second opinion. -->
+  <xsl:if test="$SUFFIX != '' and $is-default-version">
+    <xsl:result-document href="alias_ids_utilities.f90">
+! Alias layer: the bare, unsuffixed spelling of every utilities type of the default
+! Data Dictionary version (<xsl:value-of select="$DD_GIT_DESCRIBE"/>).
+module ids_utilities
+  use ids_types  ! the kind parameters and IDS_base, which the `only:` renames below would otherwise hide
+  use <xsl:value-of select="local:utilities-module()"/>  ! everything, under its suffixed spelling
+<xsl:for-each select="distinct-values(
+        for $f in /IDSs/utilities/field[@data_type='structure' or @data_type='struct_array']
+          return local:structtypename($f))"><xsl:call-template name="alias_type_use">
+        <xsl:with-param name="module-base" select="'ids_utilities'"/>
+        <xsl:with-param name="dd-type" select="."/>
+      </xsl:call-template></xsl:for-each>end module
+</xsl:result-document>
+    <xsl:apply-templates select="IDS" mode="alias_in_file"/>
+  </xsl:if>
+<!-- ======================= ====   End : alias layer  ==== =====================-->
 
 </xsl:template>
 <!-- ============================  End : declare schema ========================= -->
@@ -148,23 +195,10 @@ end module ! end of the utilities module
   module procedure get_max_occurrences_<xsl:value-of select="@name"/>
 </xsl:template>
 
-<xsl:template match="utilities" mode="module">
-  <xsl:for-each select="./field[@data_type='structure' or @data_type='struct_array']">
-    <xsl:variable name="this-type">
-      <xsl:choose>
-        <xsl:when test="@structure_reference='self'">
-          <xsl:value-of select="@name"/>
-        </xsl:when>
-        <xsl:otherwise>
-          <xsl:value-of select="@structure_reference"/>
-        </xsl:otherwise>
-      </xsl:choose>
-    </xsl:variable>
-    type ids_<xsl:value-of select="$this-type"/> !<xsl:value-of select="local:commentstring(@documentation)"/>
-    <xsl:apply-templates select="./field" mode="declare_field"/>
+<xsl:template match="utilities" mode="module"><xsl:text>&#10;</xsl:text><xsl:for-each select="./field[@data_type='structure' or @data_type='struct_array']"><xsl:variable name="this-type" select="local:structtypename(.)"/><xsl:value-of select="local:declaration-with-comment(
+      concat('    type ', local:ids-type($this-type)), string(@documentation))"/><xsl:apply-templates select="./field" mode="declare_field"/><xsl:text>
     end type
-  </xsl:for-each>
-</xsl:template>
+</xsl:text><xsl:choose><xsl:when test="position() = last()"><xsl:text>&#32;&#32;</xsl:text></xsl:when><xsl:otherwise><xsl:text>&#32;&#32;&#10;</xsl:text></xsl:otherwise></xsl:choose></xsl:for-each></xsl:template>
 
 
 
@@ -174,9 +208,9 @@ end module ! end of the utilities module
 
 <xsl:template match="IDS" mode="declare_in_file">
   <xsl:result-document href="{@name}_schema.f90">
-    module ids_schemas_<xsl:value-of select="@name"/>
+    module <xsl:value-of select="local:schemas-module(string(@name))"/>
     use ids_types
-    use ids_utilities
+    use <xsl:value-of select="local:utilities-module()"/>
     
     implicit none
 
@@ -201,16 +235,7 @@ end module ! end of the utilities module
   <xsl:variable name="this-ids" select="@name"/>
   <xsl:for-each select="./field[@data_type='structure' or @data_type='struct_array']">
     <xsl:variable name="this-name" select="@name"/>
-    <xsl:variable name="this-type">
-      <xsl:choose>
-        <xsl:when test="@structure_reference='self'">
-          <xsl:value-of select="@name"/>
-        </xsl:when>
-        <xsl:otherwise>
-          <xsl:value-of select="@structure_reference"/>
-        </xsl:otherwise>
-      </xsl:choose>
-    </xsl:variable>
+    <xsl:variable name="this-type" select="local:structtypename(.)"/>
     <xsl:apply-templates select="." mode="declare_struct_recurse">
       <xsl:with-param name="this-type" select="$this-type"/>
       <xsl:with-param name="this-ids" select="$this-ids"/>
@@ -218,9 +243,17 @@ end module ! end of the utilities module
     </xsl:apply-templates>
   </xsl:for-each>
 
-  ! ***********  <xsl:value-of select="@name"/> IDS 
-  type, extends(IDS_base) :: ids_<xsl:value-of select="@name"/> !<xsl:value-of select="local:commentstring(@documentation)"/>
-    logical, private :: c_data = .FALSE. ! Fortran specific metadata telling whether the IDS has been populated from C allocated data (LL) or not
+  ! ***********  <xsl:value-of select="@name"/> IDS <xsl:text>
+</xsl:text><xsl:value-of select="local:declaration-with-comment(
+    concat('  type, extends(IDS_base) :: ', local:ids-type(string(@name))),
+    string(@documentation))"/>
+  <xsl:choose>
+    <xsl:when test="$SUFFIX = ''"><xsl:text>
+    logical, private :: c_data = .FALSE. ! Fortran specific metadata telling whether the IDS has been populated from C allocated data (LL) or not</xsl:text></xsl:when>
+    <xsl:otherwise><xsl:text>
+    logical, private :: c_data = .FALSE.
+      ! Fortran specific metadata telling whether the IDS has been populated from C allocated data (LL) or not</xsl:text></xsl:otherwise>
+  </xsl:choose>
     integer, private :: max_occurrence = <xsl:value-of select="@maxoccur"/>! Maximum occurrence allowed as defined in the DD
     character(len = 50), private :: ids_name = '<xsl:value-of select="@name"/>'
     <xsl:apply-templates select="./field" mode="declare_field"/>
@@ -231,18 +264,18 @@ end module ! end of the utilities module
   contains 
 
     subroutine set_c_data_<xsl:value-of select="@name"/>(ids, bool)
-    type(ids_<xsl:value-of select="@name"/>), intent(inout) :: ids
+    type(<xsl:value-of select="local:ids-type(string(@name))"/>), intent(inout) :: ids
     logical, intent(in) :: bool
     ids%c_data = bool
   end subroutine
   subroutine is_c_data_<xsl:value-of select="@name"/>(ids, bool)
-    type(ids_<xsl:value-of select="@name"/>), intent(in) :: ids
+    type(<xsl:value-of select="local:ids-type(string(@name))"/>), intent(in) :: ids
     logical, intent(out) :: bool
     bool = ids%c_data
   end subroutine
 
   subroutine check_name_<xsl:value-of select="@name"/>(ids, name, retstatus)
-  class(ids_<xsl:value-of select="@name"/>), intent(in) :: ids
+  class(<xsl:value-of select="local:ids-type(string(@name))"/>), intent(in) :: ids
   character*(*), intent(in) :: name
   integer, intent(out) :: retstatus
   integer :: slash_index
@@ -257,7 +290,7 @@ end module ! end of the utilities module
 
 
 function get_max_occurrences_<xsl:value-of select="@name"/>(ids)
-    type(ids_<xsl:value-of select="@name"/>), intent(in) :: ids
+    type(<xsl:value-of select="local:ids-type(string(@name))"/>), intent(in) :: ids
     integer :: get_max_occurrences_<xsl:value-of select="@name"/>
     get_max_occurrences_<xsl:value-of select="@name"/> = ids%max_occurrence
   end function
@@ -265,7 +298,7 @@ function get_max_occurrences_<xsl:value-of select="@name"/>(ids)
 function ids_is_defined_<xsl:value-of select="@name"/>(ids) result(is_defined)
 
     use al_defs
-    type(ids_<xsl:value-of select="@name"/>), intent(in) :: ids
+    type(<xsl:value-of select="local:ids-type(string(@name))"/>), intent(in) :: ids
     logical :: is_defined
     integer :: time_mode
 
@@ -295,14 +328,43 @@ function ids_is_defined_<xsl:value-of select="@name"/>(ids) result(is_defined)
 </xsl:result-document>
 </xsl:template>
 
+<!-- The bare spelling of one IDS's schema module.
+
+     The type list comes from mode="declare_struct_recurse" with $emit='alias', i.e.
+     from the very recursion that decides which types the module above declares -
+     including its "has this type already been declared?" guard. An alias for a type
+     that module does not declare, or a missing alias for one it does, is a compile
+     error, so the two lists have to be produced by one code path rather than two
+     that agree today. -->
+<xsl:template match="IDS" mode="alias_in_file">
+  <xsl:result-document href="alias_{@name}_schema.f90">
+module <xsl:value-of select="local:schemas-module-base(string(@name))"/>
+  use ids_types  ! the kind parameters and IDS_base, which the `only:` renames below would otherwise hide
+  use ids_utilities  ! the bare spelling of the utilities types this IDS's fields are declared with
+  use <xsl:value-of select="local:schemas-module(string(@name))"/>  ! everything, under its suffixed spelling
+<xsl:variable name="this-ids" select="@name"/>
+<xsl:for-each select="./field[@data_type='structure' or @data_type='struct_array']">
+    <xsl:apply-templates select="." mode="declare_struct_recurse">
+      <xsl:with-param name="this-type" select="local:structtypename(.)"/>
+      <xsl:with-param name="this-ids" select="$this-ids"/>
+      <xsl:with-param name="this-name" select="@name"/>
+      <xsl:with-param name="emit" select="'alias'" tunnel="yes"/>
+    </xsl:apply-templates>
+  </xsl:for-each><xsl:call-template name="alias_type_use">
+    <xsl:with-param name="module-base" select="local:schemas-module-base(string(@name))"/>
+    <xsl:with-param name="dd-type" select="string(@name)"/>
+  </xsl:call-template>end module
+</xsl:result-document>
+</xsl:template>
+
 <xsl:template match="IDS" mode="sbrt_c_data">
   subroutine set_c_data_<xsl:value-of select="@name"/>(ids, bool)
-    type(ids_<xsl:value-of select="@name"/>), intent(inout) :: ids
+    type(<xsl:value-of select="local:ids-type(string(@name))"/>), intent(inout) :: ids
     logical, intent(in) :: bool
     ids%c_data = bool
   end subroutine
   subroutine is_c_data_<xsl:value-of select="@name"/>(ids, bool)
-    type(ids_<xsl:value-of select="@name"/>), intent(in) :: ids
+    type(<xsl:value-of select="local:ids-type(string(@name))"/>), intent(in) :: ids
     logical, intent(out) :: bool
     bool = ids%c_data
   end subroutine
@@ -310,7 +372,7 @@ function ids_is_defined_<xsl:value-of select="@name"/>(ids) result(is_defined)
 
 <xsl:template match="IDS" mode="sbrt_max_occurrences">
   function get_max_occurrences_<xsl:value-of select="@name"/>(ids)
-    type(ids_<xsl:value-of select="@name"/>), intent(in) :: ids
+    type(<xsl:value-of select="local:ids-type(string(@name))"/>), intent(in) :: ids
     integer :: get_max_occurrences_<xsl:value-of select="@name"/>
     get_max_occurrences_<xsl:value-of select="@name"/> = ids%max_occurrence
   end function
@@ -320,23 +382,26 @@ function ids_is_defined_<xsl:value-of select="@name"/>(ids) result(is_defined)
 
 <!-- browse substructures recursively -->
 <!-- make sure structures are declared before being used -->
+<!-- $emit selects what to do with each type this recursion reaches: declare it
+     ('declare', the default) or emit the alias layer's rename for it ('alias'). It
+     is a tunnel parameter so that only the two ends of the recursion mention it.
+
+     A flag rather than a second mode on purpose. What must not drift is the "has
+     this type been declared already?" test below: it decides which types the schema
+     module contains, and the alias layer has to name exactly those - one too few and
+     a bare name is missing, one too many and it renames a type that does not exist.
+     Two modes would mean two copies of that test. Modes cannot be chosen
+     dynamically, and mode="#current" cannot help either, since it is the leaf
+     template that has to differ while the recursion around it stays shared. -->
 <xsl:template match="field" mode="declare_struct_recurse">
   <xsl:param name="this-type"/>
   <xsl:param name="this-ids"/>
   <xsl:param name="this-name"/>
+  <xsl:param name="emit" as="xs:string" select="'declare'" tunnel="yes"/>
 
   <xsl:if test="descendant::field[(@data_type='structure' or @data_type='struct_array')]">
     <xsl:for-each select="./field[@data_type='structure' or @data_type='struct_array']">
-      <xsl:variable name="this-type">
-        <xsl:choose>
-          <xsl:when test="@structure_reference='self'">
-            <xsl:value-of select="@name"/>
-          </xsl:when>
-          <xsl:otherwise>
-            <xsl:value-of select="@structure_reference"/>
-          </xsl:otherwise>
-        </xsl:choose>
-      </xsl:variable>
+      <xsl:variable name="this-type" select="local:structtypename(.)"/>
       <xsl:variable name="this-name" select="@name"/>
       <xsl:apply-templates select="." mode="declare_struct_recurse">
         <xsl:with-param name="this-type" select="$this-type"/>
@@ -347,11 +412,21 @@ function ids_is_defined_<xsl:value-of select="@name"/>(ids) result(is_defined)
   </xsl:if>  
 
   <xsl:if test="not(preceding::field[@structure_reference=$this-type and ancestor::IDS/@name=$this-ids] or /IDSs/utilities/field/@name=$this-type)">
-    <xsl:apply-templates select="." mode="declare_struct">
-      <xsl:with-param name="this-type" select="$this-type"/>
-      <xsl:with-param name="this-ids" select="$this-ids"/>
-      <xsl:with-param name="this-name" select="$this-name"/>
-    </xsl:apply-templates>
+    <xsl:choose>
+      <xsl:when test="$emit = 'alias'">
+        <xsl:call-template name="alias_type_use">
+          <xsl:with-param name="module-base" select="local:schemas-module-base(string($this-ids))"/>
+          <xsl:with-param name="dd-type" select="$this-type"/>
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:apply-templates select="." mode="declare_struct">
+          <xsl:with-param name="this-type" select="$this-type"/>
+          <xsl:with-param name="this-ids" select="$this-ids"/>
+          <xsl:with-param name="this-name" select="$this-name"/>
+        </xsl:apply-templates>
+      </xsl:otherwise>
+    </xsl:choose>
   </xsl:if>
 
 </xsl:template>
@@ -362,7 +437,7 @@ function ids_is_defined_<xsl:value-of select="@name"/>(ids) result(is_defined)
   <xsl:param name="this-type"/>
   <xsl:param name="this-ids"/>
   <xsl:param name="this-name"/>
-  type :: ids_<xsl:value-of select="$this-type"/>
+  type :: <xsl:value-of select="local:ids-type($this-type)"/>
   <xsl:for-each select="./field">
     <xsl:apply-templates select="." mode="declare_field"/>
   </xsl:for-each>
@@ -372,83 +447,116 @@ function ids_is_defined_<xsl:value-of select="@name"/>(ids) result(is_defined)
 
 
 <xsl:template match="field" mode="declare_field">
-  <xsl:choose>
+  <xsl:variable name="declaration" as="xs:string?">
+    <xsl:choose>
     <xsl:when test="@data_type='structure'">
-      type(ids_<xsl:value-of select="@structure_reference"/>) :: <xsl:value-of select="@name"/> !<xsl:value-of select="local:commentstring(@documentation)"/>
+      <xsl:sequence select="concat('      type(',
+        local:ids-type(local:structtypename(.)), ') :: ', string(@name))"/>
     </xsl:when>
 
     <xsl:when test="@data_type='struct_array'">
-      type(ids_<xsl:value-of select="@structure_reference"/>), pointer :: <xsl:value-of select="@name"/>(:) => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
+      <xsl:sequence select="concat('      type(',
+        local:ids-type(local:structtypename(.)), '), pointer :: ', string(@name),
+        '(:) =&gt; null()')"/>
     </xsl:when>
 
     <xsl:when test="@data_type='str_type' or @data_type='str_1d_type' or @data_type='STR_0D' or @data_type='STR_1D'">
-      character(len=ids_string_length), dimension(:), pointer :: <xsl:value-of select="@name"/> => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
+      <xsl:sequence select="concat(
+        '      character(len=ids_string_length), dimension(:), pointer :: ',
+        string(@name), ' =&gt; null()')"/>
     </xsl:when>
 
     <xsl:when test="@data_type='int_type' or @data_type='INT_0D'">
-      integer(ids_int) :: <xsl:value-of select="@name"/>=ids_int_invalid !<xsl:value-of select="local:commentstring(@documentation)"/>
+      <xsl:sequence select="concat('      integer(ids_int) :: ', string(@name),
+        '=ids_int_invalid')"/>
     </xsl:when>
     <xsl:when test="@data_type='flt_type' or @data_type='FLT_0D'">
-      real(ids_real) :: <xsl:value-of select="@name"/>=ids_real_invalid !<xsl:value-of select="local:commentstring(@documentation)"/>
+      <xsl:sequence select="concat('      real(ids_real) :: ', string(@name),
+        '=ids_real_invalid')"/>
     </xsl:when>
     <xsl:when test="@data_type='cpx_type' or @data_type='CPX_0D'">
-      complex(ids_real) :: <xsl:value-of select="@name"/>=ids_complex_invalid !<xsl:value-of select="local:commentstring(@documentation)"/>
+      <xsl:sequence select="concat('      complex(ids_real) :: ', string(@name),
+        '=ids_complex_invalid')"/>
     </xsl:when>
 
     <xsl:when test="@data_type='int_1d_type' or @data_type='INT_1D'">
-      integer(ids_int), pointer :: <xsl:value-of select="@name"/>(:) => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
+      <xsl:sequence select="concat('      integer(ids_int), pointer :: ', string(@name),
+        '(:) =&gt; null()')"/>
     </xsl:when>
     <xsl:when test="@data_type='flt_1d_type' or @data_type='FLT_1D'">
-      real(ids_real), pointer :: <xsl:value-of select="@name"/>(:) => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
+      <xsl:sequence select="concat('      real(ids_real), pointer :: ', string(@name),
+        '(:) =&gt; null()')"/>
     </xsl:when>
     <xsl:when test="@data_type='cpx_1d_type' or @data_type='CPX_1D'">
-      complex(ids_real), pointer :: <xsl:value-of select="@name"/>(:) => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
+      <xsl:sequence select="concat('      complex(ids_real), pointer :: ', string(@name),
+        '(:) =&gt; null()')"/>
     </xsl:when>
 
     <xsl:when test="@data_type='int_2d_type' or @data_type='INT_2D'">
-      integer(ids_int), pointer :: <xsl:value-of select="@name"/>(:,:) => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
+      <xsl:sequence select="concat('      integer(ids_int), pointer :: ', string(@name),
+        '(:,:) =&gt; null()')"/>
     </xsl:when>
     <xsl:when test="@data_type='flt_2d_type' or @data_type='FLT_2D'">
-      real(ids_real), pointer :: <xsl:value-of select="@name"/>(:,:) => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
+      <xsl:sequence select="concat('      real(ids_real), pointer :: ', string(@name),
+        '(:,:) =&gt; null()')"/>
     </xsl:when>
     <xsl:when test="@data_type='cpx_2d_type' or @data_type='CPX_2D'">
-      complex(ids_real), pointer :: <xsl:value-of select="@name"/>(:,:) => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
+      <xsl:sequence select="concat('      complex(ids_real), pointer :: ', string(@name),
+        '(:,:) =&gt; null()')"/>
     </xsl:when>
 
     <xsl:when test="@data_type='FLT_3D'">
-      real(ids_real), pointer :: <xsl:value-of select="@name"/>(:,:,:) => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
+      <xsl:sequence select="concat('      real(ids_real), pointer :: ', string(@name),
+        '(:,:,:) =&gt; null()')"/>
     </xsl:when>
     <xsl:when test="@data_type='INT_3D'">
-      integer(ids_int), pointer :: <xsl:value-of select="@name"/>(:,:,:) => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
+      <xsl:sequence select="concat('      integer(ids_int), pointer :: ', string(@name),
+        '(:,:,:) =&gt; null()')"/>
     </xsl:when>
     <xsl:when test="@data_type='cpx_3d_type' or @data_type='CPX_3D'">
-      complex(ids_real), pointer :: <xsl:value-of select="@name"/>(:,:,:) => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
+      <xsl:sequence select="concat('      complex(ids_real), pointer :: ', string(@name),
+        '(:,:,:) =&gt; null()')"/>
     </xsl:when>
 
     <xsl:when test="@data_type='FLT_4D'">
-      real(ids_real), pointer :: <xsl:value-of select="@name"/>(:,:,:,:) => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
+      <xsl:sequence select="concat('      real(ids_real), pointer :: ', string(@name),
+        '(:,:,:,:) =&gt; null()')"/>
     </xsl:when>
     <xsl:when test="@data_type='CPX_4D'">
-      complex(ids_real), pointer :: <xsl:value-of select="@name"/>(:,:,:,:) => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
+      <xsl:sequence select="concat('      complex(ids_real), pointer :: ', string(@name),
+        '(:,:,:,:) =&gt; null()')"/>
     </xsl:when>
 
     <xsl:when test="@data_type='FLT_5D'">
-      real(ids_real), pointer :: <xsl:value-of select="@name"/>(:,:,:,:,:) => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
+      <xsl:sequence select="concat('      real(ids_real), pointer :: ', string(@name),
+        '(:,:,:,:,:) =&gt; null()')"/>
     </xsl:when>
     <xsl:when test="@data_type='CPX_5D'">
-      complex(ids_real), pointer :: <xsl:value-of select="@name"/>(:,:,:,:,:) => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
+      <xsl:sequence select="concat('      complex(ids_real), pointer :: ', string(@name),
+        '(:,:,:,:,:) =&gt; null()')"/>
     </xsl:when>
 
     <xsl:when test="@data_type='FLT_6D'">
-      real(ids_real), pointer :: <xsl:value-of select="@name"/>(:,:,:,:,:,:) => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
+      <xsl:sequence select="concat('      real(ids_real), pointer :: ', string(@name),
+        '(:,:,:,:,:,:) =&gt; null()')"/>
     </xsl:when>
     <xsl:when test="@data_type='CPX_6D'">
-      complex(ids_real), pointer :: <xsl:value-of select="@name"/>(:,:,:,:,:,:) => null() !<xsl:value-of select="local:commentstring(@documentation)"/>
+      <xsl:sequence select="concat('      complex(ids_real), pointer :: ', string(@name),
+        '(:,:,:,:,:,:) =&gt; null()')"/>
     </xsl:when>
     <xsl:otherwise>
-      ERROR
+      <xsl:sequence select="()"/>
     </xsl:otherwise>
-  </xsl:choose>  
+    </xsl:choose>
+  </xsl:variable>
+  <xsl:choose>
+    <xsl:when test="exists($declaration)">
+      <xsl:text>&#10;</xsl:text><xsl:value-of select="local:declaration-with-comment(
+        $declaration, string(@documentation))"/>
+    </xsl:when>
+    <xsl:otherwise>      ERROR
+    </xsl:otherwise>
+  </xsl:choose>
 </xsl:template>
 
 

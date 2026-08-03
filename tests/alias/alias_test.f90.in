@@ -1,0 +1,105 @@
+! Front doors and the alias layer.
+!
+! Every generated module and derived type is named for the Data Dictionary version it
+! belongs to, and the alias layer gives each of them its bare spelling back as the
+! default version. This program is the machine-checked half of that claim: that the two
+! spellings denote one entity rather than two look-alikes, and that either front door on
+! its own is enough to write a program with.
+!
+! It reaches the library only through its public front doors - no generated module
+! internals, no assertions on the text of generated sources.
+!
+! Generated from alias_test.f90.in. @ALIAS_TEST_IDS@ is an IDS this build contains and
+! @DD_MODULE_SUFFIX@ the suffix naming its default Data Dictionary version.
+
+module alias_test_bare_front_door
+  ! One use line, the bare one. A program written against a single-version build looks
+  ! exactly like this, and must keep compiling.
+  use ids_routines
+  implicit none
+contains
+  logical function bare_front_door_is_complete() result(ok)
+    type(ids_@ALIAS_TEST_IDS@) :: ids   ! an IDS type
+    type(ids_identifier) :: node        ! a utilities type
+    real(ids_real) :: kind_parameter    ! a kind parameter from the shared module
+    character(len(al_dd_version)) :: version  ! a compile-time version constant
+    ! What this function really tests, it tests by compiling at all: every name it
+    ! mentions has to resolve through that one use line. The runtime result only
+    ! confirms the calls were reached.
+    node%index = 0
+    kind_parameter = 0.0_ids_real
+    version = al_dd_version
+    call ids_deallocate(ids)            ! a generic interface
+    ok = node%index == 0 .and. kind_parameter == 0.0_ids_real .and. len(version) > 0
+  end function
+end module
+
+module alias_test_explicit_front_door
+  ! The same again, naming the default version explicitly. The alias layer is a leaf,
+  ! so nothing in scope here reaches it: no bare spelling of a versioned name is
+  ! available, and this compiles only if the explicit front door carries the version
+  ! on its own.
+  use ids_routines@DD_MODULE_SUFFIX@
+  implicit none
+contains
+  logical function explicit_front_door_is_complete() result(ok)
+    type(ids_@ALIAS_TEST_IDS@@DD_MODULE_SUFFIX@) :: ids
+    type(ids_identifier@DD_MODULE_SUFFIX@) :: node
+    real(ids_real) :: kind_parameter
+    character(len(al_dd_version)) :: version
+    node%index = 0
+    kind_parameter = 0.0_ids_real
+    version = al_dd_version
+    call ids_deallocate(ids)
+    ok = node%index == 0 .and. kind_parameter == 0.0_ids_real .and. len(version) > 0
+  end function
+end module
+
+program alias_test
+  ! Both front doors at once: the generic interfaces merge and the types they bring in
+  ! are the same entities, so this must not be ambiguous.
+  use ids_routines
+  use ids_routines@DD_MODULE_SUFFIX@
+  use alias_test_bare_front_door
+  use alias_test_explicit_front_door
+  implicit none
+
+  type(ids_@ALIAS_TEST_IDS@) :: bare_ids
+  type(ids_@ALIAS_TEST_IDS@@DD_MODULE_SUFFIX@) :: suffixed_ids
+  type(ids_identifier) :: bare_util
+  type(ids_identifier@DD_MODULE_SUFFIX@) :: suffixed_util
+  integer :: failures
+
+  failures = 0
+
+  ! same_type_as, not "the fields look alike": a bare layer pointing at a second
+  ! version would give two distinct types whose components happened to match.
+  call check(same_type_as(bare_ids, suffixed_ids), &
+       'ids_@ALIAS_TEST_IDS@ and ids_@ALIAS_TEST_IDS@@DD_MODULE_SUFFIX@ are one type')
+  call check(same_type_as(bare_util, suffixed_util), &
+       'ids_identifier and ids_identifier@DD_MODULE_SUFFIX@ are one type')
+  call check(bare_front_door_is_complete(), &
+       'use ids_routines alone brings in the default version')
+  call check(explicit_front_door_is_complete(), &
+       'use ids_routines@DD_MODULE_SUFFIX@ alone brings in the default version')
+
+  if (failures /= 0) then
+    write(*,*) 'ERROR:', failures, 'alias layer check(s) failed'
+    error stop 1
+  end if
+  write(*,*) 'All alias layer checks passed'
+
+contains
+
+  subroutine check(condition, what)
+    logical, intent(in) :: condition
+    character(*), intent(in) :: what
+    if (condition) then
+      write(*,*) '  ok    : ', what
+    else
+      write(*,*) '  ERROR : ', what
+      failures = failures + 1
+    end if
+  end subroutine
+
+end program
