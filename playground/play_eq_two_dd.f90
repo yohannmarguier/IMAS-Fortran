@@ -5,18 +5,23 @@ program play_eq_two_dd
     ! not a physics one.
     !
     ! A third column, 'converted', is a DD 4.1.1 IDS built from the DD 3.39.0 one by
-    ! convert_v3_to_v4 below. That routine is still empty, so the column reads <empty>
-    ! throughout - once it is written, the converted column should match the 4.1.1 one
-    ! line for line, which is what makes this report a check and not just a printout.
+    ! convert_v3_to_v4, which executes dd-maps/equilibrium/3.39.0--4.1.1.xml (see
+    ! eq_convert_3to4.f90). The last column is the verdict: '=' where the converted
+    ! value matches the 4.1.1 fixture, '!=' where it does not.
+    !
+    ! Two rows differ on purpose, and both are places where the map and the fixture
+    ! take opposite positions - see the notes on those rows.
     !
     ! The differences are the ones imas-dd's migration guide reports for equilibrium
     ! (COCOS 11 -> 17, 13 rename families, 12 unit changes), restricted to what
     ! equilibrium_seed.py actually writes into the fixture pair.
     !
     ! Needs a two-version build (AL_SECOND_DD_IDSDEF), e.g.
-    !   IMAS_FORTRAN_PREFIX=install-equilibrium-two-dd ./build.sh play_eq_two_dd.f90
+    !   IMAS_FORTRAN_PREFIX=install-equilibrium-two-dd \
+    !       ./build.sh play_eq_two_dd.f90 eq_convert_3to4.f90
     use ids_routines_v4_1_1
     use ids_routines_v3_39_0
+    use eq_convert_3_39_0_to_4_1_1
 
     implicit none
 
@@ -25,6 +30,9 @@ program play_eq_two_dd
     integer :: idx, status, i
 
     character(:), allocatable :: retmsg
+
+    !what the conversion had to drop or refuse, printed after the report
+    type(conversion_log) :: cvlog
 
     !type declaration
     type(ids_equilibrium_v4_1_1) :: eq4
@@ -63,7 +71,7 @@ program play_eq_two_dd
     end if
     call imas_close(idx)
 
-    call convert_v3_to_v4(eq3, eq4c)
+    call convert_v3_to_v4(eq3, eq4c, cvlog)
 
     write(*,'(a)') ' equilibrium: DD 3.39.0 -> 4.1.1, one physical equilibrium in two dictionaries'
     write(*,'(a)') ' stamped     : '//trim(eq3%ids_properties%version_put%data_dictionary(1))// &
@@ -71,6 +79,7 @@ program play_eq_two_dd
     write(*,'(a)') ' columns     : 3.39.0 as read | 4.1.1 as read | converted = convert_v3_to_v4(3.39.0)'
     write(*,'(a)') ' tags        : SAME unchanged | RENAME name only | SIGN COCOS flip |'// &
          ' MOVED restructured | UNITS | TRAP'
+    write(*,'(a)') ' verdict     : "=" converted matches 4.1.1, "!=" it does not'
     write(*,*)
 
     call block('MOVED', 'ids_properties/source -> ids_properties/provenance/node/reference/name', &
@@ -105,6 +114,11 @@ program play_eq_two_dd
         ! psi_axis was not deleted in DD 4.1.1, it stayed as an obsolescent node that
         ! nothing writes - so reading it by its old name silently returns nothing, and a
         ! conversion that fills it instead of psi_magnetic_axis is wrong in the same way.
+        !
+        ! This row differs on purpose. The map's split-psi-axis rule feeds the DD3
+        ! value to BOTH psi_axis and psi_magnetic_axis, so the conversion fills a
+        ! node the fixture leaves empty. The rule carries decision="yes" precisely
+        ! because nothing in the DD settles it; validate.py lists it for review.
         call diff_0d('TRAP', 'global_quantities/psi_axis      still there in DD 4, obsolescent', &
              eq3%time_slice(i)%global_quantities%psi_axis, &
              eq4%time_slice(i)%global_quantities%psi_axis, &
@@ -130,28 +144,26 @@ program play_eq_two_dd
              eq4%time_slice(i)%constraints%ip%measured, &
              cs%constraints%ip%measured)
         ! Same path, same type, same number - only the unit moved, which no reader can see.
+        !
+        ! This row differs on purpose too, the other way round. The fixture copies the
+        ! value through unchanged; the map declares m -> m^-2 a <redefine> with
+        ! fidelity unmappable both ways, because chi-squared is now normalised by the
+        ! measurement variance and no factor inverts that without the variance used at
+        ! reconstruction time. So the conversion refuses the field rather than guess,
+        ! and it shows up in the log below.
         call block('UNITS', 'constraints/strike_point(1)/chi_squared_r          m -> m^-2', &
              strike_v3(eq3%time_slice(i)%constraints%strike_point), &
              strike_v4(eq4%time_slice(i)%constraints%strike_point), &
              strike_v4(cs%constraints%strike_point))
     end do
 
+    call log_report(cvlog)
+
     call ids_deallocate(eq4)
     call ids_deallocate(eq3)
     call ids_deallocate(eq4c)
 
 contains
-
-    ! ------------------------------------------------------------------- the conversion
-
-    ! To be written: build the DD 4.1.1 equilibrium out of the DD 3.39.0 one, applying
-    ! exactly what the report prints - the renames, the COCOS 11 -> 17 sign flips, the
-    ! nodes that moved into a structure, and psi_magnetic_axis rather than the
-    ! obsolescent psi_axis. It fills nothing yet, so every converted value reads <empty>.
-    subroutine convert_v3_to_v4(src, dst)
-        type(ids_equilibrium_v3_39_0), intent(in) :: src
-        type(ids_equilibrium_v4_1_1), intent(inout) :: dst
-    end subroutine
 
     ! Slice i of the converted IDS, or the empty stand-in while the conversion has not
     ! built it. The shape is checked here, once, so no row below can hit a null pointer
@@ -174,11 +186,17 @@ contains
     subroutine block(tag, what, s3, s4, sc)
         character(*), intent(in) :: tag, what, s3, s4, sc
         character(11) :: t
+        character(2) :: verdict
         t = tag
+        ! Comparing the rendered strings rather than the numbers keeps one code
+        ! path for scalars, arrays, 2D rows and character fields alike, and makes
+        ! <empty> compare equal to <empty> instead of tripping over the marker.
+        verdict = '!='
+        if (s4 == sc) verdict = '= '
         write(*,'(2x,"[",a,"] ",a)') t, what
         write(*,'(6x,"3.39.0    :",a)') s3
         write(*,'(6x,"4.1.1     :",a)') s4
-        write(*,'(6x,"converted :",a)') sc
+        write(*,'(6x,"converted :",a,"   ",a)') sc, verdict
     end subroutine
 
     subroutine diff_0d(tag, what, v3, v4, vc)
