@@ -25,6 +25,12 @@ imas-python-mva-engineering-study.md
 imas-python-mva-engineering-study.md
 __pycache__/
 *.pyc
+# Cargo's build directory for the Rust read-path middleware. The CMake build points
+# cargo at <build>/middleware instead, so this only collects artifacts from running
+# cargo by hand in middleware/ (cargo test, cargo +1.76.0 test).
+/middleware/target
+# Left over from an earlier projection-engine attempt: build artifacts with no crate.
+/engine/target
 /playground/cmake-build-debug
 /cmake-build-debug-eq
 # Any other IDE-owned build directory: CLion names one per CMake profile

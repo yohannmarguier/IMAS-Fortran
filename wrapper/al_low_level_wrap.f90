@@ -142,8 +142,14 @@ module al_low_level_wrap
        integer(C_INT), value, intent(in) :: aosctx, step
      end function c_al_iterate_over_arraystruct
      
+     ! Bound to the Rust read-path middleware (middleware/src/lib.rs) rather than
+     ! al-core's al_read_data directly: imas_mw_read_data takes the same arguments,
+     ! forwards them to al_read_data and returns its status unchanged. The signature
+     ! below is al_read_data's — the shim exists to be transparent, so changing one
+     ! means changing the other. Every read in this file reaches a backend through
+     ! this one interface, which is what makes it the choke point worth intercepting.
      function c_al_read_data(ctx, fieldname, timebase, data, datatype, dim, size_array) &
-          bind(C,name="al_read_data")
+          bind(C,name="imas_mw_read_data")
        use, intrinsic :: ISO_C_BINDING
        import c_al_status_t
        type(c_al_status_t) :: c_al_read_data

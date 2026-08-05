@@ -23,6 +23,15 @@ if( NOT equilibrium IN_LIST IDS_NAMES )
   return()
 endif()
 
+# play_middleware creates its own ASCII data entry, so it is registered ahead of the
+# fixture and HDF5 guards below — those return() early and would otherwise take this
+# target with them.
+add_executable( play_middleware play_middleware.f90 )
+target_link_libraries( play_middleware al-fortran )
+message( STATUS
+  "AL_PLAYGROUND=ON: added the play_middleware target (asserts the Rust read-path"
+  " middleware is in the path; set IMAS_MW_TRACE=1 to see every read)" )
+
 if( NOT AL_BACKEND_HDF5 )
   message( STATUS
     "AL_BACKEND_HDF5 is OFF: not adding the play_equilibrium target, whose fixture"

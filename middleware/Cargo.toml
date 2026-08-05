@@ -1,0 +1,22 @@
+[package]
+name = "imas-middleware"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.76.0"
+publish = false
+description = "Interception layer between al-fortran's low-level bindings and al-core's C API"
+
+# A staticlib, not a cdylib: the shim is baked into libal-fortran itself, so an
+# installed prefix stays self-contained and no consumer of al-fortran (playground
+# programs, tests, examples) has to learn about a second shared object or carry an
+# extra rpath. aarch64-apple-darwin and x86-64 Linux both produce PIC objects by
+# default, which is what linking into a shared al-fortran requires.
+[lib]
+name = "imas_middleware"
+crate-type = ["staticlib"]
+
+[profile.release]
+# The shim sits on the read path of every scalar and array in an IDS, so it is
+# built optimized even when al-fortran itself is a Debug build; debug = true keeps
+# it steppable in gdb/lldb alongside the Fortran frames it sits between.
+debug = true

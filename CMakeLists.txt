@@ -373,11 +373,53 @@ foreach( ID_FILE IN LISTS DD_IDENTIFIER_FILES )
 endforeach()
 
 
+# Read-path middleware (Rust)
+################################################################################
+
+# middleware/ sits between the wrapper's c_al_read_data binding and al-core's
+# al_read_data: the binding names imas_mw_read_data, which the crate defines and which
+# forwards to the real symbol. That makes cargo a hard build requirement on this branch
+# — the wrapper does not compile to anything linkable without it. Making it optional
+# means a preprocessed bind name (-cpp and a .F90 wrapper), which is deliberately not
+# done here while the middleware is a prototype.
+#
+# A staticlib, so the shim lands inside libal-fortran and an installed prefix needs no
+# second shared object and no extra rpath.
+set( MIDDLEWARE_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/middleware" )
+set( MIDDLEWARE_TARGET_DIR "${CMAKE_CURRENT_BINARY_DIR}/middleware" )
+set( MIDDLEWARE_LIB "${MIDDLEWARE_TARGET_DIR}/release/libimas_middleware.a" )
+
+# HINTS covers the case build.sh already handles for gfortran: a GUI-launched IDE
+# inherits a bare PATH, and rustup puts cargo under $HOME/.cargo/bin.
+find_program( CARGO_EXECUTABLE cargo HINTS "$ENV{HOME}/.cargo/bin" "$ENV{CARGO_HOME}/bin" )
+if( NOT CARGO_EXECUTABLE )
+  message( FATAL_ERROR
+    "cargo not found, but middleware/ is on al-fortran's link line and the wrapper "
+    "binds to it (imas_mw_read_data). Install a Rust toolchain (https://rustup.rs) or "
+    "set CARGO_EXECUTABLE. See the 'Read-path middleware' section in CLAUDE.md." )
+endif()
+
+# cargo does its own change detection and is quick to no-op, but naming the sources as
+# DEPENDS keeps it out of the build entirely when nothing under middleware/ moved.
+file( GLOB_RECURSE MIDDLEWARE_SOURCES "${MIDDLEWARE_SRC_DIR}/src/*.rs" )
+add_custom_command(
+  OUTPUT ${MIDDLEWARE_LIB}
+  COMMAND ${CARGO_EXECUTABLE} build --release
+    --manifest-path "${MIDDLEWARE_SRC_DIR}/Cargo.toml"
+    --target-dir "${MIDDLEWARE_TARGET_DIR}"
+  DEPENDS ${MIDDLEWARE_SOURCES} "${MIDDLEWARE_SRC_DIR}/Cargo.toml"
+  COMMENT "Building Rust read-path middleware (imas_mw_read_data)"
+  VERBATIM
+)
+add_custom_target( al-fortran-middleware DEPENDS ${MIDDLEWARE_LIB} )
+
+
 # Targets
 ################################################################################
 
 add_library( al-fortran ${SOURCES} )
-add_dependencies( al-fortran ${AL_SOURCE_TARGETS} )
+add_dependencies( al-fortran ${AL_SOURCE_TARGETS} al-fortran-middleware )
+target_link_libraries( al-fortran ${MIDDLEWARE_LIB} )
 
 if( CMAKE_Fortran_COMPILER_ID STREQUAL "NAG" )
   # Work around NAG compiler not wanting to link against libal.so.x.y.z
