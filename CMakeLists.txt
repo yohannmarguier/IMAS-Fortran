@@ -464,3 +464,10 @@ endif()
 if( AL_EXAMPLES )
   add_subdirectory( examples )
 endif()
+
+if( AL_PLAYGROUND )
+  # Off by default: playground/ is scratch space, not part of the library, its tests or
+  # its examples. Switching it on builds its programs as ordinary CMake targets, which
+  # is what an IDE needs to run and debug one without being told about build.sh.
+  add_subdirectory( playground )
+endif()

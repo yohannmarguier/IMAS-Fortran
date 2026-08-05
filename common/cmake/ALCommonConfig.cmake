@@ -10,6 +10,7 @@ option( BUILD_SHARED_LIBS "Build shared libraries" ON )
 option( AL_EXAMPLES "Build and test examples" ON )
 option( AL_TESTS "Build tests and enable test framework" ON )
 option( AL_PLUGINS "Enable plugin framework for tests and examples" OFF )
+option( AL_PLAYGROUND "Build playground/ programs as CMake targets (for IDE run/debug)" OFF )
 option( AL_HLI_DOCS "Build the Sphinx-based High Level Interface documentation" OFF )
 option( AL_DOCS_ONLY "Don't build anything, except the Sphinx-based High Level Interface documentation" OFF )
 

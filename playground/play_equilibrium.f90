@@ -4,7 +4,7 @@ program play_equilibrium
   use ids_routines
   implicit none
 
-  character(*), parameter :: FIXTURE = '../imas-python-fixtures/fixtures/dd-4.1.1'
+  character(*), parameter :: FIXTURE = '../imas-python-fixtures/fixtures/dd-3.39.0'
   integer :: idx, status, i
   character(:), allocatable :: retmsg
   type(ids_equilibrium) :: eq
@@ -39,10 +39,10 @@ program play_equilibrium
      print *, '--- time_slice(', i, ') t =', eq%time_slice(i)%time
      print *, '  profiles_1d%psi            : ', eq%time_slice(i)%profiles_1d%psi
      print *, '  profiles_1d%f_df_dpsi      : ', eq%time_slice(i)%profiles_1d%f_df_dpsi
-     print *, '  profiles_1d%j_phi          : ', eq%time_slice(i)%profiles_1d%j_phi
+     ! print *, '  profiles_1d%j_phi          : ', eq%time_slice(i)%profiles_1d%j_phi
      print *, '  profiles_2d(1)%grid%dim1   : ', eq%time_slice(i)%profiles_2d(1)%grid%dim1
      print *, '  profiles_2d(1)%grid%dim2   : ', eq%time_slice(i)%profiles_2d(1)%grid%dim2
-     print *, '  profiles_2d(1)%b_field_phi : ', eq%time_slice(i)%profiles_2d(1)%b_field_phi
+     ! print *, '  profiles_2d(1)%b_field_phi : ', eq%time_slice(i)%profiles_2d(1)%b_field_phi
      print *, '  gq%ip                      : ', eq%time_slice(i)%global_quantities%ip
      print *, '  gq%psi_magnetic_axis       : ', eq%time_slice(i)%global_quantities%psi_magnetic_axis
      print *, '  gq%beta_tor_norm           : ', eq%time_slice(i)%global_quantities%beta_tor_norm
