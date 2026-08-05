@@ -39,23 +39,30 @@ if( NOT AL_BACKEND_HDF5 )
   return()
 endif()
 
-# The fixture path is a literal in the program, so the fixture this build's DD version
-# needs is not necessarily the one the source reads. Checking the source rather than
-# assuming keeps the two from drifting apart silently: read a fixture written by another
-# DD version and the failure surfaces at run time as unexpected values, not at build
-# time.
-set( PLAY_EQ_FIXTURE "${CMAKE_SOURCE_DIR}/imas-python-fixtures/fixtures/dd-${DD_VERSION}" )
+# The fixture path is a literal in the program, so read it back out of the source rather
+# than assuming it is this build's DD version - the two drift, and the program is the one
+# that decides.
+#
+# A fixture from a *different* DD version than the build is explicitly allowed, and used
+# to be the reason this target was skipped. Reading a dd-3.39.0 entry with a 4.1.1 library
+# is the cross-version case the Rust read-path middleware exists to handle, so it is the
+# scenario to run under a debugger, not one to withhold a target from. What is still worth
+# refusing is a fixture that is not on disk at all, since that fails at run time as an
+# unhelpful open error.
 file( READ "${CMAKE_CURRENT_SOURCE_DIR}/play_equilibrium.f90" PLAY_EQ_SOURCE )
-if( NOT PLAY_EQ_SOURCE MATCHES "fixtures/dd-${DD_VERSION}" )
+if( NOT PLAY_EQ_SOURCE MATCHES "fixtures/dd-([0-9][0-9.]*)" )
   message( STATUS
-    "play_equilibrium.f90 reads a fixture other than dd-${DD_VERSION} (this build's"
-    " Data Dictionary version): not adding the play_equilibrium target" )
+    "play_equilibrium.f90 names no dd-<version> fixture directory:"
+    " not adding the play_equilibrium target" )
   return()
 endif()
+set( PLAY_EQ_FIXTURE_VERSION "${CMAKE_MATCH_1}" )
+set( PLAY_EQ_FIXTURE
+  "${CMAKE_SOURCE_DIR}/imas-python-fixtures/fixtures/dd-${PLAY_EQ_FIXTURE_VERSION}" )
 if( NOT EXISTS "${PLAY_EQ_FIXTURE}/equilibrium.h5" )
   message( STATUS
-    "No checked-in equilibrium fixture for Data Dictionary ${DD_VERSION}"
-    " (${PLAY_EQ_FIXTURE}): not adding the play_equilibrium target" )
+    "play_equilibrium.f90 reads ${PLAY_EQ_FIXTURE}, which does not exist:"
+    " not adding the play_equilibrium target" )
   return()
 endif()
 
@@ -67,6 +74,19 @@ target_link_libraries( play_equilibrium al-fortran )
 # directory to the build directory. That is the one thing about this target still to be
 # set by hand, so say it at configure time rather than leaving it to be discovered as a
 # failed open of a fixture.
-message( STATUS
-  "AL_PLAYGROUND=ON: added the play_equilibrium target (run it with"
-  " ${CMAKE_CURRENT_SOURCE_DIR} as the working directory)" )
+if( PLAY_EQ_FIXTURE_VERSION VERSION_EQUAL DD_VERSION )
+  message( STATUS
+    "AL_PLAYGROUND=ON: added the play_equilibrium target, reading its own DD version's"
+    " fixture (dd-${PLAY_EQ_FIXTURE_VERSION}); run it with"
+    " ${CMAKE_CURRENT_SOURCE_DIR} as the working directory" )
+else()
+  # Not a warning: this is the read-path middleware's whole subject. Said out loud
+  # because it explains values that otherwise look like bugs - fields absent from the
+  # older entry come back as ids_*_invalid, and sign conventions differ between DD 3
+  # and DD 4.
+  message( STATUS
+    "AL_PLAYGROUND=ON: added the play_equilibrium target, reading a dd-"
+    "${PLAY_EQ_FIXTURE_VERSION} fixture with a DD ${DD_VERSION} library - the"
+    " cross-version read the middleware handles; run it with"
+    " ${CMAKE_CURRENT_SOURCE_DIR} as the working directory" )
+endif()
