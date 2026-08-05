@@ -25,3 +25,10 @@ imas-python-mva-engineering-study.md
 imas-python-mva-engineering-study.md
 __pycache__/
 *.pyc
+/playground/cmake-build-debug
+/cmake-build-debug-eq
+# Any other IDE-owned build directory: CLion names one per CMake profile
+# (cmake-build-debug, -eq, -docker, ...), and playground/CMakeLists.txt makes it offer
+# playground/ as a nested project with build directories of its own.
+/cmake-build-*
+/playground/cmake-build-*
