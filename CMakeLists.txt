@@ -387,7 +387,25 @@ endforeach()
 # second shared object and no extra rpath.
 set( MIDDLEWARE_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/middleware" )
 set( MIDDLEWARE_TARGET_DIR "${CMAKE_CURRENT_BINARY_DIR}/middleware" )
-set( MIDDLEWARE_LIB "${MIDDLEWARE_TARGET_DIR}/release/libimas_middleware.a" )
+
+# A Debug build gets cargo's dev profile, not release-with-debug-info. The release
+# profile carries `debug = true` so a backtrace through the shim is always readable, but
+# it is still -O3: locals live in registers or vanish, and `info args` in a
+# imas_mw_read_data frame answers "<optimized out>" — which is the one question a
+# debugger is opened to ask. The dev profile is what makes the arguments inspectable.
+#
+# The dev profile keeps panic=unwind (panic=abort is release-only, so `cargo test` can
+# report failures), which changes nothing at the boundary: unwinding out of an
+# `extern "C"` fn aborts either way.
+if( CMAKE_BUILD_TYPE STREQUAL "Debug" )
+  set( MIDDLEWARE_CARGO_PROFILE_FLAGS )
+  set( MIDDLEWARE_LIB "${MIDDLEWARE_TARGET_DIR}/debug/libimas_middleware.a" )
+  set( MIDDLEWARE_PROFILE_NAME "dev (unoptimized, inspectable locals)" )
+else()
+  set( MIDDLEWARE_CARGO_PROFILE_FLAGS --release )
+  set( MIDDLEWARE_LIB "${MIDDLEWARE_TARGET_DIR}/release/libimas_middleware.a" )
+  set( MIDDLEWARE_PROFILE_NAME "release (optimized, debug info kept)" )
+endif()
 
 # HINTS covers the case build.sh already handles for gfortran: a GUI-launched IDE
 # inherits a bare PATH, and rustup puts cargo under $HOME/.cargo/bin.
@@ -401,17 +419,62 @@ endif()
 
 # cargo does its own change detection and is quick to no-op, but naming the sources as
 # DEPENDS keeps it out of the build entirely when nothing under middleware/ moved.
+#
+# --locked --offline: the crate has no dependencies, so cargo needs no network, and
+# saying so turns a compute node with no outbound route into a clear error instead of a
+# hang. Cargo.lock is committed to make --locked meaningful.
 file( GLOB_RECURSE MIDDLEWARE_SOURCES "${MIDDLEWARE_SRC_DIR}/src/*.rs" )
 add_custom_command(
   OUTPUT ${MIDDLEWARE_LIB}
-  COMMAND ${CARGO_EXECUTABLE} build --release
+  COMMAND ${CARGO_EXECUTABLE} build ${MIDDLEWARE_CARGO_PROFILE_FLAGS} --locked --offline
     --manifest-path "${MIDDLEWARE_SRC_DIR}/Cargo.toml"
     --target-dir "${MIDDLEWARE_TARGET_DIR}"
   DEPENDS ${MIDDLEWARE_SOURCES} "${MIDDLEWARE_SRC_DIR}/Cargo.toml"
-  COMMENT "Building Rust read-path middleware (imas_mw_read_data)"
+    "${MIDDLEWARE_SRC_DIR}/Cargo.lock"
+  COMMENT "Building Rust read-path middleware, ${MIDDLEWARE_PROFILE_NAME}"
   VERBATIM
 )
 add_custom_target( al-fortran-middleware DEPENDS ${MIDDLEWARE_LIB} )
+
+# A Rust staticlib carries unresolved references into libc, libdl and libpthread that
+# the Fortran link line does not otherwise supply. Linking a *shared* library tolerates
+# those (unlike an executable), so the omission does not fail the build — it produces a
+# libal-fortran.so with unresolved symbols that bind lazily and only fault if std ever
+# reaches for a thread or dlsym. Measured on Rocky 8 / glibc 2.28: 13 unresolved
+# symbols (dlsym, pthread_create, ...) without these, 0 with them.
+#
+# rustc is asked rather than told, since the list is target- and version-specific. Only
+# on non-Apple Unix: macOS resolves all of it through libSystem and needs nothing added,
+# and a stray -lgcc_s from a future rustc would break a verified-good link there.
+if( UNIX AND NOT APPLE )
+  find_program( RUSTC_EXECUTABLE rustc HINTS "$ENV{HOME}/.cargo/bin" "$ENV{CARGO_HOME}/bin" )
+  if( RUSTC_EXECUTABLE )
+    # --print native-static-libs needs a crate to compile, not just a target name.
+    set( _probe_rs "${CMAKE_CURRENT_BINARY_DIR}/native_libs_probe.rs" )
+    file( WRITE "${_probe_rs}" "" )
+    execute_process(
+      COMMAND ${RUSTC_EXECUTABLE} --print native-static-libs --crate-type staticlib
+        -o "${CMAKE_CURRENT_BINARY_DIR}/native_libs_probe.a" "${_probe_rs}"
+      OUTPUT_VARIABLE _probe_out
+      ERROR_VARIABLE _probe_err       # the note goes to stderr
+      RESULT_VARIABLE _probe_result
+    )
+    if( _probe_result EQUAL 0 AND "${_probe_out}${_probe_err}" MATCHES "native-static-libs: ([^\n\r]+)" )
+      string( STRIP "${CMAKE_MATCH_1}" MIDDLEWARE_NATIVE_LIBS )
+      string( REPLACE " " ";" MIDDLEWARE_NATIVE_LIBS "${MIDDLEWARE_NATIVE_LIBS}" )
+      message( STATUS "Rust middleware needs native libs: ${MIDDLEWARE_NATIVE_LIBS}" )
+    endif()
+  endif()
+  if( NOT MIDDLEWARE_NATIVE_LIBS )
+    # Worth saying out loud: the build still succeeds, and the damage shows up much
+    # later as a lazily-bound symbol faulting inside a read.
+    set( MIDDLEWARE_NATIVE_LIBS -lgcc_s -lutil -lrt -lpthread -lm -ldl -lc )
+    message( WARNING
+      "Could not ask rustc which native libraries its staticlib needs; falling back to"
+      " ${MIDDLEWARE_NATIVE_LIBS}. Without them libal-fortran can link with unresolved"
+      " libc/libpthread symbols that only fault at run time." )
+  endif()
+endif()
 
 
 # Targets
@@ -419,7 +482,8 @@ add_custom_target( al-fortran-middleware DEPENDS ${MIDDLEWARE_LIB} )
 
 add_library( al-fortran ${SOURCES} )
 add_dependencies( al-fortran ${AL_SOURCE_TARGETS} al-fortran-middleware )
-target_link_libraries( al-fortran ${MIDDLEWARE_LIB} )
+# The native libs go *after* the archive: they satisfy its references, not the reverse.
+target_link_libraries( al-fortran ${MIDDLEWARE_LIB} ${MIDDLEWARE_NATIVE_LIBS} )
 
 if( CMAKE_Fortran_COMPILER_ID STREQUAL "NAG" )
   # Work around NAG compiler not wanting to link against libal.so.x.y.z

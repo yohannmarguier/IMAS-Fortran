@@ -20,3 +20,11 @@ crate-type = ["staticlib"]
 # built optimized even when al-fortran itself is a Debug build; debug = true keeps
 # it steppable in gdb/lldb alongside the Fortran frames it sits between.
 debug = true
+
+# Unwinding out of the `extern "C"` shim into Fortran is not a thing this crate is
+# allowed to do (see the rules in src/lib.rs), so drop the machinery for it: a panic
+# aborts instead, which is the same outcome the compiler already forces at an
+# `extern "C"` boundary but stated at the toolchain level, and it takes the landing
+# pads and unwind tables out of the archive. Only the release profile — `cargo test`
+# builds the dev profile, where the harness needs unwinding to report a failure.
+panic = "abort"
