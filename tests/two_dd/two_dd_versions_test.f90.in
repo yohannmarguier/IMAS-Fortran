@@ -237,11 +237,15 @@ contains
       call check_real(eq%time_slice(slice)%constraints%b_field_pol_probe(1)%measured, &
            expected_bpol_probe_measured(slice), &
            'DD 4 only: constraints/b_field_pol_probe (was bpol_probe)', slice)
-      ! The trap: psi_axis survives into DD 4.1.1 as an obsolescent node, and the live
-      ! one is psi_magnetic_axis, checked above. Reading the obsolescent one is how a
-      ! program silently gets nothing.
-      call check(eq%time_slice(slice)%global_quantities%psi_axis == ids_real_invalid, &
-           'DD 4 only trap: the obsolescent global_quantities/psi_axis is empty', slice)
+      ! psi_axis survives into DD 4.1.1 as an obsolescent node beside the live
+      ! psi_magnetic_axis, checked above. The fixture fills both, because the map's
+      ! split-psi-axis rule writes the one DD 3 value to both DD 4 spellings - so the
+      ! assertion is that they agree, not that the obsolescent one is empty. A converter
+      ! that fed only one of them would fail here.
+      call check_real(eq%time_slice(slice)%global_quantities%psi_axis, &
+           eq%time_slice(slice)%global_quantities%psi_magnetic_axis, &
+           'DD 4: the obsolescent global_quantities/psi_axis agrees with the live one', &
+           slice)
     end do
   end subroutine
 
