@@ -331,6 +331,50 @@ struct Redefine {
 
 // ===================================================================== the plan
 
+/// The parts of a report line, kept apart rather than pre-joined so that `report.rs` can
+/// colour each by its role. Composing the string here and picking it apart there would
+/// mean parsing this module's own output format back out of it.
+#[derive(Debug, Default)]
+pub struct Note {
+    /// The DD 4.1.1 path(s) the rule claims — what the program asked for.
+    pub wanted: String,
+    /// The DD 3.39.0 path(s) the value is read from. **Empty means there is no source** —
+    /// the reader renders that, since "no source at all" and "this path here" are not the
+    /// same kind of fact and should not look alike.
+    pub source: String,
+    /// Why the conversion is not exact.
+    pub detail: String,
+    /// The rule id, so a reader can find it in the map.
+    pub rule: String,
+}
+
+impl Note {
+    /// Uncoloured rendering, for a caller with no terminal in mind.
+    pub fn plain(&self) -> String {
+        format!(
+            "{} <- {}: {} [{}]",
+            self.wanted,
+            self.source_or_nothing(),
+            self.detail,
+            self.rule
+        )
+    }
+
+    /// The source paths, or the words that stand in for having none.
+    pub fn source_or_nothing(&self) -> &str {
+        if self.source.is_empty() {
+            "(nothing)"
+        } else {
+            &self.source
+        }
+    }
+
+    /// True when the map has no DD 3.39.0 path to offer at all.
+    pub fn sourceless(&self) -> bool {
+        self.source.is_empty()
+    }
+}
+
 /// What the read path should do with one requested DD 4.1.1 path.
 #[derive(Debug)]
 pub struct Plan {
@@ -351,8 +395,8 @@ pub struct Plan {
     /// Dedup key for the report — the rule id, so a subtree rule claiming 37 paths says
     /// so once instead of 37 times.
     pub key: String,
-    /// One preformatted report line, describing the *rule* rather than the instance.
-    pub line: String,
+    /// What to tell the reader, describing the *rule* rather than this instance.
+    pub note: Note,
 }
 
 impl Plan {
@@ -457,11 +501,15 @@ impl Map {
                 suppress: true,
                 verdict: Verdict::Refused,
                 key: format!("redefine:{}", redefine.matcher.shown()),
-                line: format!(
-                    "{} <- (nothing): value redefined, {}",
-                    redefine.matcher.shown(),
-                    reason_or(&redefine.reason, "no factor converts it")
-                ),
+                note: Note {
+                    wanted: redefine.matcher.shown(),
+                    source: String::new(),
+                    detail: format!(
+                        "value redefined, {}",
+                        reason_or(&redefine.reason, "no factor converts it")
+                    ),
+                    rule: "transforms/redefine".to_string(),
+                },
             });
         }
 
@@ -476,7 +524,8 @@ impl Map {
                     suppress: false,
                     verdict: Verdict::Mapped,
                     key: "cocos".to_string(),
-                    line: String::new(),
+                    // Never printed: an exact conversion is counted, not reported.
+                    note: Note::default(),
                 });
             }
         };
@@ -514,7 +563,7 @@ impl Map {
             suppress: verdict == Verdict::Refused,
             verdict,
             key: rule.id.clone(),
-            line: rule.report_line(verdict),
+            note: rule.note(verdict),
         };
         (!plan.is_noop()).then_some(plan)
     }
@@ -569,22 +618,42 @@ impl Map {
 }
 
 impl Rule {
-    fn report_line(&self, verdict: Verdict) -> String {
-        let rights = join(self.rights.iter().map(Matcher::shown));
-        let lefts = if self.lefts.is_empty() {
-            "(nothing)".to_string()
-        } else {
-            join(self.lefts.iter().map(Target::shown))
-        };
-        let detail = match (self.rel, verdict) {
-            (Rel::RightOnly, _) => "no DD3 source".to_string(),
-            (Rel::Retyped, Verdict::Absent) => format!(
-                "container shape {} cannot be rewritten as a path",
-                self.shape.as_deref().unwrap_or("changed")
+    fn note(&self, verdict: Verdict) -> Note {
+        Note {
+            wanted: join(self.rights.iter().map(Matcher::shown)),
+            source: if self.lefts.is_empty() {
+                String::new()
+            } else {
+                join(self.lefts.iter().map(Target::shown))
+            },
+            detail: match (self.rel, verdict) {
+                (Rel::RightOnly, _) => "no DD3 source".to_string(),
+                (Rel::Retyped, Verdict::Absent) => format!(
+                    "container shape {} cannot be rewritten as a path",
+                    self.shape.as_deref().unwrap_or("changed")
+                ),
+                // Most fold rules carry no @reason, and a column of "see the map" says
+                // nothing. What makes a merge lossy is derivable from the rule itself — how
+                // many DD 3 spellings land on the one DD 4 path — so say that instead.
+                _ => reason_or(&self.reason, &self.why()),
+            },
+            rule: self.id.clone(),
+        }
+    }
+
+    /// What the `rel` alone says about the cost, for a rule whose `@reason` is absent.
+    fn why(&self) -> String {
+        match self.rel {
+            Rel::Merged => format!(
+                "{} DD3 spellings collapse to one DD4 path",
+                self.lefts.len()
             ),
-            _ => reason_or(&self.reason, "see the map"),
-        };
-        format!("{rights} <- {lefts}: {detail} [{}]", self.id)
+            Rel::Split => "one DD3 value feeds every DD4 spelling".to_string(),
+            Rel::Moved => "relocated to a different parent".to_string(),
+            Rel::Renamed => "renamed".to_string(),
+            Rel::Retyped => "same path, different type".to_string(),
+            _ => "see the map".to_string(),
+        }
     }
 }
 
@@ -964,8 +1033,8 @@ mod tests {
             vec!["time_slice/boundary_separatrix/gap/value"]
         );
         assert_eq!(plan.verdict, Verdict::Lossy);
-        assert!(plan.line.contains("move-gap"));
-        assert!(plan.line.contains("identifier"), "line was: {}", plan.line);
+        assert!(plan.note.plain().contains("move-gap"));
+        assert!(plan.note.plain().contains("identifier"), "line was: {}", plan.note.plain());
     }
 
     /// The heart of the 3.39.0 → 4.1.1 step: DD3 ships both spellings, so the read tries
@@ -1041,7 +1110,7 @@ mod tests {
         assert!(plan.sources.is_empty(), "nothing on the left to read");
         assert!(!plan.suppress, "absent is al-core's own answer, not ours");
         assert_eq!(plan.verdict, Verdict::Absent);
-        assert!(plan.line.contains("new-contour-tree"));
+        assert!(plan.note.plain().contains("new-contour-tree"));
     }
 
     /// m → m⁻² is a dimensional redefinition: chi-squared is now normalised by the
@@ -1058,7 +1127,7 @@ mod tests {
             assert_eq!(plan.verdict, Verdict::Refused, "{right}");
             assert!(plan.suppress, "{right}");
             assert!(plan.sources.is_empty(), "{right}");
-            assert!(plan.line.contains("variance"), "line was: {}", plan.line);
+            assert!(plan.note.plain().contains("variance"), "line was: {}", plan.note.plain());
         }
         // Its siblings are ordinary paths and must not be caught by the same rule.
         assert!(map
@@ -1099,7 +1168,7 @@ mod tests {
             .expect("coordinates_type is retyped");
         assert_eq!(plan.verdict, Verdict::Absent);
         assert!(plan.sources.is_empty());
-        assert!(plan.line.contains("int_1d:struct_array"), "{}", plan.line);
+        assert!(plan.note.plain().contains("int_1d:struct_array"), "{}", plan.note.plain());
     }
 
     /// A path that only appears in <transforms> gets a plan carrying nothing but the

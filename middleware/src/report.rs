@@ -13,6 +13,11 @@
 //! printed. They cost nothing, and burying six real losses under a few hundred exact
 //! rewrites is how a warning channel stops being read.
 //!
+//! Colour follows the same priority (see `paint.rs`): the losses carry it, the scaffolding
+//! is dimmed out of the way, and a counter of zero recedes rather than shouting a number
+//! that means "nothing to see". It is off unless stderr is a terminal, so a redirected log
+//! or a CTest capture is byte-for-byte what it always was.
+//!
 //! As everywhere in this crate, nothing here may panic: `eprintln!` would, if the write
 //! failed, so every line goes out through `write!` with the result discarded, and a
 //! poisoned lock silently drops the line rather than taking the process with it.
@@ -21,11 +26,24 @@ use std::collections::HashMap;
 use std::io::Write;
 use std::sync::Mutex;
 
-use crate::map::Verdict;
+use crate::map::{Note, Verdict};
+use crate::paint::{count, paint, Style};
+
+/// The colour each outcome is reported in. Refused is worst — a value withheld — then
+/// lossy, then a skip, which is a gap in the map or this shim rather than in the data.
+/// Absent is yellow because it is expected: DD 4 simply has fields DD 3 never had.
+fn style_of(verdict: Verdict) -> Style {
+    match verdict {
+        Verdict::Refused => Style::Refused,
+        Verdict::Lossy => Style::Lossy,
+        Verdict::Absent => Style::Absent,
+        Verdict::Mapped => Style::Good,
+    }
+}
 
 struct Entry {
     verdict: Verdict,
-    line: String,
+    note: Note,
     hits: u64,
 }
 
@@ -37,7 +55,7 @@ struct Ledger {
     converted: u64,
     /// Values whose sign was flipped for COCOS 11 -> 17.
     flipped: u64,
-    /// Reads the map could not express through the context they arrived on.
+    /// Reads the map answered but the open context could not express.
     unreachable: u64,
     /// Startup complaints, printed once each.
     notices: Vec<String>,
@@ -45,12 +63,10 @@ struct Ledger {
 
 static LEDGER: Mutex<Option<Ledger>> = Mutex::new(None);
 
-const TAG: &str = "[imas-mw]";
-
 /// Print one line to stderr. Not `eprintln!`, which panics if the write fails.
 fn emit(line: &str) {
     let mut err = std::io::stderr().lock();
-    let _ = writeln!(err, "{TAG} {line}");
+    let _ = writeln!(err, "{} {line}", paint("[imas-mw]", Style::Faint));
 }
 
 fn with_ledger<R>(f: impl FnOnce(&mut Ledger) -> R) -> Option<R> {
@@ -58,15 +74,59 @@ fn with_ledger<R>(f: impl FnOnce(&mut Ledger) -> R) -> Option<R> {
     Some(f(guard.get_or_insert_with(Ledger::default)))
 }
 
+/// One rule's line: `VERDICT wanted <- source: why [rule]`.
+///
+/// The two paths are the point. `wanted` is bold — it is what the program asked for and
+/// what a reader is scanning for — and `source` is cyan, because when a fold falls back to
+/// an obsolescent alias, *which DD 3 name the value actually came from* is the one thing
+/// the line exists to say. The arrow and the rule id are scaffolding and are dimmed.
+fn render(verdict: Verdict, note: &Note, indent: &str, suffix: &str) -> String {
+    format!(
+        "{indent}{} {} {} {}{}{}{}",
+        tag(verdict.label(), style_of(verdict)),
+        paint(&note.wanted, Style::Wanted),
+        paint("<-", Style::Faint),
+        // Cyan means "a DD 3 path you can go and look at". Having no source is a different
+        // kind of fact, so it recedes instead of impersonating one.
+        paint(
+            note.source_or_nothing(),
+            if note.sourceless() {
+                Style::Faint
+            } else {
+                Style::Source
+            },
+        ),
+        paint(": ", Style::Faint),
+        note.detail,
+        paint(&format!(" [{}]{suffix}", note.rule), Style::Faint),
+    )
+}
+
+/// A label painted and then padded to a fixed column.
+///
+/// The padding cannot go through `{:<8}`: escape codes are zero-width on screen but not to
+/// the formatter, so formatting an already-painted string pads by nothing and every line
+/// after the first colour ends up ragged. Width is counted on the text, applied outside the
+/// escapes — which also keeps the coloured and uncoloured renderings aligned identically.
+const LABEL_WIDTH: usize = 8;
+
+fn tag(label: &str, style: Style) -> String {
+    format!(
+        "{}{}",
+        paint(label, style),
+        " ".repeat(LABEL_WIDTH.saturating_sub(label.chars().count()))
+    )
+}
+
 /// A one-off message, printed immediately and repeated in the summary — the map banner
 /// and anything the loader could not make sense of.
 pub fn notice(line: &str) {
-    emit(line);
+    emit(&paint(line, Style::Heading));
     with_ledger(|ledger| ledger.notices.push(line.to_string()));
 }
 
 /// Count one converted read, printing the rule's line the first time it fires.
-pub fn record(verdict: Verdict, key: &str, line: &str, flipped: bool) {
+pub fn record(verdict: Verdict, key: &str, note: &Note, flipped: bool) {
     let first = with_ledger(|ledger| {
         ledger.converted += 1;
         if flipped {
@@ -82,7 +142,12 @@ pub fn record(verdict: Verdict, key: &str, line: &str, flipped: bool) {
                     key.to_string(),
                     Entry {
                         verdict,
-                        line: line.to_string(),
+                        note: Note {
+                            wanted: note.wanted.clone(),
+                            source: note.source.clone(),
+                            detail: note.detail.clone(),
+                            rule: note.rule.clone(),
+                        },
                         hits: 1,
                     },
                 );
@@ -91,12 +156,13 @@ pub fn record(verdict: Verdict, key: &str, line: &str, flipped: bool) {
         }
     });
     if first == Some(true) {
-        emit(&format!("{:<8} {line}", verdict.label()));
+        emit(&render(verdict, note, "", ""));
     }
 }
 
 /// Count a read the map answered but the context could not express. Printed once: it is a
-/// gap in the map or in this shim, not a property of the data.
+/// gap in the map or in this shim, not a property of the data — which is why it gets a
+/// colour of its own rather than borrowing a verdict's.
 pub fn unreachable(right: &str, left: &str) {
     let first = with_ledger(|ledger| {
         ledger.unreachable += 1;
@@ -104,47 +170,67 @@ pub fn unreachable(right: &str, left: &str) {
     });
     if first == Some(true) {
         emit(&format!(
-            "{:<8} {right} <- {left}: not reachable from the open context, read unchanged",
-            "SKIPPED"
+            "{} {} {} {}{}not reachable from the open context, read unchanged",
+            tag("SKIPPED", Style::Skipped),
+            paint(right, Style::Wanted),
+            paint("<-", Style::Faint),
+            paint(left, Style::Source),
+            paint(": ", Style::Faint),
         ));
     }
 }
 
 /// The whole story, for a program to print when it is done reading.
 pub fn summary() -> Vec<String> {
-    let Some(lines) = with_ledger(|ledger| {
-        let mut lines: Vec<String> = ledger.notices.clone();
+    with_ledger(|ledger| {
+        let mut lines: Vec<String> = ledger
+            .notices
+            .iter()
+            .map(|notice| paint(notice, Style::Heading))
+            .collect();
 
-        let count = |want: Verdict| -> (usize, u64) {
+        let tally = |want: Verdict| -> (usize, u64) {
             ledger
                 .entries
                 .values()
                 .filter(|entry| entry.verdict == want)
                 .fold((0, 0), |(rules, hits), entry| (rules + 1, hits + entry.hits))
         };
-        let (mapped_rules, mapped_hits) = count(Verdict::Mapped);
-        let (lossy_rules, lossy_hits) = count(Verdict::Lossy);
-        let (absent_rules, absent_hits) = count(Verdict::Absent);
-        let (refused_rules, refused_hits) = count(Verdict::Refused);
 
-        lines.push(format!("reads converted        : {}", ledger.converted));
+        // `label : <rules> rules, <hits> reads`, with both numbers dimmed when they are
+        // zero. A run with nothing to answer for is then almost entirely grey, and the one
+        // red number in a run that does have something is impossible to miss.
+        let mut counter = |label: &str, rules: usize, hits: u64, style: Style| {
+            lines.push(format!(
+                "{label:<23}: {} rules, {} reads",
+                count(rules as u64, style),
+                count(hits, style),
+            ));
+        };
+        let (rules, hits) = tally(Verdict::Mapped);
+        counter("exact", rules, hits, Style::Good);
+        let (rules, hits) = tally(Verdict::Lossy);
+        counter("lossy", rules, hits, Style::Lossy);
+        let (rules, hits) = tally(Verdict::Absent);
+        counter("no DD3 source", rules, hits, Style::Absent);
+        let (rules, hits) = tally(Verdict::Refused);
+        counter("refused as unmappable", rules, hits, Style::Refused);
+
         lines.push(format!(
-            "exact                  : {mapped_rules} rules, {mapped_hits} reads"
+            "{:<23}: {} reads",
+            "converted",
+            count(ledger.converted, Style::Good)
         ));
-        lines.push(format!("COCOS sign flips       : {}", ledger.flipped));
         lines.push(format!(
-            "lossy                  : {lossy_rules} rules, {lossy_hits} reads"
-        ));
-        lines.push(format!(
-            "no DD3 source          : {absent_rules} rules, {absent_hits} reads"
-        ));
-        lines.push(format!(
-            "refused as unmappable  : {refused_rules} rules, {refused_hits} reads"
+            "{:<23}: {} values",
+            "COCOS sign flips",
+            count(ledger.flipped, Style::Good)
         ));
         if ledger.unreachable > 0 {
             lines.push(format!(
-                "not reachable          : {} reads",
-                ledger.unreachable
+                "{:<23}: {} reads",
+                "not reachable",
+                count(ledger.unreachable, Style::Skipped)
             ));
         }
 
@@ -156,21 +242,19 @@ pub fn summary() -> Vec<String> {
                 .values()
                 .filter(|entry| entry.verdict == want)
                 .collect();
-            group.sort_by(|a, b| a.line.cmp(&b.line));
+            group.sort_by_key(|entry| entry.note.wanted.clone());
             for entry in group {
-                lines.push(format!(
-                    "  {:<8} {} ({} reads)",
-                    want.label(),
-                    entry.line,
-                    entry.hits
+                lines.push(render(
+                    want,
+                    &entry.note,
+                    "  ",
+                    &format!(" ({} reads)", entry.hits),
                 ));
             }
         }
         lines
-    }) else {
-        return Vec::new();
-    };
-    lines
+    })
+    .unwrap_or_default()
 }
 
 /// Number of reads whose value the map could not deliver faithfully — lossy, absent,
@@ -194,14 +278,14 @@ pub fn losses() -> u64 {
 pub extern "C" fn imas_mw_conversion_report() {
     let lines = summary();
     if lines.is_empty() {
-        emit("no DD conversion was active");
+        emit(&paint("no DD conversion was active", Style::Faint));
         return;
     }
-    emit("---- DD conversion report ----");
+    emit(&paint("---- DD conversion report ----", Style::Faint));
     for line in lines {
         emit(&line);
     }
-    emit("------------------------------");
+    emit(&paint("------------------------------", Style::Faint));
 }
 
 /// `report::losses()` for Fortran.
@@ -213,21 +297,47 @@ pub extern "C" fn imas_mw_conversion_losses() -> u64 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::paint;
 
-    /// The ledger is process-global, so this is one test rather than several racing ones.
+    fn note(wanted: &str, source: &str, rule: &str) -> Note {
+        Note {
+            wanted: wanted.to_string(),
+            source: source.to_string(),
+            detail: "why".to_string(),
+            rule: rule.to_string(),
+        }
+    }
+
+    /// The ledger and the colour decision are both process-global, so this is one test
+    /// rather than several racing ones. Colour is forced off first: what is asserted here
+    /// is the content, and `paint`'s own test covers the escapes.
     #[test]
     fn the_ledger_counts_per_rule_and_totals_per_read() {
-        record(Verdict::Lossy, "fold-p1d-j", "j_phi <- j_phi | j_tor", true);
-        record(Verdict::Lossy, "fold-p1d-j", "j_phi <- j_phi | j_tor", true);
-        record(Verdict::Absent, "new-contour-tree", "contour_tree", false);
-        record(Verdict::Mapped, "rename-bpol-probe", "probe", false);
+        let _colour = paint::test_lock();
+        paint::force(false);
+
+        let fold = note("profiles_1d/j_phi", "j_phi | j_tor", "fold-p1d-j");
+        record(Verdict::Lossy, "fold-p1d-j", &fold, true);
+        record(Verdict::Lossy, "fold-p1d-j", &fold, true);
+        record(
+            Verdict::Absent,
+            "new-contour-tree",
+            &note("contour_tree", "(nothing)", "new-contour-tree"),
+            false,
+        );
+        record(
+            Verdict::Mapped,
+            "rename-bpol-probe",
+            &note("b_field_pol_probe", "bpol_probe", "rename-bpol-probe"),
+            false,
+        );
         unreachable("a/b", "c/d");
 
         let summary = summary();
         let has = |needle: &str| summary.iter().any(|line| line.contains(needle));
 
-        assert!(has("reads converted        : 4"), "{summary:#?}");
-        assert!(has("COCOS sign flips       : 2"), "{summary:#?}");
+        assert!(has("converted              : 4 reads"), "{summary:#?}");
+        assert!(has("COCOS sign flips       : 2 values"), "{summary:#?}");
         assert!(has("lossy                  : 1 rules, 2 reads"), "{summary:#?}");
         assert!(has("no DD3 source          : 1 rules, 1 reads"), "{summary:#?}");
         assert!(has("exact                  : 1 rules, 1 reads"), "{summary:#?}");
@@ -237,8 +347,92 @@ mod tests {
         assert_eq!(losses(), 4);
 
         // The detail block repeats every loss and no exact conversion.
-        assert!(has("LOSSY    j_phi <- j_phi | j_tor (2 reads)"), "{summary:#?}");
-        assert!(has("ABSENT   contour_tree (1 reads)"), "{summary:#?}");
-        assert!(!has("MAPPED   probe"), "exact conversions are not listed");
+        assert!(
+            has("LOSSY    profiles_1d/j_phi <- j_phi | j_tor: why [fold-p1d-j] (2 reads)"),
+            "{summary:#?}"
+        );
+        assert!(
+            has("ABSENT   contour_tree <- (nothing): why [new-contour-tree] (1 reads)"),
+            "{summary:#?}"
+        );
+        assert!(!has("MAPPED   b_field_pol_probe"), "exact conversions are not listed");
+    }
+
+    /// With colour on, the severity lands on the verdict and the provenance on the two
+    /// paths — the two things the line exists to distinguish.
+    #[test]
+    fn a_rendered_loss_paints_the_verdict_and_both_paths() {
+        let _colour = paint::test_lock();
+        paint::force(true);
+        let line = render(
+            Verdict::Lossy,
+            &note("profiles_1d/j_phi", "profiles_1d/j_tor", "fold-p1d-j"),
+            "",
+            "",
+        );
+        assert!(line.contains("\x1b[31mLOSSY\x1b[0m"), "{line:?}");
+        assert!(line.contains("\x1b[1mprofiles_1d/j_phi\x1b[0m"), "{line:?}");
+        assert!(line.contains("\x1b[36mprofiles_1d/j_tor\x1b[0m"), "{line:?}");
+        assert!(line.contains("\x1b[2m [fold-p1d-j]\x1b[0m"), "{line:?}");
+
+        // Refused is the one that gets bold red, since it is the only outcome where a
+        // value is withheld rather than merely degraded.
+        let line = render(
+            Verdict::Refused,
+            &note("chi_squared_r", "(nothing)", "transforms/redefine"),
+            "",
+            "",
+        );
+        assert!(line.contains("\x1b[1;31mREFUSED\x1b[0m"), "{line:?}");
+
+        paint::force(false);
+    }
+
+    /// The column the paths start in must not move when colour goes on — the whole value of
+    /// a fixed-width label is that the eye can run down it. This is the regression `{:<8}`
+    /// on a painted string silently causes.
+    #[test]
+    fn the_label_column_is_the_same_painted_or_not() {
+        let _colour = paint::test_lock();
+        let column = |line: &str| {
+            // Everything up to the first path, with escapes removed: that is what the
+            // terminal actually advances by.
+            strip(line).find("chi_squared_r").expect("the path is in the line")
+        };
+        let one = note("chi_squared_r", "(nothing)", "r");
+
+        paint::force(false);
+        let plain_refused = column(&render(Verdict::Refused, &one, "", ""));
+        let plain_lossy = column(&render(Verdict::Lossy, &one, "", ""));
+        paint::force(true);
+        let painted_refused = column(&render(Verdict::Refused, &one, "", ""));
+        let painted_lossy = column(&render(Verdict::Lossy, &one, "", ""));
+        paint::force(false);
+
+        assert_eq!(plain_refused, painted_refused, "colour moved the path column");
+        assert_eq!(plain_lossy, painted_lossy, "colour moved the path column");
+        assert_eq!(
+            plain_refused, plain_lossy,
+            "REFUSED and LOSSY must share a column despite differing in length"
+        );
+    }
+
+    /// Drop ANSI escapes, so a test can measure what a terminal would show.
+    fn strip(line: &str) -> String {
+        let mut out = String::with_capacity(line.len());
+        let mut chars = line.chars();
+        while let Some(c) = chars.next() {
+            if c != '\x1b' {
+                out.push(c);
+                continue;
+            }
+            // "\x1b[" then parameters then a final letter.
+            for c in chars.by_ref() {
+                if c.is_ascii_alphabetic() {
+                    break;
+                }
+            }
+        }
+        out
     }
 }

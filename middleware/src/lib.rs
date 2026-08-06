@@ -65,6 +65,7 @@
 
 pub mod ctx;
 pub mod map;
+pub mod paint;
 pub mod report;
 pub mod xml;
 
@@ -213,6 +214,31 @@ static READS: AtomicU64 = AtomicU64::new(0);
 #[no_mangle]
 pub extern "C" fn imas_mw_read_count() -> u64 {
     READS.load(Ordering::Relaxed)
+}
+
+/// Whether `field` — an absolute DD 4.1.1 path relative to the IDS root, e.g.
+/// `time_slice/profiles_1d/j_phi` — is one the map actually rewrites, folds, flips or
+/// refuses, as opposed to a plain, unconverted pass-through. This is a static property of
+/// the map itself, not of any particular read: it does not touch a context or a backend,
+/// so it may be called at any time, including before or between reads.
+///
+/// Exported so a caller can highlight exactly which fields a conversion would touch —
+/// `playground/play_equilibrium.f90` colors those rows — rather than inferring it from the
+/// per-rule report, which counts hits but does not answer "would this one path convert".
+/// Returns 0 whenever conversion is not armed at all (`enabled()` is `None`), since then
+/// nothing is converted regardless of what the map would say about the path.
+///
+/// # Safety
+/// `field` must be NUL-terminated or null.
+#[no_mangle]
+pub unsafe extern "C" fn imas_mw_path_needs_conversion(field: *const c_char) -> c_int {
+    let Some(map) = convert::enabled() else {
+        return 0;
+    };
+    let Some(path) = borrow(field) else {
+        return 0;
+    };
+    map.resolve(path).is_some() as c_int
 }
 
 // ===================================================================== context path
@@ -465,7 +491,7 @@ mod convert {
             0
         };
 
-        report::record(plan.verdict, &plan.key, &plan.line, flipped > 0);
+        report::record(plan.verdict, &plan.key, &plan.note, flipped > 0);
         status
     }
 
@@ -741,7 +767,7 @@ mod convert {
         let map = enabled()?;
         let request = ctx::locate(ctx, borrow(path)?, &map.ids)?;
         let plan = map.resolve(&request.right)?;
-        report::record(plan.verdict, &plan.key, &plan.line, false);
+        report::record(plan.verdict, &plan.key, &plan.note, false);
 
         // Precedence 1 only. An array-of-structure's length is decided when it opens and
         // every field below it is read through the resulting context, so there is no
