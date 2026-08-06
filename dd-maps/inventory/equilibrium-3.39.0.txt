@@ -492,8 +492,6 @@ time_slice/global_quantities/psi_external_average
 time_slice/global_quantities/q_95
 time_slice/global_quantities/q_axis
 time_slice/global_quantities/q_min
-time_slice/global_quantities/q_min/psi
-time_slice/global_quantities/q_min/psi_norm
 time_slice/global_quantities/q_min/rho_tor_norm
 time_slice/global_quantities/q_min/value
 time_slice/global_quantities/rho_tor_boundary

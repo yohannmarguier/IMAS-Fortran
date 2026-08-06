@@ -724,11 +724,13 @@ contains
         d%q_min%value = s%q_min%value
         d%q_min%rho_tor_norm = s%q_min%rho_tor_norm
 
-        ! right_only, and NOT in the map: q_min/{psi,psi_norm} are DD4-only. The
-        ! map lists global_quantities/q_min/psi among its COCOS flips, again a
-        ! transform on a path it cannot populate.
+        ! right_only: q_min/{psi,psi_norm} were added to the DD in 3.40.0, so
+        ! they have no 3.39.0 source. The map declares this via new-q-min-psi /
+        ! new-q-min-psi-norm (it previously omitted this - the 3.39.0 inventory
+        ! wrongly listed both paths as present, and the map carried a COCOS
+        ! flip for q_min/psi that had nothing to act on).
         call refuse(lg, 'global_quantities/q_min/{psi,psi_norm} not synthesised'// &
-                        ' (DD4-only, missing from map)')
+                        ' (DD4-only, added in DD 3.40.0)')
 
         ! merged fold-energy-mhd: energy_mhd (precedence 1) then w_mhd
         ! (precedence 2, obsolescent). Both do exist in DD 3.39.0, so this is a

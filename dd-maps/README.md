@@ -90,8 +90,8 @@ exactly one rule. Rules may overlap textually; the most specific (longest
 matched prefix) wins, and a genuine tie is an error. Paths present in both
 versions and unclaimed fall through to `<default rel="identical"/>`.
 
-Current state for equilibrium: 53 rules (7 from includes) covering 585 left and
-455 right paths, 32 COCOS sign flips, 4 redefinitions. Two rules are flagged
+Current state for equilibrium: 55 rules (7 from includes) covering 583 left and
+455 right paths, 31 COCOS sign flips, 4 redefinitions. Two rules are flagged
 `decision="yes"` and need a physicist — `validate.py` prints them.
 
 ### A path existing in only one version is not the same as `left_only`
@@ -148,8 +148,8 @@ guide is a grep recipe for humans, and using it directly would corrupt data:
   normalised by variance), not a rescale — no factor inverts it. They are
   `<redefine>` with `unmappable` both ways, not `<scale>`.
 
-Deriving instead from the path sets gives the honest picture: 399 identical,
-186 left-only, 56 right-only.
+Deriving instead from the path sets gives the honest picture: 397 identical,
+186 left-only, 58 right-only.
 
 One structural finding worth knowing: **DD 3.39.0 is a transitional version that
 ships old and new names side by side** (`j_tor` *and* `j_phi`, `b_tor` *and*

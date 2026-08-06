@@ -3,8 +3,14 @@
   equilibrium: DD 3.39.0 <-> DD 4.1.1
 
   Derived from the imas-dd MCP server path sets for both versions:
-    585 paths on the left, 455 on the right
-    399 identical, 186 left-only, 56 right-only
+    583 paths on the left, 455 on the right
+    397 identical, 186 left-only, 58 right-only
+
+  q_min/psi and q_min/psi_norm were removed from the 3.39.0 inventory and
+  declared right_only here: both were added to the DD in 3.40.0 (confirmed via
+  the imas-dd version history), so the transcribed 3.39.0 inventory listing
+  them was wrong, not merely incomplete like the ~12% under-report the README
+  documents.
 
   Rules below claim every left-only and right-only path. Paths present in both
   and unclaimed fall through to <default rel="identical"/>.
@@ -36,7 +42,7 @@
   <coverage scope="time_slice/convergence" forward="exact" reverse="exact"/>
   <coverage scope="time_slice/coordinate_system" forward="lossy" reverse="unmappable"/>
   <coverage scope="time_slice/ggd" forward="lossy" reverse="unmappable"/>
-  <coverage scope="time_slice/global_quantities" forward="lossy" reverse="exact"/>
+  <coverage scope="time_slice/global_quantities" forward="unmappable" reverse="lossy"/>
   <coverage scope="time_slice/profiles_1d" forward="lossy" reverse="exact"/>
   <coverage scope="time_slice/profiles_2d" forward="lossy" reverse="exact"/>
   <coverage scope="vacuum_toroidal_field" forward="exact" reverse="exact"/>
@@ -364,6 +370,18 @@
       <fidelity forward="unmappable" reverse="lossy"/>
     </rule>
 
+    <rule id="new-q-min-psi" rel="right_only"
+          right="time_slice/global_quantities/q_min/psi" source="derived">
+      <fidelity forward="unmappable" reverse="lossy"
+                reason="path added in DD 3.40.0; no counterpart in 3.39.0"/>
+    </rule>
+
+    <rule id="new-q-min-psi-norm" rel="right_only"
+          right="time_slice/global_quantities/q_min/psi_norm" source="derived">
+      <fidelity forward="unmappable" reverse="lossy"
+                reason="path added in DD 3.40.0; no counterpart in 3.39.0"/>
+    </rule>
+
     <!-- psi_axis survives into DD4 but DD4 also introduces the clearer
          psi_magnetic_axis for the same quantity. Feeding both keeps the
          forward conversion complete. -->
@@ -419,7 +437,6 @@
             note="target of split-psi-axis"/>
       <flip path="time_slice/global_quantities/psi_boundary"/>
       <flip path="time_slice/global_quantities/psi_external_average"/>
-      <flip path="time_slice/global_quantities/q_min/psi"/>
       <flip path="time_slice/global_quantities/v_external"/>
       <flip path="time_slice/profiles_1d/darea_dpsi"/>
       <flip path="time_slice/profiles_1d/dpressure_dpsi"/>
