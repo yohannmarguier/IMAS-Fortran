@@ -330,10 +330,9 @@ contains
                              d%convergence%grad_shafranov_deviation_expression)
         d%convergence%grad_shafranov_deviation_value = &
             s%convergence%grad_shafranov_deviation_value
-        ! right_only, and NOT in the map: convergence/result is DD4-only, so the
-        ! map's <default rel="identical"/> would have the engine copy a field
-        ! DD 3.39.0 does not have.
-        call refuse(lg, 'time_slice/convergence/result not synthesised (DD4-only, missing from map)')
+        ! right_only: convergence/result was added in DD 3.41.0, so it has no
+        ! 3.39.0 source. Declared via new-convergence-result.
+        call refuse(lg, 'time_slice/convergence/result not synthesised (DD4-only, added in DD 3.41.0)')
 
         d%time = s%time
     end subroutine
@@ -529,10 +528,11 @@ contains
             end do
         end if
 
-        ! right_only, and NOT in the map: constraints/j_parallel is DD4-only, yet
-        ! the map lists constraints/j_parallel/position/psi among its 32 COCOS
-        ! flips - a transform on a path it has no rule to populate.
-        call refuse(lg, 'constraints/j_parallel not synthesised (DD4-only, missing from map)')
+        ! right_only: constraints/j_parallel was added in DD 3.40.0, so it has
+        ! no 3.39.0 source (DD 3.39.0's constraints only ever had j_phi/j_tor).
+        ! Declared via new-constraints-j-parallel; the dead COCOS flip this map
+        ! used to carry on constraints/j_parallel/position/psi is gone too.
+        call refuse(lg, 'constraints/j_parallel not synthesised (DD4-only, added in DD 3.40.0)')
 
         ! identical, except the two chi_squared refusals inside
         if (associated(s%x_point)) then
@@ -550,9 +550,11 @@ contains
             call refuse(lg, 'constraints/strike_point/chi_squared_{r,z} refused (m -> m^-2 redefine)')
         end if
 
-        ! right_only, and NOT in the map: three DD4-only scalars.
+        ! right_only: three DD4-only scalars, all added in DD 3.40.0. Declared
+        ! via new-constraints-chi-squared-reduced / -freedom-degrees-n /
+        ! -constraints-n.
         call refuse(lg, 'constraints/{chi_squared_reduced,freedom_degrees_n,constraints_n}'// &
-                        ' not synthesised (DD4-only, missing from map)')
+                        ' not synthesised (DD4-only, added in DD 3.40.0)')
     end subroutine
 
     ! ------------------------------------------- the constraints_0D_* family
@@ -700,9 +702,10 @@ contains
         ! cocos flip: global_quantities/psi_boundary
         d%psi_boundary = flipped(s%psi_boundary)
 
-        ! right_only, and NOT in the map: rho_tor_boundary is DD4-only.
+        ! right_only: rho_tor_boundary was added in DD 3.40.0. Declared via
+        ! new-global-quantities-rho-tor-boundary.
         call refuse(lg, 'global_quantities/rho_tor_boundary not synthesised'// &
-                        ' (DD4-only, missing from map)')
+                        ' (DD4-only, added in DD 3.40.0)')
 
         ! identical
         d%magnetic_axis%r = s%magnetic_axis%r
@@ -759,8 +762,9 @@ contains
         ! that is one physical fact, so it is flipped once.
         call cp1(s%psi, d%psi, FLIP)
 
-        ! right_only, and NOT in the map: profiles_1d/psi_norm is DD4-only.
-        call refuse(lg, 'profiles_1d/psi_norm not synthesised (DD4-only, missing from map)')
+        ! right_only: profiles_1d/psi_norm was added in DD 3.40.0. Declared
+        ! via new-profiles-1d-psi-norm.
+        call refuse(lg, 'profiles_1d/psi_norm not synthesised (DD4-only, added in DD 3.40.0)')
 
         ! identical
         call cp1(s%phi, d%phi)

@@ -146,8 +146,6 @@ time_slice/constraints/bpol_probe/measured
 time_slice/constraints/bpol_probe/reconstructed
 time_slice/constraints/bpol_probe/time_measurement
 time_slice/constraints/bpol_probe/weight
-time_slice/constraints/chi_squared_reduced
-time_slice/constraints/constraints_n
 time_slice/constraints/diamagnetic_flux
 time_slice/constraints/diamagnetic_flux/chi_squared
 time_slice/constraints/diamagnetic_flux/exact
@@ -169,7 +167,6 @@ time_slice/constraints/flux_loop/measured
 time_slice/constraints/flux_loop/reconstructed
 time_slice/constraints/flux_loop/time_measurement
 time_slice/constraints/flux_loop/weight
-time_slice/constraints/freedom_degrees_n
 time_slice/constraints/ip
 time_slice/constraints/ip/chi_squared
 time_slice/constraints/ip/exact
@@ -192,19 +189,6 @@ time_slice/constraints/iron_core_segment/magnetisation_z/measured
 time_slice/constraints/iron_core_segment/magnetisation_z/reconstructed
 time_slice/constraints/iron_core_segment/magnetisation_z/time_measurement
 time_slice/constraints/iron_core_segment/magnetisation_z/weight
-time_slice/constraints/j_parallel
-time_slice/constraints/j_parallel/chi_squared
-time_slice/constraints/j_parallel/exact
-time_slice/constraints/j_parallel/measured
-time_slice/constraints/j_parallel/position
-time_slice/constraints/j_parallel/position/phi
-time_slice/constraints/j_parallel/position/psi
-time_slice/constraints/j_parallel/position/r
-time_slice/constraints/j_parallel/position/rho_tor_norm
-time_slice/constraints/j_parallel/position/z
-time_slice/constraints/j_parallel/reconstructed
-time_slice/constraints/j_parallel/time_measurement
-time_slice/constraints/j_parallel/weight
 time_slice/constraints/j_phi
 time_slice/constraints/j_phi/chi_squared
 time_slice/constraints/j_phi/exact
@@ -340,8 +324,6 @@ time_slice/convergence/grad_shafranov_deviation_expression
 time_slice/convergence/grad_shafranov_deviation_expression/index
 time_slice/convergence/grad_shafranov_deviation_value
 time_slice/convergence/iterations_n
-time_slice/convergence/result
-time_slice/convergence/result/index
 time_slice/coordinate_system
 time_slice/coordinate_system/g11_contravariant
 time_slice/coordinate_system/g11_covariant
@@ -494,7 +476,6 @@ time_slice/global_quantities/q_axis
 time_slice/global_quantities/q_min
 time_slice/global_quantities/q_min/rho_tor_norm
 time_slice/global_quantities/q_min/value
-time_slice/global_quantities/rho_tor_boundary
 time_slice/global_quantities/surface
 time_slice/global_quantities/v_external
 time_slice/global_quantities/volume
@@ -537,7 +518,6 @@ time_slice/profiles_1d/mass_density
 time_slice/profiles_1d/phi
 time_slice/profiles_1d/pressure
 time_slice/profiles_1d/psi
-time_slice/profiles_1d/psi_norm
 time_slice/profiles_1d/q
 time_slice/profiles_1d/r_inboard
 time_slice/profiles_1d/r_outboard

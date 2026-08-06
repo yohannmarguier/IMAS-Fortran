@@ -3,14 +3,20 @@
   equilibrium: DD 3.39.0 <-> DD 4.1.1
 
   Derived from the imas-dd MCP server path sets for both versions:
-    583 paths on the left, 455 on the right
-    397 identical, 186 left-only, 58 right-only
+    563 paths on the left, 455 on the right
+    377 identical, 186 left-only, 78 right-only
 
-  q_min/psi and q_min/psi_norm were removed from the 3.39.0 inventory and
-  declared right_only here: both were added to the DD in 3.40.0 (confirmed via
-  the imas-dd version history), so the transcribed 3.39.0 inventory listing
-  them was wrong, not merely incomplete like the ~12% under-report the README
-  documents.
+  Nine paths were removed from the 3.39.0 inventory and declared right_only
+  here, all confirmed via the imas-dd version history to have been added to
+  the DD in 3.40.0 or 3.41.0 - after 3.39.0, so the transcribed 3.39.0
+  inventory listing them was wrong, not merely incomplete like the ~12%
+  under-report the README documents: q_min/psi, q_min/psi_norm,
+  constraints/j_parallel (a 13-path subtree), constraints/chi_squared_reduced,
+  constraints/freedom_degrees_n, constraints/constraints_n,
+  global_quantities/rho_tor_boundary, profiles_1d/psi_norm and
+  convergence/result (a 2-path subtree, 3.41.0). eq_convert_3to4.f90 had
+  already independently discovered and hand-refused every one of these as
+  "missing from map" before the map itself was fixed to agree.
 
   Rules below claim every left-only and right-only path. Paths present in both
   and unclaimed fall through to <default rel="identical"/>.
@@ -39,11 +45,11 @@
   <coverage scope="time_slice/boundary_separatrix" forward="lossy" reverse="unmappable"/>
   <coverage scope="time_slice/constraints" forward="unmappable" reverse="unmappable"/>
   <coverage scope="time_slice/contour_tree" forward="unmappable" reverse="lossy"/>
-  <coverage scope="time_slice/convergence" forward="exact" reverse="exact"/>
+  <coverage scope="time_slice/convergence" forward="unmappable" reverse="lossy"/>
   <coverage scope="time_slice/coordinate_system" forward="lossy" reverse="unmappable"/>
   <coverage scope="time_slice/ggd" forward="lossy" reverse="unmappable"/>
   <coverage scope="time_slice/global_quantities" forward="unmappable" reverse="lossy"/>
-  <coverage scope="time_slice/profiles_1d" forward="lossy" reverse="exact"/>
+  <coverage scope="time_slice/profiles_1d" forward="unmappable" reverse="lossy"/>
   <coverage scope="time_slice/profiles_2d" forward="lossy" reverse="exact"/>
   <coverage scope="vacuum_toroidal_field" forward="exact" reverse="exact"/>
 
@@ -382,6 +388,51 @@
                 reason="path added in DD 3.40.0; no counterpart in 3.39.0"/>
     </rule>
 
+    <rule id="new-constraints-j-parallel" rel="right_only"
+          right="time_slice/constraints/j_parallel" subtree="yes" source="derived">
+      <fidelity forward="unmappable" reverse="lossy"
+                reason="path added in DD 3.40.0; no counterpart in 3.39.0"/>
+      <note>13 paths. DD3 constraints has no j_parallel entry at all, only
+            j_phi/j_tor.</note>
+    </rule>
+
+    <rule id="new-constraints-chi-squared-reduced" rel="right_only"
+          right="time_slice/constraints/chi_squared_reduced" source="derived">
+      <fidelity forward="unmappable" reverse="lossy"
+                reason="path added in DD 3.40.0; no counterpart in 3.39.0"/>
+    </rule>
+
+    <rule id="new-constraints-freedom-degrees-n" rel="right_only"
+          right="time_slice/constraints/freedom_degrees_n" source="derived">
+      <fidelity forward="unmappable" reverse="lossy"
+                reason="path added in DD 3.40.0; no counterpart in 3.39.0"/>
+    </rule>
+
+    <rule id="new-constraints-constraints-n" rel="right_only"
+          right="time_slice/constraints/constraints_n" source="derived">
+      <fidelity forward="unmappable" reverse="lossy"
+                reason="path added in DD 3.40.0; no counterpart in 3.39.0"/>
+    </rule>
+
+    <rule id="new-global-quantities-rho-tor-boundary" rel="right_only"
+          right="time_slice/global_quantities/rho_tor_boundary" source="derived">
+      <fidelity forward="unmappable" reverse="lossy"
+                reason="path added in DD 3.40.0; no counterpart in 3.39.0"/>
+    </rule>
+
+    <rule id="new-profiles-1d-psi-norm" rel="right_only"
+          right="time_slice/profiles_1d/psi_norm" source="derived">
+      <fidelity forward="unmappable" reverse="lossy"
+                reason="path added in DD 3.40.0; no counterpart in 3.39.0"/>
+    </rule>
+
+    <rule id="new-convergence-result" rel="right_only"
+          right="time_slice/convergence/result" subtree="yes" source="derived">
+      <fidelity forward="unmappable" reverse="lossy"
+                reason="path added in DD 3.41.0; no counterpart in 3.39.0"/>
+      <note>2 paths (result, result/index).</note>
+    </rule>
+
     <!-- psi_axis survives into DD4 but DD4 also introduces the clearer
          psi_magnetic_axis for the same quantity. Feeding both keeps the
          forward conversion complete. -->
@@ -422,7 +473,6 @@
       <flip path="time_slice/constraints/flux_loop/reconstructed"/>
       <flip path="time_slice/constraints/ip/measured"/>
       <flip path="time_slice/constraints/ip/reconstructed"/>
-      <flip path="time_slice/constraints/j_parallel/position/psi"/>
       <flip path="time_slice/constraints/j_phi/position/psi"/>
       <flip path="time_slice/constraints/n_e/position/psi"/>
       <flip path="time_slice/constraints/pf_current/measured"/>
