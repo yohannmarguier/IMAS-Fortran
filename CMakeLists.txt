@@ -424,12 +424,18 @@ endif()
 # saying so turns a compute node with no outbound route into a clear error instead of a
 # hang. Cargo.lock is committed to make --locked meaningful.
 file( GLOB_RECURSE MIDDLEWARE_SOURCES "${MIDDLEWARE_SRC_DIR}/src/*.rs" )
+
+# The conversion maps are `include_str!`d into the crate (middleware/src/map.rs), so a
+# map edit changes the shim. cargo tracks that on its own, but CMake would not run cargo
+# at all if only the XML moved — so the maps are DEPENDS too.
+file( GLOB_RECURSE MIDDLEWARE_MAPS "${CMAKE_CURRENT_SOURCE_DIR}/dd-maps/*.xml" )
+
 add_custom_command(
   OUTPUT ${MIDDLEWARE_LIB}
   COMMAND ${CARGO_EXECUTABLE} build ${MIDDLEWARE_CARGO_PROFILE_FLAGS} --locked --offline
     --manifest-path "${MIDDLEWARE_SRC_DIR}/Cargo.toml"
     --target-dir "${MIDDLEWARE_TARGET_DIR}"
-  DEPENDS ${MIDDLEWARE_SOURCES} "${MIDDLEWARE_SRC_DIR}/Cargo.toml"
+  DEPENDS ${MIDDLEWARE_SOURCES} ${MIDDLEWARE_MAPS} "${MIDDLEWARE_SRC_DIR}/Cargo.toml"
     "${MIDDLEWARE_SRC_DIR}/Cargo.lock"
   COMMENT "Building Rust read-path middleware, ${MIDDLEWARE_PROFILE_NAME}"
   VERBATIM

@@ -82,8 +82,15 @@ module al_low_level_wrap
        integer(C_INT), value, intent(in) :: pctx, mode
      end function c_al_close_pulse
 
+     ! The four begin_*_action calls and al_end_action below are bound to the Rust
+     ! middleware for one reason: al_read_data is never given a DD path, only a path
+     ! relative to a *context*, so `profiles_1d/psi` arrives with nothing to say it
+     ! belongs to `time_slice`. The shim reconstructs the absolute path by remembering
+     ! what each context was opened on, which it can only do by seeing the calls that
+     ! open and close one. Each forwards to its al-core counterpart unchanged; the
+     ! signatures below are al-core's, so changing one means changing the other.
      function c_al_begin_global_action(pctx, dataobjectname, datapath, rwmode, opctx) &
-          bind(C,name="al_begin_global_action")
+          bind(C,name="imas_mw_begin_global_action")
        use, intrinsic :: ISO_C_BINDING
        import c_al_status_t
        type(c_al_status_t) :: c_al_begin_global_action
@@ -94,7 +101,7 @@ module al_low_level_wrap
      end function c_al_begin_global_action
 
      function c_al_begin_slice_action(pctx, dataobjectname, rwmode, time, interpmode, opctx) &
-          bind(C,name="al_begin_slice_action")
+          bind(C,name="imas_mw_begin_slice_action")
        use, intrinsic :: ISO_C_BINDING
        import c_al_status_t
        type(c_al_status_t) :: c_al_begin_slice_action
@@ -105,7 +112,7 @@ module al_low_level_wrap
      end function c_al_begin_slice_action
 
      function c_al_begin_timerange_action(pctx, dataobjectname, rwmode, tmin, tmax, dtime, dim, interpmode, opctx) &
-        bind(C,name="al_begin_timerange_action")
+        bind(C,name="imas_mw_begin_timerange_action")
         use, intrinsic :: ISO_C_BINDING
         import c_al_status_t
         type(c_al_status_t) :: c_al_begin_timerange_action
@@ -118,7 +125,7 @@ module al_low_level_wrap
      end function c_al_begin_timerange_action
 
      function c_al_end_action(ctx) &
-          bind(C,name="al_end_action")
+          bind(C,name="imas_mw_end_action")
        use, intrinsic :: ISO_C_BINDING
        import c_al_status_t
        type(c_al_status_t) :: c_al_end_action
@@ -143,11 +150,12 @@ module al_low_level_wrap
      end function c_al_iterate_over_arraystruct
      
      ! Bound to the Rust read-path middleware (middleware/src/lib.rs) rather than
-     ! al-core's al_read_data directly: imas_mw_read_data takes the same arguments,
-     ! forwards them to al_read_data and returns its status unchanged. The signature
-     ! below is al_read_data's — the shim exists to be transparent, so changing one
-     ! means changing the other. Every read in this file reaches a backend through
-     ! this one interface, which is what makes it the choke point worth intercepting.
+     ! al-core's al_read_data directly: imas_mw_read_data takes the same arguments and
+     ! forwards them to al_read_data. The signature below is al_read_data's — changing
+     ! one means changing the other. Every read in this file reaches a backend through
+     ! this one interface, which is what makes it the choke point worth intercepting:
+     ! with IMAS_MW_CONVERT set, this is where a DD 4.1.1 field name is turned into the
+     ! DD 3.39.0 path that holds the value.
      function c_al_read_data(ctx, fieldname, timebase, data, datatype, dim, size_array) &
           bind(C,name="imas_mw_read_data")
        use, intrinsic :: ISO_C_BINDING
@@ -171,7 +179,7 @@ module al_low_level_wrap
      end function c_al_write_data
      
      function c_al_begin_arraystruct_action(ctx, path, timebase, aos_size, aosctx) &
-          bind(C,name="al_begin_arraystruct_action")
+          bind(C,name="imas_mw_begin_arraystruct_action")
        use, intrinsic :: ISO_C_BINDING
        import c_al_status_t
        type(c_al_status_t) :: c_al_begin_arraystruct_action

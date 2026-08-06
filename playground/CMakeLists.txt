@@ -69,6 +69,21 @@ endif()
 add_executable( play_equilibrium play_equilibrium.f90 )
 target_link_libraries( play_equilibrium al-fortran )
 
+# play_eq_mw_convert asserts the *converted* read against the DD 4.1.1 half of the same
+# fixture pair, so it needs both halves on disk where play_equilibrium needs only one.
+if( EXISTS "${CMAKE_SOURCE_DIR}/imas-python-fixtures/fixtures/dd-4.1.1/equilibrium.h5" )
+  add_executable( play_eq_mw_convert play_eq_mw_convert.f90 )
+  target_link_libraries( play_eq_mw_convert al-fortran )
+  message( STATUS
+    "AL_PLAYGROUND=ON: added the play_eq_mw_convert target (reads the dd-"
+    "${PLAY_EQ_FIXTURE_VERSION} entry through the Rust middleware and checks it against"
+    " the dd-4.1.1 fixture's values); run it with ${CMAKE_CURRENT_SOURCE_DIR} as the"
+    " working directory" )
+else()
+  message( STATUS
+    "no dd-4.1.1 fixture to check against: not adding the play_eq_mw_convert target" )
+endif()
+
 # The fixture path in the program is relative to this directory, so the program only
 # works run from here, while a CMake-aware IDE defaults a run configuration's working
 # directory to the build directory. That is the one thing about this target still to be

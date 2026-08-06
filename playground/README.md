@@ -77,11 +77,42 @@ cd playground
 ./bin/play_magnetics
 ```
 
-`play_equilibrium.f90` reads the checked-in DD 4.1.1 equilibrium fixture
-(`imas-python-fixtures/fixtures/dd-4.1.1`, HDF5 backend) and prints every field
-`equilibrium_seed.py` writes — it needs an install built with `DD_VERSION=4.1.1`
-and `AL_BACKEND_HDF5=ON`, and must be run from `playground/` since the fixture
-path is relative.
+`play_equilibrium.f90` reads the checked-in **DD 3.39.0** equilibrium fixture
+(`imas-python-fixtures/fixtures/dd-3.39.0`, HDF5 backend) with a DD 4.1.1
+library and prints the fields `equilibrium_seed.py` writes. It needs an install
+built with `DD_VERSION=4.1.1` and `AL_BACKEND_HDF5=ON`, and must be run from
+`playground/` since the fixture path is relative.
+
+The version mismatch is the point. Run it both ways:
+
+```bash
+./build.sh play_equilibrium.f90
+./bin/play_equilibrium                     # raw: DD4 names against a DD3 entry
+IMAS_MW_CONVERT=1 ./bin/play_equilibrium   # converted, losses on stderr
+```
+
+Raw, `beta_tor_norm` and `psi_magnetic_axis` come back as `-9e40` (DD 3 spells
+them `beta_normal` and `psi_axis`), `constraints%b_field_pol_probe` is an empty
+array (DD 3 calls it `bpol_probe`), and `ip` and `psi` carry the DD 3 COCOS 11
+sign. With `IMAS_MW_CONVERT` set, the Rust read-path middleware rewrites the
+paths on their way to al-core using
+`dd-maps/equilibrium/3.39.0--4.1.1.xml`, falls back to the obsolescent DD 3
+alias where 3.39.0 ships both names, applies the 32 COCOS sign flips, and prints
+what the conversion cost. Add `IMAS_MW_TRACE=1` to see every read and its
+rewrite.
+
+`play_eq_mw_convert.f90` is the same read with assertions instead of prints: it
+checks every field against the values `equilibrium_seed.py` writes into
+`fixtures/dd-4.1.1`, which is the independently derived right answer. It sets
+`IMAS_MW_CONVERT` itself, so it needs no environment:
+
+```bash
+./build.sh play_eq_mw_convert.f90 && ./bin/play_eq_mw_convert
+```
+
+`play_middleware.f90` needs no fixture at all — it creates its own ASCII entry
+and asserts, via the shim's `imas_mw_read_count()`, that the middleware is in
+the read path even when it is forwarding unchanged.
 
 ## Debugging in CLion
 
