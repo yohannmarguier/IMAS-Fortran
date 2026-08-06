@@ -22,6 +22,13 @@
 //! rewritten. Both are needed: a read resolves right → left absolutely, then has to be
 //! expressed relative to the context al-core has, and after `boundary/gap` has been
 //! opened as `boundary_separatrix/gap` the two no longer share a prefix.
+//!
+//! A frame also carries `convert`, decided once when its root opens by comparing this
+//! entry's own DD version stamp against the library's — see `lib.rs`'s `opened_root`. An
+//! entry already in the library's version has nothing for the map to do, and reading it as
+//! if it were the older version would apply the map's rewrites and COCOS flips to data that
+//! never needed them. This is what lets one process open a native DD 4.1.1 entry and a DD
+//! 3.39.0 entry through the same armed map and have each read correctly.
 
 use std::ffi::c_int;
 use std::sync::Mutex;
@@ -40,6 +47,12 @@ struct Frame {
     /// The context's path as al-core has it — DD 3.39.0 once a rewrite has happened.
     left: String,
     read: bool,
+    /// Whether *this entry* actually needs the map at all, decided once when the root
+    /// opened by comparing `ids_properties/version_put/data_dictionary` against the
+    /// library's own DD version. An entry already in the library's version must not be
+    /// converted — the 32 COCOS paths would be flipped a second time — so this is checked
+    /// alongside `read` rather than folded into whether the map is merely loaded.
+    convert: bool,
 }
 
 /// Live contexts. A get holds a handful at a time (IDS root, one per nested
@@ -56,8 +69,10 @@ pub struct Request {
 
 /// Register a context opened directly on an IDS — global, slice or timerange. Its path is
 /// the IDS root unless al-core was given a `datapath`, which the Fortran wrapper leaves
-/// empty.
-pub fn open_root(id: c_int, ids: &str, datapath: &str, read: bool) {
+/// empty. `convert` is decided once by the caller, from this entry's own DD version stamp
+/// — not recomputed per read, the same reason `read` is decided once here rather than at
+/// every `locate`.
+pub fn open_root(id: c_int, ids: &str, datapath: &str, read: bool, convert: bool) {
     let path = normalise(datapath);
     insert(Frame {
         id,
@@ -65,6 +80,7 @@ pub fn open_root(id: c_int, ids: &str, datapath: &str, read: bool) {
         right: path.clone(),
         left: path,
         read,
+        convert,
     });
 }
 
@@ -74,12 +90,13 @@ pub fn open_root(id: c_int, ids: &str, datapath: &str, read: bool) {
 /// context means pass-through, and inventing a root for it would make relative paths
 /// resolve against the wrong place.
 pub fn open_child(parent: c_int, id: c_int, right_path: &str, left_path: &str) {
-    let Some((ids, right, left, read)) = with_frame(parent, |frame| {
+    let Some((ids, right, left, read, convert)) = with_frame(parent, |frame| {
         (
             frame.ids.clone(),
             join(&frame.right, right_path),
             join(&frame.left, left_path),
             frame.read,
+            frame.convert,
         )
     }) else {
         return;
@@ -90,6 +107,7 @@ pub fn open_child(parent: c_int, id: c_int, right_path: &str, left_path: &str) {
         right,
         left,
         read,
+        convert,
     });
 }
 
@@ -102,10 +120,11 @@ pub fn close(id: c_int) {
 }
 
 /// Where `field` sits in both versions, or `None` when the context is unknown, belongs to
-/// another IDS, or is not a read — all of which mean "forward untouched".
+/// another IDS, is not a read, or is a read of an entry already in the library's own DD
+/// version — all of which mean "forward untouched".
 pub fn locate(id: c_int, field: &str, ids: &str) -> Option<Request> {
     with_frame(id, |frame| {
-        if !frame.read || frame.ids != ids {
+        if !frame.read || !frame.convert || frame.ids != ids {
             return None;
         }
         Some(Request {
@@ -175,7 +194,7 @@ mod tests {
     /// several would let cargo's threads see each other's frames.
     #[test]
     fn nested_contexts_reconstruct_absolute_paths_in_both_versions() {
-        open_root(2, "equilibrium", "", true);
+        open_root(2, "equilibrium", "", true, true);
 
         // time_slice is spelled the same in both versions.
         open_child(2, 6, "time_slice", "time_slice");
@@ -222,7 +241,7 @@ mod tests {
         assert!(locate(9, "value", "equilibrium").is_none());
 
         // A write context is registered but never rewritten, and its children inherit.
-        open_root(3, "equilibrium", "", false);
+        open_root(3, "equilibrium", "", false, true);
         open_child(3, 4, "time_slice", "time_slice");
         assert!(locate(3, "time", "equilibrium").is_none());
         assert!(locate(4, "profiles_1d/psi", "equilibrium").is_none());
@@ -235,5 +254,20 @@ mod tests {
         close(3);
         close(4);
         close(6);
+    }
+
+    /// An entry already in the library's own DD version has nothing for the map to do,
+    /// and must not be touched — this is the flag that stops a native DD 4.1.1 read from
+    /// being converted as if it were DD 3.39.0, which would double-flip its COCOS paths.
+    #[test]
+    fn a_read_context_that_needs_no_conversion_is_never_resolved() {
+        open_root(20, "equilibrium", "", true, false);
+        open_child(20, 21, "time_slice", "time_slice");
+
+        assert!(locate(20, "vacuum_toroidal_field/r0", "equilibrium").is_none());
+        assert!(locate(21, "profiles_1d/psi", "equilibrium").is_none());
+
+        close(20);
+        close(21);
     }
 }

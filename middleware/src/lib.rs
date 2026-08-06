@@ -28,14 +28,24 @@
 //!   wearing the right units.
 //!
 //! Conversion is off unless `IMAS_MW_CONVERT` is set, and then applies only to the IDS the
-//! map describes. Nothing consults the DD version of the data or of the library: which
-//! map to run is the operator's call, not something to infer from a version stamp that
-//! may be missing or wrong.
+//! map describes — that switch is the operator's call, read once through a `OnceLock`
+//! (`convert::enabled`), since it sits on a path taken hundreds of thousands of times per
+//! `get` and a per-call `getenv` would be the dominant cost of having a middleware at all.
+//!
+//! What the switch alone cannot decide is *which entries* need converting: it is latched
+//! for the whole process, so a run that armed it to read a DD 3.39.0 entry would just as
+//! happily mangle a native DD 4.1.1 entry opened in the same process — double-flipping its
+//! 32 COCOS paths, which is exactly the bug this crate must not have. So once armed, every
+//! root context opened for the map's IDS is checked once, individually, against its own
+//! `ids_properties/version_put/data_dictionary` (`convert::entry_needs_conversion`):
+//! conversion only actually runs for a context whose entry does not already declare the
+//! library's own DD version. A missing or unreadable stamp counts as needing conversion —
+//! that is what an entry written before this field existed looks like, and it is the case
+//! the map exists for. This is what lets one process open both fixture halves and have
+//! each read correctly, which `playground/play_equilibrium.f90` relies on.
 //!
 //! `IMAS_MW_TRACE=1` prints one line per read (ctx, path, datatype, dims, status, and the
-//! conversion if any). Both variables are read once through a `OnceLock`: this sits on a
-//! path taken hundreds of thousands of times per `get`, where a per-call `getenv` would be
-//! the dominant cost of having a middleware at all.
+//! conversion if any), read once through the same kind of `OnceLock` for the same reason.
 //!
 //! ## Rules this crate lives by
 //!
@@ -150,6 +160,12 @@ extern "C" {
     ) -> AlStatus;
 
     fn al_end_action(ctx: c_int) -> AlStatus;
+
+    /// The standard C library's `free`, already linked into any process that gets this far
+    /// — not a new dependency. Used the one time this crate allocates a read of its own
+    /// (the version stamp `opened_root` reads to decide `convert`) rather than merely
+    /// relaying a buffer al-core owns and the Fortran side frees.
+    fn free(ptr: *mut c_void);
 }
 
 // ===================================================================== the read path
@@ -370,10 +386,14 @@ mod convert {
     /// `IMAS_MW_CONVERT` enables the conversion. Any value is a yes except the usual ways
     /// of writing no, so `IMAS_MW_CONVERT=3.39.0` reads as well as `=1` does.
     ///
-    /// It is deliberately a switch rather than a version comparison. The alternative —
-    /// reading `ids_properties/version_put/data_dictionary` and converting when it differs
-    /// from the library's — would make every read depend on a stamp that is absent from
-    /// older entries and, when a converter has already touched the data, wrong.
+    /// This is deliberately a manual arming switch and not, by itself, the version
+    /// comparison: which *map* to load — and whether this run may convert its IDS at all —
+    /// stays the operator's call rather than something inferred from a stamp a run might
+    /// never see (nothing here loads a map on spec, hoping to find an entry it applies to).
+    /// Once armed, though, `opened_root`'s `entry_needs_conversion` *does* compare each
+    /// opened entry's own version stamp against the library's, so the switch answers "is
+    /// the machinery loaded" and the per-entry check answers "does this particular read
+    /// need it" — see the module doc above.
     fn convert_requested() -> bool {
         match std::env::var("IMAS_MW_CONVERT") {
             Ok(value) => !matches!(
@@ -637,18 +657,82 @@ mod convert {
         rwmode: c_int,
         opctx: *mut c_int,
     ) {
-        if status.code != 0 || enabled().is_none() {
+        if status.code != 0 {
             return;
         }
+        let Some(map) = enabled() else {
+            return;
+        };
         let (Some(ids), Some(id)) = (borrow(dataobjectname), opctx.as_ref().copied()) else {
             return;
         };
-        ctx::open_root(
-            id,
-            ids,
-            borrow(datapath).unwrap_or(""),
-            rwmode == ctx::READ_OP,
+        let read = rwmode == ctx::READ_OP;
+        // Only a read of the map's own IDS is worth the extra probe read below; a write
+        // context, or a read of some other IDS, is never converted regardless.
+        let convert = read && ids == map.ids && entry_needs_conversion(id, map);
+        ctx::open_root(id, ids, borrow(datapath).unwrap_or(""), read, convert);
+    }
+
+    /// Whether the entry `ctx` just opened onto actually needs `map` applied at all,
+    /// decided by comparing its own `ids_properties/version_put/data_dictionary` against
+    /// `map.right_dd` — the DD version this library, and this map, were built for.
+    ///
+    /// Read directly through al-core's `al_read_data`, never through `imas_mw_read_data`:
+    /// deciding whether the map applies cannot itself be run through the map. This is the
+    /// one read this crate issues on its own rather than relaying, so unlike every other
+    /// buffer here — which al-core allocates and the Fortran side frees — this one is
+    /// freed right below.
+    ///
+    /// Absent or empty is treated as needing conversion: that is exactly what an entry
+    /// written before this field existed looks like, and it is the case the map exists to
+    /// handle. Only entries that *positively* declare the library's own version are left
+    /// alone — which is what lets one process open a native DD 4.1.1 entry and a DD 3.39.0
+    /// entry through the same armed map and have both read correctly.
+    ///
+    /// # Safety
+    /// `ctx` is a context al-core just opened successfully for `map.ids`.
+    unsafe fn entry_needs_conversion(ctx: c_int, map: &Map) -> bool {
+        let field = b"ids_properties/version_put/data_dictionary\0";
+        let timebase = b"\0";
+        let mut data: *mut c_void = std::ptr::null_mut();
+        let mut dims: [c_int; 1] = [0];
+        let status = al_read_data(
+            ctx,
+            field.as_ptr() as *const c_char,
+            timebase.as_ptr() as *const c_char,
+            &mut data,
+            CHAR_DATA,
+            1,
+            dims.as_mut_ptr(),
         );
+        if status.code != 0 || data.is_null() {
+            report::notice(&format!(
+                "{}: entry has no version_put/data_dictionary stamp, converting",
+                map.ids
+            ));
+            return true;
+        }
+        let len = dims[0].max(0) as usize;
+        let bytes = std::slice::from_raw_parts(data as *const u8, len);
+        let stamp = String::from_utf8_lossy(bytes).trim().to_string();
+        free(data);
+
+        let convert = differs(&stamp, &map.right_dd);
+        report::notice(&format!(
+            "{}: entry declares DD {} against a DD {} library -> {}",
+            map.ids,
+            if stamp.is_empty() { "?" } else { stamp.as_str() },
+            map.right_dd,
+            if convert { "converting" } else { "already this version, not converting" },
+        ));
+        convert
+    }
+
+    /// The comparison `entry_needs_conversion` makes, pulled out so it can be unit tested
+    /// without a live al-core context. An empty stamp counts as differing — see that
+    /// function's doc for why.
+    fn differs(stamp: &str, library_dd: &str) -> bool {
+        stamp.is_empty() || stamp != library_dd
     }
 
     /// # Safety
@@ -690,6 +774,38 @@ mod convert {
         };
         let left = rewrite.map(|rewrite| rewrite.relative.as_str()).unwrap_or(right);
         ctx::open_child(parent, id, right, left);
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        /// The one thing standing between a native DD 4.1.1 read and a double-flipped
+        /// COCOS field: an entry that already declares the library's own version must
+        /// compare as "no conversion needed".
+        #[test]
+        fn an_entry_already_at_the_library_version_does_not_differ() {
+            assert!(!differs("4.1.1", "4.1.1"));
+        }
+
+        #[test]
+        fn an_entry_at_a_different_version_differs() {
+            assert!(differs("3.39.0", "4.1.1"));
+        }
+
+        /// A missing or unparsed stamp must default to "needs conversion" — that is
+        /// exactly what an entry written before this field existed looks like.
+        #[test]
+        fn an_empty_stamp_counts_as_differing() {
+            assert!(differs("", "4.1.1"));
+        }
+
+        /// `differs` is a raw comparison; trimming the stamp is `entry_needs_conversion`'s
+        /// job, done once before calling this, not something to repeat on every call.
+        #[test]
+        fn differs_does_not_trim_on_its_own() {
+            assert!(differs(" 4.1.1", "4.1.1"));
+        }
     }
 }
 
