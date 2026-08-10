@@ -1,4 +1,57 @@
 # AL core and plugins
+#
+# This module answers one question — what does the target name `al` refer to — and
+# answers it differently per acquisition mode. Everything downstream links `al`
+# and does not care which mode produced it.
+#
+# Note that retargeting `al` has no effect on a NAG build: that branch in the
+# top-level CMakeLists.txt does not link the target. The full warning is at the
+# branch itself; see also docs/adr/0001-multiversion-shim-linkage.md.
+
+if( AL_USE_MULTIVERSION_SHIM )
+  # Multiversion shim: `al` refers to the IMAS-Multiversion-DD-Loader instead of to
+  # AL core. The shim mirrors AL core's public C ABI symbol for symbol, so the
+  # wrapper's `iso_c_binding` interfaces bind to it unchanged, and it resolves AL
+  # core itself at run time through dlopen/dlsym — hence no AL core acquisition
+  # here, at any point in this module.
+  #
+  # Point CMAKE_PREFIX_PATH (or imas-mvdd-loader_DIR) at the shim's install prefix.
+  find_package( imas-mvdd-loader REQUIRED CONFIG )
+  # An INTERFACE library rather than `add_library( al ALIAS <imported target> )`:
+  # aliasing a non-GLOBAL imported target, which is what a config package creates,
+  # needs CMake 3.18 and this project declares 3.16.
+  add_library( al INTERFACE )
+  target_link_libraries( al INTERFACE imas-mvdd-loader::imas-mvdd-loader )
+  # File name of the shim's library, without prefix or suffix — what a dependency
+  # listing of the built HLI spells. tests/shim asserts on it.
+  set( AL_SHIM_LIBRARY_NAME imas_mvdd_loader )
+  message( STATUS
+    "AL core calls are routed through the multiversion shim "
+    "(imas-mvdd-loader ${imas-mvdd-loader_VERSION}, ${imas-mvdd-loader_DIR})"
+  )
+
+  # AL core's own cache options are not declared in this mode, since AL core is not
+  # part of the build. That includes AL_BACKEND_HDF5 and friends, which
+  # tests/generator reads to build its backend matrix: pass them explicitly to keep
+  # the generated test matrix the same as a direct build's. MDSplus is the one that
+  # cannot work that way, because its model is a target AL core builds.
+  if( AL_BACKEND_MDSPLUS )
+    message( FATAL_ERROR
+      "AL_BACKEND_MDSPLUS is not supported with AL_USE_MULTIVERSION_SHIM: the tests "
+      "and examples need the al-mdsplus-model target, which AL core builds and a "
+      "shim build does not add."
+    )
+  endif()
+
+  # AL_CORE_VERSION is deliberately left at whatever the user configured: the shim
+  # does not record which AL core it will open, and the generated
+  # al-fortran-<DD>.pc keeps naming al-core in `Requires:` because that is still
+  # where the run-time dependency is.
+
+  # Stop processing: the plugin framework and the documentation build below both
+  # come with AL core, the same way they are skipped in the pkg-config mode.
+  return()
+endif()
 
 if( NOT AL_DOWNLOAD_DEPENDENCIES AND NOT AL_DEVELOPMENT_LAYOUT )
   # The Access Layer core should be available as a module, use PkgConfig to create a
