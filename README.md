@@ -38,6 +38,12 @@ never puts it on a link line. To open an IMAS-Core that already exists instead o
 building one, point `-D AL_CORE_RUNTIME_LIBRARY=/path/to/libal.so` at the library
 itself.
 
+Each registered test is given `IMAS_CORE_LIBRARY` — the shim's own override for
+which IMAS-Core to open — pointing at whichever of those two it is, so `ctest` needs
+nothing set in the shell. A program run by hand out of the build tree does: export
+`IMAS_CORE_LIBRARY` yourself, or the shim will fall back to the bare soname and the
+dynamic loader will not find it.
+
 The option defaults to `OFF`, in which case nothing about the build changes.
 `common/cmake/ALCore.cmake` binds the target name `al` to the shim; the link line
 is untouched. `ctest -R shim-linkage` checks that the built library really does

@@ -55,6 +55,15 @@ if( AL_USE_MULTIVERSION_SHIM )
   # `al` target above; see the module header for why it is an ExternalProject.
   include( ALCoreRuntime )
 
+  # What every test in this build has to be told, because none of the loader's
+  # default search paths reaches a build tree. IMAS_CORE_LIBRARY is the shim's own
+  # documented override for which AL core to open; naming the file outright is what
+  # keeps this identical on Linux and macOS, where a bare soname is resolved by
+  # different rules. Test registrations append it to their ENVIRONMENT property, so
+  # a shim build's suite needs nothing set in the shell. Empty in every other mode,
+  # where the string appends nothing.
+  set( AL_CORE_TEST_ENVIRONMENT "IMAS_CORE_LIBRARY=${AL_CORE_RUNTIME_LIBRARY}" )
+
   # Stop processing: the plugin framework and the documentation build below both
   # come with AL core as a subproject, the same way they are skipped in the
   # pkg-config mode.
