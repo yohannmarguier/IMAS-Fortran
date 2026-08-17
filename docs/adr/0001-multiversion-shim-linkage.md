@@ -69,9 +69,17 @@ cover), which proves the linkage before any DD path is ever rewritten.
 - **The shim must be installed and found.** Point `CMAKE_PREFIX_PATH` (or
   `imas-mvdd-loader_DIR`) at its install prefix. `find_package` is `REQUIRED`, so a
   missing shim fails at configure time rather than silently falling back.
-- **No IMAS-Core is part of a shim build.** The shim carries no link-time
-  dependency on it, so nothing acquires it. Three things follow, all of them
-  matching how the existing pkg-config mode already behaves:
+- **No IMAS-Core is *linked into* a shim build, but one is still acquired.** The
+  shim carries no link-time dependency on it, so nothing links it — and the first
+  version of this decision concluded from that that nothing needed to acquire it
+  either. That was wrong, and it was wrong in the one way a build system can be:
+  the shim mirrors IMAS-Core's ABI and implements none of it, so with no IMAS-Core
+  present it fell back to the bare soname, the dynamic loader found nothing, and
+  every test in the suite failed at its first `al_*` call. A shim build now builds
+  an IMAS-Core it never links, in `common/cmake/ALCoreRuntime.cmake`, as a separate
+  CMake project — a subproject would define the target name `al`, which is the name
+  this decision gives the shim. Three things still follow from IMAS-Core not being
+  a *subproject*, all of them matching how the existing pkg-config mode behaves:
   - The plugin framework (`AL_PLUGINS`) is not acquired; it is fetched alongside
     IMAS-Core. The `-with-plugins` example variants therefore cannot run in a shim
     build, so the acceptance run below covers the suite without them.
@@ -80,7 +88,9 @@ cover), which proves the linkage before any DD path is ever rewritten.
   - IMAS-Core's own cache options are not declared — notably `AL_BACKEND_HDF5` and
     friends, which `tests/generator/CMakeLists.txt` reads to build its backend
     matrix. Pass them explicitly to keep the generated test matrix the same as a
-    direct build's; otherwise the suite still passes, but over fewer backends. This
+    direct build's; otherwise the suite still passes, but over fewer backends.
+    `ALCoreRuntime.cmake` forwards the same values to the IMAS-Core it builds, so
+    one spelling covers both the matrix and the library that has to serve it. This
     is the one place where "the suite passes unmodified" rests on an option the
     operator re-passes rather than on construction — declaring IMAS-Core's backend
     defaults here would be this build asserting support it cannot verify.

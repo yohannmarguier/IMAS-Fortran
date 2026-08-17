@@ -12,8 +12,9 @@ if( AL_USE_MULTIVERSION_SHIM )
   # Multiversion shim: `al` refers to the IMAS-Multiversion-DD-Loader instead of to
   # AL core. The shim mirrors AL core's public C ABI symbol for symbol, so the
   # wrapper's `iso_c_binding` interfaces bind to it unchanged, and it resolves AL
-  # core itself at run time through dlopen/dlsym — hence no AL core acquisition
-  # here, at any point in this module.
+  # core itself at run time through dlopen/dlsym — so no AL core is *linked* here.
+  # One is still acquired, for the shim to open; ALCoreRuntime below owns that, and
+  # explains why it cannot be this module's `al`.
   #
   # Point CMAKE_PREFIX_PATH (or imas-mvdd-loader_DIR) at the shim's install prefix.
   find_package( imas-mvdd-loader REQUIRED CONFIG )
@@ -31,9 +32,11 @@ if( AL_USE_MULTIVERSION_SHIM )
   )
 
   # AL core's own cache options are not declared in this mode, since AL core is not
-  # part of the build. That includes AL_BACKEND_HDF5 and friends, which
+  # a subproject of this build. That includes AL_BACKEND_HDF5 and friends, which
   # tests/generator reads to build its backend matrix: pass them explicitly to keep
-  # the generated test matrix the same as a direct build's. MDSplus is the one that
+  # the generated test matrix the same as a direct build's. ALCoreRuntime forwards
+  # the same values on to the AL core it builds, so one spelling covers both the
+  # test matrix and the library that has to serve it. MDSplus is the one that
   # cannot work that way, because its model is a target AL core builds.
   if( AL_BACKEND_MDSPLUS )
     message( FATAL_ERROR
@@ -48,8 +51,13 @@ if( AL_USE_MULTIVERSION_SHIM )
   # al-fortran-<DD>.pc keeps naming al-core in `Requires:` because that is still
   # where the run-time dependency is.
 
+  # The AL core the shim opens at run time. Nothing links it, so this cannot be the
+  # `al` target above; see the module header for why it is an ExternalProject.
+  include( ALCoreRuntime )
+
   # Stop processing: the plugin framework and the documentation build below both
-  # come with AL core, the same way they are skipped in the pkg-config mode.
+  # come with AL core as a subproject, the same way they are skipped in the
+  # pkg-config mode.
   return()
 endif()
 

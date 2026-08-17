@@ -30,8 +30,13 @@ cmake --build build -j
 ctest --test-dir build --output-on-failure
 ```
 
-IMAS-Core is still needed to *run*: the shim opens it by soname, or from
-`$IMAS_CORE_LIBRARY` if that names a specific library.
+IMAS-Core is still needed to *run*: the shim mirrors its ABI and implements none of
+it, so it opens the real one and forwards. The build acquires an IMAS-Core for that
+purpose — by the same `AL_DOWNLOAD_DEPENDENCIES` / `AL_DEVELOPMENT_LAYOUT` choice as
+every other dependency — builds it under `build/_deps/al-core-runtime-build`, and
+never puts it on a link line. To open an IMAS-Core that already exists instead of
+building one, point `-D AL_CORE_RUNTIME_LIBRARY=/path/to/libal.so` at the library
+itself.
 
 The option defaults to `OFF`, in which case nothing about the build changes.
 `common/cmake/ALCore.cmake` binds the target name `al` to the shim; the link line
