@@ -29,10 +29,12 @@ include(FetchContent)
 
 # Load dependency
 ################################################################################
-# A shim build skips AL core here — adding it as a subproject would create the
+# A shim build skips AL core *as a subproject* here — adding it would create the
 # target name `al` and leave ALCore.cmake nothing to retarget — but leaves
 # AL_DOWNLOAD_DEPENDENCIES and AL_DEVELOPMENT_LAYOUT alone, since they govern every
-# dependency and the Data Dictionary is still acquired the way they say.
+# dependency and the Data Dictionary is still acquired the way they say. Those two
+# options also select how common/cmake/ALCoreRuntime.cmake acquires the AL core the
+# shim opens at run time, which is a separate CMake project for this same reason.
 if( NOT AL_USE_MULTIVERSION_SHIM )
   if( ${AL_DOWNLOAD_DEPENDENCIES} )
     # Download common assets from the ITER git:

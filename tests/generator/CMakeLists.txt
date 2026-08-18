@@ -92,7 +92,9 @@ foreach( IDS_NAME IN LISTS IDS_NAMES )
     set_tests_properties( ${TEST_NAME} PROPERTIES
       FAIL_REGULAR_EXPRESSION "[Ee][Rr][Rr][Oo][Rr]"
       # Disable coordinate consistency validation and warnings on obsolete nodes
-      ENVIRONMENT "IMAS_VERSION=${DD_VERSION};IMAS_AL_DISABLE_VALIDATE=1;IMAS_AL_DISABLE_OBSOLESCENT_WARNING=1;ids_path=${MDSPLUS_MODEL_DIR};MDSPLUS_MODELS_PATH=${MDSPLUS_MODEL_DIR}"
+      # AL_CORE_TEST_ENVIRONMENT is empty unless this is a shim build, where it
+      # names the AL core the shim opens; see common/cmake/ALCore.cmake.
+      ENVIRONMENT "IMAS_VERSION=${DD_VERSION};IMAS_AL_DISABLE_VALIDATE=1;IMAS_AL_DISABLE_OBSOLESCENT_WARNING=1;ids_path=${MDSPLUS_MODEL_DIR};MDSPLUS_MODELS_PATH=${MDSPLUS_MODEL_DIR};${AL_CORE_TEST_ENVIRONMENT}"
     )
 
   endif()
