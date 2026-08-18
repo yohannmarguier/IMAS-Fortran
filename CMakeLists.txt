@@ -13,6 +13,10 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/common/cmake/ALLocalPaths.cmake)
 ################################################################################
 option( AL_DOWNLOAD_DEPENDENCIES "Automatically download assets from the AL git repository" ON )
 option( AL_DEVELOPMENT_LAYOUT "Use development repositories from sibling directory" OFF )
+# Route every AL core call through the IMAS-Multiversion-DD-Loader shim instead of
+# calling IMAS-Core directly. See docs/adr/0001-multiversion-shim-linkage.md; the
+# retargeting itself lives in common/cmake/ALCore.cmake.
+option( AL_USE_MULTIVERSION_SHIM "Link against the IMAS-Multiversion-DD-Loader shim instead of AL core" OFF )
 if( AL_DEVELOPMENT_LAYOUT AND AL_DOWNLOAD_DEPENDENCIES )
     message( STATUS "AL_DEVELOPMENT_LAYOUT=ON: setting AL_DOWNLOAD_DEPENDENCIES=OFF" )
     set( AL_DOWNLOAD_DEPENDENCIES OFF CACHE BOOL "Automatically download assets from the AL git
@@ -25,20 +29,28 @@ include(FetchContent)
 
 # Load dependency
 ################################################################################
-if( ${AL_DOWNLOAD_DEPENDENCIES} )
-  # Download common assets from the ITER git:
-  FetchContent_Declare(
-    al-core
-    GIT_REPOSITORY "${AL_CORE_GIT_REPOSITORY}"
-    GIT_TAG "${AL_CORE_VERSION}"
-  )
-  FetchContent_MakeAvailable( al-core )
-elseif ( ${AL_DEVELOPMENT_LAYOUT} )
-  FetchContent_Declare(
-    al-core
-    SOURCE_DIR      "${CMAKE_CURRENT_SOURCE_DIR}/../IMAS-Core"
-  )
-  FetchContent_MakeAvailable( al-core )
+# A shim build skips AL core *as a subproject* here — adding it would create the
+# target name `al` and leave ALCore.cmake nothing to retarget — but leaves
+# AL_DOWNLOAD_DEPENDENCIES and AL_DEVELOPMENT_LAYOUT alone, since they govern every
+# dependency and the Data Dictionary is still acquired the way they say. Those two
+# options also select how common/cmake/ALCoreRuntime.cmake acquires the AL core the
+# shim opens at run time, which is a separate CMake project for this same reason.
+if( NOT AL_USE_MULTIVERSION_SHIM )
+  if( ${AL_DOWNLOAD_DEPENDENCIES} )
+    # Download common assets from the ITER git:
+    FetchContent_Declare(
+      al-core
+      GIT_REPOSITORY "${AL_CORE_GIT_REPOSITORY}"
+      GIT_TAG "${AL_CORE_VERSION}"
+    )
+    FetchContent_MakeAvailable( al-core )
+  elseif ( ${AL_DEVELOPMENT_LAYOUT} )
+    FetchContent_Declare(
+      al-core
+      SOURCE_DIR      "${CMAKE_CURRENT_SOURCE_DIR}/../IMAS-Core"
+    )
+    FetchContent_MakeAvailable( al-core )
+  endif()
 endif()
 
 
@@ -200,6 +212,16 @@ add_dependencies( al-fortran al-fortran-sources )
 
 if( CMAKE_Fortran_COMPILER_ID STREQUAL "NAG" )
   # Work around NAG compiler not wanting to link against libal.so.x.y.z
+  #
+  # WARNING — this branch SILENTLY DEFEATS AL_USE_MULTIVERSION_SHIM. It does not
+  # link the `al` target; it hardcodes the library name `al` and a search path, so
+  # whatever ALCore.cmake made `al` refer to is bypassed and a NAG build links AL
+  # core directly. There is no error and no warning at build or run time: once the
+  # shim carries conversion logic, a NAG build simply performs no conversion, and
+  # the only symptom is data that was silently never translated. Anyone changing
+  # this branch must keep it in step with the acquisition mode, and any fix must be
+  # verified with a NAG toolchain — which this project does not have.
+  # See docs/adr/0001-multiversion-shim-linkage.md.
   add_dependencies( al-fortran al )
   get_target_property( AL_BINARY_DIR al BINARY_DIR )
   target_link_options( al-fortran PRIVATE -lal -L${AL_BINARY_DIR} "-Wl,-Xlinker,-rpath,-Xlinker,${AL_BINARY_DIR}" )
@@ -268,6 +290,9 @@ install( CODE
 
 if( AL_TESTS )
   add_subdirectory( tests/generator )
+  if( AL_USE_MULTIVERSION_SHIM )
+    add_subdirectory( tests/shim )
+  endif()
 endif()
 
 if( AL_EXAMPLES )

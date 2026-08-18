@@ -27,7 +27,11 @@ function( set_al_example_properties TEST DISABLED USE_PLUGINS EXTRA_ENVIRONMENT 
   else()
     set( P_ENV ${EXAMPLE_ENVIRONMENT_WITHOUT_PLUGINS} )
   endif()
-  set_tests_properties( ${TEST} PROPERTIES ENVIRONMENT "${P_ENV};${EXTRA_ENVIRONMENT}" )
+  # AL_CORE_TEST_ENVIRONMENT is empty unless this is a shim build, where it names
+  # the AL core the shim opens; see common/cmake/ALCore.cmake.
+  set_tests_properties( ${TEST} PROPERTIES
+    ENVIRONMENT "${P_ENV};${EXTRA_ENVIRONMENT};${AL_CORE_TEST_ENVIRONMENT}"
+  )
 
   # Set fixtures: put/put_slice must run before get/get_slice
   string( TOLOWER ${TEST} TEST_LOWER )
