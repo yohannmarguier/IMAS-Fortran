@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
-# Compile play_eq_two_dd against the shim-linked al-fortran in ../install-shim
-# and run it over the two fixtures.
+# Build play_eq_two_dd through playground/CMakeLists.txt and run it over the two
+# fixtures.
+#
+# Compilation, and the check that the al-fortran being linked actually reaches
+# the shim, both live in CMakeLists.txt now; this script only configures, builds
+# and runs. To build without running:
+#
+#   cmake -B playground/build -S playground && cmake --build playground/build
 #
 # Two things have to be told to the process, both because nothing in a build tree
 # is on a default search path:
@@ -16,33 +22,23 @@ repo="$(cd "$here/.." && pwd)"
 
 PREFIX="${PREFIX:-$repo/install-shim}"
 SHIM="${SHIM:-$repo/../IMAS-Multiversion-DD-Loader/install}"
+BUILD="${BUILD:-$here/build}"
 : "${IMAS_CORE_LIBRARY:=$repo/cmake-build-debug/_deps/al-core-build/libal.dylib}"
 : "${IMAS_MVDD_HLI_DD_VERSION:=4.1.1}"
 export IMAS_CORE_LIBRARY IMAS_MVDD_HLI_DD_VERSION
 
-for f in "$PREFIX/lib/libal-fortran-4.1.1.dylib" "$IMAS_CORE_LIBRARY"; do
-  [[ -e $f ]] || { echo "missing: $f" >&2; exit 1; }
-done
+[[ -e $IMAS_CORE_LIBRARY ]] || { echo "missing: $IMAS_CORE_LIBRARY" >&2; exit 1; }
 
-# The whole point of this playground is that calls reach the shim. A link line
-# that resolved al_* against IMAS-Core instead would still build and still run,
-# and the only symptom would be data that was never converted -- so fail loudly
-# rather than silently measure nothing.
-if ! otool -L "$PREFIX/lib/libal-fortran-4.1.1.dylib" | grep -q imas_mvdd_loader; then
-  echo "ERROR: $PREFIX bypasses the shim -- its al-fortran links IMAS-Core directly." >&2
-  echo "Rebuild with -D AL_USE_MULTIVERSION_SHIM=ON and reinstall." >&2
-  exit 1
-fi
-
-gfortran -O1 -g -o "$here/play_eq_two_dd" "$here/play_eq_two_dd.f90" \
-  -I"$PREFIX/include/fortran" \
-  -L"$PREFIX/lib" -lal-fortran-4.1.1 \
-  -L"$SHIM/lib" -limas_mvdd_loader \
-  -Wl,-rpath,"$PREFIX/lib" -Wl,-rpath,"$SHIM/lib"
+cmake -B "$BUILD" -S "$here" \
+  -D AL_FORTRAN_PREFIX="$PREFIX" \
+  -D IMAS_MVDD_LOADER_PREFIX="$SHIM" \
+  -D IMAS_CORE_LIBRARY="$IMAS_CORE_LIBRARY" \
+  -D PLAYGROUND_DD_VERSION="$IMAS_MVDD_HLI_DD_VERSION"
+cmake --build "$BUILD"
 
 cd "$repo"
 set +e
-"$here/play_eq_two_dd" "$repo/imas-python-fixtures/fixtures" "${1:-dd-4.1.1}" "${2:-dd-3.39.0}"
+"$BUILD/play_eq_two_dd" "$repo/imas-python-fixtures/fixtures" "${1:-dd-4.1.1}" "${2:-dd-3.39.0}"
 rc=$?
 set -e
 

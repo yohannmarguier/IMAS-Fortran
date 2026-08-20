@@ -1,4 +1,2 @@
-# Built by run.sh, not by the CMake build.
-play_eq_two_dd
-*.dSYM/
-*.mod
+# Built by playground/CMakeLists.txt, not by the main build.
+build/

@@ -1,7 +1,15 @@
 # playground
 
-Scratch programs run against an **installed** al-fortran, outside the CMake
-build. Nothing here is a ctest test; nothing here is built by the main build.
+Scratch programs run against an **installed** al-fortran. `CMakeLists.txt` here
+is a project of its own: it links a prefix rather than building one, so it is
+deliberately not part of the main build and refuses to be `add_subdirectory`'d
+into it.
+
+```
+cmake -B build -S .                        # defaults to ../install-shim
+cmake --build build
+ctest --test-dir build --output-on-failure
+```
 
 ## play_eq_two_dd
 
@@ -9,10 +17,16 @@ Reads both `equilibrium` fixtures from `../imas-python-fixtures/fixtures` and
 prints one table row per path: the DD 4.1.1 value, the DD 3.39.0 value, and what
 the shim did to get the second one.
 
+`run.sh` configures, builds and runs it in one step:
+
 ```
 ./run.sh                    # cross-version: dies in the HLI, see below
 ./run.sh dd-4.1.1 dd-4.1.1  # self-test: 170 rows, all "same"
 ```
+
+The same two runs exist as tests, so `ctest` covers them without the wrapper:
+`play_eq_two_dd-self`, and `play_eq_two_dd-cross`, which is `DISABLED` for as
+long as the defect below stands.
 
 ## Current state
 
@@ -74,8 +88,9 @@ hand-written list.
 
 ### Environment
 
-`run.sh` sets both variables the shim needs, since neither has a usable default
-from a build tree:
+Both variables the shim needs are injected into the ctest environment, and
+exported by `run.sh` for a by-hand run, since neither has a usable default from
+a build tree:
 
 - `IMAS_CORE_LIBRARY` — which real IMAS-Core the shim `dlopen`s. Defaults to the
   one under `../cmake-build-debug/_deps/al-core-build`.
@@ -84,10 +99,13 @@ from a build tree:
   entry's stamp against it, so one process can read both pulses: the 4.1.1 one
   passes through, the 3.39.0 one converts.
 
-Override either by exporting it before running. `PREFIX` and `SHIM` point at the
-al-fortran install and the loader install respectively.
+Configure them as `IMAS_CORE_LIBRARY` and `PLAYGROUND_DD_VERSION`, or export
+them for `run.sh`, which forwards them. The two prefixes are `AL_FORTRAN_PREFIX`
+and `IMAS_MVDD_LOADER_PREFIX` (`PREFIX` and `SHIM` in `run.sh`).
 
-`run.sh` refuses to run if `$PREFIX`'s al-fortran does not actually link
-`libimas_mvdd_loader` — a build that linked IMAS-Core directly would compile and
-run fine and simply never convert anything, which is exactly the failure
-`docs/adr/0001-multiversion-shim-linkage.md` warns about.
+The build refuses to proceed if `AL_FORTRAN_PREFIX`'s al-fortran does not
+actually link `libimas_mvdd_loader` — a build that linked IMAS-Core directly
+would compile and run fine and simply never convert anything, which is exactly
+the failure `docs/adr/0001-multiversion-shim-linkage.md` warns about. The check
+is `cmake/CheckShimLinkage.cmake`, run at configure time and again as the
+`shim-linkage` test, because the prefix can be reinstalled in between.

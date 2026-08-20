@@ -17,6 +17,10 @@ option( AL_DEVELOPMENT_LAYOUT "Use development repositories from sibling directo
 # calling IMAS-Core directly. See docs/adr/0001-multiversion-shim-linkage.md; the
 # retargeting itself lives in common/cmake/ALCore.cmake.
 option( AL_USE_MULTIVERSION_SHIM "Link against the IMAS-Multiversion-DD-Loader shim instead of AL core" OFF )
+# Scratch programs in playground/. Off by default: they are diagnostics, not part
+# of the library or its suite. On, they are built against the al-fortran target of
+# this build, which is what makes them debuggable -- see playground/README.md.
+option( AL_PLAYGROUND "Build the scratch programs in playground/" OFF )
 if( AL_DEVELOPMENT_LAYOUT AND AL_DOWNLOAD_DEPENDENCIES )
     message( STATUS "AL_DEVELOPMENT_LAYOUT=ON: setting AL_DOWNLOAD_DEPENDENCIES=OFF" )
     set( AL_DOWNLOAD_DEPENDENCIES OFF CACHE BOOL "Automatically download assets from the AL git
@@ -297,4 +301,8 @@ endif()
 
 if( AL_EXAMPLES )
   add_subdirectory( examples )
+endif()
+
+if( AL_PLAYGROUND )
+  add_subdirectory( playground )
 endif()
