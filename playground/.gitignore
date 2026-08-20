@@ -1,0 +1,4 @@
+# Built by run.sh, not by the CMake build.
+play_eq_two_dd
+*.dSYM/
+*.mod
