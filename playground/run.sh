@@ -42,32 +42,48 @@ set +e
 rc=$?
 set -e
 
-# A cross-version read currently dies inside the generated HLI, not inside the
-# shim. Say so where it happens, so the signal is not mistaken for a shim fault
-# or for a broken fixture. FINDINGS.md carries the full diagnosis.
-if [[ $rc -gt 128 ]]; then
+# A cross-version read stops at the first DD path the shim refuses, and exits
+# non-zero without reaching time_slice. That is the current, intended behaviour;
+# say so, so a clean stop is not mistaken for a broken fixture.
+if [[ $rc -ne 0 && $rc -le 128 ]]; then
   cat >&2 <<'MSG'
 
 ================================================================================
-KILLED BY SIGNAL -- this is the known IMAS-Fortran defect, not a shim fault.
+STOPPED AT A REFUSED DD PATH -- expected, and not a fault.
 ================================================================================
 The shim refused one DD path, correctly:
 
     grids_ggd/grid/space/coordinates_type
 
-The generated HLI mishandles that refusal and ends one context twice:
+coordinates_type is INT_1D in DD 3.39.0 and an array of identifier structures in
+DD 4.1.1, so no value transformation converts one into the other.
 
-  1. utilities_get_struct.f90, the "else" arm of the coordinates_type
-     arraystruct block, ends its ENCLOSING context and returns the never-set
-     aosctx as a status.
-  2. the caller's isErrorCritical block ends that SAME context again.
+The generated HLI now propagates that refusal outward as an ordinary error, one
+level at a time. grids_ggd precedes time_slice in the IDS, so the read stops
+before any table data exists -- hence no table.
 
-grids_ggd precedes time_slice in the IDS, so the read dies before any table
-data exists. Generator site: IDSDef2F90Routines.xsl:4932-4937.
-See playground/FINDINGS.md.
+Whether a refusal *should* stop the whole read, rather than leaving that array
+empty and continuing, is an open policy question: see playground/FINDINGS.md.
 
 To see the table itself, run a self-test with one pulse in both columns:
     ./run.sh dd-4.1.1 dd-4.1.1
+================================================================================
+MSG
+fi
+
+# This used to be the normal outcome: a refused path made the generated failure
+# arm end its caller's context, which the caller then ended again. Fixed in
+# IDSDef2F90Routines.xsl; guarded by the playground-play_eq_two_dd-cross ctest.
+if [[ $rc -gt 128 ]]; then
+  cat >&2 <<'MSG'
+
+================================================================================
+KILLED BY SIGNAL -- REGRESSION of the arraystruct-refusal double-close.
+================================================================================
+A failed al_begin_arraystruct_action creates no context, so the failure arm must
+not end the enclosing one: inside a get_struct_* routine that context is a dummy
+argument, and its owner ends it itself. Generator site:
+IDSDef2F90Routines.xsl:4932. See playground/FINDINGS.md.
 ================================================================================
 MSG
 fi

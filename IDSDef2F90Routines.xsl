@@ -4931,8 +4931,16 @@ end module
              call al_end_action(aosctx, status)
           else
              write(*,*) "ERROR! with field "//<xsl:value-of select="$fieldpath"/><xsl:text>&#xa;</xsl:text>
-             <xsl:if test="$structvar='IDS'">if (present(retstatus)) </xsl:if>retstatus = aosctx
-             call al_end_action(<xsl:value-of select="$contextvar"/>, status)
+             <!-- A failed al_begin_arraystruct_action creates no context: it leaves
+                  aosctx unwritten, so returning it as a status returns garbage, and
+                  there is no arraystruct context to end. Return the real status, and
+                  end only a context this routine owns. At IDS level ($structvar='IDS')
+                  that is the operation context opened by al_begin_global_action here,
+                  so ending it is the correct cleanup before returning. Inside a
+                  get_struct_* routine the enclosing context is a dummy argument owned
+                  by the caller, which ends it itself on a non-zero status; ending it
+                  here too closed the same context twice. -->
+             <xsl:if test="$structvar='IDS'">if (present(retstatus)) </xsl:if>retstatus = status<xsl:if test="$structvar='IDS'"><xsl:text>&#xa;</xsl:text>             call al_end_action(<xsl:value-of select="$contextvar"/>, status)</xsl:if>
              return
           endif
     <xsl:if test="@type='dynamic'">endif</xsl:if>
