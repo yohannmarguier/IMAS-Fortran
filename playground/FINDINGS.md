@@ -4,7 +4,13 @@ Running `play_eq_two_dd` against the two fixtures surfaces one defect in this
 repository. The defect is in generated code, so the fix belongs in
 `IDSDef2F90Routines.xsl`, not in any `.f90`.
 
-Nothing here is fixed. This document exists to make the defect precise.
+**Status (2026-08-21): the memory fault described below is fixed** in
+`IDSDef2F90Routines.xsl`, on the read *and* write paths; see "What was changed".
+The *policy* question at the end is deliberately still open, so a cross-version
+read now fails cleanly instead of producing a table.
+
+The sections below are kept in the present tense as a description of the defect,
+because they are what the fix has to be read against.
 
 ## The trigger
 
@@ -98,11 +104,91 @@ returns immediately, so the read stops before any `time_slice` data is read.
 `ids_get_slice` follows the same path and gives the same result — there is no
 way around it through the HLI API.
 
+## What was changed
+
+One generator site, the `else` arm above.
+
+**`retstatus = aosctx` became `retstatus = status`**, at all 1115 sites.
+
+**The `al_end_action` is now emitted only when `$structvar='IDS'`.** That test is
+exactly the "does this routine own the enclosing context" predicate, which is why
+the split is clean rather than a heuristic:
+
+| | routine | `$contextvar` | owner | close |
+|---|---|---|---|---|
+| 448 sites | `$structvar='IDS'` | `opctx` | opened by `al_begin_global_action` in *this* routine, closed by it on success | **kept** — dropping it would leak the operation context |
+| 667 sites | `$structvar='struct'` | `ctx` | a dummy argument; the caller ends it in its own `isErrorCritical` arm | **removed** — this was the double-close |
+
+Measured on the generated tree, that predicate never disagrees with the variable
+name: every `present(retstatus)` arm closes `opctx`, every other arm closes `ctx`.
+Note that per-IDS `<ids>_get.f90` files contain *both* kinds of routine, so "root"
+means the `$structvar` test, not the file.
+
+Verified against a full-DD shim build (DD 4.1.1, gfortran 15.2, Debug):
+
+- cross-version read: **exit 139 (SIGSEGV) before, exit 1 after**
+- same-version control: exit 0, 428 rows, unchanged
+- `ctest`: 85/85 pass. This shows *no regression*; it does not exercise the arm,
+  since a same-version round trip never makes `al_begin_arraystruct_action` fail.
+  The guard for the arm itself is `playground-play_eq_two_dd-cross`, which is no
+  longer `DISABLED` and now fails only on a signal (`check_no_signal.cmake`).
+
+### The write path, fixed the same way
+
+The `PUT_FIELD` template had the same shape at `IDSDef2F90Routines.xsl:4379`:
+
+```xslt
+       else
+          write(*,*) "ERROR! with field "//<xsl:value-of select="$fieldpath"/>
+          call al_end_action(<xsl:value-of select="$contextvar"/>, status)
+          return
+       endif
+```
+
+Same failed begin, same close of a context the routine may not own: **1254 nested
+sites** (243 of them in `utilities_put_struct.f90`, the rest in the nested
+`put_struct_ids_<ids>_*(ctx, ...)` routines inside the per-IDS `<ids>_put.f90`
+files), against **277** IDS-level sites where `opctx` is owned and the close is
+kept.
+
+The write arm carried a *second* defect the read arm did not. It never assigned
+`retstatus` at all, and a caller passes its own `status` variable as that
+argument:
+
+```fortran
+call put_struct_ids_equilibrium_tim724(aosctx, name, '', IDS%time_slice(i), &
+                                       timemode, timedparent.or..true., status)
+if (isErrorCritical(status, aosctx, path//"time_slice")) then
+```
+
+So a failed arraystruct put returned with the caller's `status` still holding its
+previous value -- normally `0` -- and `isErrorCritical` did not fire: the write
+failed and the caller carried on as though it had succeeded. Silent data loss on
+the write path, where the read path was merely loud and wrong. Both arms now
+assign `retstatus = status`, which is what `b920619` ("Add missing error
+propagation for some AoS cases") set out to do and applied only to `GET_FIELD`.
+
+Unlike the read fix this one has no behavioural red/green here, because nothing
+in this repository makes an arraystruct *write* fail -- the playground only reads.
+It is verified by inspecting the generated code and by the suite not regressing
+(85/85), which also shows no existing test depended on a swallowed put error.
+
 ## What the fix has to decide
 
 Correcting the two defects above stops the memory fault and yields a clean
 error. It does **not** produce a table: the read still aborts at `grids_ggd`, so
-every `time_slice` path stays empty.
+every `time_slice` path stays empty. That is the observed post-fix behaviour --
+the refusal now propagates outward one level at a time, each routine ending only
+its own context:
+
+```
+IMAS-MVDD: this path's container changed shape and cannot be served; ...
+ ERROR! with field coordinates_type
+ ERROR! with field 'space'
+ ERROR! with field 'grid'
+ ERROR! with field 'grids_ggd'
+ERROR: a pulse came back with no time_slice          <- play_eq_two_dd, exit 1
+```
 
 A table needs a policy decision as well: **must a refusal stop the whole read?**
 A best-effort read would leave the refused array empty and continue. That
@@ -113,9 +199,13 @@ telling the caller what was skipped — rather than a `write(*,*)` and a return.
 ## Reproducing
 
 ```sh
-./run.sh                    # cross-version: dies, with the banner above
-./run.sh dd-4.1.1 dd-4.1.1  # self-test: 170 rows, all "same"
+./run.sh                    # cross-version: exits 1 with the errors above
+./run.sh dd-4.1.1 dd-4.1.1  # self-test: full table, all "same"
 ```
 
 The self-test is what proves the table logic independently of the shim, since
-the cross-version read cannot currently reach it.
+the cross-version read still cannot reach it.
+
+Both are also ctest tests (`playground-play_eq_two_dd-self` / `-cross`). To see
+the original memory fault, revert the `else` arm at `IDSDef2F90Routines.xsl:4932`
+and rebuild -- the whole library regenerates, so this is a full rebuild.

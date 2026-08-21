@@ -159,12 +159,18 @@ set_tests_properties( ${PLAYGROUND_TEST_PREFIX}play_eq_two_dd-self PROPERTIES
   ENVIRONMENT "${PLAYGROUND_ENVIRONMENT}"
   FAIL_REGULAR_EXPRESSION "DIFF|FLIP|SHAPE|only3|only4|ERROR" )
 
-# The cross-version read, the actual exercise. DISABLED because it currently
-# dies by signal inside the generated HLI -- a known IMAS-Fortran defect, not a
-# shim fault; see FINDINGS.md. Run it under the debugger, or through run.sh;
-# drop the DISABLED property once the defect is fixed.
+# The cross-version read, the actual exercise. It used to die by signal inside
+# the generated HLI on a refused DD path; that defect is fixed in
+# IDSDef2F90Routines.xsl and this test is the guard against its return.
+#
+# Wrapped rather than run directly because the pass condition is "was not killed",
+# not "exited 0": the read still stops at the first refused path, so it exits
+# non-zero by design. Whether a refusal should instead be reported as an absent
+# array and the read continued is an open policy question -- see FINDINGS.md --
+# and this test is written to survive answering it either way.
 add_test( NAME ${PLAYGROUND_TEST_PREFIX}play_eq_two_dd-cross
-  COMMAND play_eq_two_dd "${PLAYGROUND_FIXTURES}" dd-4.1.1 dd-3.39.0 )
+  COMMAND ${CMAKE_COMMAND}
+    -D "COMMAND_TO_RUN=$<TARGET_FILE:play_eq_two_dd>;${PLAYGROUND_FIXTURES};dd-4.1.1;dd-3.39.0"
+    -P "${CMAKE_CURRENT_SOURCE_DIR}/check_no_signal.cmake" )
 set_tests_properties( ${PLAYGROUND_TEST_PREFIX}play_eq_two_dd-cross PROPERTIES
-  ENVIRONMENT "${PLAYGROUND_ENVIRONMENT}"
-  DISABLED TRUE )
+  ENVIRONMENT "${PLAYGROUND_ENVIRONMENT}" )
