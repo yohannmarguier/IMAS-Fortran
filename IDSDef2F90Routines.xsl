@@ -4392,8 +4392,16 @@ end module
           enddo
           call al_end_action(aosctx, status)
        else
-          write(*,*) "ERROR! with field "//<xsl:value-of select="$fieldpath"/>
-          call al_end_action(<xsl:value-of select="$contextvar"/>, status)
+          write(*,*) "ERROR! with field "//<xsl:value-of select="$fieldpath"/><xsl:text>&#xa;</xsl:text>
+          <!-- Same contract as the GET arm: a failed al_begin_arraystruct_action
+               creates no context, so end only one this routine owns. At IDS level
+               ($structvar='IDS') that is the opctx opened by al_begin_global_action
+               here; inside a put_struct_* routine the enclosing context is a dummy
+               argument and its owner ends it, so ending it here closed it twice.
+               retstatus was never assigned at all, and callers pass their own status
+               variable as this argument, so a failed put returned whatever that held
+               (normally 0) and the caller carried on as if the write had succeeded. -->
+          <xsl:if test="$structvar='IDS'">if (present(retstatus)) </xsl:if>retstatus = status<xsl:if test="$structvar='IDS'"><xsl:text>&#xa;</xsl:text>          call al_end_action(<xsl:value-of select="$contextvar"/>, status)</xsl:if>
           return
        endif
     endif
