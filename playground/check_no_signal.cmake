@@ -6,12 +6,17 @@
 # second time, and IMAS-Core's delLLenv has no released-slot guard. The symptom
 # was always a signal, never a status.
 #
-# Deliberately indifferent to the exit code. A cross-version read still stops at
-# the first refused path, so it exits non-zero on purpose, and whether that
-# should instead become a best-effort read is an open policy question. Pinning
-# the exit code here would make this test fail the moment that question is
-# answered; pinning "was not killed" keeps it a guard against exactly the defect
-# it was written for.
+# The signal guard is unconditional and is the reason this wrapper exists.
+#
+# EXPECT_STATUS is optional. It was left out while "must a refusal stop the whole
+# read?" was open, because pinning the exit code would have made this test fail
+# the moment that question was answered. It has been answered -- a refusal is
+# tolerated and the read completes -- so the cross-version test now pins 0.
+# Omitting EXPECT_STATUS keeps the old indifferent behaviour.
+#
+# stdout and stderr are echoed so ctest's PASS_REGULAR_EXPRESSION /
+# FAIL_REGULAR_EXPRESSION can see the program's own output; execute_process
+# captures it, so without this it would be invisible.
 #
 # Invoked by playground/CMakeLists.txt.
 
@@ -51,3 +56,17 @@ if( _killed )
 endif()
 
 message( STATUS "Exited with status ${_result}; not killed by a signal." )
+
+# Echo before any status check, so a failure report carries the output too.
+if( _stdout )
+  message( "${_stdout}" )
+endif()
+if( _stderr )
+  message( "${_stderr}" )
+endif()
+
+if( DEFINED EXPECT_STATUS AND ( NOT _result STREQUAL EXPECT_STATUS ) )
+  message( FATAL_ERROR
+    "Expected exit status ${EXPECT_STATUS}, got ${_result}."
+  )
+endif()

@@ -57,6 +57,21 @@ module al_defs
   integer, parameter :: LOWLEVEL_ERR       = ERR_0-3
   integer, parameter :: CONSISTENCY_ERR    = ERR_0-4
 
+  ! IMAS-Core allocates only the ERR_0 family above, -1..-5. The band -1000..-1099
+  ! is reserved for a layer interposed between this HLI and IMAS-Core; the
+  ! IMAS-Multiversion-DD-Loader currently allocates just -1000 in it
+  ! (IMAS_MVDD_CONVERSION_ERROR), meaning "this path cannot be served in the
+  ! caller's dictionary". Disjoint from the family above by construction, so a
+  ! build that links IMAS-Core directly can never produce one of these.
+  integer, parameter :: AL_EXTERNAL_REFUSAL_MAX = -1000
+  integer, parameter :: AL_EXTERNAL_REFUSAL_MIN = -1099
+
+  ! Not an error: the read completed, but at least one path was refused and its
+  ! field left unset. Positive, so it cannot collide with any status coming from
+  ! the C ABI, while still tripping the `status.ne.0` test callers already write.
+  ! See al_get_policy for the skip log that says which paths.
+  integer, parameter :: PARTIAL_READ        = 1
+
   integer, parameter :: IDS_TIME_MODE_UNKNOWN = -999999999
   integer, parameter :: IDS_TIME_MODE_HETEROGENEOUS = 0
   integer, parameter :: IDS_TIME_MODE_HOMOGENEOUS = 1

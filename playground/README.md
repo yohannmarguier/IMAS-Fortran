@@ -20,28 +20,30 @@ the shim did to get the second one.
 `run.sh` configures, builds and runs it in one step:
 
 ```
-./run.sh                    # cross-version: dies in the HLI, see below
-./run.sh dd-4.1.1 dd-4.1.1  # self-test: 170 rows, all "same"
+./run.sh                    # cross-version: full table, PARTIAL_READ
+./run.sh dd-4.1.1 dd-4.1.1  # self-test: 170 rows, all "same", 0 skipped
 ```
 
 The same two runs exist as tests, so `ctest` covers them without the wrapper:
-`play_eq_two_dd-self`, and `play_eq_two_dd-cross`, which is `DISABLED` for as
-long as the defect below stands.
+`play_eq_two_dd-self` and `play_eq_two_dd-cross`.
 
 ## Current state
 
-The cross-version read does not complete. The shim correctly refuses
-`grids_ggd/grid/space/coordinates_type`, and the generated HLI mishandles that
-refusal by ending one context twice, which is a memory fault. `grids_ggd`
-precedes `time_slice`, so the read dies before any table data exists.
+The cross-version read completes. The shim correctly refuses
+`grids_ggd/grid/space/coordinates_type`, and the generated HLI now treats that
+refusal as what it is -- a path that does not exist in the dictionary this HLI
+speaks -- rather than as an error. The field is left disassociated, the path is
+recorded in `al_get_policy`'s skip log, and the read carries on to `time_slice`.
+`ids_get` reports `PARTIAL_READ` so the caller knows the IDS is incomplete.
 
-That defect is the point of the exercise, not an obstacle to it: it is what a
-shim-linked read shows about this repository. **[FINDINGS.md](FINDINGS.md)** has
-the diagnosis, the generator site, and the scope. Nothing is fixed.
+Getting here took two fixes and one decision, all in
+**[FINDINGS.md](FINDINGS.md)**: the refusal used to end one context twice, which
+was a memory fault; then it aborted the whole read, which was clean but produced
+no table; and then "must a refusal stop the read?" was answered no.
 
-Until it is, `./run.sh dd-4.1.1 dd-4.1.1` is what exercises the table: one pulse
-in both columns must report `same` on every row, which proves the table logic
-independently of any conversion.
+`./run.sh dd-4.1.1 dd-4.1.1` remains the check on the table logic itself: one
+pulse in both columns must report `same` on every row and skip nothing, which
+proves the table independently of any conversion.
 
 The program is compiled against **one** dictionary — the DD 4.1.1 al-fortran in
 `../install-shim` — so both pulses are read into the same DD 4.1.1 derived type.

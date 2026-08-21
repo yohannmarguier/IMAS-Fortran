@@ -3,6 +3,7 @@
 ! data to void C pointers
 module al_low_level_wrap
   use al_defs
+  use al_get_policy, only: al_note_status_message
   use iso_c_binding
 
   type, bind(C) :: c_al_status_t
@@ -281,7 +282,10 @@ module al_low_level_wrap
 
 contains 
 
-  pure function fstatus(cstatus)
+  ! Not `pure`: it retains the last non-zero status so al_get_policy can attach
+  ! the C layer's own explanation to a skipped path. Every wrapper below funnels
+  ! through here, which is why this is the one place that needs to change.
+  function fstatus(cstatus)
     use, intrinsic :: ISO_C_BINDING
     implicit none
     type(al_status) :: fstatus
@@ -295,6 +299,7 @@ contains
           fstatus%message(i:i) = cstatus%message(i)
           i = i+1
        end do
+       call al_note_status_message(fstatus%code, fstatus%message)
     end if
   end function fstatus
 

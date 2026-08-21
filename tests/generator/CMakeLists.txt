@@ -74,6 +74,21 @@ target_link_libraries( al-fortran-test-helpers PUBLIC al-fortran )
 # Ensure the mod dir is available when using nagfor
 target_include_directories( al-fortran-test-helpers PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/include )
 
+# The read-side refusal policy, exercised directly rather than through a read.
+# No pulse in this suite can make a read fail, so without this the tolerant arm
+# of isErrorCritical is never entered by anything in an ordinary build; the
+# behavioural proof needs a second Data Dictionary version and lives in
+# playground/.
+add_executable( al-fortran-test-get-policy test_get_policy.f90 )
+target_link_libraries( al-fortran-test-get-policy al-fortran )
+add_dependencies( al-fortran-tests al-fortran-test-get-policy )
+add_test( NAME al-fortran-test-get-policy COMMAND al-fortran-test-get-policy )
+# Not the suite's usual "no ERROR anywhere" condition: this test drives the fatal
+# branch on purpose, and that branch prints "ERROR! with field ...". A failed
+# expectation says POLICY-FAILURE instead.
+set_tests_properties( al-fortran-test-get-policy PROPERTIES
+  FAIL_REGULAR_EXPRESSION "POLICY-FAILURE" )
+
 foreach( IDS_NAME IN LISTS IDS_NAMES )
   if( NOT IDS_NAME STREQUAL "")
     set( TEST_NAME al-fortran-test-${IDS_NAME} )

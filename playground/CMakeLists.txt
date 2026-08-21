@@ -159,18 +159,22 @@ set_tests_properties( ${PLAYGROUND_TEST_PREFIX}play_eq_two_dd-self PROPERTIES
   ENVIRONMENT "${PLAYGROUND_ENVIRONMENT}"
   FAIL_REGULAR_EXPRESSION "DIFF|FLIP|SHAPE|only3|only4|ERROR" )
 
-# The cross-version read, the actual exercise. It used to die by signal inside
-# the generated HLI on a refused DD path; that defect is fixed in
-# IDSDef2F90Routines.xsl and this test is the guard against its return.
+# The cross-version read, the actual exercise, and the only test anywhere in this
+# repository that reaches the best-effort arm: nothing else can make a read fail.
 #
-# Wrapped rather than run directly because the pass condition is "was not killed",
-# not "exited 0": the read still stops at the first refused path, so it exits
-# non-zero by design. Whether a refusal should instead be reported as an absent
-# array and the read continued is an open policy question -- see FINDINGS.md --
-# and this test is written to survive answering it either way.
+# It guards three things at once, which is why it is wrapped rather than run
+# directly. The wrapper's unconditional signal check is the regression guard for
+# the arraystruct-refusal double-close. EXPECT_STATUS=0 pins the policy: a
+# refused path must not stop the read. The regexes pin the reporting -- the
+# refused path has to be named. The FAIL regex stays on ERROR only: whether a
+# converted value is *right* is the conversion layer's business, not this HLI's,
+# so DIFF and FLIP rows are not this test's to judge.
 add_test( NAME ${PLAYGROUND_TEST_PREFIX}play_eq_two_dd-cross
   COMMAND ${CMAKE_COMMAND}
     -D "COMMAND_TO_RUN=$<TARGET_FILE:play_eq_two_dd>;${PLAYGROUND_FIXTURES};dd-4.1.1;dd-3.39.0"
+    -D "EXPECT_STATUS=0"
     -P "${CMAKE_CURRENT_SOURCE_DIR}/check_no_signal.cmake" )
 set_tests_properties( ${PLAYGROUND_TEST_PREFIX}play_eq_two_dd-cross PROPERTIES
-  ENVIRONMENT "${PLAYGROUND_ENVIRONMENT}" )
+  ENVIRONMENT "${PLAYGROUND_ENVIRONMENT}"
+  PASS_REGULAR_EXPRESSION "grids_ggd/grid/space/coordinates_type"
+  FAIL_REGULAR_EXPRESSION "ERROR" )
