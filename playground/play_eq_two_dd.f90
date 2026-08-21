@@ -231,6 +231,8 @@ end module eq_table
 
 program play_eq_two_dd
   use ids_routines
+  use al_get_policy
+  use iso_fortran_env, only: output_unit
   use eq_table
   implicit none
 
@@ -241,6 +243,7 @@ program play_eq_two_dd
   type(ids_equilibrium_profiles_2d), pointer :: q4, q3
   character(len=512) :: root, arg, pulse4, pulse3
   integer :: idx
+  integer :: status4, status3, skipped4, skipped3
 
   ! argv: [fixture-root] [pulse-for-column-1] [pulse-for-column-2]. Passing the
   ! same pulse twice is the way to check the table itself rather than the shim:
@@ -256,18 +259,38 @@ program play_eq_two_dd
   if (len_trim(arg) > 0) pulse3 = trim(arg)
 
   call imas_open('imas:hdf5?path='//trim(root)//'/'//trim(pulse4), OPEN_PULSE, idx)
-  call ids_get(idx, 'equilibrium', e4)
+  call ids_get(idx, 'equilibrium', e4, status4)
   call imas_close(idx)
+  skipped4 = al_get_skipped_count()
 
   call imas_open('imas:hdf5?path='//trim(root)//'/'//trim(pulse3), OPEN_PULSE, idx)
-  call ids_get(idx, 'equilibrium', e3)
+  call ids_get(idx, 'equilibrium', e3, status3)
   call imas_close(idx)
+  ! The skip log is reset by each ids_get, so read it before the next one.
+  skipped3 = al_get_skipped_count()
+  call al_report_skipped_paths(output_unit)
 
   write(*, '(a)') ''
   write(*, '(a)') 'HLI dictionary   : 4.1.1 (both pulses read into the DD 4.1.1 type)'
   write(*, '(a)') 'column 1         : '//trim(pulse4)//'  stamp '//trim(dd_stamp(e4))
   write(*, '(a)') 'column 2         : '//trim(pulse3)//'  stamp '//trim(dd_stamp(e3))
   write(*, '(a)') 'time slice shown : '//char(48 + SL)
+  write(*, '(a,i0,a,i0,a)') 'column 1 read    : status ', status4, ', ', skipped4, ' path(s) skipped'
+  write(*, '(a,i0,a,i0,a)') 'column 2 read    : status ', status3, ', ', skipped3, ' path(s) skipped'
+
+  ! A cross-version read is expected to come back PARTIAL_READ: the conversion
+  ! layer refuses grids_ggd/grid/space/coordinates_type, which is INT_1D in
+  ! DD 3.39.0 and an array of identifier structures in DD 4.1.1. What must NOT
+  ! happen any more is the read stopping there -- everything below this line is
+  ! time_slice data that used to be unreachable.
+  if (status4 < 0 .or. status3 < 0) then
+    write(*, '(a)') 'ERROR: a read failed outright'
+    stop 1
+  end if
+  if (skipped3 > 0 .and. status3 /= PARTIAL_READ) then
+    write(*, '(a)') 'ERROR: paths were skipped but the read did not report PARTIAL_READ'
+    stop 1
+  end if
 
   if (.not. associated(e4%time_slice) .or. .not. associated(e3%time_slice)) then
     write(*, '(a)') 'ERROR: a pulse came back with no time_slice'

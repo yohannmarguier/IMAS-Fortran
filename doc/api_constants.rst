@@ -198,3 +198,36 @@ Version constants
 
     Get the patch version of the Data Dictionary definitions that are used, for
     example ``0``.
+
+
+Read status
+-----------
+
+.. f:variable:: PARTIAL_READ
+    :attrs: parameter=1
+
+    Returned by :f:func:`ids_get`, :f:func:`ids_get_slice` and
+    :f:func:`ids_get_sample` when the read completed but one or more paths could
+    not be served and were left unset.
+
+    Positive, so it can never collide with a status from the Access Layer core,
+    which allocates only negative values. It is still non-zero, so code testing
+    ``retstatus /= 0`` notices it; code testing ``retstatus < 0`` does not.
+
+    .. seealso:: :ref:`Partial reads`
+
+.. f:variable:: AL_EXTERNAL_REFUSAL_MAX
+    :attrs: parameter=-1000
+
+    Upper bound of the status band reserved for a layer interposed between this
+    HLI and the Access Layer core, used to report that a path cannot be served
+    in the caller's Data Dictionary version.
+
+    The core itself allocates only ``UNKNOWN_ERR`` (-1) through
+    ``CONSISTENCY_ERR`` (-5), so the two ranges cannot collide and a build
+    linking the core directly never sees a status in this band.
+
+.. f:variable:: AL_EXTERNAL_REFUSAL_MIN
+    :attrs: parameter=-1099
+
+    Lower bound of the same reserved band.

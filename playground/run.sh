@@ -42,31 +42,21 @@ set +e
 rc=$?
 set -e
 
-# A cross-version read stops at the first DD path the shim refuses, and exits
-# non-zero without reaching time_slice. That is the current, intended behaviour;
-# say so, so a clean stop is not mistaken for a broken fixture.
+# A refused DD path no longer stops the read: the field is left unset and the
+# read carries on, so a cross-version run produces a table and exits 0. A
+# non-zero exit here therefore means something else went wrong.
 if [[ $rc -ne 0 && $rc -le 128 ]]; then
   cat >&2 <<'MSG'
 
 ================================================================================
-STOPPED AT A REFUSED DD PATH -- expected, and not a fault.
+CROSS-VERSION READ FAILED -- this is now a fault, not the expected outcome.
 ================================================================================
-The shim refused one DD path, correctly:
+A refused DD path is tolerated: the generated HLI leaves the field unset, logs
+it, and returns PARTIAL_READ. The expected result of this run is a full table
+with grids_ggd/grid/space/coordinates_type reported as skipped.
 
-    grids_ggd/grid/space/coordinates_type
-
-coordinates_type is INT_1D in DD 3.39.0 and an array of identifier structures in
-DD 4.1.1, so no value transformation converts one into the other.
-
-The generated HLI now propagates that refusal outward as an ordinary error, one
-level at a time. grids_ggd precedes time_slice in the IDS, so the read stops
-before any table data exists -- hence no table.
-
-Whether a refusal *should* stop the whole read, rather than leaving that array
-empty and continuing, is an open policy question: see playground/FINDINGS.md.
-
-To see the table itself, run a self-test with one pulse in both columns:
-    ./run.sh dd-4.1.1 dd-4.1.1
+Exiting non-zero means the read failed for some other reason -- look at the
+SKIPPED and ERROR lines above. See playground/FINDINGS.md.
 ================================================================================
 MSG
 fi
