@@ -1076,11 +1076,16 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   call al_begin_global_action(pulsectx, name, WRITE_OP, opctx, status) 
   if (status.ne.0) then
      write(*,*) 'Error in al_begin_global_action (from ids_put for IDS <xsl:value-of select="@name"/>)'
-     if (present(retstatus)) then 
-        retstatus = opctx
+     <!-- The begin failed, so no context was created: there is nothing to end,
+          and opctx holds no defined value. Return the real status, and return
+          *here*: falling through ran the whole field block against a context
+          that was never opened. -->
+     if (present(retstatus)) then
+        retstatus = status
      else
-        STOP 
+        STOP
      end if
+     return
   end if
 
   timedparent=.false.
@@ -1093,11 +1098,17 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   call al_write_plugins_metadata(opctx, status)
   if (status.ne.0) then
      write(*,*) 'Error in al_write_plugins_metadata (from ids_put for IDS <xsl:value-of select="@name"/>)'
+     <!-- opctx was opened by this routine and is still open, so end it before
+          returning. Return the real status, not opctx: that is a context id,
+          not a status. Falling through ran the rest of the routine against a
+          context whose operation had already failed. -->
      if (present(retstatus)) then
-        retstatus = opctx
+        retstatus = status
      else
-        STOP 
+        STOP
      end if
+     call al_end_action(opctx, status)
+     return
   end if
   call al_end_action(opctx, status)
   if (present(retstatus)) retstatus = status
@@ -1380,11 +1391,16 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   if (status.ne.0) then
      !! error when trying to get new ctx => stop!
      write(*,*) 'Error in al_begin_slice_action (from ids_put_slice for IDS <xsl:value-of select="@name"/>)'     
+     <!-- The begin failed, so no context was created: there is nothing to end,
+          and opctx holds no defined value. Return the real status, and return
+          *here*: falling through ran the whole field block against a context
+          that was never opened. -->
      if (present(retstatus)) then
-        retstatus = opctx
+        retstatus = status
      else
-        STOP 
+        STOP
      end if
+     return
   end if
 
   <!--<xsl:if test="@specific_validation_rules='yes'">
@@ -1403,11 +1419,17 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   call al_write_plugins_metadata(opctx, status)
   if (status.ne.0) then
      write(*,*) 'Error in al_write_plugins_metadata (from ids_put_slice for IDS <xsl:value-of select="@name"/>)'
+     <!-- opctx was opened by this routine and is still open, so end it before
+          returning. Return the real status, not opctx: that is a context id,
+          not a status. Falling through ran the rest of the routine against a
+          context whose operation had already failed. -->
      if (present(retstatus)) then
-        retstatus = opctx
+        retstatus = status
      else
-        STOP 
+        STOP
      end if
+     call al_end_action(opctx, status)
+     return
   end if
 
   call al_end_action(opctx, status)
@@ -3666,21 +3688,32 @@ subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   if (status.ne.0) then
      !! error when trying to get new ctx => stop!
      write(*,*) 'Error in al_begin_global_action (from ids_get for IDS <xsl:value-of select="@name"/>)'
+     <!-- The begin failed, so no context was created: there is nothing to end,
+          and opctx holds no defined value. Return the real status, and return
+          *here*: falling through ran the whole field block against a context
+          that was never opened. -->
      if (present(retstatus)) then
-        retstatus = opctx
+        retstatus = status
      else
-        STOP 
+        STOP
      end if
+     return
   end if
   
   call al_bind_readback_plugins(opctx, status)
   if (status.ne.0) then
      write(*,*) 'Error in al_bind_readback_plugins (from ids_get for IDS <xsl:value-of select="@name"/>)'
+     <!-- opctx was opened by this routine and is still open, so end it before
+          returning. Return the real status, not opctx: that is a context id,
+          not a status. Falling through ran the rest of the routine against a
+          context whose operation had already failed. -->
      if (present(retstatus)) then
-        retstatus = opctx
+        retstatus = status
      else
-        STOP 
+        STOP
      end if
+     call al_end_action(opctx, status)
+     return
   end if
 
   timedparent=.false.
@@ -3696,11 +3729,17 @@ subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   call al_unbind_readback_plugins(opctx, status)
   if (status.ne.0) then
      write(*,*) 'Error in al_unbind_readback_plugins (from ids_get for IDS <xsl:value-of select="@name"/>)'
+     <!-- opctx was opened by this routine and is still open, so end it before
+          returning. Return the real status, not opctx: that is a context id,
+          not a status. Falling through ran the rest of the routine against a
+          context whose operation had already failed. -->
      if (present(retstatus)) then
-        retstatus = opctx
+        retstatus = status
      else
-        STOP 
+        STOP
      end if
+     call al_end_action(opctx, status)
+     return
   end if
 
   call al_end_action(opctx, status)
@@ -3770,6 +3809,7 @@ use ids_schemas_<xsl:value-of select="@name"/>
         if (present(retstatus)) then
            retstatus = status
         endif
+        call al_end_action(opctx, status)
         return
      endif
      if (status.ne.0) then
@@ -3777,12 +3817,16 @@ use ids_schemas_<xsl:value-of select="@name"/>
         if (present(retstatus)) then
            retstatus = status
         endif
+        call al_end_action(opctx, status)
         return
      end if
   call al_end_action(opctx, status)
 
   if(storedtimemode == IDS_TIME_MODE_UNKNOWN) then
         write(*,*) 'GET_SAMPLE: error reading homogeneous time for <xsl:value-of select="@name"/> IDS'
+        <!-- This returned without assigning retstatus at all, so the caller saw
+             whatever it had passed in, normally 0, i.e. success. -->
+        if (present(retstatus)) retstatus = UNKNOWN_ERR
         return
   end if
 
@@ -3799,11 +3843,17 @@ use ids_schemas_<xsl:value-of select="@name"/>
   call al_bind_readback_plugins(opctx, status)
   if (status.ne.0) then
      write(*,*) 'GET_SAMPLE: Error in al_bind_readback_plugins (from ids_get for IDS <xsl:value-of select="@name"/>)'
+     <!-- opctx was opened by this routine and is still open, so end it before
+          returning. Return the real status, not opctx: that is a context id,
+          not a status. Falling through ran the rest of the routine against a
+          context whose operation had already failed. -->
      if (present(retstatus)) then
-        retstatus = opctx
+        retstatus = status
      else
-        STOP 
+        STOP
      end if
+     call al_end_action(opctx, status)
+     return
   end if
 
   timedparent = .false.
@@ -3820,11 +3870,17 @@ use ids_schemas_<xsl:value-of select="@name"/>
 	call al_unbind_readback_plugins(opctx, status)
   if (status.ne.0) then
      write(*,*) 'Error in al_unbind_readback_plugins (from ids_get for IDS <xsl:value-of select="@name"/>)'
+     <!-- opctx was opened by this routine and is still open, so end it before
+          returning. Return the real status, not opctx: that is a context id,
+          not a status. Falling through ran the rest of the routine against a
+          context whose operation had already failed. -->
      if (present(retstatus)) then
-        retstatus = opctx
+        retstatus = status
      else
-        STOP 
+        STOP
      end if
+     call al_end_action(opctx, status)
+     return
   end if
 
   call al_end_action(opctx, status)
@@ -3940,21 +3996,32 @@ subroutine get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   if (status.ne.0) then
      !! error when trying to get new ctx => stop!
      write(*,*) 'Error in al_begin_slice_action (from ids_get_slice for IDS <xsl:value-of select="@name"/>)'    
-     if (present(retstatus)) then 
-        retstatus = opctx
+     <!-- The begin failed, so no context was created: there is nothing to end,
+          and opctx holds no defined value. Return the real status, and return
+          *here*: falling through ran the whole field block against a context
+          that was never opened. -->
+     if (present(retstatus)) then
+        retstatus = status
      else
-        STOP 
+        STOP
      end if
+     return
   end if
   
   call al_bind_readback_plugins(opctx, status)
   if (status.ne.0) then
      write(*,*) 'Error in al_bind_readback_plugins (from ids_get_slice for IDS <xsl:value-of select="@name"/>)'
+     <!-- opctx was opened by this routine and is still open, so end it before
+          returning. Return the real status, not opctx: that is a context id,
+          not a status. Falling through ran the rest of the routine against a
+          context whose operation had already failed. -->
      if (present(retstatus)) then
-        retstatus = opctx
+        retstatus = status
      else
-        STOP 
+        STOP
      end if
+     call al_end_action(opctx, status)
+     return
   end if
 
   timedparent=.false.
@@ -3970,11 +4037,17 @@ subroutine get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   call al_unbind_readback_plugins(opctx, status)
   if (status.ne.0) then
      write(*,*) 'Error in al_unbind_readback_plugins (from ids_get_slice for IDS <xsl:value-of select="@name"/>)'
+     <!-- opctx was opened by this routine and is still open, so end it before
+          returning. Return the real status, not opctx: that is a context id,
+          not a status. Falling through ran the rest of the routine against a
+          context whose operation had already failed. -->
      if (present(retstatus)) then
-        retstatus = opctx
+        retstatus = status
      else
-        STOP 
+        STOP
      end if
+     call al_end_action(opctx, status)
+     return
   end if
 
   call al_end_action(opctx, status)
