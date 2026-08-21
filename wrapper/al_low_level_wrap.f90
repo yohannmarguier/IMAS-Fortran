@@ -1885,6 +1885,10 @@ end subroutine al_get_version_for_put
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
+    ! dsize is an out-parameter that the core writes only when it returns data.
+    ! A read that succeeds with nothing to return leaves it untouched, so
+    ! without this the extent below comes from uninitialised stack.
+    dsize = 0
     status = fstatus(c_al_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, CHAR_DATA, 1, csize))
     if (status%code.eq.0) then
@@ -1907,11 +1911,19 @@ end subroutine al_get_version_for_put
     integer, intent(out) :: dim1, retstatus
     character, dimension(:), pointer :: tmpdata
     integer :: size,i
+    ! nullify as a statement, not `=> null()` in the declaration: an initialiser
+    ! there would imply SAVE and make this routine non-reentrant.
+    nullify(tmpdata)
+    size = 0
+    dim1 = 0
     call get_vect1D_char(opCtx, fieldPath, timebasePath, &
          tmpdata, size, retstatus)
     data = ' '
-    if (retstatus.eq.0) then
-       do i=1,size
+    ! A read can succeed and still return nothing, in which case tmpdata stays
+    ! disassociated. Test it rather than trusting the extent: dereferencing and
+    ! then freeing an unset pointer is what a cross-version read hits first.
+    if (retstatus.eq.0 .and. associated(tmpdata)) then
+       do i=1,min(size,len(data))
           data(i:i) = tmpdata(i)
        end do
        if (size.gt.0) then
@@ -1934,6 +1946,10 @@ end subroutine al_get_version_for_put
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
+    ! dsize is an out-parameter that the core writes only when it returns data.
+    ! A read that succeeds with nothing to return leaves it untouched, so
+    ! without this the extent below comes from uninitialised stack.
+    dsize = 0
     status = fstatus(c_al_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, 1, csize))
     if (status%code.eq.0) then
@@ -1959,6 +1975,10 @@ end subroutine al_get_version_for_put
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
+    ! dsize is an out-parameter that the core writes only when it returns data.
+    ! A read that succeeds with nothing to return leaves it untouched, so
+    ! without this the extent below comes from uninitialised stack.
+    dsize = 0
     status = fstatus(c_al_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, 1, csize))
     if (status%code.eq.0) then
@@ -1984,6 +2004,10 @@ end subroutine al_get_version_for_put
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
+    ! dsize is an out-parameter that the core writes only when it returns data.
+    ! A read that succeeds with nothing to return leaves it untouched, so
+    ! without this the extent below comes from uninitialised stack.
+    dsize = 0
     status = fstatus(c_al_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, 1, csize))
     if (status%code.eq.0) then
@@ -2010,6 +2034,10 @@ end subroutine al_get_version_for_put
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
+    ! dsize is an out-parameter that the core writes only when it returns data.
+    ! A read that succeeds with nothing to return leaves it untouched, so
+    ! without this the extent below comes from uninitialised stack.
+    dsize = 0
     status = fstatus(c_al_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, CHAR_DATA, 2, csize))
     if (status%code.eq.0) then
@@ -2075,6 +2103,10 @@ end subroutine get_vect1D_string
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
+    ! dsize is an out-parameter that the core writes only when it returns data.
+    ! A read that succeeds with nothing to return leaves it untouched, so
+    ! without this the extent below comes from uninitialised stack.
+    dsize = 0
     status = fstatus(c_al_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, 2, csize))
     if (status%code.eq.0) then
@@ -2102,6 +2134,10 @@ end subroutine get_vect1D_string
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
+    ! dsize is an out-parameter that the core writes only when it returns data.
+    ! A read that succeeds with nothing to return leaves it untouched, so
+    ! without this the extent below comes from uninitialised stack.
+    dsize = 0
     status = fstatus(c_al_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, 2, csize))
     if (status%code.eq.0) then
@@ -2129,6 +2165,10 @@ end subroutine get_vect1D_string
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
+    ! dsize is an out-parameter that the core writes only when it returns data.
+    ! A read that succeeds with nothing to return leaves it untouched, so
+    ! without this the extent below comes from uninitialised stack.
+    dsize = 0
     status = fstatus(c_al_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, 2, csize))
     if (status%code.eq.0) then
@@ -2156,6 +2196,10 @@ end subroutine get_vect1D_string
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
+    ! dsize is an out-parameter that the core writes only when it returns data.
+    ! A read that succeeds with nothing to return leaves it untouched, so
+    ! without this the extent below comes from uninitialised stack.
+    dsize = 0
     status = fstatus(c_al_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, 3, csize))
     if (status%code.eq.0) then
@@ -2184,6 +2228,10 @@ end subroutine get_vect1D_string
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
+    ! dsize is an out-parameter that the core writes only when it returns data.
+    ! A read that succeeds with nothing to return leaves it untouched, so
+    ! without this the extent below comes from uninitialised stack.
+    dsize = 0
     status = fstatus(c_al_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, 3, csize))
     if (status%code.eq.0) then
@@ -2212,6 +2260,10 @@ end subroutine get_vect1D_string
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
+    ! dsize is an out-parameter that the core writes only when it returns data.
+    ! A read that succeeds with nothing to return leaves it untouched, so
+    ! without this the extent below comes from uninitialised stack.
+    dsize = 0
     status = fstatus(c_al_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, 3, csize))
     if (status%code.eq.0) then
@@ -2240,6 +2292,10 @@ end subroutine get_vect1D_string
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
+    ! dsize is an out-parameter that the core writes only when it returns data.
+    ! A read that succeeds with nothing to return leaves it untouched, so
+    ! without this the extent below comes from uninitialised stack.
+    dsize = 0
     status = fstatus(c_al_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, 4, csize))
     if (status%code.eq.0) then
@@ -2269,6 +2325,10 @@ end subroutine get_vect1D_string
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
+    ! dsize is an out-parameter that the core writes only when it returns data.
+    ! A read that succeeds with nothing to return leaves it untouched, so
+    ! without this the extent below comes from uninitialised stack.
+    dsize = 0
     status = fstatus(c_al_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, 4, csize))
     if (status%code.eq.0) then
@@ -2298,6 +2358,10 @@ end subroutine get_vect1D_string
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
+    ! dsize is an out-parameter that the core writes only when it returns data.
+    ! A read that succeeds with nothing to return leaves it untouched, so
+    ! without this the extent below comes from uninitialised stack.
+    dsize = 0
     status = fstatus(c_al_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, 4, csize))
     if (status%code.eq.0) then
@@ -2327,6 +2391,10 @@ end subroutine get_vect1D_string
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
+    ! dsize is an out-parameter that the core writes only when it returns data.
+    ! A read that succeeds with nothing to return leaves it untouched, so
+    ! without this the extent below comes from uninitialised stack.
+    dsize = 0
     status = fstatus(c_al_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, 5, csize))
     if (status%code.eq.0) then
@@ -2357,6 +2425,10 @@ end subroutine get_vect1D_string
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
+    ! dsize is an out-parameter that the core writes only when it returns data.
+    ! A read that succeeds with nothing to return leaves it untouched, so
+    ! without this the extent below comes from uninitialised stack.
+    dsize = 0
     status = fstatus(c_al_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, 5, csize))
     if (status%code.eq.0) then
@@ -2387,6 +2459,10 @@ end subroutine get_vect1D_string
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
+    ! dsize is an out-parameter that the core writes only when it returns data.
+    ! A read that succeeds with nothing to return leaves it untouched, so
+    ! without this the extent below comes from uninitialised stack.
+    dsize = 0
     status = fstatus(c_al_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, 5, csize))
     if (status%code.eq.0) then
@@ -2417,6 +2493,10 @@ end subroutine get_vect1D_string
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
+    ! dsize is an out-parameter that the core writes only when it returns data.
+    ! A read that succeeds with nothing to return leaves it untouched, so
+    ! without this the extent below comes from uninitialised stack.
+    dsize = 0
     status = fstatus(c_al_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, 6, csize))
     if (status%code.eq.0) then
@@ -2448,6 +2528,10 @@ end subroutine get_vect1D_string
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
+    ! dsize is an out-parameter that the core writes only when it returns data.
+    ! A read that succeeds with nothing to return leaves it untouched, so
+    ! without this the extent below comes from uninitialised stack.
+    dsize = 0
     status = fstatus(c_al_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, 6, csize))
     if (status%code.eq.0) then
@@ -2479,6 +2563,10 @@ end subroutine get_vect1D_string
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
+    ! dsize is an out-parameter that the core writes only when it returns data.
+    ! A read that succeeds with nothing to return leaves it untouched, so
+    ! without this the extent below comes from uninitialised stack.
+    dsize = 0
     status = fstatus(c_al_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, 6, csize))
     if (status%code.eq.0) then
@@ -2510,6 +2598,10 @@ end subroutine get_vect1D_string
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
+    ! dsize is an out-parameter that the core writes only when it returns data.
+    ! A read that succeeds with nothing to return leaves it untouched, so
+    ! without this the extent below comes from uninitialised stack.
+    dsize = 0
     status = fstatus(c_al_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, INTEGER_DATA, 7, csize))
     if (status%code.eq.0) then
@@ -2542,6 +2634,10 @@ end subroutine get_vect1D_string
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
+    ! dsize is an out-parameter that the core writes only when it returns data.
+    ! A read that succeeds with nothing to return leaves it untouched, so
+    ! without this the extent below comes from uninitialised stack.
+    dsize = 0
     status = fstatus(c_al_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, DOUBLE_DATA, 7, csize))
     if (status%code.eq.0) then
@@ -2574,6 +2670,10 @@ end subroutine get_vect1D_string
     type(al_status) :: status
     csize = C_LOC(dsize(1))
     cptr = C_NULL_PTR
+    ! dsize is an out-parameter that the core writes only when it returns data.
+    ! A read that succeeds with nothing to return leaves it untouched, so
+    ! without this the extent below comes from uninitialised stack.
+    dsize = 0
     status = fstatus(c_al_read_data(opCtx, trim(fieldPath)//C_NULL_CHAR,&
          trim(timebasePath)//C_NULL_CHAR, cptr, COMPLEX_DATA, 7, csize))
     if (status%code.eq.0) then
