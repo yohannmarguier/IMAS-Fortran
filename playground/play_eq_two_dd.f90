@@ -1,9 +1,24 @@
 ! Reads both equilibrium fixtures through the multiversion shim and prints,
 ! path by path, every leaf attribute of the equilibrium IDS (DD 4.1.1) --
 ! column 1 is the DD 4.1.1 pulse read straight, column 2 is the DD 3.39.0
-! pulse converted on the way in. There is no verdict column: this table is
-! meant to be diffed against a second run of the same program linked without
-! the shim, not read verdict-by-verdict in one sitting.
+! pulse converted on the way in. A verdict column classifies the relationship
+! between the two columns for that row, and the whole line is colored by
+! verdict so a real difference stands out without reading every value:
+!
+!   same    white    both columns agree
+!   FLIP    yellow   equal up to sign -- a COCOS 11 -> 17 flip
+!   DIFF    red      both present, and they disagree
+!   SHAPE   magenta  both present, different extents
+!   only4   cyan     4.1.1 has it, the 3.39.0 read produced nothing
+!   only3   blue     the 3.39.0 read produced it, 4.1.1 has nothing
+!   --      gray     neither side has it
+!
+! For arrays, the verdict is computed over the whole array; only element (1)
+! is printed as a sample.
+!
+! Colors are unconditional ANSI escapes (no isatty check -- that intrinsic
+! isn't portable to the NAG build), so redirect through `less -R` or `cat -v`
+! rather than a plain pager if piping this to a file.
 !
 ! This program is compiled against ONE data dictionary: the DD 4.1.1 al-fortran
 ! in ../install-shim. Both pulses are therefore read into the same DD 4.1.1
@@ -28,9 +43,10 @@
 !    bookkeeping filled by the AL itself, not by an equilibrium code; only
 !    association + size (+ node(1)/path for provenance) is reported.
 !
-! A field unset on both sides prints '-' or '(not provided)', same as a field
-! unset on just one side -- that asymmetry is exactly what diffing the
-! shimmed and unshimmed runs of this program is for.
+! A field unset on both sides prints '-' or '(not provided)' with a gray '--'
+! verdict; a field unset on only one side prints the same placeholder text but
+! gets 'only4'/'only3' instead -- the verdict column, not the placeholder
+! text, is what tells the two cases apart.
 
 module eq_table
   use ids_routines
@@ -38,6 +54,17 @@ module eq_table
 
   integer, parameter :: PW = 56                          ! path column width
   integer, parameter :: SW = 40                           ! string sample width
+  real(ids_real), parameter :: TOL = 1.0e-9_ids_real
+
+  character(len=*), parameter :: ESC     = achar(27)
+  character(len=*), parameter :: C_RESET = ESC//'[0m'
+  character(len=*), parameter :: C_SAME  = ESC//'[97m'   ! white   -- same
+  character(len=*), parameter :: C_FLIP  = ESC//'[33m'   ! yellow  -- FLIP
+  character(len=*), parameter :: C_DIFF  = ESC//'[31m'   ! red     -- DIFF
+  character(len=*), parameter :: C_SHAPE = ESC//'[35m'   ! magenta -- SHAPE
+  character(len=*), parameter :: C_ONLY4 = ESC//'[36m'   ! cyan    -- only4
+  character(len=*), parameter :: C_ONLY3 = ESC//'[34m'   ! blue    -- only3
+  character(len=*), parameter :: C_NONE  = ESC//'[90m'   ! gray    -- --
 
   interface row_struct_ptr
     module procedure row_struct_ptr_provenance, row_struct_ptr_plugins
@@ -48,6 +75,84 @@ contains
   logical function unset_d(x)
     real(ids_real), intent(in) :: x
     unset_d = (x <= -1.0e40_ids_real) .or. (x /= x)
+  end function
+
+  logical function near(a, b)
+    real(ids_real), intent(in) :: a, b
+    near = abs(a - b) <= TOL * max(1.0_ids_real, abs(a), abs(b))
+  end function
+
+  logical function all_near(a, b)
+    real(ids_real), intent(in) :: a(:), b(:)
+    integer :: i
+    all_near = .false.
+    if (size(a) /= size(b)) return
+    do i = 1, size(a)
+      if (.not. near(a(i), b(i))) return
+    end do
+    all_near = .true.
+  end function
+
+  subroutine cmp_flat(a, b, same, flip)
+    real(ids_real), intent(in) :: a(:), b(:)
+    logical, intent(out) :: same, flip
+    same = all_near(a, b)
+    flip = .false.
+    if (.not. same) flip = all_near(a, -b)
+  end subroutine
+
+  ! The one place a verdict's color is decided, so every row type agrees.
+  subroutine paint(path, col1, col2, verdict)
+    character(len=*), intent(in) :: path, col1, col2, verdict
+    character(len=9) :: color
+    select case (trim(verdict))
+    case ('same');  color = C_SAME
+    case ('FLIP');  color = C_FLIP
+    case ('DIFF');  color = C_DIFF
+    case ('SHAPE'); color = C_SHAPE
+    case ('only4'); color = C_ONLY4
+    case ('only3'); color = C_ONLY3
+    case default;   color = C_NONE   ! '--'
+    end select
+    write(*, '(a,a,2x,a,2x,a,2x,a,a)') trim(color), pad(path), col1, col2, verdict, C_RESET
+  end subroutine
+
+  function verdict_d(a, b) result(v)
+    real(ids_real), intent(in) :: a, b
+    character(len=6) :: v
+    logical :: pa, pb
+    pa = .not. unset_d(a); pb = .not. unset_d(b)
+    if (.not. pa .and. .not. pb) then
+      v = '--'
+    else if (.not. pb) then
+      v = 'only4'
+    else if (.not. pa) then
+      v = 'only3'
+    else if (near(a, b)) then
+      v = 'same'
+    else if (near(a, -b)) then
+      v = 'FLIP'
+    else
+      v = 'DIFF'
+    end if
+  end function
+
+  function verdict_i(a, b) result(v)
+    integer(ids_int), intent(in) :: a, b
+    character(len=6) :: v
+    logical :: pa, pb
+    pa = (a /= ids_int_invalid); pb = (b /= ids_int_invalid)
+    if (.not. pa .and. .not. pb) then
+      v = '--'
+    else if (.not. pb) then
+      v = 'only4'
+    else if (.not. pa) then
+      v = 'only3'
+    else if (a == b) then
+      v = 'same'
+    else
+      v = 'DIFF'
+    end if
   end function
 
   function pad(s) result(p)
@@ -104,13 +209,13 @@ contains
   subroutine row_d(path, a, b)
     character(len=*), intent(in) :: path
     real(ids_real), intent(in) :: a, b
-    write(*, '(a,2x,a15,2x,a15)') pad(path), num_d(a), num_d(b)
+    call paint(path, num_d(a), num_d(b), verdict_d(a, b))
   end subroutine
 
   subroutine row_i(path, a, b)
     character(len=*), intent(in) :: path
     integer(ids_int), intent(in) :: a, b
-    write(*, '(a,2x,a15,2x,a15)') pad(path), num_i(a), num_i(b)
+    call paint(path, num_i(a), num_i(b), verdict_i(a, b))
   end subroutine
 
   subroutine row_d1(path, a, b)
@@ -118,16 +223,37 @@ contains
     real(ids_real), pointer, intent(in) :: a(:), b(:)
     real(ids_real) :: s4, s3
     character(len=16) :: tag
+    logical :: ha, hb, same, flip
+    character(len=6) :: v
     s4 = -9.0e40_ids_real; s3 = -9.0e40_ids_real
     tag = ''
-    if (associated(a)) then
+    ha = associated(a); hb = associated(b)
+    if (ha) then
       write(tag, '(a,i0,a)') '[', size(a), ']'
       if (size(a) > 0) s4 = a(1)
     end if
-    if (associated(b)) then
+    if (hb) then
       if (size(b) > 0) s3 = b(1)
     end if
-    call row_d(trim(path)//trim(tag), s4, s3)
+    if (.not. ha .and. .not. hb) then
+      v = '--'
+    else if (.not. hb) then
+      v = 'only4'
+    else if (.not. ha) then
+      v = 'only3'
+    else if (size(a) /= size(b)) then
+      v = 'SHAPE'
+    else
+      call cmp_flat(a, b, same, flip)
+      if (same) then
+        v = 'same'
+      else if (flip) then
+        v = 'FLIP'
+      else
+        v = 'DIFF'
+      end if
+    end if
+    call paint(trim(path)//trim(tag), num_d(s4), num_d(s3), v)
   end subroutine
 
   subroutine row_i1(path, a, b)
@@ -135,16 +261,32 @@ contains
     integer(ids_int), pointer, intent(in) :: a(:), b(:)
     integer(ids_int) :: s4, s3
     character(len=16) :: tag
+    logical :: ha, hb
+    character(len=6) :: v
     s4 = ids_int_invalid; s3 = ids_int_invalid
     tag = ''
-    if (associated(a)) then
+    ha = associated(a); hb = associated(b)
+    if (ha) then
       write(tag, '(a,i0,a)') '[', size(a), ']'
       if (size(a) > 0) s4 = a(1)
     end if
-    if (associated(b)) then
+    if (hb) then
       if (size(b) > 0) s3 = b(1)
     end if
-    call row_i(trim(path)//trim(tag), s4, s3)
+    if (.not. ha .and. .not. hb) then
+      v = '--'
+    else if (.not. hb) then
+      v = 'only4'
+    else if (.not. ha) then
+      v = 'only3'
+    else if (size(a) /= size(b)) then
+      v = 'SHAPE'
+    else if (all(a == b)) then
+      v = 'same'
+    else
+      v = 'DIFF'
+    end if
+    call paint(trim(path)//trim(tag), num_i(s4), num_i(s3), v)
   end subroutine
 
   subroutine row_d2(path, a, b)
@@ -152,16 +294,37 @@ contains
     real(ids_real), pointer, intent(in) :: a(:,:), b(:,:)
     real(ids_real) :: s4, s3
     character(len=20) :: tag
+    logical :: ha, hb, same, flip
+    character(len=6) :: v
     s4 = -9.0e40_ids_real; s3 = -9.0e40_ids_real
     tag = ''
-    if (associated(a)) then
+    ha = associated(a); hb = associated(b)
+    if (ha) then
       write(tag, '(a,i0,a,i0,a)') '[', size(a,1), 'x', size(a,2), ']'
       if (size(a) > 0) s4 = a(1,1)
     end if
-    if (associated(b)) then
+    if (hb) then
       if (size(b) > 0) s3 = b(1,1)
     end if
-    call row_d(trim(path)//trim(tag), s4, s3)
+    if (.not. ha .and. .not. hb) then
+      v = '--'
+    else if (.not. hb) then
+      v = 'only4'
+    else if (.not. ha) then
+      v = 'only3'
+    else if (.not. all(shape(a) == shape(b))) then
+      v = 'SHAPE'
+    else
+      call cmp_flat(reshape(a, [size(a)]), reshape(b, [size(b)]), same, flip)
+      if (same) then
+        v = 'same'
+      else if (flip) then
+        v = 'FLIP'
+      else
+        v = 'DIFF'
+      end if
+    end if
+    call paint(trim(path)//trim(tag), num_d(s4), num_d(s3), v)
   end subroutine
 
   subroutine row_d4(path, a, b)
@@ -169,16 +332,37 @@ contains
     real(ids_real), pointer, intent(in) :: a(:,:,:,:), b(:,:,:,:)
     real(ids_real) :: s4, s3
     character(len=20) :: tag
+    logical :: ha, hb, same, flip
+    character(len=6) :: v
     s4 = -9.0e40_ids_real; s3 = -9.0e40_ids_real
     tag = ''
-    if (associated(a)) then
+    ha = associated(a); hb = associated(b)
+    if (ha) then
       write(tag, '(a,i0,a)') '[', size(a), ' tot]'
       if (size(a) > 0) s4 = a(1,1,1,1)
     end if
-    if (associated(b)) then
+    if (hb) then
       if (size(b) > 0) s3 = b(1,1,1,1)
     end if
-    call row_d(trim(path)//trim(tag), s4, s3)
+    if (.not. ha .and. .not. hb) then
+      v = '--'
+    else if (.not. hb) then
+      v = 'only4'
+    else if (.not. ha) then
+      v = 'only3'
+    else if (.not. all(shape(a) == shape(b))) then
+      v = 'SHAPE'
+    else
+      call cmp_flat(reshape(a, [size(a)]), reshape(b, [size(b)]), same, flip)
+      if (same) then
+        v = 'same'
+      else if (flip) then
+        v = 'FLIP'
+      else
+        v = 'DIFF'
+      end if
+    end if
+    call paint(trim(path)//trim(tag), num_d(s4), num_d(s3), v)
   end subroutine
 
   subroutine row_s1(path, a, b)
@@ -186,20 +370,34 @@ contains
     character(len=ids_string_length), pointer, intent(in) :: a(:), b(:)
     character(len=SW) :: s4, s3
     character(len=16) :: tag
+    logical :: ha, hb
+    character(len=6) :: v
     s4 = '(not provided)'; s3 = '(not provided)'
     tag = ''
-    if (associated(a)) then
+    ha = associated(a); hb = associated(b)
+    if (ha) then
       write(tag, '(a,i0,a)') '[', size(a), ']'
       if (size(a) > 0) then
         if (len_trim(a(1)) > 0) s4 = a(1)
       end if
     end if
-    if (associated(b)) then
+    if (hb) then
       if (size(b) > 0) then
         if (len_trim(b(1)) > 0) s3 = b(1)
       end if
     end if
-    write(*, '(a,2x,a,2x,a)') pad(trim(path)//trim(tag)), pads(s4), pads(s3)
+    if (.not. ha .and. .not. hb) then
+      v = '--'
+    else if (.not. hb) then
+      v = 'only4'
+    else if (.not. ha) then
+      v = 'only3'
+    else if (trim(s4) == trim(s3)) then
+      v = 'same'
+    else
+      v = 'DIFF'
+    end if
+    call paint(trim(path)//trim(tag), pads(s4), pads(s3), v)
   end subroutine
 
   subroutine row_id(path, name4, idx4, descr4, name3, idx3, descr3)
@@ -218,10 +416,22 @@ contains
     logical, intent(in) :: has4, has3
     integer, intent(in) :: n4, n3
     character(len=SW) :: s4, s3
+    character(len=6) :: v
     s4 = '(not provided)'; s3 = '(not provided)'
     if (has4) write(s4, '(a,i0,a)') 'associated[', n4, ']'
     if (has3) write(s3, '(a,i0,a)') 'associated[', n3, ']'
-    write(*, '(a,2x,a,2x,a)') pad(path), pads(s4), pads(s3)
+    if (.not. has4 .and. .not. has3) then
+      v = '--'
+    else if (.not. has3) then
+      v = 'only4'
+    else if (.not. has4) then
+      v = 'only3'
+    else if (n4 == n3) then
+      v = 'same'
+    else
+      v = 'DIFF'
+    end if
+    call paint(path, pads(s4), pads(s3), v)
   end subroutine
 
   ! ------------------------------------------------------ AOS(1) presence
@@ -912,7 +1122,15 @@ program play_eq_two_dd
   t3 => e3%time_slice(SL)
 
   write(*, '(a)') ''
-  write(*, '(a,2x,a15,2x,a15)') pad('PATH'), '       column 1', '       column 2'
+  write(*, '(a)') C_SAME//'legend: same'//C_RESET//'  '// &
+                  C_FLIP//'FLIP'//C_RESET//'  '// &
+                  C_DIFF//'DIFF'//C_RESET//'  '// &
+                  C_SHAPE//'SHAPE'//C_RESET//'  '// &
+                  C_ONLY4//'only4'//C_RESET//'  '// &
+                  C_ONLY3//'only3'//C_RESET//'  '// &
+                  C_NONE//'--'//C_RESET
+  write(*, '(a)') ''
+  write(*, '(a,2x,a15,2x,a15,2x,a)') pad('PATH'), '       column 1', '       column 2', 'VERDICT'
   write(*, '(a)') repeat('=', 100)
 
   call sect('ids_properties')
