@@ -895,7 +895,9 @@ end interface
 
  contains
 
-<xsl:call-template name="isCriticalFuncCtx"/>
+<xsl:call-template name="isCriticalFuncCtx">
+  <xsl:with-param name="method" select="'put'"/>
+</xsl:call-template>
 
 <xsl:for-each select="/IDSs/utilities//field[@data_type='structure' or @data_type='struct_array']">
   <xsl:variable name="this-name" select="@name"/>
@@ -1076,11 +1078,16 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   call al_begin_global_action(pulsectx, name, WRITE_OP, opctx, status) 
   if (status.ne.0) then
      write(*,*) 'Error in al_begin_global_action (from ids_put for IDS <xsl:value-of select="@name"/>)'
-     if (present(retstatus)) then 
-        retstatus = opctx
+     <!-- The begin failed, so no context was created: there is nothing to end,
+          and opctx holds no defined value. Return the real status, and return
+          *here*: falling through ran the whole field block against a context
+          that was never opened. -->
+     if (present(retstatus)) then
+        retstatus = status
      else
-        STOP 
+        STOP
      end if
+     return
   end if
 
   timedparent=.false.
@@ -1093,11 +1100,17 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   call al_write_plugins_metadata(opctx, status)
   if (status.ne.0) then
      write(*,*) 'Error in al_write_plugins_metadata (from ids_put for IDS <xsl:value-of select="@name"/>)'
+     <!-- opctx was opened by this routine and is still open, so end it before
+          returning. Return the real status, not opctx: that is a context id,
+          not a status. Falling through ran the rest of the routine against a
+          context whose operation had already failed. -->
      if (present(retstatus)) then
-        retstatus = opctx
+        retstatus = status
      else
-        STOP 
+        STOP
      end if
+     call al_end_action(opctx, status)
+     return
   end if
   call al_end_action(opctx, status)
   if (present(retstatus)) retstatus = status
@@ -1175,7 +1188,9 @@ end interface
 
  contains
 
-<xsl:call-template name="isCriticalFuncCtx"/>
+<xsl:call-template name="isCriticalFuncCtx">
+  <xsl:with-param name="method" select="'put'"/>
+</xsl:call-template>
 
 <xsl:for-each select="/IDSs/utilities//field[@data_type='structure' or @data_type='struct_array']">
   <xsl:variable name="this-name" select="@name"/>
@@ -1380,11 +1395,16 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   if (status.ne.0) then
      !! error when trying to get new ctx => stop!
      write(*,*) 'Error in al_begin_slice_action (from ids_put_slice for IDS <xsl:value-of select="@name"/>)'     
+     <!-- The begin failed, so no context was created: there is nothing to end,
+          and opctx holds no defined value. Return the real status, and return
+          *here*: falling through ran the whole field block against a context
+          that was never opened. -->
      if (present(retstatus)) then
-        retstatus = opctx
+        retstatus = status
      else
-        STOP 
+        STOP
      end if
+     return
   end if
 
   <!--<xsl:if test="@specific_validation_rules='yes'">
@@ -1403,11 +1423,17 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   call al_write_plugins_metadata(opctx, status)
   if (status.ne.0) then
      write(*,*) 'Error in al_write_plugins_metadata (from ids_put_slice for IDS <xsl:value-of select="@name"/>)'
+     <!-- opctx was opened by this routine and is still open, so end it before
+          returning. Return the real status, not opctx: that is a context id,
+          not a status. Falling through ran the rest of the routine against a
+          context whose operation had already failed. -->
      if (present(retstatus)) then
-        retstatus = opctx
+        retstatus = status
      else
-        STOP 
+        STOP
      end if
+     call al_end_action(opctx, status)
+     return
   end if
 
   call al_end_action(opctx, status)
@@ -1489,7 +1515,9 @@ end interface
 
  contains
 
-<xsl:call-template name="isCriticalFuncCtx"/>
+<xsl:call-template name="isCriticalFuncCtx">
+  <xsl:with-param name="method" select="'get'"/>
+</xsl:call-template>
 
 <xsl:for-each select="/IDSs/utilities//field[@data_type='structure' or @data_type='struct_array']">
   <xsl:variable name="this-name" select="@name"/>
@@ -3641,6 +3669,7 @@ end interface
 subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS, retstatus)
   use ids_schemas_<xsl:value-of select="@name"/>
   use al_low_level_wrap
+  use al_get_policy
   implicit none
 
   integer(ids_int), intent(out), optional :: retstatus
@@ -3666,25 +3695,38 @@ subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   if (status.ne.0) then
      !! error when trying to get new ctx => stop!
      write(*,*) 'Error in al_begin_global_action (from ids_get for IDS <xsl:value-of select="@name"/>)'
+     <!-- The begin failed, so no context was created: there is nothing to end,
+          and opctx holds no defined value. Return the real status, and return
+          *here*: falling through ran the whole field block against a context
+          that was never opened. -->
      if (present(retstatus)) then
-        retstatus = opctx
+        retstatus = status
      else
-        STOP 
+        STOP
      end if
+     return
   end if
   
   call al_bind_readback_plugins(opctx, status)
   if (status.ne.0) then
      write(*,*) 'Error in al_bind_readback_plugins (from ids_get for IDS <xsl:value-of select="@name"/>)'
+     <!-- opctx was opened by this routine and is still open, so end it before
+          returning. Return the real status, not opctx: that is a context id,
+          not a status. Falling through ran the rest of the routine against a
+          context whose operation had already failed. -->
      if (present(retstatus)) then
-        retstatus = opctx
+        retstatus = status
      else
-        STOP 
+        STOP
      end if
+     call al_end_action(opctx, status)
+     return
   end if
 
   timedparent=.false.
   call set_c_data(IDS,.true.)
+  <!-- The skip log describes one operation, not the process. -->
+  call al_reset_skip_log()
 
   <xsl:apply-templates select="./field" mode="GET_FIELD">
     <xsl:with-param name="structvar" select="'IDS'"/>
@@ -3696,16 +3738,33 @@ subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   call al_unbind_readback_plugins(opctx, status)
   if (status.ne.0) then
      write(*,*) 'Error in al_unbind_readback_plugins (from ids_get for IDS <xsl:value-of select="@name"/>)'
+     <!-- opctx was opened by this routine and is still open, so end it before
+          returning. Return the real status, not opctx: that is a context id,
+          not a status. Falling through ran the rest of the routine against a
+          context whose operation had already failed. -->
      if (present(retstatus)) then
-        retstatus = opctx
+        retstatus = status
      else
-        STOP 
+        STOP
      end if
+     call al_end_action(opctx, status)
+     return
   end if
 
   call al_end_action(opctx, status)
 
-  if (present(retstatus)) retstatus = status
+  <!-- retstatus here is al_end_action's status, not the read's. If the read left
+       fields unset because a conversion layer refused them, say so: PARTIAL_READ
+       is positive, so it can never be confused with a C-ABI status, and it still
+       trips the `status.ne.0` test callers already write. al_get_policy has the
+       list of paths. -->
+  if (present(retstatus)) then
+     if (status == 0 .and. al_get_skipped_count() > 0) then
+        retstatus = PARTIAL_READ
+     else
+        retstatus = status
+     end if
+  end if
   return
 end subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
 
@@ -3713,6 +3772,7 @@ end subroutine get_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
 subroutine get_sample_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS,  tmin, tmax, dtime, interp, retstatus)
 use ids_schemas_<xsl:value-of select="@name"/>
   use al_low_level_wrap
+  use al_get_policy
   implicit none
   integer(ids_int), intent(out), optional :: retstatus
   character*(*) :: name
@@ -3770,19 +3830,29 @@ use ids_schemas_<xsl:value-of select="@name"/>
         if (present(retstatus)) then
            retstatus = status
         endif
+        call al_end_action(opctx, status)
         return
      endif
+     <!-- Not dead code once a refusal can be tolerated: isErrorCritical may now
+          return .FALSE. for a path the conversion layer refused. homogeneous_time
+          is not an optional field (everything below depends on it), so this
+          stays a hard stop, and it is why the band test must never be read as
+          "tolerate everywhere". -->
      if (status.ne.0) then
         write(*,*) 'Error in get_int "ids_properties/homogeneous_time" (from get_sample for IDS <xsl:value-of select="@name"/>)'  
         if (present(retstatus)) then
            retstatus = status
         endif
+        call al_end_action(opctx, status)
         return
      end if
   call al_end_action(opctx, status)
 
   if(storedtimemode == IDS_TIME_MODE_UNKNOWN) then
         write(*,*) 'GET_SAMPLE: error reading homogeneous time for <xsl:value-of select="@name"/> IDS'
+        <!-- This returned without assigning retstatus at all, so the caller saw
+             whatever it had passed in, normally 0, i.e. success. -->
+        if (present(retstatus)) retstatus = UNKNOWN_ERR
         return
   end if
 
@@ -3799,15 +3869,23 @@ use ids_schemas_<xsl:value-of select="@name"/>
   call al_bind_readback_plugins(opctx, status)
   if (status.ne.0) then
      write(*,*) 'GET_SAMPLE: Error in al_bind_readback_plugins (from ids_get for IDS <xsl:value-of select="@name"/>)'
+     <!-- opctx was opened by this routine and is still open, so end it before
+          returning. Return the real status, not opctx: that is a context id,
+          not a status. Falling through ran the rest of the routine against a
+          context whose operation had already failed. -->
      if (present(retstatus)) then
-        retstatus = opctx
+        retstatus = status
      else
-        STOP 
+        STOP
      end if
+     call al_end_action(opctx, status)
+     return
   end if
 
   timedparent = .false.
  	call set_c_data(IDS,.true.)
+  <!-- The skip log describes one operation, not the process. -->
+  call al_reset_skip_log()
 
   <xsl:apply-templates select="./field" mode="GET_FIELD">
     <xsl:with-param name="structvar" select="'IDS'"/>
@@ -3820,16 +3898,33 @@ use ids_schemas_<xsl:value-of select="@name"/>
 	call al_unbind_readback_plugins(opctx, status)
   if (status.ne.0) then
      write(*,*) 'Error in al_unbind_readback_plugins (from ids_get for IDS <xsl:value-of select="@name"/>)'
+     <!-- opctx was opened by this routine and is still open, so end it before
+          returning. Return the real status, not opctx: that is a context id,
+          not a status. Falling through ran the rest of the routine against a
+          context whose operation had already failed. -->
      if (present(retstatus)) then
-        retstatus = opctx
+        retstatus = status
      else
-        STOP 
+        STOP
      end if
+     call al_end_action(opctx, status)
+     return
   end if
 
   call al_end_action(opctx, status)
 
-  if (present(retstatus)) retstatus = status
+  <!-- retstatus here is al_end_action's status, not the read's. If the read left
+       fields unset because a conversion layer refused them, say so: PARTIAL_READ
+       is positive, so it can never be confused with a C-ABI status, and it still
+       trips the `status.ne.0` test callers already write. al_get_policy has the
+       list of paths. -->
+  if (present(retstatus)) then
+     if (status == 0 .and. al_get_skipped_count() > 0) then
+        retstatus = PARTIAL_READ
+     else
+        retstatus = status
+     end if
+  end if
   return
 
 
@@ -3903,6 +3998,7 @@ end interface
 subroutine get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(pulsectx, name, IDS, twant, interpol, retstatus)
   use ids_schemas_<xsl:value-of select="@name"/>
   use al_low_level_wrap
+  use al_get_policy
   implicit none
 
   integer(ids_int), intent(out), optional :: retstatus
@@ -3940,25 +4036,38 @@ subroutine get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   if (status.ne.0) then
      !! error when trying to get new ctx => stop!
      write(*,*) 'Error in al_begin_slice_action (from ids_get_slice for IDS <xsl:value-of select="@name"/>)'    
-     if (present(retstatus)) then 
-        retstatus = opctx
+     <!-- The begin failed, so no context was created: there is nothing to end,
+          and opctx holds no defined value. Return the real status, and return
+          *here*: falling through ran the whole field block against a context
+          that was never opened. -->
+     if (present(retstatus)) then
+        retstatus = status
      else
-        STOP 
+        STOP
      end if
+     return
   end if
   
   call al_bind_readback_plugins(opctx, status)
   if (status.ne.0) then
      write(*,*) 'Error in al_bind_readback_plugins (from ids_get_slice for IDS <xsl:value-of select="@name"/>)'
+     <!-- opctx was opened by this routine and is still open, so end it before
+          returning. Return the real status, not opctx: that is a context id,
+          not a status. Falling through ran the rest of the routine against a
+          context whose operation had already failed. -->
      if (present(retstatus)) then
-        retstatus = opctx
+        retstatus = status
      else
-        STOP 
+        STOP
      end if
+     call al_end_action(opctx, status)
+     return
   end if
 
   timedparent=.false.
   call set_c_data(IDS,.true.)
+  <!-- The skip log describes one operation, not the process. -->
+  call al_reset_skip_log()
 
   <xsl:apply-templates select="./field" mode="GET_FIELD">
     <xsl:with-param name="structvar" select="'IDS'"/>
@@ -3970,16 +4079,33 @@ subroutine get_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   call al_unbind_readback_plugins(opctx, status)
   if (status.ne.0) then
      write(*,*) 'Error in al_unbind_readback_plugins (from ids_get_slice for IDS <xsl:value-of select="@name"/>)'
+     <!-- opctx was opened by this routine and is still open, so end it before
+          returning. Return the real status, not opctx: that is a context id,
+          not a status. Falling through ran the rest of the routine against a
+          context whose operation had already failed. -->
      if (present(retstatus)) then
-        retstatus = opctx
+        retstatus = status
      else
-        STOP 
+        STOP
      end if
+     call al_end_action(opctx, status)
+     return
   end if
 
   call al_end_action(opctx, status)
 
-  if (present(retstatus)) retstatus = status
+  <!-- retstatus here is al_end_action's status, not the read's. If the read left
+       fields unset because a conversion layer refused them, say so: PARTIAL_READ
+       is positive, so it can never be confused with a C-ABI status, and it still
+       trips the `status.ne.0` test callers already write. al_get_policy has the
+       list of paths. -->
+  if (present(retstatus)) then
+     if (status == 0 .and. al_get_skipped_count() > 0) then
+        retstatus = PARTIAL_READ
+     else
+        retstatus = status
+     end if
+  end if
   return
 
   </xsl:otherwise>
@@ -4392,8 +4518,16 @@ end module
           enddo
           call al_end_action(aosctx, status)
        else
-          write(*,*) "ERROR! with field "//<xsl:value-of select="$fieldpath"/>
-          call al_end_action(<xsl:value-of select="$contextvar"/>, status)
+          write(*,*) "ERROR! with field "//<xsl:value-of select="$fieldpath"/><xsl:text>&#xa;</xsl:text>
+          <!-- Same contract as the GET arm: a failed al_begin_arraystruct_action
+               creates no context, so end only one this routine owns. At IDS level
+               ($structvar='IDS') that is the opctx opened by al_begin_global_action
+               here; inside a put_struct_* routine the enclosing context is a dummy
+               argument and its owner ends it, so ending it here closed it twice.
+               retstatus was never assigned at all, and callers pass their own status
+               variable as this argument, so a failed put returned whatever that held
+               (normally 0) and the caller carried on as if the write had succeeded. -->
+          <xsl:if test="$structvar='IDS'">if (present(retstatus)) </xsl:if>retstatus = status<xsl:if test="$structvar='IDS'"><xsl:text>&#xa;</xsl:text>          call al_end_action(<xsl:value-of select="$contextvar"/>, status)</xsl:if>
           return
        endif
     endif
@@ -4927,13 +5061,42 @@ end module
          <xsl:with-param name="root" select="$root"/>
        </xsl:apply-templates> 
                 call al_iterate_over_arraystruct(aosctx, 1, status)
+                <!-- Advancing the cursor is not node-local: it is the loop itself,
+                     not one field, so a failure here is fatal even under a
+                     best-effort read. This used to be unreachable after a failed
+                     element, because an element failure returned immediately. Now
+                     that a refused element is tolerated, the loop really does run
+                     to aoslen, and a wedged cursor would otherwise be iterated
+                     against silently on every remaining turn. -->
+                if (status.ne.0) then
+                   write(*,*) "ERROR! cannot advance array of structures "//<xsl:value-of select="$fieldpath"/><xsl:text>&#xa;                   </xsl:text><xsl:if test="$structvar='IDS'">if (present(retstatus)) </xsl:if>retstatus = status
+                   call al_end_action(aosctx, status)
+                   return
+                endif
              enddo
              call al_end_action(aosctx, status)
           else
-             write(*,*) "ERROR! with field "//<xsl:value-of select="$fieldpath"/><xsl:text>&#xa;</xsl:text>
-             <xsl:if test="$structvar='IDS'">if (present(retstatus)) </xsl:if>retstatus = aosctx
-             call al_end_action(<xsl:value-of select="$contextvar"/>, status)
-             return
+
+             <!-- A failed al_begin_arraystruct_action creates no context: it leaves
+                  aosctx unwritten, so returning it as a status returns garbage, and
+                  there is no arraystruct context to end. Return the real status, and
+                  end only a context this routine owns. At IDS level ($structvar='IDS')
+                  that is the operation context opened by al_begin_global_action here,
+                  so ending it is the correct cleanup before returning. Inside a
+                  get_struct_* routine the enclosing context is a dummy argument owned
+                  by the caller, which ends it itself on a non-zero status; ending it
+                  here too closed the same context twice. -->
+             if (isErrorCritical(status, <xsl:value-of select="$contextvar"/>, <xsl:value-of select="$fieldpath"/>)) then
+                <xsl:if test="$structvar='IDS'">if (present(retstatus)) </xsl:if>retstatus = status<xsl:if test="$structvar='IDS'"><xsl:text>&#xa;</xsl:text>                call al_end_action(<xsl:value-of select="$contextvar"/>, status)</xsl:if>
+                return
+             endif
+             <!-- Tolerated. The array is simply never allocated, which leaves it
+                  disassociated: byte for byte what an absent array looks like.
+                  aoslen is stale here (al_begin_arraystruct_action only writes it
+                  back on success) but is read only inside the branch above, so
+                  this must stay a fall-through and must never re-enter it.
+                  Reset status so the invariant is local to this arm. -->
+             status = 0
           endif
     <xsl:if test="@type='dynamic'">endif</xsl:if>
   </xsl:when>
@@ -5444,9 +5607,11 @@ end module
 
 
 <xsl:template name="isCriticalFuncCtx">
+  <xsl:param name="method"/>
 FUNCTION isErrorCritical(status, ctx, path) RESULT (exitRequest)
    use ids_types
-   use al_low_level_wrap
+   use al_low_level_wrap<xsl:if test="$method='get'">
+   use al_get_policy</xsl:if>
    implicit none
 
    integer(ids_int) :: status, ctx
@@ -5458,7 +5623,20 @@ FUNCTION isErrorCritical(status, ctx, path) RESULT (exitRequest)
    if(status == 0) then
       exitRequest = .FALSE.
       return
-   else
+<xsl:if test="$method='get'">   else if (is_external_refusal(status)) then
+      ! An interposing DD-conversion layer has declared this path unservable in
+      ! the dictionary this HLI speaks. That is not a failure of the read: the
+      ! path does not exist here and no retry can produce it, so aborting would
+      ! cost every remaining field for nothing. Leave the field unset, record
+      ! what was skipped, and let the caller carry on.
+      !
+      ! Sound only because this is a per-field site. The same status is what the
+      ! conversion layer returns from al_begin_global_action and the data-entry
+      ! seams; tolerating it there would sail past an IDS that was never opened.
+      call al_note_skipped_path(path, status)
+      exitRequest = .FALSE.
+      return
+</xsl:if>   else
       exitRequest = .TRUE.
       write(*,*) "ERROR! with field '",path,"'"
       return

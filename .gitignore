@@ -10,8 +10,6 @@ doc/code_samples/tutorial/*.o
 /.idea
 /graphify-out
 /docs/agents
-CLAUDE.md
-CONTEXT.md
 FORK_GUIDE.md
 imas-python-mva-engineering-study.md
 imas-python-mva-engineering-study.md
@@ -25,12 +23,13 @@ imas-python-mva-engineering-study.md
 /build-linux
 /cmake-build-debug-eq
 /dd-maps
-/imas-python-fixtures
 /install-equilibrium-two-dd
 /install-equilibrium
 /middleware
-/playground
 /testdb
 /build-shim-off
 /build-shim-on
 /build-shim
+/install-shim
+.graphifyignore
+/build-dev

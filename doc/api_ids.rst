@@ -23,7 +23,9 @@ IDS API
         number, e.g. ``"core_profiles"`` (for occurrence 0),
         ``"core_profiles/1"`` (for occurrence 1)
     :param IDS: IDS object to fill
-    :option integer retstatus [out]: Status code: ``0`` on success, ``<0`` on failure
+    :option integer retstatus [out]: Status code: ``0`` on success, ``<0`` on
+        failure, ``PARTIAL_READ`` if the read completed but left one or more
+        paths unset. See :ref:`Partial reads`.
     :example: .. literalinclude:: code_samples/dbentry_get
 
 .. f:subroutine:: ids_get_slice(pulsectx, name, IDS, twant, interpol, retstatus)
@@ -44,7 +46,9 @@ IDS API
     :param real twant [in]: Requested time slice
     :param integer interpol [in]: Interpolation method to use, see :ref:`Load a
             single \`time slice\` of an IDS`
-    :option integer retstatus [out]: Status code: ``0`` on success, ``<0`` on failure
+    :option integer retstatus [out]: Status code: ``0`` on success, ``<0`` on
+        failure, ``PARTIAL_READ`` if the read completed but left one or more
+        paths unset. See :ref:`Partial reads`.
     :example: .. literalinclude:: code_samples/dbentry_getslice
 
 .. f:subroutine:: ids_put(pulsectx, name, IDS, retstatus)
@@ -299,3 +303,71 @@ IDS API
             - ``LINEAR_INTERP``
 
         :option integer status [out]: Status code: ``0`` on success, ``<0`` on failure
+
+
+.. _Partial reads:
+
+Partial reads
+-------------
+
+A read can be served by a layer interposed between this HLI and the AL core --
+in practice a Data Dictionary conversion layer, which lets a program compiled
+against one dictionary read a pulse written under another. Such a layer may
+declare an individual path **unservable**: typically its container changed shape
+between the two dictionaries, so no value transformation maps one onto the
+other.
+
+A refusal is not treated as an error. The path does not exist in the dictionary
+this HLI speaks and no retry can produce it, so :f:func:`ids_get`,
+:f:func:`ids_get_slice` and :f:func:`ids_get_sample` leave that field unset,
+record it, and read the rest of the IDS. The alternative -- aborting -- costs
+every remaining field to gain nothing, and one refused path early in an IDS
+would otherwise make the whole IDS unreadable.
+
+Only a refusal is tolerated, and only per field. Every status the AL core itself
+produces (``UNKNOWN_ERR`` through ``CONSISTENCY_ERR``) remains fatal, as does any
+failure to open the IDS in the first place. A build that links the AL core
+directly can never see a refusal, so this behaviour changes nothing for it.
+
+**Detecting a partial read.** ``retstatus`` is ``PARTIAL_READ`` (a positive
+value, so it can never be confused with a status from the AL core, while still
+being non-zero). Code that tests ``retstatus /= 0`` notices; code that tests
+``retstatus < 0`` does not.
+
+**Finding out what was skipped.** The ``al_get_policy`` module holds a log of the
+paths the *most recent* read left unset. It is reset at the start of every get,
+so read it before issuing the next one.
+
+.. code-block:: fortran
+
+    use al_get_policy
+
+    integer :: status, i, code
+    character(len=AL_SKIP_PATH_LEN) :: path
+    character(len=MAX_ERR_MSG_LEN)  :: message
+    logical :: found
+
+    call ids_get(pulsectx, 'equilibrium', eq, status)
+    if (status == PARTIAL_READ) then
+       do i = 1, al_get_skipped_count()
+          call al_get_skipped_path(i, path, code, message, found)
+          if (found) write(*,*) trim(path), ' :: ', trim(message)
+       end do
+    end if
+
+:f:func:`al_report_skipped_paths` writes the same list to a unit.
+
+.. warning::
+
+    A skipped field is left **disassociated**, exactly as an absent field would
+    be, so test it with ``associated()`` rather than ``size()``.
+
+    This makes reusing an IDS object dangerous. If you pass an IDS that a
+    previous get filled and you did not ``ids_deallocate``, a skipped subtree
+    still holds the *previous* read's data, and nothing distinguishes it from
+    freshly read data except the skip log. Deallocate between reads.
+
+.. note::
+
+    The skip log is global to the process and is not thread-safe. Perform one
+    get at a time per process.
