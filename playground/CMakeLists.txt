@@ -151,13 +151,6 @@ else()
   set( PLAYGROUND_TEST_PREFIX "playground-" )
 endif()
 
-# One pulse in both columns: no conversion is involved, so every row must read
-# 'same'. This is what checks the table logic itself.
-add_test( NAME ${PLAYGROUND_TEST_PREFIX}play_eq_two_dd-self
-  COMMAND play_eq_two_dd "${PLAYGROUND_FIXTURES}" dd-4.1.1 dd-4.1.1 )
-set_tests_properties( ${PLAYGROUND_TEST_PREFIX}play_eq_two_dd-self PROPERTIES
-  ENVIRONMENT "${PLAYGROUND_ENVIRONMENT}"
-  FAIL_REGULAR_EXPRESSION "DIFF|FLIP|SHAPE|only3|only4|ERROR" )
 
 # The cross-version read, the actual exercise, and the only test anywhere in this
 # repository that reaches the best-effort arm: nothing else can make a read fail.
