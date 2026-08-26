@@ -277,61 +277,84 @@ jobs:
         echo "$HOME/hdf5/bin" >> $GITHUB_PATH
         echo "LD_LIBRARY_PATH=$HOME/hdf5/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
     
+    - name: Resolve dependency revisions
+      id: deps
+      run: |
+        # IMAS-Core and the Data Dictionary are fetched by branch (develop/main),
+        # so their content changes without any change in this repository. Resolve
+        # each branch to a commit SHA and put it in the build-tree cache key, so
+        # an upstream commit invalidates the cache instead of being silently
+        # served from it.
+        core_sha=$(git ls-remote https://github.com/iterorganization/IMAS-Core.git refs/heads/develop | cut -f1)
+        dd_sha=$(git ls-remote https://github.com/iterorganization/IMAS-Data-Dictionary.git refs/heads/main | cut -f1)
+        echo "core_sha=${core_sha:-unknown}" >> $GITHUB_OUTPUT
+        echo "dd_sha=${dd_sha:-unknown}" >> $GITHUB_OUTPUT
+        echo "IMAS-Core develop: ${core_sha:-unknown}"
+        echo "Data Dictionary main: ${dd_sha:-unknown}"
+
+    - name: Cache CMake build tree
+      id: cache-build
+      uses: actions/cache@v6
+      with:
+        path: build
+        # The whole build tree, not just build/_deps. IMAS-Core is ~30s of a
+        # ~22min build; the expensive parts are the XSLT generation of the
+        # Fortran sources from the DD (~5min) and compiling them (~12min), and
+        # both live outside _deps. Restoring the tree lets make rebuild only
+        # what actually changed.
+        #
+        # github.sha is last so the primary key never hits and every run saves a
+        # refreshed tree; the restore-keys ladder is what actually supplies it,
+        # falling back from "same deps and same build files" to "same runner".
+        key: build-${{ matrix.os }}-${{ matrix.cc }}-${{ matrix.fc }}-${{ hashFiles('CMakeLists.txt', 'common/cmake/**', '**/*.xsl') }}-core-${{ steps.deps.outputs.core_sha }}-dd-${{ steps.deps.outputs.dd_sha }}-${{ github.sha }}
+        restore-keys: |
+          build-${{ matrix.os }}-${{ matrix.cc }}-${{ matrix.fc }}-${{ hashFiles('CMakeLists.txt', 'common/cmake/**', '**/*.xsl') }}-core-${{ steps.deps.outputs.core_sha }}-dd-${{ steps.deps.outputs.dd_sha }}-
+          build-${{ matrix.os }}-${{ matrix.cc }}-${{ matrix.fc }}-${{ hashFiles('CMakeLists.txt', 'common/cmake/**', '**/*.xsl') }}-
+          build-${{ matrix.os }}-${{ matrix.cc }}-${{ matrix.fc }}-
+
     - name: Configure CMake
-      run: |
-        # Set Boost and HDF5 paths based on installation method
-        if [ "${{ matrix.use_system_packages }}" = "true" ]; then
-          BOOST_OPTS=""
-          HDF5_OPTS=""
-          PREFIX_PATH=""
-        else
-          BOOST_OPTS="-DBoost_NO_BOOST_CMAKE=ON -DBOOST_ROOT=$HOME/boost -DBoost_INCLUDE_DIR=$HOME/boost/include"
-          HDF5_OPTS="-DHDF5_ROOT=$HOME/hdf5"
-          PREFIX_PATH="-DCMAKE_PREFIX_PATH=$HOME/boost;$HOME/hdf5"
-        fi
-        
-        # Configure CMake with retry logic for git operations
-        export GIT_CURL_VERBOSE=1
-        for attempt in 1 2 3; do
-          echo "CMake configuration attempt $attempt..."
-          cmake -B build \
-            -DCMAKE_INSTALL_PREFIX=$PWD/install \
-            -DCMAKE_C_COMPILER=${{ matrix.cc }} \
-            -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} \
-            -DCMAKE_Fortran_COMPILER=${{ matrix.fc }} \
-            -DCMAKE_CXX_STANDARD=17 \
-            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-            $PREFIX_PATH \
-            -DAL_BACKEND_HDF5=${{ matrix.backend_hdf5 }} \
-            -DAL_BACKEND_MDSPLUS=${{ matrix.backend_mdsplus }} \
-            -DAL_BACKEND_UDA=${{ matrix.backend_uda }} \
-            -DAL_BUILD_MDSPLUS_MODELS=OFF \
-            -DAL_DOWNLOAD_DEPENDENCIES=ON \
-            -DAL_CORE_GIT_REPOSITORY=https://github.com/iterorganization/IMAS-Core.git \
-            -DDD_GIT_REPOSITORY=https://github.com/iterorganization/IMAS-Data-Dictionary.git \
-            -DAL_CORE_VERSION=develop \
-            -DDD_VERSION=main \
-            -DAL_EXAMPLES=ON \
-            -DAL_TESTS=ON \
-            -DAL_PLUGINS=OFF \
-            -DAL_HLI_DOCS=OFF \
-            $BOOST_OPTS \
-            $HDF5_OPTS && break
-          
-          if [ $attempt -lt 3 ]; then
-            echo "CMake configuration failed, retrying in 10 seconds..."
-            rm -rf build
-            sleep 10
-          else
-            echo "CMake configuration failed after 3 attempts"
-            exit 1
-          fi
-        done
-    
+      env:
+        MATRIX_CC: ${{ matrix.cc }}
+        MATRIX_CXX: ${{ matrix.cxx }}
+        MATRIX_FC: ${{ matrix.fc }}
+        BACKEND_HDF5: ${{ matrix.backend_hdf5 }}
+        BACKEND_MDSPLUS: ${{ matrix.backend_mdsplus }}
+        BACKEND_UDA: ${{ matrix.backend_uda }}
+        USE_SYSTEM_PACKAGES: ${{ matrix.use_system_packages }}
+      run: .github/scripts/configure-cmake.sh
+
     - name: Build
+      env:
+        MATRIX_CC: ${{ matrix.cc }}
+        MATRIX_CXX: ${{ matrix.cxx }}
+        MATRIX_FC: ${{ matrix.fc }}
+        BACKEND_HDF5: ${{ matrix.backend_hdf5 }}
+        BACKEND_MDSPLUS: ${{ matrix.backend_mdsplus }}
+        BACKEND_UDA: ${{ matrix.backend_uda }}
+        USE_SYSTEM_PACKAGES: ${{ matrix.use_system_packages }}
+        CACHE_HIT: ${{ steps.cache-build.outputs.cache-matched-key != '' }}
       run: |
+        if make -C build -j$(nproc) all; then
+          exit 0
+        fi
+
+        # A build tree restored from cache is the one input this workflow does
+        # not fully control: a partially-written object, a stale generated
+        # source, or a compiler upgrade in the runner image can leave it in a
+        # state make cannot repair. Rather than leave a poisoned cache blocking
+        # every subsequent run until someone clears it by hand, fall back once
+        # to a clean build. A build that was already clean fails for a real
+        # reason, so do not retry it.
+        if [ "$CACHE_HIT" != "true" ]; then
+          echo "::error::Build failed from a clean tree"
+          exit 1
+        fi
+
+        echo "::warning::Incremental build from the cached tree failed - discarding it and rebuilding from scratch"
+        rm -rf build
+        .github/scripts/configure-cmake.sh
         make -C build -j$(nproc) all
-    
+
     - name: Run tests
       run: |
         # Create test database
