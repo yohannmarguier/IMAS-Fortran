@@ -306,11 +306,26 @@ jobs:
         # github.sha is last so the primary key never hits and every run saves a
         # refreshed tree; the restore-keys ladder is what actually supplies it,
         # falling back from "same deps and same build files" to "same runner".
-        key: build-${{ matrix.os }}-${{ matrix.cc }}-${{ matrix.fc }}-${{ hashFiles('CMakeLists.txt', 'common/cmake/**', '**/*.xsl') }}-core-${{ steps.deps.outputs.core_sha }}-dd-${{ steps.deps.outputs.dd_sha }}-${{ github.sha }}
+        key: build-${{ matrix.os }}-${{ matrix.cc }}-${{ matrix.fc }}-${{ hashFiles('CMakeLists.txt', 'common/cmake/**', '*.xsl', 'common/**/*.xsl', 'tests/generator/*.xsl') }}-core-${{ steps.deps.outputs.core_sha }}-dd-${{ steps.deps.outputs.dd_sha }}-${{ github.sha }}
         restore-keys: |
-          build-${{ matrix.os }}-${{ matrix.cc }}-${{ matrix.fc }}-${{ hashFiles('CMakeLists.txt', 'common/cmake/**', '**/*.xsl') }}-core-${{ steps.deps.outputs.core_sha }}-dd-${{ steps.deps.outputs.dd_sha }}-
-          build-${{ matrix.os }}-${{ matrix.cc }}-${{ matrix.fc }}-${{ hashFiles('CMakeLists.txt', 'common/cmake/**', '**/*.xsl') }}-
+          build-${{ matrix.os }}-${{ matrix.cc }}-${{ matrix.fc }}-${{ hashFiles('CMakeLists.txt', 'common/cmake/**', '*.xsl', 'common/**/*.xsl', 'tests/generator/*.xsl') }}-core-${{ steps.deps.outputs.core_sha }}-dd-${{ steps.deps.outputs.dd_sha }}-
+          build-${{ matrix.os }}-${{ matrix.cc }}-${{ matrix.fc }}-${{ hashFiles('CMakeLists.txt', 'common/cmake/**', '*.xsl', 'common/**/*.xsl', 'tests/generator/*.xsl') }}-
           build-${{ matrix.os }}-${{ matrix.cc }}-${{ matrix.fc }}-
+
+    - name: Detect restored build tree
+      id: tree
+      run: |
+        # actions/cache only reports cache-hit on an exact primary-key match,
+        # and the primary key here deliberately never matches (it ends in
+        # github.sha so every run saves a refreshed tree). Ask the filesystem
+        # instead: a CMakeCache.txt before configure means a tree was restored.
+        if [ -f build/CMakeCache.txt ]; then
+          echo "restored=true" >> $GITHUB_OUTPUT
+          echo "Restored a cached build tree"
+        else
+          echo "restored=false" >> $GITHUB_OUTPUT
+          echo "No cached build tree - building from scratch"
+        fi
 
     - name: Configure CMake
       env:
@@ -332,7 +347,7 @@ jobs:
         BACKEND_MDSPLUS: ${{ matrix.backend_mdsplus }}
         BACKEND_UDA: ${{ matrix.backend_uda }}
         USE_SYSTEM_PACKAGES: ${{ matrix.use_system_packages }}
-        CACHE_HIT: ${{ steps.cache-build.outputs.cache-matched-key != '' }}
+        RESTORED_TREE: ${{ steps.tree.outputs.restored }}
       run: |
         if make -C build -j$(nproc) all; then
           exit 0
@@ -345,7 +360,7 @@ jobs:
         # every subsequent run until someone clears it by hand, fall back once
         # to a clean build. A build that was already clean fails for a real
         # reason, so do not retry it.
-        if [ "$CACHE_HIT" != "true" ]; then
+        if [ "$RESTORED_TREE" != "true" ]; then
           echo "::error::Build failed from a clean tree"
           exit 1
         fi
