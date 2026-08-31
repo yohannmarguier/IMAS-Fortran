@@ -89,6 +89,18 @@ add_test( NAME al-fortran-test-get-policy COMMAND al-fortran-test-get-policy )
 set_tests_properties( al-fortran-test-get-policy PROPERTIES
   FAIL_REGULAR_EXPRESSION "POLICY-FAILURE" )
 
+# The write-side refusal policy, for the same reason: no pulse in this suite can
+# make a write fail, so the tolerant arm of the put-side isErrorCritical is
+# otherwise never entered either.
+add_executable( al-fortran-test-put-policy test_put_policy.f90 )
+target_link_libraries( al-fortran-test-put-policy al-fortran )
+add_dependencies( al-fortran-tests al-fortran-test-put-policy )
+add_test( NAME al-fortran-test-put-policy COMMAND al-fortran-test-put-policy )
+# Drives the fatal branch on purpose, which prints "ERROR! with field ...", and
+# the tolerant branch, which prints "REFUSED WRITE: ...". Neither is a failure.
+set_tests_properties( al-fortran-test-put-policy PROPERTIES
+  FAIL_REGULAR_EXPRESSION "POLICY-FAILURE" )
+
 foreach( IDS_NAME IN LISTS IDS_NAMES )
   if( NOT IDS_NAME STREQUAL "")
     set( TEST_NAME al-fortran-test-${IDS_NAME} )

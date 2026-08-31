@@ -72,6 +72,13 @@ module al_defs
   ! See al_get_policy for the skip log that says which paths.
   integer, parameter :: PARTIAL_READ        = 1
 
+  ! The write counterpart: the put completed, but at least one path was refused
+  ! and the caller's value for it was not stored. Positive for the same reason,
+  ! and distinct from PARTIAL_READ so that a caller doing both can tell which
+  ! half was incomplete. See al_put_policy for why a refused write is tolerated
+  ! at all, and for what it does and does not record about the dropped paths.
+  integer, parameter :: PARTIAL_PUT         = 2
+
   integer, parameter :: IDS_TIME_MODE_UNKNOWN = -999999999
   integer, parameter :: IDS_TIME_MODE_HETEROGENEOUS = 0
   integer, parameter :: IDS_TIME_MODE_HOMOGENEOUS = 1
@@ -80,6 +87,18 @@ module al_defs
   integer, parameter :: MAX_ERR_MSG_LEN    = 256
 
 contains
+
+  ! Is this status an interposing layer saying "I cannot serve this path"? Lives
+  ! here rather than in either policy module because both need it and neither
+  ! owns it: it is a fact about the status band declared just above, not a
+  ! decision about what to do with one. al_get_policy and al_put_policy each
+  ! re-export it by using this module, so there is one entity and no ambiguity
+  ! in a scope that can see both.
+  pure logical function is_external_refusal(code)
+    integer, intent(in) :: code
+    is_external_refusal = (code .le. AL_EXTERNAL_REFUSAL_MAX) .and. &
+                          (code .ge. AL_EXTERNAL_REFUSAL_MIN)
+  end function is_external_refusal
 
   function default_backend() 
     integer :: default_backend

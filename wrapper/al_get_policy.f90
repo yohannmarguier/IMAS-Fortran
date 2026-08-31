@@ -19,6 +19,10 @@
 !   is_external_refusal(code)  -- is this status *eligible* to be tolerated?
 !   (node locality)            -- is this *site* one where tolerating is sound?
 !
+! The first now lives in al_defs, beside the status band it tests, because the
+! write-side policy needs the same question answered and neither module owns it.
+! It is still re-exported from here, so `use al_get_policy` reaches it as before.
+!
 ! The second is not expressed here, because it is structural rather than a
 ! run-time test. Only two sites in IDSDef2F90Routines.xsl may consult this
 ! module: isErrorCritical, and the failure arm of al_begin_arraystruct_action.
@@ -62,15 +66,6 @@ module al_get_policy
   character(len=MAX_ERR_MSG_LEN), save :: al_last_status_message = ' '
 
 contains
-
-  ! Is this status one an interposing layer uses to say "I cannot serve this
-  ! path"? IMAS-Core allocates only -1..-5 (UNKNOWN_ERR..CONSISTENCY_ERR), so a
-  ! build without such a layer can never satisfy this test.
-  pure logical function is_external_refusal(code)
-    integer, intent(in) :: code
-    is_external_refusal = (code .le. AL_EXTERNAL_REFUSAL_MAX) .and. &
-                          (code .ge. AL_EXTERNAL_REFUSAL_MIN)
-  end function is_external_refusal
 
   subroutine al_note_skipped_path(path, code)
     character(len=*), intent(in) :: path

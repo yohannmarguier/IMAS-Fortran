@@ -877,6 +877,12 @@ end module
   <xsl:result-document href="utilities_put_struct.f90">
 module utilities_put_struct
 
+<!-- Used at module level, not inside one routine: both isErrorCritical and the
+     failure arm of al_begin_arraystruct_action consult the write-side refusal
+     policy, and the second is emitted into the put routines below rather than
+     into that function. -->
+use al_put_policy
+
 interface ids_put_struct
   <xsl:for-each select="/IDSs/utilities/field[@data_type='structure' or @data_type='struct_array']">  
     <xsl:variable name="this-type">
@@ -966,6 +972,12 @@ end module
 module <xsl:value-of select="@name"/>_put_struct
 
 use utilities_put_struct
+
+<!-- Used at module level, not inside one routine: both isErrorCritical and the
+     failure arm of al_begin_arraystruct_action consult the write-side refusal
+     policy, and the second is emitted into the put routines below rather than
+     into that function. -->
+use al_put_policy
 
 interface ids_put
   module procedure put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/> <!-- subroutine for the whole IDS -->
@@ -1091,6 +1103,9 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
   end if
 
   timedparent=.false.
+  <!-- The refused-write count describes one operation, not the process. -->
+  call al_reset_refused_writes()
+
   <xsl:apply-templates select="./field" mode="PUT_FIELD">
     <xsl:with-param name="structvar" select="'IDS'"/>
     <xsl:with-param name="contextvar" select="'opctx'"/>
@@ -1113,7 +1128,21 @@ subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>(puls
      return
   end if
   call al_end_action(opctx, status)
-  if (present(retstatus)) retstatus = status
+
+  <!-- retstatus here is al_end_action's status, not the write's. If the
+       interposing layer refused any path, the caller's value for it was dropped
+       and the occurrence does not hold everything they supplied. Say so:
+       PARTIAL_PUT is positive, so it can never be confused with a C-ABI status,
+       and it still trips the `status.ne.0` test callers already write. Without
+       this the tolerance of a refused write would be silent, which is the one
+       outcome al_put_policy exists to prevent. -->
+  if (present(retstatus)) then
+     if (status == 0 .and. al_get_refused_write_count() > 0) then
+        retstatus = PARTIAL_PUT
+     else
+        retstatus = status
+     end if
+  end if
 end subroutine put_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
 
 <xsl:for-each select=".//field[@data_type='structure' or @data_type='struct_array']">
@@ -1169,6 +1198,12 @@ end module
 <xsl:template match="utilities" mode="put_slice_struct">
   <xsl:result-document href="utilities_put_slice_struct.f90">
 module utilities_put_slice_struct
+
+<!-- Used at module level, not inside one routine: both isErrorCritical and the
+     failure arm of al_begin_arraystruct_action consult the write-side refusal
+     policy, and the second is emitted into the put routines below rather than
+     into that function. -->
+use al_put_policy
 
 interface ids_put_slice_struct
   <xsl:for-each select="/IDSs/utilities/field[@data_type='structure' or @data_type='struct_array']">  
@@ -1248,6 +1283,12 @@ end module
 module <xsl:value-of select="@name"/>_put_slice_struct
 
 use utilities_put_slice_struct
+
+<!-- Used at module level, not inside one routine: both isErrorCritical and the
+     failure arm of al_begin_arraystruct_action consult the write-side refusal
+     policy, and the second is emitted into the put routines below rather than
+     into that function. -->
+use al_put_policy
 
 interface ids_put_slice
   module procedure put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/> <!-- subroutine for the whole IDS -->
@@ -1365,7 +1406,18 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
      ! Get homogeneous_time to check consistency
      call get_int(opctx, "ids_properties/homogeneous_time",&amp;
      '', storedtimemode, status)
-     if(isErrorCritical(status, opctx, "ids_properties/homogeneous_time")) then
+     <!-- Deliberately not isErrorCritical. That predicate now tolerates an
+          interposing layer's refusal, and this site is not a per-field write:
+          it is a *read*, and its result is what chooses between writing a slice
+          and delegating to a full ids_put. A tolerated refusal here would leave
+          storedtimemode at IDS_TIME_MODE_UNKNOWN, and ids_put opens by deleting
+          the occurrence, so one refused metadata read would turn this
+          put_slice into a delete-and-rewrite of the whole IDS. Routing it
+          through the write policy would also record a refused *write* for a
+          call that was writing nothing. al_put_policy carries the derived site
+          list this exception belongs to. -->
+     if (status.ne.0) then
+        write(*,*) "ERROR! with field 'ids_properties/homogeneous_time'"
         if (present(retstatus)) then
            retstatus = status
            return
@@ -1413,6 +1465,9 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   </xsl:if>-->
 
   timedparent=.false.
+  <!-- The refused-write count describes one operation, not the process. -->
+  call al_reset_refused_writes()
+
   <xsl:apply-templates select="./field" mode="PUT_FIELD">
     <xsl:with-param name="structvar" select="'IDS'"/>
     <xsl:with-param name="contextvar" select="'opctx'"/>
@@ -1437,7 +1492,21 @@ subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/
   end if
 
   call al_end_action(opctx, status)
-  if (present(retstatus)) retstatus = status
+
+  <!-- retstatus here is al_end_action's status, not the write's. If the
+       interposing layer refused any path, the caller's value for it was dropped
+       and the occurrence does not hold everything they supplied. Say so:
+       PARTIAL_PUT is positive, so it can never be confused with a C-ABI status,
+       and it still trips the `status.ne.0` test callers already write. Without
+       this the tolerance of a refused write would be silent, which is the one
+       outcome al_put_policy exists to prevent. -->
+  if (present(retstatus)) then
+     if (status == 0 .and. al_get_refused_write_count() > 0) then
+        retstatus = PARTIAL_PUT
+     else
+        retstatus = status
+     end if
+  end if
 end subroutine put_slice_struct_ids_<xsl:value-of select="local:unique_name(@name)"/>
 
 <xsl:for-each select=".//field[@data_type='structure' or @data_type='struct_array']">
@@ -4517,6 +4586,24 @@ end module
              call al_iterate_over_arraystruct(aosctx, 1, status)
           enddo
           call al_end_action(aosctx, status)
+       else if (is_external_refusal(status)) then
+          ! The layer has refused to open this array of structures for writing:
+          ! the stored dictionary has no slot for the path at all. Nothing below
+          ! it can be written, and no per-field attempt underneath it could have
+          ! succeeded, so this is one refusal covering a subtree rather than a
+          ! failure to recover from. Tolerated for the same reason as a leaf
+          ! (see al_put_policy, which also explains why this site needed its own
+          ! answer: it is a sizing call, not a lookup). Recorded distinctly,
+          ! because "one value was dropped" and "this whole branch is absent"
+          ! must not read alike.
+          !
+          ! A failed al_begin_arraystruct_action creates no context, so there is
+          ! nothing to end here. aoslen is stale -- it is written back only on
+          ! success -- and is read only inside the branch above, so this must
+          ! stay a fall-through and must never re-enter it. Reset status so the
+          ! invariant is local to this arm.
+          call al_note_refused_write_subtree(<xsl:value-of select="$fieldpath"/>, status)
+          status = 0
        else
           write(*,*) "ERROR! with field "//<xsl:value-of select="$fieldpath"/><xsl:text>&#xa;</xsl:text>
           <!-- Same contract as the GET arm: a failed al_begin_arraystruct_action
@@ -5612,6 +5699,10 @@ FUNCTION isErrorCritical(status, ctx, path) RESULT (exitRequest)
    use ids_types
    use al_low_level_wrap<xsl:if test="$method='get'">
    use al_get_policy</xsl:if>
+   <!-- No `use al_put_policy` for method='put': the two modules this function is
+        emitted into (utilities_put_struct, utilities_put_slice_struct) use it at
+        module level, because the failure arm of al_begin_arraystruct_action needs
+        it too and that code is not inside this function. -->
    implicit none
 
    integer(ids_int) :: status, ctx
@@ -5634,6 +5725,22 @@ FUNCTION isErrorCritical(status, ctx, path) RESULT (exitRequest)
       ! conversion layer returns from al_begin_global_action and the data-entry
       ! seams; tolerating it there would sail past an IDS that was never opened.
       call al_note_skipped_path(path, status)
+      exitRequest = .FALSE.
+      return
+</xsl:if><xsl:if test="$method='put'">   else if (is_external_refusal(status)) then
+      ! The interposing DD-conversion layer has declared this path unstorable in
+      ! the dictionary the pulse is held under. Aborting would not undo the
+      ! fields already written -- this traversal has no rollback -- so it buys a
+      ! failure status at the cost of every field still to come. Tolerating
+      ! instead leaves an occurrence complete except for paths the stored
+      ! dictionary has no room for. See al_put_policy: this is a decision
+      ! reasoned for writes, not the read-side policy reused.
+      !
+      ! Sound only because this is a per-field site. al_put_policy names the
+      ! full site list, including the one put site that must NOT tolerate: the
+      ! put_slice read of ids_properties/homogeneous_time, where a tolerated
+      ! refusal would turn a slice write into a rewrite of the whole IDS.
+      call al_note_refused_write(path, status)
       exitRequest = .FALSE.
       return
 </xsl:if>   else

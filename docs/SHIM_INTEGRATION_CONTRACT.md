@@ -179,6 +179,19 @@ the refusal field-by-field the way the read path already does via
 `al_get_policy`. This is a documented limitation of the shim, not a defect to
 chase — see README.md's "Scope and limitations".
 
+> **In this checkout** the HLI-side half of #61 is implemented, so the paragraph
+> above describes upstream rather than what you will observe here.
+> `wrapper/al_put_policy.f90` tolerates a refused write per field, and per
+> subtree at a refused `al_begin_arraystruct_action`; every dropped path prints
+> as `REFUSED WRITE:` (or `REFUSED WRITE (subtree):`); and `ids_put` /
+> `ids_put_slice` return `PARTIAL_PUT` instead of `0`. What that does *not* do is
+> untear the slice: the `time_slice` container is still one element longer and
+> the leaves written before the refusal are still on disk. What changes is that
+> the traversal now runs to the end, so the occurrence is complete except for the
+> paths the stored dictionary has no slot for, and the call reports which state
+> it left behind instead of failing at an arbitrary point. The shim's own
+> contract is unchanged and still assumes an unmodified upstream.
+
 **A refusal here can also crash the process, not just fail the call**, in one
 specific structural case unrelated to your own writes: IMAS-Core's own
 internal plugin machinery (`AccessLayerPluginManager::write_field` and
