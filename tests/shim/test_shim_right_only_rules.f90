@@ -17,9 +17,13 @@
 ! `expected_verdict_for_kind(rule_kind_right_only)` requires. Passing the two
 ! reads the other way round reports `only3` for the same reading and every
 ! assertion below would fail for a reason that has nothing to do with the
-! shim. test_shim_structural_rules passes them in the opposite order, which is
-! immaterial there because every verdict it expects is `same`, a verdict the
-! primitives reach symmetrically.
+! shim. test_shim_structural_rules passes them in the opposite order, which
+! does not change whether it passes — every verdict it expects is `same`, and
+! the primitives reach `same` symmetrically — but it does change how it reads
+! when it fails: a structural rule the shim served nothing for prints `only3`,
+! "a value on the DD 3 side only", for a reading where the value is in fact on
+! the DD 4 side. That is a legibility defect in a failure message rather than
+! a wrong result, and it belongs to that test rather than this one.
 !
 ! This is also why the loss log is a second channel rather than the only one:
 ! a value comparison on its own distinguishes a served field from a refused
@@ -32,8 +36,8 @@ program test_shim_right_only_rules
   use ids_routines, only: ids_equilibrium, OPEN_PULSE, imas_open, imas_close, ids_get, ids_real
   use al_get_policy, only: PARTIAL_READ
   use shim_comparison, only: verdict_real, verdict_integer, verdict_real_vector
-  use shim_rule_table, only: right_only_rules, right_only_rule_count, expected_verdict_for_kind, &
-                             kind_name, rule_kind_right_only, rule_kind_identical
+  use shim_rule_table, only: right_only_rules, right_only_rule_count, structural_rules, &
+                             expected_verdict_for_kind, kind_name, rule_kind_right_only
   implicit none
 
   type(ids_equilibrium) :: eq_cross, eq_control
@@ -42,7 +46,7 @@ program test_shim_right_only_rules
   integer :: failures, expectations, demonstrations
   logical :: has_cross, has_control
   real(ids_real), allocatable :: cross_values(:), control_values(:)
-  character(len=6) :: served_nothing
+  character(len=6) :: served_nothing, agreement_expected
 
   call get_command_argument(1, fixture_root)
   if (len_trim(fixture_root) == 0) error stop 'missing fixture root'
@@ -57,8 +61,10 @@ program test_shim_right_only_rules
 
   if (status_control /= 0) error stop 'same-version control read did not succeed cleanly'
   if (status_cross /= 0 .and. status_cross /= PARTIAL_READ) error stop 'cross-version read failed outright'
-  if (.not. associated(eq_control%time_slice)) error stop 'control read produced no time slices'
-  if (.not. associated(eq_cross%time_slice)) error stop 'cross-version read produced no time slices'
+  ! Every check below indexes time_slice(1), so an associated but empty array
+  ! would be an out-of-bounds read rather than a failed assertion.
+  if (.not. has_time_slice(eq_control)) error stop 'control read produced no time slices'
+  if (.not. has_time_slice(eq_cross)) error stop 'cross-version read produced no time slices'
 
   failures = 0
   expectations = 0
@@ -73,7 +79,7 @@ program test_shim_right_only_rules
   call gather_contour_nodes(eq_cross, cross_values, has_cross)
   call check('new-contour-tree', combine([ &
        verdict_real_vector(has_control, control_values, has_cross, cross_values), &
-       contour_edges_verdict()]))
+       contour_edges_verdict(eq_control, eq_cross)]))
 
   call gather_j_parallel(eq_control, control_values, has_control)
   call gather_j_parallel(eq_cross, cross_values, has_cross)
@@ -135,18 +141,30 @@ program test_shim_right_only_rules
   ! nothing at all would satisfy every structural rule.
   !
   ! So: take a reading the assertions above have just established the shim
-  ! serves nothing for, and put it through the same comparison the suite uses,
-  ! against the verdict the agreement-expecting kinds require. The first
-  ! expectation keeps the demonstration honest — it fails if the reading is
-  ! not in fact a served-nothing one, so this cannot pass vacuously. The
-  ! second is the property itself.
+  ! serves nothing for, and put it through `agrees` — the same predicate every
+  ! `check` above decides on — against the expectation carried by a real entry
+  ! of the structural table. The expectation is fetched through
+  ! expected_verdict_for_kind from `structural_rules(1)%kind` rather than
+  ! written out here, so this demonstrates the rule the suite actually
+  ! asserts, and follows it automatically if that mapping ever changes.
+  !
+  ! The first expectation keeps the demonstration honest — it fails if the
+  ! reading is not in fact a served-nothing one, so this cannot pass
+  ! vacuously. The second is the property itself.
+  !
+  ! The anchor is deliberately `global_quantities/rho_tor_boundary`, one of
+  ! the eight rules that hold today, and it must stay one of those: anchoring
+  ! it on one of the five documented reds would fail the first expectation and
+  ! turn a real finding into a confusing demonstration failure. Note it is not
+  ! `boundary/rho_tor`, which is a different path and one of the five.
   ! -------------------------------------------------------------------------
   served_nothing = verdict_real(eq_control%time_slice(1)%global_quantities%rho_tor_boundary, &
                                 eq_cross%time_slice(1)%global_quantities%rho_tor_boundary)
+  agreement_expected = expected_verdict_for_kind(structural_rules(1)%kind)
 
   call demonstrate(agrees(served_nothing, expected_verdict_for_kind(rule_kind_right_only)), &
        'the demonstration reading is one the DD 4 side has and the shim served nothing for')
-  call demonstrate(.not. agrees(served_nothing, expected_verdict_for_kind(rule_kind_identical)), &
+  call demonstrate(.not. agrees(served_nothing, agreement_expected), &
        'a rule expecting the two sides to agree fails on a reading the shim served nothing for')
 
   if (expectations /= right_only_rule_count) then
@@ -197,18 +215,35 @@ contains
   end function combine
 
   ! `edges` is the contour tree's integer connectivity array. Reusing the real
-  ! vector primitive for it is exact at node-index magnitudes, and keeps the
-  ! subtree's second leaf inside the rule's verdict instead of silently
-  ! uncovered.
-  function contour_edges_verdict() result(verdict)
+  ! vector primitive for it is exact at node-index magnitudes, and brings the
+  ! subtree's other array under the same verdict as its nodes.
+  !
+  ! This rule is asserted on a sample of its subtree, not all of it: node
+  ! psi/r/z and edges, four of the ten paths the map counts, leaving
+  ! node/critical_type and node/levelset/{r,z}. Same for
+  ! new-constraints-j-parallel, three leaves of thirteen. That is the point of
+  ! asserting per rule rather than per leaf — a right_only rule is served or
+  ! it is not, and the sampled leaves are enough to say which — but it is a
+  ! sample, and a shim serving part of a subtree would not be caught here.
+  function contour_edges_verdict(control, cross) result(verdict)
+    type(ids_equilibrium), intent(in) :: control, cross
     character(len=6) :: verdict
     real(ids_real), allocatable :: control_edges(:), cross_edges(:)
     logical :: control_has, cross_has
 
-    call gather_contour_edges(eq_control, control_edges, control_has)
-    call gather_contour_edges(eq_cross, cross_edges, cross_has)
+    call gather_contour_edges(control, control_edges, control_has)
+    call gather_contour_edges(cross, cross_edges, cross_has)
     verdict = verdict_real_vector(control_has, control_edges, cross_has, cross_edges)
   end function contour_edges_verdict
+
+  logical function has_time_slice(equilibrium)
+    type(ids_equilibrium), intent(in) :: equilibrium
+
+    has_time_slice = .false.
+    if (associated(equilibrium%time_slice)) then
+      has_time_slice = size(equilibrium%time_slice) > 0
+    end if
+  end function has_time_slice
 
   ! An array the shim served nothing for may come back either unassociated or
   ! associated but empty, and the two must be treated alike: an empty array
@@ -216,6 +251,14 @@ contains
   ! reading into a `SHAPE` verdict against a populated oracle rather than the
   ! `only4` the rule expects. `.and.` is not short-circuiting in Fortran, so
   ! the size test is nested inside the association test throughout.
+  !
+  ! A boundary worth stating, because it is the array-valued form of the
+  ! defect the five documented reds exhibit for scalars: presence here is
+  ! decided by allocation, not by content. An array the shim allocated and
+  ! filled with sentinels would be reported present and compared, yielding
+  ! `DIFF` or `SHAPE` rather than `only4`. The rule would still fail, and its
+  ! verdict would still name the disagreement — but it would not name it as a
+  ! served-nothing reading.
   subroutine gather_contour_nodes(equilibrium, values, is_present)
     type(ids_equilibrium), intent(in) :: equilibrium
     real(ids_real), allocatable, intent(out) :: values(:)

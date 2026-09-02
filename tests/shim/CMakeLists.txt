@@ -109,8 +109,18 @@ target_link_libraries(al-fortran-test-shim-right-only-rules PRIVATE al-fortran)
 add_test(NAME al-fortran-test-shim-right-only-rules
   COMMAND al-fortran-test-shim-right-only-rules "${AL_SHIM_FIXTURE_ROOT}"
 )
+# This read refuses paths, so it is a run with a non-exact outcome, and
+# docs/SHIM_INTEGRATION_CONTRACT.md section 7 says such a run writes a loss
+# file into IMAS_MVDD_LOSS_LOG_DIR -- or into the working directory when that
+# is unset, which would drop it in the build tree and leave it for whichever
+# test looks there next. This test asserts nothing about the loss log; it
+# points it somewhere private purely so it cannot be mistaken for another
+# test's artifact. The directory has to exist before the run, hence
+# file(MAKE_DIRECTORY) at configure time.
+set(AL_SHIM_RIGHT_ONLY_LOSS_LOG_DIR "${CMAKE_CURRENT_BINARY_DIR}/right-only-loss-log")
+file(MAKE_DIRECTORY "${AL_SHIM_RIGHT_ONLY_LOSS_LOG_DIR}")
 set_tests_properties(al-fortran-test-shim-right-only-rules PROPERTIES
-  ENVIRONMENT "IMAS_MVDD_HLI_DD_VERSION=4.1.1;${AL_CORE_TEST_ENVIRONMENT}"
+  ENVIRONMENT "IMAS_MVDD_HLI_DD_VERSION=4.1.1;IMAS_MVDD_LOSS_LOG_DIR=${AL_SHIM_RIGHT_ONLY_LOSS_LOG_DIR};${AL_CORE_TEST_ENVIRONMENT}"
   LABELS "shim;contract-assertion"
   FAIL_REGULAR_EXPRESSION "RIGHT-ONLY-FAILURE"
 )
