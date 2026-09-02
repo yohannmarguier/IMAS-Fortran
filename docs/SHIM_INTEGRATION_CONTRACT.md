@@ -234,6 +234,33 @@ from the on-disk consequence (which real HDF5 collapses to one).
 
 ## 7. Cross-cutting: how the caller learns any of this
 
+### Loss-log file (ask of the shim)
+
+The Tier-1 HLI suite depends on the shim's process-local loss-log file, so this
+is an explicit ask of the shim and its format and placement are part of this
+contract.  A process that records a
+non-exact outcome writes one file named `imas-mvdd-loss-<UTC>-<pid>.txt`
+(with `-<n>` before `.txt` only to avoid a same-process filename collision) in
+`IMAS_MVDD_LOSS_LOG_DIR`; when that variable is unset it writes in the current
+directory.  The selected directory must already exist.  A test gives each run
+an empty, private directory and must find exactly one matching file there.
+
+The file starts with this five-line preamble, in order:
+
+```text
+# imas-mvdd loss log format 1
+# written <UTC>
+# process <pid>
+# hli-dd-version <version>
+uri\tids\tstored-dd\thli-dd\toperation\tfidelity\tpath
+```
+
+The first line is the format marker; the fifth line is a tab-separated column
+header, not a comment.  Each subsequent row has those seven columns in that
+order.  Consumers must skip the header by position, rather than by a
+comment-marker filter, and may rely on the `operation`, `fidelity`, and `path`
+columns for a loss assertion.
+
 - **`al_status_t.code == 0` always means success, full stop** — including a
   lossy or partially-served read, and including the unwritten-candidate case
   on write. Never infer fidelity from `code`.

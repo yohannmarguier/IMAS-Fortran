@@ -31,6 +31,7 @@ imas-python-mva-engineering-study.md
 /build-shim-on
 /build-shim
 /install-shim
+imas-mvdd-loss-*.txt
 /imas-python-fixtures/__pycache__/
 .graphifyignore
 /build-dev
