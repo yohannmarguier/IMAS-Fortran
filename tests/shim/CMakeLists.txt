@@ -36,3 +36,21 @@ add_test( NAME al-fortran-test-shim-linkage
     -D "SHIM_LIBRARY_NAME=${AL_SHIM_LIBRARY_NAME}"
     -P "${CMAKE_CURRENT_SOURCE_DIR}/check_shim_linkage.cmake"
 )
+
+# The comparison oracle is tested before any pulse-based contract assertion uses
+# it.  It is deliberately self-contained in this registered suite rather than
+# sharing the playground's diagnostic-only table code.
+add_executable( al-fortran-test-shim-comparison
+  shim_comparison.f90
+  test_shim_comparison.f90
+)
+target_link_libraries( al-fortran-test-shim-comparison PRIVATE al-fortran )
+add_test( NAME al-fortran-test-shim-comparison COMMAND al-fortran-test-shim-comparison )
+# Refusals and other error-shaped text are legitimate output of later shim
+# tests.  A distinctive marker plus the program's non-zero exit is the pass
+# condition, and the count assertion in the program prevents a no-op test from
+# passing.
+set_tests_properties( al-fortran-test-shim-comparison PROPERTIES
+  FAIL_REGULAR_EXPRESSION "COMPARISON-FAILURE"
+  LABELS "shim;contract-assertion"
+)

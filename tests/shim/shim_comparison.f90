@@ -1,0 +1,131 @@
+! Comparison primitives for the registered shim contract suite.
+!
+! This is intentionally separate from playground/play_eq_two_dd.f90.  The
+! playground is a diagnostic built as a standalone project, whereas these
+! primitives are the suite's oracle and must always be built with its tests.
+module shim_comparison
+  use ids_routines, only: ids_real, ids_int, ids_int_invalid
+  implicit none
+  private
+
+  real(ids_real), parameter :: tolerance = 1.0e-9_ids_real
+
+  public :: verdict_real, verdict_integer, verdict_real_vector, color_for_verdict
+
+contains
+
+  logical function is_absent_real(value)
+    real(ids_real), intent(in) :: value
+
+    is_absent_real = value <= -1.0e40_ids_real .or. value /= value
+  end function is_absent_real
+
+  logical function near(left, right)
+    real(ids_real), intent(in) :: left, right
+
+    near = abs(left - right) <= tolerance * max(1.0_ids_real, abs(left), abs(right))
+  end function near
+
+  logical function all_near(left, right)
+    real(ids_real), intent(in) :: left(:), right(:)
+    integer :: index
+
+    all_near = .false.
+    if (size(left) /= size(right)) return
+    do index = 1, size(left)
+      if (.not. near(left(index), right(index))) return
+    end do
+    all_near = .true.
+  end function all_near
+
+  function verdict_real(left, right) result(verdict)
+    real(ids_real), intent(in) :: left, right
+    character(len=6) :: verdict
+    logical :: has_left, has_right
+
+    has_left = .not. is_absent_real(left)
+    has_right = .not. is_absent_real(right)
+    if (.not. has_left .and. .not. has_right) then
+      verdict = '--'
+    else if (.not. has_right) then
+      verdict = 'only4'
+    else if (.not. has_left) then
+      verdict = 'only3'
+    else if (near(left, right)) then
+      verdict = 'same'
+    else if (near(left, -right)) then
+      ! A COCOS conversion was expected to yield equal HLI values.  Opposite
+      ! signs therefore mean its required flip did not happen.
+      verdict = 'NOFLIP'
+    else
+      verdict = 'DIFF'
+    end if
+  end function verdict_real
+
+  function verdict_integer(left, right) result(verdict)
+    integer(ids_int), intent(in) :: left, right
+    character(len=6) :: verdict
+    logical :: has_left, has_right
+
+    has_left = left /= ids_int_invalid
+    has_right = right /= ids_int_invalid
+    if (.not. has_left .and. .not. has_right) then
+      verdict = '--'
+    else if (.not. has_right) then
+      verdict = 'only4'
+    else if (.not. has_left) then
+      verdict = 'only3'
+    else if (left == right) then
+      verdict = 'same'
+    else
+      verdict = 'DIFF'
+    end if
+  end function verdict_integer
+
+  function verdict_real_vector(has_left, left, has_right, right) result(verdict)
+    logical, intent(in) :: has_left, has_right
+    real(ids_real), intent(in) :: left(:), right(:)
+    character(len=6) :: verdict
+
+    if (.not. has_left .and. .not. has_right) then
+      verdict = '--'
+    else if (.not. has_right) then
+      verdict = 'only4'
+    else if (.not. has_left) then
+      verdict = 'only3'
+    else if (size(left) /= size(right)) then
+      verdict = 'SHAPE'
+    else if (all_near(left, right)) then
+      verdict = 'same'
+    else if (all_near(left, -right)) then
+      verdict = 'NOFLIP'
+    else
+      verdict = 'DIFF'
+    end if
+  end function verdict_real_vector
+
+  function color_for_verdict(verdict) result(color)
+    character(len=*), intent(in) :: verdict
+    character(len=5) :: color
+    character(len=*), parameter :: escape = achar(27)
+    character(len=*), parameter :: mismatch = escape//'[31m'
+
+    select case (trim(verdict))
+    case ('same')
+      color = escape//'[97m'
+    case ('NOFLIP', 'DIFF')
+      ! A missing required sign flip is a failed contract assertion, not a
+      ! warning.  Keep it visually equivalent to an ordinary mismatch.
+      color = mismatch
+    case ('SHAPE')
+      color = escape//'[35m'
+    case ('only4')
+      color = escape//'[36m'
+    case ('only3')
+      color = escape//'[34m'
+    case default
+      color = escape//'[90m'
+    end select
+  end function color_for_verdict
+
+end module shim_comparison
