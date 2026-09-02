@@ -93,3 +93,25 @@ set_tests_properties(al-fortran-test-shim-structural-rules PROPERTIES
   LABELS "shim;contract-assertion"
   FAIL_REGULAR_EXPRESSION "STRUCTURAL-FAILURE"
 )
+
+# COCOS 11 -> 17 rules: every path the map's <cocos> block flips, each
+# asserted the same way as the structural rules above. A sign flip that
+# stops being applied reports 'NOFLIP', which shim_comparison gives mismatch
+# severity, not warning severity, and this test's FAIL_REGULAR_EXPRESSION
+# catches it exactly as it would any other rule failure. See
+# shim_rule_table.f90 for the table, its citations, and why it carries 30
+# entries rather than the 32 commonly quoted elsewhere.
+add_executable(al-fortran-test-shim-cocos-rules
+  shim_comparison.f90
+  shim_rule_table.f90
+  test_shim_cocos_rules.f90
+)
+target_link_libraries(al-fortran-test-shim-cocos-rules PRIVATE al-fortran)
+add_test(NAME al-fortran-test-shim-cocos-rules
+  COMMAND al-fortran-test-shim-cocos-rules "${AL_SHIM_FIXTURE_ROOT}"
+)
+set_tests_properties(al-fortran-test-shim-cocos-rules PROPERTIES
+  ENVIRONMENT "IMAS_MVDD_HLI_DD_VERSION=4.1.1;${AL_CORE_TEST_ENVIRONMENT}"
+  LABELS "shim;contract-assertion"
+  FAIL_REGULAR_EXPRESSION "COCOS-FAILURE"
+)
