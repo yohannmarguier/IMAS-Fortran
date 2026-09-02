@@ -93,3 +93,24 @@ set_tests_properties(al-fortran-test-shim-structural-rules PROPERTIES
   LABELS "shim;contract-assertion"
   FAIL_REGULAR_EXPRESSION "STRUCTURAL-FAILURE"
 )
+
+# The right_only rules: paths DD 4 introduced with no DD 3 source, where the
+# expected verdict is a value on the DD 4 side only rather than agreement.
+# Same two reads as the structural rules, compared the other way round -- the
+# DD 4 oracle first, the shim-served side second -- which is what makes a
+# served-nothing reading report `only4`; test_shim_right_only_rules.f90 says
+# why at length.
+add_executable(al-fortran-test-shim-right-only-rules
+  shim_comparison.f90
+  shim_rule_table.f90
+  test_shim_right_only_rules.f90
+)
+target_link_libraries(al-fortran-test-shim-right-only-rules PRIVATE al-fortran)
+add_test(NAME al-fortran-test-shim-right-only-rules
+  COMMAND al-fortran-test-shim-right-only-rules "${AL_SHIM_FIXTURE_ROOT}"
+)
+set_tests_properties(al-fortran-test-shim-right-only-rules PROPERTIES
+  ENVIRONMENT "IMAS_MVDD_HLI_DD_VERSION=4.1.1;${AL_CORE_TEST_ENVIRONMENT}"
+  LABELS "shim;contract-assertion"
+  FAIL_REGULAR_EXPRESSION "RIGHT-ONLY-FAILURE"
+)
