@@ -54,3 +54,22 @@ set_tests_properties( al-fortran-test-shim-comparison PROPERTIES
   FAIL_REGULAR_EXPRESSION "COMPARISON-FAILURE"
   LABELS "shim;contract-assertion"
 )
+
+# The HLI ends ids_get's root action itself, so it observes nested fidelity
+# through the shim's process-local loss-log file, not the shim C ABI.  Give the
+# test an isolated directory so the dynamic log filename cannot pick up a prior
+# run's entries.
+set(AL_SHIM_FIXTURE_ROOT "${CMAKE_SOURCE_DIR}/imas-python-fixtures/fixtures")
+set(AL_SHIM_NESTED_LOSS_LOG_DIR "${CMAKE_CURRENT_BINARY_DIR}/nested-loss-log")
+add_executable(al-fortran-test-shim-nested-loss test_shim_nested_loss.f90)
+target_link_libraries(al-fortran-test-shim-nested-loss PRIVATE al-fortran)
+add_test(NAME al-fortran-test-shim-nested-loss
+  COMMAND ${CMAKE_COMMAND}
+    -D "COMMAND_TO_RUN=$<TARGET_FILE:al-fortran-test-shim-nested-loss>;${AL_SHIM_FIXTURE_ROOT}"
+    -D "LOSS_LOG_DIR=${AL_SHIM_NESTED_LOSS_LOG_DIR}"
+    -P "${CMAKE_CURRENT_SOURCE_DIR}/check_nested_loss_log.cmake"
+)
+set_tests_properties(al-fortran-test-shim-nested-loss PROPERTIES
+  ENVIRONMENT "IMAS_MVDD_HLI_DD_VERSION=4.1.1;IMAS_MVDD_LOSS_LOG_DIR=${AL_SHIM_NESTED_LOSS_LOG_DIR};${AL_CORE_TEST_ENVIRONMENT}"
+  LABELS "shim;contract-assertion"
+)
