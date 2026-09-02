@@ -27,8 +27,15 @@
 ! the shim's implementation. This module carries only the kinds whose
 ! verdict is "the two sides agree" and whose subject matter is structural:
 ! identical, renamed, moved, merged (the eight folds where both DD3 spellings
-! carry real data) and split. Right_only, retyped and the COCOS-transform
-! paths have their own verdicts and belong to later tickets (#68-#70, #72).
+! carry real data) and split. Right_only and the COCOS-transform paths have
+! their own verdicts and belong to later tickets (#68, #69, #72).
+!
+! The paths the shim refuses to serve have landed here too, in
+! `refusal_rules` below (#70). They share this module because they share its
+! shape and its citation discipline, and they are a separate table because a
+! refusal is in play for each of them -- correctly for the one `retyped`
+! rule, and wrongly for the four unit-`redefined` ones, which are red by
+! design until the shim serves them.
 !
 ! Five further `merged` rules exist in the map (fold-constraints-j,
 ! fold-ggd-j, fold-ggd-bfield, fold-p1d-j, fold-p2d-j) whose only real DD3
@@ -47,6 +54,14 @@ module shim_rule_table
   integer, parameter, public :: rule_kind_moved     = 3
   integer, parameter, public :: rule_kind_merged    = 4
   integer, parameter, public :: rule_kind_split     = 5
+
+  ! The kinds for the paths the shim refuses today (#70): one where refusing
+  ! is right, one where it is the defect. 6 and 7 are deliberately left free
+  ! for the COCOS (#68) and right_only (#69) kinds, which land on this same
+  ! base: numbering by ticket keeps three sibling branches from claiming the
+  ! same integer.
+  integer, parameter, public :: rule_kind_retyped   = 8
+  integer, parameter, public :: rule_kind_redefined = 9
 
   type, public :: rule_entry
     character(len=32)  :: id
@@ -135,18 +150,103 @@ module shim_rule_table
       'map rule "split-psi-axis"; fixtures README "Container and structure changes" row "global_quantities/psi_axis"') &
   ]
 
+  ! -------------------------------------------------------------------------
+  ! The paths the shim refuses to serve today.
+  !
+  ! That is what collects these five entries: the refusal is an observation
+  ! about current behaviour, not the expectation. The expectation differs per
+  ! kind, and for four of the five the refusal is itself the defect:
+  !
+  !   retyped   -- the refusal is correct. No value transformation reshapes
+  !                an INT_1D into an array of identifier structures, so the
+  !                path genuinely cannot be served and the expected verdict
+  !                is a tolerated refusal.
+  !   redefined -- the refusal is wrong, and these entries are RED BY DESIGN
+  !                until the shim is fixed. The map marks the four
+  !                chi_squared paths fidelity="unmappable"; that marking is
+  !                the defect. Both dictionaries hold the same number
+  !                (imas-python-fixtures/README.md, "Redefinitions the map
+  !                refuses", writes the DD 3 number unchanged into both
+  !                fixtures), so the expected verdict is that the two sides
+  !                agree, and the assertion says so rather than recording
+  !                what the shim does today.
+  !
+  ! Per docs/adr/0002, a contract assertion is not inverted, quarantined or
+  ! weakened to match observed behaviour: the four reds turn green by
+  ! themselves when the shim serves these paths, with nobody having to
+  ! remember to come back and flip an expectation. ADR 0002's Consequences
+  ! already lists these four among the suite's expected failures on arrival.
+  ! -------------------------------------------------------------------------
+  integer, parameter, public :: refusal_rule_count = 5
+
+  type(rule_entry), parameter, public :: refusal_rules(refusal_rule_count) = [ &
+    ! -- retyped: the map's one rel="retyped" rule.  Refused unconditionally,
+    !    even though the rule declares itself fidelity="exact", because no
+    !    value transformation reshapes an INT_1D into an identifier struct
+    !    array (playground/FINDINGS.md, "The trigger"). --
+    rule_entry('retype-coordinates-type', rule_kind_retyped, &
+      'grids_ggd/grid/space/coordinates_type', &
+      'map rule "retype-coordinates-type" rel="retyped" shape="int_1d:struct_array"; contract 8.2 "container changed shape"'), &
+    ! -- redefined: the map's four <redefine> globs, declared unmappable
+    !    there on the grounds that m -> m^-2 normalises chi-squared by a
+    !    measurement variance no factor recovers.  Asserted as served
+    !    regardless, because the two fixtures hold the same number and the
+    !    contract expects it delivered: the unmappable marking is the thing
+    !    these four entries are red about. --
+    rule_entry('redefine-x-point-chi-sq-r', rule_kind_redefined, &
+      'time_slice/constraints/x_point/chi_squared_r', &
+      'map <redefine glob="time_slice/constraints/x_point/chi_squared_r" left-units="m" right-units="m^-2"> unmappable'), &
+    rule_entry('redefine-x-point-chi-sq-z', rule_kind_redefined, &
+      'time_slice/constraints/x_point/chi_squared_z', &
+      'map <redefine glob="time_slice/constraints/x_point/chi_squared_z" left-units="m" right-units="m^-2"> unmappable'), &
+    rule_entry('redefine-strike-pt-chi-sq-r', rule_kind_redefined, &
+      'time_slice/constraints/strike_point/chi_squared_r', &
+      'map <redefine glob="time_slice/constraints/strike_point/chi_squared_r" left-units="m" right-units="m^-2"> unmappable'), &
+    rule_entry('redefine-strike-pt-chi-sq-z', rule_kind_redefined, &
+      'time_slice/constraints/strike_point/chi_squared_z', &
+      'map <redefine glob="time_slice/constraints/strike_point/chi_squared_z" left-units="m" right-units="m^-2"> unmappable') &
+  ]
+
+  ! The reason strings the contract froze for these two kinds
+  ! (docs/SHIM_INTEGRATION_CONTRACT.md 8.2, "Path-resolution reasons").
+  ! Asserting the reason rather than only the status code is what makes a
+  ! failure say which rule fired instead of merely that something refused,
+  ! and it is why these two strings cannot be reworded without a contract
+  ! change.
+  character(len=*), parameter, public :: retyped_refusal_reason = &
+    "this path's container changed shape and cannot be served"
+  character(len=*), parameter, public :: redefined_refusal_reason = &
+    "this path's unit was redefined and cannot be converted"
+
   public :: expected_verdict_for_kind, kind_name
 
 contains
 
-  ! Kind-to-verdict is fixed and stated once, here, rather than per entry:
-  ! every kind this table carries expects the two sides to agree.
+  ! Kind-to-verdict is fixed and stated once, here, rather than per entry.
+  ! Only `retyped` expects the shim to have served nothing; every other kind,
+  ! `redefined` included, expects the two sides to agree.
   function expected_verdict_for_kind(kind) result(verdict)
     integer, intent(in) :: kind
     character(len=6) :: verdict
 
     select case (kind)
     case (rule_kind_identical, rule_kind_renamed, rule_kind_moved, rule_kind_merged, rule_kind_split)
+      verdict = 'same'
+    case (rule_kind_retyped)
+      ! What a refusal looks like through the comparison primitives: the
+      ! DD 4.1.1 control read holds the value and the shim's cross-version
+      ! read holds nothing.  That reads as 'only4' only when the control is
+      ! the first argument and the shim read the second, which is the order
+      ! test_shim_refusal_rules uses and states.
+      !
+      ! The verdict is half the assertion.  A field can also be absent
+      ! because the pulse never held it, so the refusal test pairs this
+      ! 'only4' with a named entry in the read-side skip log.
+      verdict = 'only4'
+    case (rule_kind_redefined)
+      ! Red by design: the shim refuses these today, so the observed verdict
+      ! is 'only4' and this expectation fails until the shim serves them.
+      ! Stated as the contract has it, not as the shim behaves.
       verdict = 'same'
     case default
       error stop 'shim_rule_table: unhandled rule kind'
@@ -168,6 +268,10 @@ contains
       name = 'merged'
     case (rule_kind_split)
       name = 'split'
+    case (rule_kind_retyped)
+      name = 'retyped'
+    case (rule_kind_redefined)
+      name = 'redefined'
     case default
       name = 'unknown'
     end select
