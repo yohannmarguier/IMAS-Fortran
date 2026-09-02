@@ -26,6 +26,11 @@ One HDF5 pulse per version is created in `<output-dir>/dd-<version>` (an
 `imas:hdf5?path=...` URI, overwritten if it exists). The generated output for
 both versions is checked in under `fixtures/`.
 
+Run `./verify_fixtures.sh` to regenerate the pair outside the checkout and
+compare every HDF5 dataset against the checked-in oracle. This uses `h5diff`:
+HDF5 metadata is not byte-stable, so a bytewise comparison would report drift
+where the fixture data is identical.
+
 ## Layout
 
 | File | What it is |
