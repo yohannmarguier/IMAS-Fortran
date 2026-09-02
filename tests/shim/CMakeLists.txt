@@ -73,3 +73,23 @@ set_tests_properties(al-fortran-test-shim-nested-loss PROPERTIES
   ENVIRONMENT "IMAS_MVDD_HLI_DD_VERSION=4.1.1;IMAS_MVDD_LOSS_LOG_DIR=${AL_SHIM_NESTED_LOSS_LOG_DIR};${AL_CORE_TEST_ENVIRONMENT}"
   LABELS "shim;contract-assertion"
 )
+
+# Structural rules (identical, renamed, moved, merged, split): each asserted
+# by comparing a shim-converted read of the DD 3.39.0 fixture against a
+# direct, same-version read of the DD 4.1.1 fixture, so no expected value is
+# transcribed into this file by hand. See shim_rule_table.f90 for the table
+# and its citations.
+add_executable(al-fortran-test-shim-structural-rules
+  shim_comparison.f90
+  shim_rule_table.f90
+  test_shim_structural_rules.f90
+)
+target_link_libraries(al-fortran-test-shim-structural-rules PRIVATE al-fortran)
+add_test(NAME al-fortran-test-shim-structural-rules
+  COMMAND al-fortran-test-shim-structural-rules "${AL_SHIM_FIXTURE_ROOT}"
+)
+set_tests_properties(al-fortran-test-shim-structural-rules PROPERTIES
+  ENVIRONMENT "IMAS_MVDD_HLI_DD_VERSION=4.1.1;${AL_CORE_TEST_ENVIRONMENT}"
+  LABELS "shim;contract-assertion"
+  FAIL_REGULAR_EXPRESSION "STRUCTURAL-FAILURE"
+)
