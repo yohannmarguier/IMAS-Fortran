@@ -14,7 +14,7 @@
 program test_shim_structural_rules
   use ids_routines, only: ids_equilibrium, OPEN_PULSE, imas_open, imas_close, ids_get, ids_real
   use al_get_policy, only: PARTIAL_READ
-  use shim_comparison, only: verdict_real, verdict_real_vector
+  use shim_comparison, only: verdict_real, verdict_real_vector_by_size
   use shim_rule_table, only: structural_rules, structural_rule_count, expected_verdict_for_kind, kind_name
   implicit none
 
@@ -44,7 +44,7 @@ program test_shim_structural_rules
   call check('identical-vacuum-r0', &
        verdict_real(eq_cross%vacuum_toroidal_field%r0, eq_control%vacuum_toroidal_field%r0))
   call check('identical-time', &
-       verdict_real_vector(.true., eq_cross%time, .true., eq_control%time))
+       verdict_real_vector_by_size(eq_cross%time, eq_control%time))
   call check('identical-beta-pol', &
        verdict_real(eq_cross%time_slice(1)%global_quantities%beta_pol, &
                     eq_control%time_slice(1)%global_quantities%beta_pol))
@@ -94,14 +94,14 @@ program test_shim_structural_rules
        verdict_real(eq_cross%time_slice(1)%global_quantities%magnetic_axis%b_field_phi, &
                     eq_control%time_slice(1)%global_quantities%magnetic_axis%b_field_phi))
   call check('fold-p1d-baverage', &
-       verdict_real_vector(.true., eq_cross%time_slice(1)%profiles_1d%b_field_average, &
-                            .true., eq_control%time_slice(1)%profiles_1d%b_field_average))
+       verdict_real_vector_by_size(eq_cross%time_slice(1)%profiles_1d%b_field_average, &
+                                   eq_control%time_slice(1)%profiles_1d%b_field_average))
   call check('fold-p1d-bmax', &
-       verdict_real_vector(.true., eq_cross%time_slice(1)%profiles_1d%b_field_max, &
-                            .true., eq_control%time_slice(1)%profiles_1d%b_field_max))
+       verdict_real_vector_by_size(eq_cross%time_slice(1)%profiles_1d%b_field_max, &
+                                   eq_control%time_slice(1)%profiles_1d%b_field_max))
   call check('fold-p1d-bmin', &
-       verdict_real_vector(.true., eq_cross%time_slice(1)%profiles_1d%b_field_min, &
-                            .true., eq_control%time_slice(1)%profiles_1d%b_field_min))
+       verdict_real_vector_by_size(eq_cross%time_slice(1)%profiles_1d%b_field_min, &
+                                   eq_control%time_slice(1)%profiles_1d%b_field_min))
   call check('fold-energy-mhd', &
        verdict_real(eq_cross%time_slice(1)%global_quantities%energy_mhd, &
                     eq_control%time_slice(1)%global_quantities%energy_mhd))
@@ -145,7 +145,7 @@ contains
     real(ids_real), intent(in) :: left(:,:), right(:,:)
     character(len=6) :: verdict
 
-    verdict = verdict_real_vector(.true., reshape(left, [size(left)]), .true., reshape(right, [size(right)]))
+    verdict = verdict_real_vector_by_size(reshape(left, [size(left)]), reshape(right, [size(right)]))
   end function flat_2d_verdict
 
   function find_rule(id) result(idx)

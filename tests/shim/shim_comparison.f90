@@ -11,6 +11,7 @@ module shim_comparison
   real(ids_real), parameter :: tolerance = 1.0e-9_ids_real
 
   public :: verdict_real, verdict_integer, verdict_real_vector, color_for_verdict
+  public :: verdict_real_vector_by_size
 
 contains
 
@@ -81,6 +82,23 @@ contains
       verdict = 'DIFF'
     end if
   end function verdict_integer
+
+  ! Presence of a vector quantity derived from the reading itself: a side that
+  ! was never served comes back zero-length.
+  !
+  ! Callers used to pass `.true., .true.` for both sides where a value was
+  ! simply expected to be there.  That is not an assertion, it is an assumption,
+  ! and it disables the absence arm below: two zero-length arrays have equal
+  ! size, all_near's loop then runs zero times and returns .true., and the
+  ! verdict is `same`.  A rule whose quantity neither side served would pass as
+  ! agreement.  Deriving presence here means no call site can claim a presence
+  ! it has not checked.
+  function verdict_real_vector_by_size(left, right) result(verdict)
+    real(ids_real), intent(in) :: left(:), right(:)
+    character(len=6) :: verdict
+
+    verdict = verdict_real_vector(size(left) > 0, left, size(right) > 0, right)
+  end function verdict_real_vector_by_size
 
   function verdict_real_vector(has_left, left, has_right, right) result(verdict)
     logical, intent(in) :: has_left, has_right
