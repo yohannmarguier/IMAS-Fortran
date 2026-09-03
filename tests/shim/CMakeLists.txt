@@ -326,3 +326,82 @@ set_tests_properties(al-fortran-test-shim-full-put-stamp PROPERTIES
   ENVIRONMENT "IMAS_MVDD_HLI_DD_VERSION=4.1.1;${AL_CORE_TEST_ENVIRONMENT}"
   LABELS "shim;contract-assertion"
 )
+
+# A stamp is read while opening an occurrence, so these two states have to be
+# present in the pulse before the program begins.  The checked-in DD 3 pulse is
+# copied and its one stamp dataset is removed or malformed at build time; no
+# scenario-specific HDF5 artifact is kept in the repository.
+set(AL_SHIM_STAMP_VARIANT_PYTHON "${CMAKE_SOURCE_DIR}/imas-python-fixtures/.venv/bin/python")
+set(AL_SHIM_STAMP_VARIANT_TOOLING_AVAILABLE FALSE)
+if( EXISTS "${AL_SHIM_STAMP_VARIANT_PYTHON}" )
+  execute_process(
+    COMMAND "${AL_SHIM_STAMP_VARIANT_PYTHON}" -c "import h5py"
+    RESULT_VARIABLE AL_SHIM_STAMP_VARIANT_H5PY_RESULT
+    OUTPUT_QUIET
+    ERROR_QUIET
+  )
+  if( AL_SHIM_STAMP_VARIANT_H5PY_RESULT EQUAL 0 )
+    set(AL_SHIM_STAMP_VARIANT_TOOLING_AVAILABLE TRUE)
+  endif()
+endif()
+
+if( NOT AL_SHIM_STAMP_VARIANT_TOOLING_AVAILABLE )
+  message( STATUS
+    "Not registering shim stamp-variant tests: needs imas-python-fixtures/.venv with h5py" )
+else()
+  set(AL_SHIM_STAMP_VARIANT_SOURCE "${AL_SHIM_FIXTURE_ROOT}/dd-3.39.0")
+  set(AL_SHIM_STAMP_ABSENT_FIXTURE "${CMAKE_CURRENT_BINARY_DIR}/stamp-absent-fixture")
+  set(AL_SHIM_STAMP_MALFORMED_FIXTURE "${CMAKE_CURRENT_BINARY_DIR}/stamp-malformed-fixture")
+  set(AL_SHIM_STAMP_VARIANT_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/derive_stamp_variant.py")
+
+  add_custom_command(
+    OUTPUT
+      "${AL_SHIM_STAMP_ABSENT_FIXTURE}/equilibrium.h5"
+      "${AL_SHIM_STAMP_MALFORMED_FIXTURE}/equilibrium.h5"
+    COMMAND "${AL_SHIM_STAMP_VARIANT_PYTHON}" "${AL_SHIM_STAMP_VARIANT_SCRIPT}"
+      "${AL_SHIM_STAMP_VARIANT_SOURCE}" "${AL_SHIM_STAMP_ABSENT_FIXTURE}" absent
+    COMMAND "${AL_SHIM_STAMP_VARIANT_PYTHON}" "${AL_SHIM_STAMP_VARIANT_SCRIPT}"
+      "${AL_SHIM_STAMP_VARIANT_SOURCE}" "${AL_SHIM_STAMP_MALFORMED_FIXTURE}" malformed
+    DEPENDS
+      "${AL_SHIM_STAMP_VARIANT_SCRIPT}"
+      "${AL_SHIM_STAMP_VARIANT_SOURCE}/equilibrium.h5"
+      "${AL_SHIM_STAMP_VARIANT_SOURCE}/master.h5"
+    VERBATIM
+  )
+  add_custom_target(al-fortran-test-shim-stamp-fixtures ALL DEPENDS
+    "${AL_SHIM_STAMP_ABSENT_FIXTURE}/equilibrium.h5"
+    "${AL_SHIM_STAMP_MALFORMED_FIXTURE}/equilibrium.h5"
+  )
+
+  function(add_shim_stamp_test name fixture require_no_loss_log)
+    set(target "al-fortran-test-shim-${name}")
+    string(REPLACE "-" "_" source_name "${name}")
+    add_executable(${target} "test_shim_${source_name}.f90")
+    target_link_libraries(${target} PRIVATE al-fortran)
+    al_shim_private_module_dir(${target})
+    add_dependencies(${target} al-fortran-test-shim-stamp-fixtures)
+
+    if( require_no_loss_log )
+      set(loss_log_dir "${CMAKE_CURRENT_BINARY_DIR}/${name}-loss-log")
+      add_test(NAME ${target}
+        COMMAND ${CMAKE_COMMAND}
+          -D "COMMAND_TO_RUN=$<TARGET_FILE:${target}>;${fixture}"
+          -D "LOSS_LOG_DIR=${loss_log_dir}"
+          -P "${CMAKE_CURRENT_SOURCE_DIR}/check_no_shim_loss_log.cmake"
+      )
+      set(environment
+        "IMAS_MVDD_HLI_DD_VERSION=4.1.1;IMAS_MVDD_LOSS_LOG_DIR=${loss_log_dir};${AL_CORE_TEST_ENVIRONMENT}")
+    else()
+      add_test(NAME ${target} COMMAND ${target} "${fixture}")
+      set(environment "IMAS_MVDD_HLI_DD_VERSION=4.1.1;${AL_CORE_TEST_ENVIRONMENT}")
+    endif()
+
+    set_tests_properties(${target} PROPERTIES
+      ENVIRONMENT "${environment}"
+      LABELS "shim;contract-assertion"
+    )
+  endfunction()
+
+  add_shim_stamp_test(stamp-absent "${AL_SHIM_STAMP_ABSENT_FIXTURE}" TRUE)
+  add_shim_stamp_test(stamp-malformed "${AL_SHIM_STAMP_MALFORMED_FIXTURE}" FALSE)
+endif()
