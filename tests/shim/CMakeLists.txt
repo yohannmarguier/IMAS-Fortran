@@ -37,6 +37,19 @@ add_test( NAME al-fortran-test-shim-linkage
     -P "${CMAKE_CURRENT_SOURCE_DIR}/check_shim_linkage.cmake"
 )
 
+# Each executable below compiles the suite's shared modules for itself, and
+# ALSetCompilerFlags gives this whole directory a single relative
+# CMAKE_Fortran_MODULE_DIRECTORY.  Left alone the targets would write the same
+# .mod files to the same path and race under a parallel build -- observed as
+# `Error copying Fortran module "tests/shim/include/shim_comparison.mod"` with
+# three targets in play.  Every Fortran target here therefore gets a module
+# directory of its own; add one for any target added later.
+function( al_shim_private_module_dir target )
+  set_target_properties( ${target} PROPERTIES
+    Fortran_MODULE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/include/${target}"
+  )
+endfunction()
+
 # The comparison oracle is tested before any pulse-based contract assertion uses
 # it.  It is deliberately self-contained in this registered suite rather than
 # sharing the playground's diagnostic-only table code.
@@ -45,6 +58,7 @@ add_executable( al-fortran-test-shim-comparison
   test_shim_comparison.f90
 )
 target_link_libraries( al-fortran-test-shim-comparison PRIVATE al-fortran )
+al_shim_private_module_dir( al-fortran-test-shim-comparison )
 add_test( NAME al-fortran-test-shim-comparison COMMAND al-fortran-test-shim-comparison )
 # Refusals and other error-shaped text are legitimate output of later shim
 # tests.  A distinctive marker plus the program's non-zero exit is the pass
@@ -85,6 +99,7 @@ add_executable(al-fortran-test-shim-structural-rules
   test_shim_structural_rules.f90
 )
 target_link_libraries(al-fortran-test-shim-structural-rules PRIVATE al-fortran)
+al_shim_private_module_dir(al-fortran-test-shim-structural-rules)
 add_test(NAME al-fortran-test-shim-structural-rules
   COMMAND al-fortran-test-shim-structural-rules "${AL_SHIM_FIXTURE_ROOT}"
 )
@@ -107,6 +122,7 @@ add_executable(al-fortran-test-shim-cocos-rules
   test_shim_cocos_rules.f90
 )
 target_link_libraries(al-fortran-test-shim-cocos-rules PRIVATE al-fortran)
+al_shim_private_module_dir(al-fortran-test-shim-cocos-rules)
 add_test(NAME al-fortran-test-shim-cocos-rules
   COMMAND al-fortran-test-shim-cocos-rules "${AL_SHIM_FIXTURE_ROOT}"
 )
@@ -128,6 +144,7 @@ add_executable(al-fortran-test-shim-right-only-rules
   test_shim_right_only_rules.f90
 )
 target_link_libraries(al-fortran-test-shim-right-only-rules PRIVATE al-fortran)
+al_shim_private_module_dir(al-fortran-test-shim-right-only-rules)
 add_test(NAME al-fortran-test-shim-right-only-rules
   COMMAND al-fortran-test-shim-right-only-rules "${AL_SHIM_FIXTURE_ROOT}"
 )
@@ -145,4 +162,40 @@ set_tests_properties(al-fortran-test-shim-right-only-rules PROPERTIES
   ENVIRONMENT "IMAS_MVDD_HLI_DD_VERSION=4.1.1;IMAS_MVDD_LOSS_LOG_DIR=${AL_SHIM_RIGHT_ONLY_LOSS_LOG_DIR};${AL_CORE_TEST_ENVIRONMENT}"
   LABELS "shim;contract-assertion"
   FAIL_REGULAR_EXPRESSION "RIGHT-ONLY-FAILURE"
+)
+
+# The rules the map refuses: the one `retyped` rule and the four unit
+# `redefine` globs.  Same two reads as the structural rules, asserted the
+# other way round -- the two sides must not agree -- and paired with the
+# read-side skip log, because for a redefinition both fixtures hold the same
+# number and only the skip log tells a refusal from a passthrough.
+#
+# This test asserts the Fortran-side skip log, which is a different channel
+# from the shim's loss log file, but it still needs its own loss-log
+# directory: leaving IMAS_MVDD_LOSS_LOG_DIR unset is not neutral, because the
+# shim then writes the loss log into the current working directory.  Giving
+# it a directory of its own -- rather than the empty value the shim reads as
+# "disable" -- keeps the suite parallel-safe and leaves the channel there for
+# a later test to assert.  It is not cleaned before the run because nothing
+# here reads it; the test that does own that (al-fortran-test-shim-nested-loss)
+# cleans its own through a CMake wrapper.
+set(AL_SHIM_REFUSAL_LOSS_LOG_DIR "${CMAKE_CURRENT_BINARY_DIR}/refusal-loss-log")
+file(MAKE_DIRECTORY "${AL_SHIM_REFUSAL_LOSS_LOG_DIR}")
+add_executable(al-fortran-test-shim-refusal-rules
+  shim_comparison.f90
+  shim_rule_table.f90
+  test_shim_refusal_rules.f90
+)
+target_link_libraries(al-fortran-test-shim-refusal-rules PRIVATE al-fortran)
+al_shim_private_module_dir(al-fortran-test-shim-refusal-rules)
+add_test(NAME al-fortran-test-shim-refusal-rules
+  COMMAND al-fortran-test-shim-refusal-rules "${AL_SHIM_FIXTURE_ROOT}"
+)
+# The program prints refusal- and error-shaped text as expected output, so the
+# pass condition is its own marker plus a zero exit, never the absence of the
+# word "error".
+set_tests_properties(al-fortran-test-shim-refusal-rules PROPERTIES
+  ENVIRONMENT "IMAS_MVDD_HLI_DD_VERSION=4.1.1;IMAS_MVDD_LOSS_LOG_DIR=${AL_SHIM_REFUSAL_LOSS_LOG_DIR};${AL_CORE_TEST_ENVIRONMENT}"
+  LABELS "shim;contract-assertion"
+  FAIL_REGULAR_EXPRESSION "REFUSAL-FAILURE"
 )
