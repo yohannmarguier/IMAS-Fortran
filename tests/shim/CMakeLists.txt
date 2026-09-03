@@ -102,6 +102,7 @@ set_tests_properties(al-fortran-test-shim-nested-loss PROPERTIES
 add_executable(al-fortran-test-shim-structural-rules
   shim_comparison.f90
   shim_rule_table.f90
+  shim_rule_check.f90
   test_shim_structural_rules.f90
 )
 target_link_libraries(al-fortran-test-shim-structural-rules PRIVATE al-fortran)
@@ -125,6 +126,7 @@ set_tests_properties(al-fortran-test-shim-structural-rules PROPERTIES
 add_executable(al-fortran-test-shim-cocos-rules
   shim_comparison.f90
   shim_rule_table.f90
+  shim_rule_check.f90
   test_shim_cocos_rules.f90
 )
 target_link_libraries(al-fortran-test-shim-cocos-rules PRIVATE al-fortran)
@@ -147,6 +149,7 @@ set_tests_properties(al-fortran-test-shim-cocos-rules PROPERTIES
 add_executable(al-fortran-test-shim-right-only-rules
   shim_comparison.f90
   shim_rule_table.f90
+  shim_rule_check.f90
   test_shim_right_only_rules.f90
 )
 target_link_libraries(al-fortran-test-shim-right-only-rules PRIVATE al-fortran)
@@ -190,6 +193,7 @@ file(MAKE_DIRECTORY "${AL_SHIM_REFUSAL_LOSS_LOG_DIR}")
 add_executable(al-fortran-test-shim-refusal-rules
   shim_comparison.f90
   shim_rule_table.f90
+  shim_rule_check.f90
   test_shim_refusal_rules.f90
 )
 target_link_libraries(al-fortran-test-shim-refusal-rules PRIVATE al-fortran)

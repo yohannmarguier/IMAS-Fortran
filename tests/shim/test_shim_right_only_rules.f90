@@ -36,14 +36,16 @@ program test_shim_right_only_rules
   use ids_routines, only: ids_equilibrium, OPEN_PULSE, imas_open, imas_close, ids_get, ids_real
   use al_get_policy, only: PARTIAL_READ
   use shim_comparison, only: verdict_real, verdict_integer, verdict_real_vector
-  use shim_rule_table, only: right_only_rules, right_only_rule_count, structural_rules, &
-                             expected_verdict_for_kind, kind_name, rule_kind_right_only
+  use shim_rule_table, only: right_only_rules, structural_rules, &
+                             expected_verdict_for_kind, rule_kind_right_only
+  use shim_rule_check, only: rule_checker, verdicts_agree
   implicit none
 
   type(ids_equilibrium) :: eq_cross, eq_control
   character(len=512) :: fixture_root
   integer :: context, status_cross, status_control
-  integer :: failures, expectations, demonstrations
+  integer :: demonstrations
+  type(rule_checker) :: checker
   logical :: has_cross, has_control
   real(ids_real), allocatable :: cross_values(:), control_values(:)
   character(len=6) :: served_nothing, agreement_expected
@@ -66,8 +68,8 @@ program test_shim_right_only_rules
   if (.not. has_time_slice(eq_control)) error stop 'control read produced no time slices'
   if (.not. has_time_slice(eq_cross)) error stop 'cross-version read produced no time slices'
 
-  failures = 0
-  expectations = 0
+  checker%rules = right_only_rules
+  checker%marker = 'RIGHT-ONLY-FAILURE'
   demonstrations = 0
 
   ! -- subtrees: DD 4 containers with no DD 3 counterpart at all --
@@ -77,59 +79,59 @@ program test_shim_right_only_rules
   ! served-nothing side is never dereferenced.
   call gather_contour_nodes(eq_control, control_values, has_control)
   call gather_contour_nodes(eq_cross, cross_values, has_cross)
-  call check('new-contour-tree', combine([ &
+  call checker%check('new-contour-tree', combine([ &
        verdict_real_vector(has_control, control_values, has_cross, cross_values), &
        contour_edges_verdict(eq_control, eq_cross)]))
 
   call gather_j_parallel(eq_control, control_values, has_control)
   call gather_j_parallel(eq_cross, cross_values, has_cross)
-  call check('new-constraints-j-parallel', &
+  call checker%check('new-constraints-j-parallel', &
        verdict_real_vector(has_control, control_values, has_cross, cross_values))
 
   ! `convergence/result` is an identifier structure whose only leaf in the
   ! map's two-path note is `index`; the shim serving nothing leaves it at the
   ! integer sentinel.
-  call check('new-convergence-result', &
+  call checker%check('new-convergence-result', &
        verdict_integer(eq_control%time_slice(1)%convergence%result%index, &
                        eq_cross%time_slice(1)%convergence%result%index))
 
   ! -- boundary --
-  call check('new-boundary-rho-tor', &
+  call checker%check('new-boundary-rho-tor', &
        verdict_real(eq_control%time_slice(1)%boundary%rho_tor, &
                     eq_cross%time_slice(1)%boundary%rho_tor))
-  call check('new-boundary-phi', &
+  call checker%check('new-boundary-phi', &
        verdict_real(eq_control%time_slice(1)%boundary%phi, &
                     eq_cross%time_slice(1)%boundary%phi))
-  call check('new-boundary-phi-poloidal-current', &
+  call checker%check('new-boundary-phi-poloidal-current', &
        verdict_real(eq_control%time_slice(1)%boundary%phi_poloidal_current, &
                     eq_cross%time_slice(1)%boundary%phi_poloidal_current))
 
   ! -- global_quantities --
-  call check('new-q-min-psi', &
+  call checker%check('new-q-min-psi', &
        verdict_real(eq_control%time_slice(1)%global_quantities%q_min%psi, &
                     eq_cross%time_slice(1)%global_quantities%q_min%psi))
-  call check('new-q-min-psi-norm', &
+  call checker%check('new-q-min-psi-norm', &
        verdict_real(eq_control%time_slice(1)%global_quantities%q_min%psi_norm, &
                     eq_cross%time_slice(1)%global_quantities%q_min%psi_norm))
-  call check('new-global-quantities-rho-tor-boundary', &
+  call checker%check('new-global-quantities-rho-tor-boundary', &
        verdict_real(eq_control%time_slice(1)%global_quantities%rho_tor_boundary, &
                     eq_cross%time_slice(1)%global_quantities%rho_tor_boundary))
 
   ! -- constraints --
-  call check('new-constraints-chi-squared-reduced', &
+  call checker%check('new-constraints-chi-squared-reduced', &
        verdict_real(eq_control%time_slice(1)%constraints%chi_squared_reduced, &
                     eq_cross%time_slice(1)%constraints%chi_squared_reduced))
-  call check('new-constraints-freedom-degrees-n', &
+  call checker%check('new-constraints-freedom-degrees-n', &
        verdict_integer(eq_control%time_slice(1)%constraints%freedom_degrees_n, &
                        eq_cross%time_slice(1)%constraints%freedom_degrees_n))
-  call check('new-constraints-constraints-n', &
+  call checker%check('new-constraints-constraints-n', &
        verdict_integer(eq_control%time_slice(1)%constraints%constraints_n, &
                        eq_cross%time_slice(1)%constraints%constraints_n))
 
   ! -- profiles_1d --
   call gather_p1d_psi_norm(eq_control, control_values, has_control)
   call gather_p1d_psi_norm(eq_cross, cross_values, has_cross)
-  call check('new-profiles-1d-psi-norm', &
+  call checker%check('new-profiles-1d-psi-norm', &
        verdict_real_vector(has_control, control_values, has_cross, cross_values))
 
   ! -------------------------------------------------------------------------
@@ -162,37 +164,25 @@ program test_shim_right_only_rules
                                 eq_cross%time_slice(1)%global_quantities%rho_tor_boundary)
   agreement_expected = expected_verdict_for_kind(structural_rules(1)%kind)
 
-  call demonstrate(agrees(served_nothing, expected_verdict_for_kind(rule_kind_right_only)), &
+  call demonstrate(verdicts_agree(served_nothing, expected_verdict_for_kind(rule_kind_right_only)), &
        'the demonstration reading is one the DD 4 side has and the shim served nothing for')
-  call demonstrate(.not. agrees(served_nothing, agreement_expected), &
+  call demonstrate(.not. verdicts_agree(served_nothing, agreement_expected), &
        'a rule expecting the two sides to agree fails on a reading the shim served nothing for')
 
-  if (expectations /= right_only_rule_count) then
-    write(*, '(a,i0,a,i0,a)') 'RIGHT-ONLY-FAILURE: only ', expectations, ' of ', right_only_rule_count, &
-      ' rule table entries were checked'
-    failures = failures + 1
-  end if
+  call checker%assert_every_rule_checked(checker%expectations)
 
   if (demonstrations /= 2) then
     write(*, '(a,i0,a)') 'RIGHT-ONLY-FAILURE: only ', demonstrations, ' of 2 demonstrations were run'
-    failures = failures + 1
+    checker%failures = checker%failures + 1
   end if
 
-  if (failures > 0) then
-    write(*, '(a,i0,a)') 'RIGHT-ONLY-FAILURE: ', failures, ' right_only rule(s) failed'
+  if (checker%failures > 0) then
+    write(*, '(a,i0,a)') 'RIGHT-ONLY-FAILURE: ', checker%failures, ' right_only rule(s) failed'
     stop 1
   end if
 
 contains
 
-  ! The single place a verdict is judged against an expectation, shared by the
-  ! rule checks and by the demonstration below them, so the demonstration
-  ! exercises the suite's real comparison rather than a restatement of it.
-  logical function agrees(actual, expected)
-    character(len=*), intent(in) :: actual, expected
-
-    agrees = trim(actual) == trim(expected)
-  end function agrees
 
   ! A subtree rule combines several leaf verdicts into the one verdict the
   ! rule is judged on. It fails if any leaf does, and the first leaf that does
@@ -207,7 +197,7 @@ contains
     expected = expected_verdict_for_kind(rule_kind_right_only)
     combined = expected
     do leaf = 1, size(verdicts)
-      if (.not. agrees(verdicts(leaf), expected)) then
+      if (.not. verdicts_agree(verdicts(leaf), expected)) then
         combined = verdicts(leaf)
         return
       end if
@@ -328,48 +318,14 @@ contains
     end if
   end subroutine gather_p1d_psi_norm
 
-  function find_rule(id) result(idx)
-    character(len=*), intent(in) :: id
-    integer :: idx
-    integer :: i
 
-    idx = 0
-    do i = 1, right_only_rule_count
-      if (trim(right_only_rules(i)%id) == trim(id)) then
-        idx = i
-        return
-      end if
-    end do
-    error stop 'test_shim_right_only_rules: rule id not found in shim_rule_table: '//trim(id)
-  end function find_rule
-
-  subroutine check(id, verdict)
-    character(len=*), intent(in) :: id
-    character(len=6), intent(in) :: verdict
-    integer :: idx
-    character(len=6) :: expected
-
-    idx = find_rule(id)
-    expected = expected_verdict_for_kind(right_only_rules(idx)%kind)
-    expectations = expectations + 1
-    if (.not. agrees(verdict, expected)) then
-      failures = failures + 1
-      write(*, '(a,a,a,a,a,a,a,a,a,a)') 'RIGHT-ONLY-FAILURE: rule ', trim(id), ' (', &
-        trim(kind_name(right_only_rules(idx)%kind)), ') path ', trim(right_only_rules(idx)%hli_path), &
-        ' verdict=', trim(verdict), ' expected=', trim(expected)
-      write(*, '(a,a)') '  source: ', trim(right_only_rules(idx)%source)
-    end if
-  end subroutine check
 
   subroutine demonstrate(condition, what)
     logical, intent(in) :: condition
     character(len=*), intent(in) :: what
 
     demonstrations = demonstrations + 1
-    if (.not. condition) then
-      failures = failures + 1
-      write(*, '(a,a)') 'RIGHT-ONLY-FAILURE: ', what
-    end if
+    if (.not. condition) call checker%fail(what)
   end subroutine demonstrate
 
 end program test_shim_right_only_rules

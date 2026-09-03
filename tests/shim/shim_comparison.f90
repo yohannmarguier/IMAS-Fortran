@@ -11,7 +11,7 @@ module shim_comparison
   real(ids_real), parameter :: tolerance = 1.0e-9_ids_real
 
   public :: verdict_real, verdict_integer, verdict_real_vector, color_for_verdict
-  public :: verdict_real_vector_by_size
+  public :: verdict_real_vector_by_size, verdict_real_matrix_by_size
 
 contains
 
@@ -99,6 +99,17 @@ contains
 
     verdict = verdict_real_vector(size(left) > 0, left, size(right) > 0, right)
   end function verdict_real_vector_by_size
+
+  ! A 2-D quantity judged as its flattened elements.  The structural and COCOS
+  ! tests each carried a private copy of this; the extents still decide, so a
+  ! fold that changed the grid reports SHAPE rather than quietly comparing a
+  ! different number of points.
+  function verdict_real_matrix_by_size(left, right) result(verdict)
+    real(ids_real), intent(in) :: left(:,:), right(:,:)
+    character(len=6) :: verdict
+
+    verdict = verdict_real_vector_by_size(reshape(left, [size(left)]), reshape(right, [size(right)]))
+  end function verdict_real_matrix_by_size
 
   function verdict_real_vector(has_left, left, has_right, right) result(verdict)
     logical, intent(in) :: has_left, has_right
