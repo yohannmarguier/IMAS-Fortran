@@ -68,17 +68,20 @@ program test_shim_structural_rules
 
   ! -- moved (each rule combines a r/z pair into one verdict) --
   call check('move-closest-wall-point', &
-       combine2(verdict_real(eq_cross%time_slice(1)%boundary%closest_wall_point%r, &
+       combine2('move-closest-wall-point', &
+                verdict_real(eq_cross%time_slice(1)%boundary%closest_wall_point%r, &
                               eq_control%time_slice(1)%boundary%closest_wall_point%r), &
                 verdict_real(eq_cross%time_slice(1)%boundary%closest_wall_point%z, &
                               eq_control%time_slice(1)%boundary%closest_wall_point%z)))
   call check('move-dr-dz-zero-point', &
-       combine2(verdict_real(eq_cross%time_slice(1)%boundary%dr_dz_zero_point%r, &
+       combine2('move-dr-dz-zero-point', &
+                verdict_real(eq_cross%time_slice(1)%boundary%dr_dz_zero_point%r, &
                               eq_control%time_slice(1)%boundary%dr_dz_zero_point%r), &
                 verdict_real(eq_cross%time_slice(1)%boundary%dr_dz_zero_point%z, &
                               eq_control%time_slice(1)%boundary%dr_dz_zero_point%z)))
   call check('move-gap', &
-       combine2(verdict_real(eq_cross%time_slice(1)%boundary%gap(1)%r, &
+       combine2('move-gap', &
+                verdict_real(eq_cross%time_slice(1)%boundary%gap(1)%r, &
                               eq_control%time_slice(1)%boundary%gap(1)%r), &
                 verdict_real(eq_cross%time_slice(1)%boundary%gap(1)%z, &
                               eq_control%time_slice(1)%boundary%gap(1)%z)))
@@ -108,7 +111,8 @@ program test_shim_structural_rules
 
   ! -- split: one DD3 source feeds two DD4 targets; both must agree --
   call check('split-psi-axis', &
-       combine2(verdict_real(eq_cross%time_slice(1)%global_quantities%psi_axis, &
+       combine2('split-psi-axis', &
+                verdict_real(eq_cross%time_slice(1)%global_quantities%psi_axis, &
                               eq_control%time_slice(1)%global_quantities%psi_axis), &
                 verdict_real(eq_cross%time_slice(1)%global_quantities%psi_magnetic_axis, &
                               eq_control%time_slice(1)%global_quantities%psi_magnetic_axis)))
@@ -128,13 +132,20 @@ contains
 
   ! One rule can combine several leaf verdicts (e.g. an r/z pair); the rule
   ! fails if either does, and the first non-agreeing verdict is reported.
-  function combine2(first, second) result(combined)
+  !
+  ! What counts as agreeing is the rule's own expectation, looked up exactly as
+  ! check() looks it up.  Writing 'same' in here instead would be a second,
+  ! silent copy of the kind-to-verdict mapping: correct only for as long as
+  ! every kind reaching this function still expects agreement, and wrong with
+  ! no error the day expected_verdict_for_kind gives one of them something
+  ! else.  test_shim_right_only_rules derives it for the same reason.
+  function combine2(id, first, second) result(combined)
+    character(len=*), intent(in) :: id
     character(len=6), intent(in) :: first, second
-    character(len=6) :: combined
+    character(len=6) :: combined, expected
 
-    if (first == 'same' .and. second == 'same') then
-      combined = 'same'
-    else if (first /= 'same') then
+    expected = expected_verdict_for_kind(structural_rules(find_rule(id))%kind)
+    if (trim(first) /= trim(expected)) then
       combined = first
     else
       combined = second
