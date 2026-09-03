@@ -73,3 +73,37 @@ set_tests_properties(al-fortran-test-shim-nested-loss PROPERTIES
   ENVIRONMENT "IMAS_MVDD_HLI_DD_VERSION=4.1.1;IMAS_MVDD_LOSS_LOG_DIR=${AL_SHIM_NESTED_LOSS_LOG_DIR};${AL_CORE_TEST_ENVIRONMENT}"
   LABELS "shim;contract-assertion"
 )
+
+# The write tests must mutate only private fixture copies.  Each setup test is
+# a CTest fixture, so a selected scenario is prepared too and parallel runs do
+# not share a pulse directory.
+add_executable(al-fortran-test-shim-roundtrip test_shim_roundtrip.f90)
+target_link_libraries(al-fortran-test-shim-roundtrip PRIVATE al-fortran)
+
+function(add_shim_roundtrip_test name fixture read_control)
+  set(copy_test "al-fortran-test-shim-${name}-fixture")
+  set(test_name "al-fortran-test-shim-${name}")
+  set(fixture_copy "${CMAKE_CURRENT_BINARY_DIR}/${name}-fixture")
+
+  add_test(NAME ${copy_test}
+    COMMAND ${CMAKE_COMMAND}
+      -D "SOURCE=${AL_SHIM_FIXTURE_ROOT}/${fixture}"
+      -D "DESTINATION=${fixture_copy}"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/copy_fixture.cmake"
+  )
+  set_tests_properties(${copy_test} PROPERTIES FIXTURES_SETUP ${test_name})
+
+  add_test(NAME ${test_name}
+    COMMAND al-fortran-test-shim-roundtrip ${fixture_copy} ${read_control}
+  )
+  set_tests_properties(${test_name} PROPERTIES
+    FIXTURES_REQUIRED ${test_name}
+    ENVIRONMENT "IMAS_MVDD_HLI_DD_VERSION=4.1.1;${AL_CORE_TEST_ENVIRONMENT}"
+    LABELS "shim;contract-assertion"
+  )
+endfunction()
+
+# This pair is one argument: only the DD 3 pulse exercises the map, and the
+# DD 4 control rules out a vacuous roundtrip that succeeds without conversion.
+add_shim_roundtrip_test(roundtrip-cross-dd dd-3.39.0 partial-read-allowed)
+add_shim_roundtrip_test(roundtrip-same-dd dd-4.1.1 clean-read)
