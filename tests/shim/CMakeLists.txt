@@ -87,6 +87,7 @@ add_test(NAME al-fortran-test-shim-nested-loss
   COMMAND ${CMAKE_COMMAND}
     -D "COMMAND_TO_RUN=$<TARGET_FILE:al-fortran-test-shim-nested-loss>;${AL_SHIM_FIXTURE_ROOT}"
     -D "LOSS_LOG_DIR=${AL_SHIM_NESTED_LOSS_LOG_DIR}"
+    -D "FIXTURE_ROOT=${AL_SHIM_FIXTURE_ROOT}"
     -P "${CMAKE_CURRENT_SOURCE_DIR}/check_nested_loss_log.cmake"
 )
 set_tests_properties(al-fortran-test-shim-nested-loss PROPERTIES

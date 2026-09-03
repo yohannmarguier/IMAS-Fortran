@@ -1,8 +1,34 @@
 # Run a cross-DD HLI read and inspect its Tier-1 loss-log file.  This stays at
 # the HLI boundary: direct imas_mvdd_context_loss_* calls are a shim-repository
 # concern (ADR 0002), while the file is the only loss channel this binding owns.
-if( NOT DEFINED COMMAND_TO_RUN OR NOT DEFINED LOSS_LOG_DIR )
-  message(FATAL_ERROR "COMMAND_TO_RUN and LOSS_LOG_DIR are required")
+if( NOT DEFINED COMMAND_TO_RUN OR NOT DEFINED LOSS_LOG_DIR OR NOT DEFINED FIXTURE_ROOT )
+  message(FATAL_ERROR "COMMAND_TO_RUN, LOSS_LOG_DIR and FIXTURE_ROOT are required")
+endif()
+
+# Issue #66 asks that the checked-in fixture is byte-identical after a
+# cross-version read.  Every other assertion in this suite reads the fixtures
+# and trusts them; if a converting read ever wrote back to the pulse it read,
+# nothing here would notice, and every later comparison would be against a
+# pulse the suite itself had modified.
+#
+# Content, not mtime: HDF5 rewrites can leave the size alone, and a checkout
+# sets timestamps arbitrarily.
+function( fixture_digest out_var )
+  file(GLOB_RECURSE _files "${FIXTURE_ROOT}/*")
+  list(SORT _files)
+  set(_digest "")
+  foreach(_file IN LISTS _files)
+    if( NOT IS_DIRECTORY "${_file}" )
+      file(MD5 "${_file}" _hash)
+      string(APPEND _digest "${_file} ${_hash}\n")
+    endif()
+  endforeach()
+  set(${out_var} "${_digest}" PARENT_SCOPE)
+endfunction()
+
+fixture_digest(_fixture_before)
+if( _fixture_before STREQUAL "" )
+  message(FATAL_ERROR "no fixture files found under ${FIXTURE_ROOT}: the immutability check would pass vacuously")
 endif()
 
 file(MAKE_DIRECTORY "${LOSS_LOG_DIR}")
@@ -19,6 +45,11 @@ execute_process(
 )
 if( NOT _result EQUAL 0 )
   message(FATAL_ERROR "nested loss reader failed (${_result})\nstdout:\n${_stdout}\nstderr:\n${_stderr}")
+endif()
+
+fixture_digest(_fixture_after)
+if( NOT _fixture_after STREQUAL _fixture_before )
+  message(SEND_ERROR "the cross-version read modified the checked-in fixture under ${FIXTURE_ROOT}")
 endif()
 
 file(GLOB _logs "${LOSS_LOG_DIR}/imas-mvdd-loss-*.txt")
