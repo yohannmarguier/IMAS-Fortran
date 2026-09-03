@@ -298,3 +298,31 @@ set_tests_properties(al-fortran-test-shim-torn-write PROPERTIES
   ENVIRONMENT "IMAS_MVDD_HLI_DD_VERSION=4.1.1;${AL_CORE_TEST_ENVIRONMENT}"
   LABELS "shim;behaviour-pin"
 )
+
+# Unlike ids_put_slice, a full put visits the DD-version stamp.  Run this
+# contract assertion against a private DD 3 copy: it proves the shim names and
+# tolerates that refusal, finishes the generated traversal, and leaves the
+# original DD 3 stamp in place.
+add_executable(al-fortran-test-shim-full-put-stamp test_shim_full_put_stamp.f90)
+target_link_libraries(al-fortran-test-shim-full-put-stamp PRIVATE al-fortran)
+al_shim_private_module_dir(al-fortran-test-shim-full-put-stamp)
+add_test(NAME al-fortran-test-shim-full-put-stamp-fixture
+  COMMAND ${CMAKE_COMMAND}
+    -D "SOURCE=${AL_SHIM_FIXTURE_ROOT}/dd-3.39.0"
+    -D "DESTINATION=${CMAKE_CURRENT_BINARY_DIR}/full-put-stamp-fixture"
+    -P "${CMAKE_CURRENT_SOURCE_DIR}/copy_fixture.cmake"
+)
+set_tests_properties(al-fortran-test-shim-full-put-stamp-fixture PROPERTIES
+  FIXTURES_SETUP al-fortran-test-shim-full-put-stamp
+)
+add_test(NAME al-fortran-test-shim-full-put-stamp
+  COMMAND ${CMAKE_COMMAND}
+    -D "COMMAND_TO_RUN=$<TARGET_FILE:al-fortran-test-shim-full-put-stamp>;${CMAKE_CURRENT_BINARY_DIR}/full-put-stamp-fixture"
+    -D "EXPECTED_OUTPUT=REFUSED WRITE: 'ids_properties/version_put/data_dictionary'"
+    -P "${CMAKE_CURRENT_SOURCE_DIR}/check_full_put_stamp.cmake"
+)
+set_tests_properties(al-fortran-test-shim-full-put-stamp PROPERTIES
+  FIXTURES_REQUIRED al-fortran-test-shim-full-put-stamp
+  ENVIRONMENT "IMAS_MVDD_HLI_DD_VERSION=4.1.1;${AL_CORE_TEST_ENVIRONMENT}"
+  LABELS "shim;contract-assertion"
+)
