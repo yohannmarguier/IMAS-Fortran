@@ -74,6 +74,32 @@ set_tests_properties( al-fortran-test-shim-comparison PROPERTIES
   LABELS "shim;contract-assertion"
 )
 
+# Fixture provenance (issue #64): the checked-in pulses must be what their
+# generator produces, or every assertion in this suite is against numbers
+# nobody can re-derive.  verify_fixtures.sh regenerates them outside the
+# checkout and compares every dataset with h5diff; registering it here is what
+# turns that from a script somebody may remember to run into a criterion the
+# suite enforces.
+#
+# It needs the fixtures' own virtualenv and h5diff, neither of which this
+# project builds, so it registers only when both are present -- the same
+# pattern as the linkage test above.  A missing venv means the check is
+# skipped, never that it silently passes.
+set(AL_SHIM_FIXTURE_VENV_PYTHON "${CMAKE_SOURCE_DIR}/imas-python-fixtures/.venv/bin/python")
+find_program(AL_SHIM_H5DIFF h5diff)
+if( EXISTS "${AL_SHIM_FIXTURE_VENV_PYTHON}" AND AL_SHIM_H5DIFF )
+  add_test(NAME al-fortran-test-shim-fixture-provenance
+    COMMAND "${CMAKE_SOURCE_DIR}/imas-python-fixtures/verify_fixtures.sh"
+  )
+  set_tests_properties(al-fortran-test-shim-fixture-provenance PROPERTIES
+    LABELS "shim;contract-assertion"
+  )
+else()
+  message( STATUS
+    "Not registering al-fortran-test-shim-fixture-provenance: needs "
+    "imas-python-fixtures/.venv (see its README) and h5diff" )
+endif()
+
 # The HLI ends ids_get's root action itself, so it observes nested fidelity
 # through the shim's process-local loss-log file, not the shim C ABI.  Give the
 # test an isolated directory so the dynamic log filename cannot pick up a prior
