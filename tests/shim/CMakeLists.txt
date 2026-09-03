@@ -77,6 +77,7 @@ set(AL_SHIM_FIXTURE_ROOT "${CMAKE_SOURCE_DIR}/imas-python-fixtures/fixtures")
 set(AL_SHIM_NESTED_LOSS_LOG_DIR "${CMAKE_CURRENT_BINARY_DIR}/nested-loss-log")
 add_executable(al-fortran-test-shim-nested-loss test_shim_nested_loss.f90)
 target_link_libraries(al-fortran-test-shim-nested-loss PRIVATE al-fortran)
+al_shim_private_module_dir(al-fortran-test-shim-nested-loss)
 add_test(NAME al-fortran-test-shim-nested-loss
   COMMAND ${CMAKE_COMMAND}
     -D "COMMAND_TO_RUN=$<TARGET_FILE:al-fortran-test-shim-nested-loss>;${AL_SHIM_FIXTURE_ROOT}"
