@@ -64,7 +64,12 @@ add_test( NAME al-fortran-test-shim-comparison COMMAND al-fortran-test-shim-comp
 # tests.  A distinctive marker plus the program's non-zero exit is the pass
 # condition, and the count assertion in the program prevents a no-op test from
 # passing.
+# This program makes no AL call today, so it would run without the shim's
+# run-time environment.  It is given it anyway: it links al-fortran, and so the
+# shim, and the day an assertion here touches the C ABI the missing
+# IMAS_CORE_LIBRARY would surface as an unrelated-looking dlopen failure.
 set_tests_properties( al-fortran-test-shim-comparison PROPERTIES
+  ENVIRONMENT "${AL_CORE_TEST_ENVIRONMENT}"
   FAIL_REGULAR_EXPRESSION "COMPARISON-FAILURE"
   LABELS "shim;contract-assertion"
 )
