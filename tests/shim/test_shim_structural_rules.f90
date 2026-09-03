@@ -68,19 +68,19 @@ program test_shim_structural_rules
 
   ! -- moved (each rule combines a r/z pair into one verdict) --
   call check('move-closest-wall-point', &
-       combine2('move-closest-wall-point', &
+       combine_pair('move-closest-wall-point', &
                 verdict_real(eq_cross%time_slice(1)%boundary%closest_wall_point%r, &
                               eq_control%time_slice(1)%boundary%closest_wall_point%r), &
                 verdict_real(eq_cross%time_slice(1)%boundary%closest_wall_point%z, &
                               eq_control%time_slice(1)%boundary%closest_wall_point%z)))
   call check('move-dr-dz-zero-point', &
-       combine2('move-dr-dz-zero-point', &
+       combine_pair('move-dr-dz-zero-point', &
                 verdict_real(eq_cross%time_slice(1)%boundary%dr_dz_zero_point%r, &
                               eq_control%time_slice(1)%boundary%dr_dz_zero_point%r), &
                 verdict_real(eq_cross%time_slice(1)%boundary%dr_dz_zero_point%z, &
                               eq_control%time_slice(1)%boundary%dr_dz_zero_point%z)))
   call check('move-gap', &
-       combine2('move-gap', &
+       combine_pair('move-gap', &
                 verdict_real(eq_cross%time_slice(1)%boundary%gap(1)%r, &
                               eq_control%time_slice(1)%boundary%gap(1)%r), &
                 verdict_real(eq_cross%time_slice(1)%boundary%gap(1)%z, &
@@ -111,7 +111,7 @@ program test_shim_structural_rules
 
   ! -- split: one DD3 source feeds two DD4 targets; both must agree --
   call check('split-psi-axis', &
-       combine2('split-psi-axis', &
+       combine_pair('split-psi-axis', &
                 verdict_real(eq_cross%time_slice(1)%global_quantities%psi_axis, &
                               eq_control%time_slice(1)%global_quantities%psi_axis), &
                 verdict_real(eq_cross%time_slice(1)%global_quantities%psi_magnetic_axis, &
@@ -139,7 +139,7 @@ contains
   ! every kind reaching this function still expects agreement, and wrong with
   ! no error the day expected_verdict_for_kind gives one of them something
   ! else.  test_shim_right_only_rules derives it for the same reason.
-  function combine2(id, first, second) result(combined)
+  function combine_pair(id, first, second) result(combined)
     character(len=*), intent(in) :: id
     character(len=6), intent(in) :: first, second
     character(len=6) :: combined, expected
@@ -150,7 +150,7 @@ contains
     else
       combined = second
     end if
-  end function combine2
+  end function combine_pair
 
   function flat_2d_verdict(left, right) result(verdict)
     real(ids_real), intent(in) :: left(:,:), right(:,:)
