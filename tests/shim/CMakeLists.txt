@@ -269,3 +269,32 @@ endfunction()
 # DD 4 control rules out a vacuous roundtrip that succeeds without conversion.
 add_shim_roundtrip_test(roundtrip-cross-dd dd-3.39.0 partial-read-allowed)
 add_shim_roundtrip_test(roundtrip-same-dd dd-4.1.1 clean-read)
+
+# Behaviour pin, not a contract assertion (issue #74): a DD 4-only leaf is
+# refused while the rest of this slice continues.  The resulting torn slice is
+# an accepted limitation, so its label must keep it distinct from assertions of
+# the shim contract above.
+set(AL_SHIM_TORN_WRITE_FIXTURE "${CMAKE_CURRENT_BINARY_DIR}/torn-write-fixture")
+add_executable(al-fortran-test-shim-torn-write test_shim_torn_write.f90)
+target_link_libraries(al-fortran-test-shim-torn-write PRIVATE al-fortran)
+al_shim_private_module_dir(al-fortran-test-shim-torn-write)
+add_test(NAME al-fortran-test-shim-torn-write-fixture
+  COMMAND ${CMAKE_COMMAND}
+    -D "SOURCE=${AL_SHIM_FIXTURE_ROOT}/dd-3.39.0"
+    -D "DESTINATION=${AL_SHIM_TORN_WRITE_FIXTURE}"
+    -P "${CMAKE_CURRENT_SOURCE_DIR}/copy_fixture.cmake"
+)
+set_tests_properties(al-fortran-test-shim-torn-write-fixture PROPERTIES
+  FIXTURES_SETUP al-fortran-test-shim-torn-write
+)
+add_test(NAME al-fortran-test-shim-torn-write
+  COMMAND ${CMAKE_COMMAND}
+    -D "COMMAND_TO_RUN=$<TARGET_FILE:al-fortran-test-shim-torn-write>;${AL_SHIM_TORN_WRITE_FIXTURE}"
+    -D "EXPECTED_REFUSED_PATH=global_quantities/rho_tor_boundary"
+    -P "${CMAKE_CURRENT_SOURCE_DIR}/check_torn_write.cmake"
+)
+set_tests_properties(al-fortran-test-shim-torn-write PROPERTIES
+  FIXTURES_REQUIRED al-fortran-test-shim-torn-write
+  ENVIRONMENT "IMAS_MVDD_HLI_DD_VERSION=4.1.1;${AL_CORE_TEST_ENVIRONMENT}"
+  LABELS "shim;behaviour-pin"
+)
