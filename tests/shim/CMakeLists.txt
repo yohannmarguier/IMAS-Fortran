@@ -64,10 +64,41 @@ add_test( NAME al-fortran-test-shim-comparison COMMAND al-fortran-test-shim-comp
 # tests.  A distinctive marker plus the program's non-zero exit is the pass
 # condition, and the count assertion in the program prevents a no-op test from
 # passing.
+# This program makes no AL call today, so it would run without the shim's
+# run-time environment.  It is given it anyway: it links al-fortran, and so the
+# shim, and the day an assertion here touches the C ABI the missing
+# IMAS_CORE_LIBRARY would surface as an unrelated-looking dlopen failure.
 set_tests_properties( al-fortran-test-shim-comparison PROPERTIES
+  ENVIRONMENT "${AL_CORE_TEST_ENVIRONMENT}"
   FAIL_REGULAR_EXPRESSION "COMPARISON-FAILURE"
   LABELS "shim;contract-assertion"
 )
+
+# Fixture provenance (issue #64): the checked-in pulses must be what their
+# generator produces, or every assertion in this suite is against numbers
+# nobody can re-derive.  verify_fixtures.sh regenerates them outside the
+# checkout and compares every dataset with h5diff; registering it here is what
+# turns that from a script somebody may remember to run into a criterion the
+# suite enforces.
+#
+# It needs the fixtures' own virtualenv and h5diff, neither of which this
+# project builds, so it registers only when both are present -- the same
+# pattern as the linkage test above.  A missing venv means the check is
+# skipped, never that it silently passes.
+set(AL_SHIM_FIXTURE_VENV_PYTHON "${CMAKE_SOURCE_DIR}/imas-python-fixtures/.venv/bin/python")
+find_program(AL_SHIM_H5DIFF h5diff)
+if( EXISTS "${AL_SHIM_FIXTURE_VENV_PYTHON}" AND AL_SHIM_H5DIFF )
+  add_test(NAME al-fortran-test-shim-fixture-provenance
+    COMMAND "${CMAKE_SOURCE_DIR}/imas-python-fixtures/verify_fixtures.sh"
+  )
+  set_tests_properties(al-fortran-test-shim-fixture-provenance PROPERTIES
+    LABELS "shim;contract-assertion"
+  )
+else()
+  message( STATUS
+    "Not registering al-fortran-test-shim-fixture-provenance: needs "
+    "imas-python-fixtures/.venv (see its README) and h5diff" )
+endif()
 
 # The HLI ends ids_get's root action itself, so it observes nested fidelity
 # through the shim's process-local loss-log file, not the shim C ABI.  Give the
@@ -77,10 +108,12 @@ set(AL_SHIM_FIXTURE_ROOT "${CMAKE_SOURCE_DIR}/imas-python-fixtures/fixtures")
 set(AL_SHIM_NESTED_LOSS_LOG_DIR "${CMAKE_CURRENT_BINARY_DIR}/nested-loss-log")
 add_executable(al-fortran-test-shim-nested-loss test_shim_nested_loss.f90)
 target_link_libraries(al-fortran-test-shim-nested-loss PRIVATE al-fortran)
+al_shim_private_module_dir(al-fortran-test-shim-nested-loss)
 add_test(NAME al-fortran-test-shim-nested-loss
   COMMAND ${CMAKE_COMMAND}
     -D "COMMAND_TO_RUN=$<TARGET_FILE:al-fortran-test-shim-nested-loss>;${AL_SHIM_FIXTURE_ROOT}"
     -D "LOSS_LOG_DIR=${AL_SHIM_NESTED_LOSS_LOG_DIR}"
+    -D "FIXTURE_ROOT=${AL_SHIM_FIXTURE_ROOT}"
     -P "${CMAKE_CURRENT_SOURCE_DIR}/check_nested_loss_log.cmake"
 )
 set_tests_properties(al-fortran-test-shim-nested-loss PROPERTIES
@@ -96,6 +129,7 @@ set_tests_properties(al-fortran-test-shim-nested-loss PROPERTIES
 add_executable(al-fortran-test-shim-structural-rules
   shim_comparison.f90
   shim_rule_table.f90
+  shim_rule_check.f90
   test_shim_structural_rules.f90
 )
 target_link_libraries(al-fortran-test-shim-structural-rules PRIVATE al-fortran)
@@ -119,6 +153,7 @@ set_tests_properties(al-fortran-test-shim-structural-rules PROPERTIES
 add_executable(al-fortran-test-shim-cocos-rules
   shim_comparison.f90
   shim_rule_table.f90
+  shim_rule_check.f90
   test_shim_cocos_rules.f90
 )
 target_link_libraries(al-fortran-test-shim-cocos-rules PRIVATE al-fortran)
@@ -141,6 +176,7 @@ set_tests_properties(al-fortran-test-shim-cocos-rules PROPERTIES
 add_executable(al-fortran-test-shim-right-only-rules
   shim_comparison.f90
   shim_rule_table.f90
+  shim_rule_check.f90
   test_shim_right_only_rules.f90
 )
 target_link_libraries(al-fortran-test-shim-right-only-rules PRIVATE al-fortran)
@@ -184,6 +220,7 @@ file(MAKE_DIRECTORY "${AL_SHIM_REFUSAL_LOSS_LOG_DIR}")
 add_executable(al-fortran-test-shim-refusal-rules
   shim_comparison.f90
   shim_rule_table.f90
+  shim_rule_check.f90
   test_shim_refusal_rules.f90
 )
 target_link_libraries(al-fortran-test-shim-refusal-rules PRIVATE al-fortran)

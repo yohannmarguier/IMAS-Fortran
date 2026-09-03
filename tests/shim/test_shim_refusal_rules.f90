@@ -63,14 +63,16 @@ program test_shim_refusal_rules
   use al_get_policy, only: PARTIAL_READ, al_get_skipped_count, al_get_skipped_path, &
                            AL_SKIP_PATH_LEN, AL_SKIP_LOG_CAPACITY
   use shim_comparison, only: verdict_real, verdict_integer
-  use shim_rule_table, only: refusal_rules, refusal_rule_count, expected_verdict_for_kind, &
+  use shim_rule_check, only: rule_checker
+  use shim_rule_table, only: refusal_rules, expected_verdict_for_kind, &
                              kind_name, retyped_refusal_reason, redefined_refusal_reason
   implicit none
 
   type(ids_equilibrium) :: eq_cross, eq_control
   character(len=512) :: fixture_root
   integer :: context, status_cross, status_control
-  integer :: failures, expectations, rules_checked
+  integer :: expectations, rules_checked
+  type(rule_checker) :: checker
 
   ! A copy of the read-side skip log taken while it still describes the
   ! cross-version read.
@@ -87,7 +89,8 @@ program test_shim_refusal_rules
   call get_command_argument(1, fixture_root)
   if (len_trim(fixture_root) == 0) error stop 'missing fixture root'
 
-  failures = 0
+  checker%rules = refusal_rules
+  checker%marker = 'REFUSAL-FAILURE'
   expectations = 0
   rules_checked = 0
 
@@ -191,14 +194,10 @@ program test_shim_refusal_rules
   call expect(expectations == expected_expectation_count, &
               'every expectation in this program must run')
 
-  if (rules_checked /= refusal_rule_count) then
-    write(*, '(a,i0,a,i0,a)') 'REFUSAL-FAILURE: only ', rules_checked, ' of ', refusal_rule_count, &
-      ' refusal rule table entries were checked'
-    failures = failures + 1
-  end if
+  call checker%assert_every_rule_checked(rules_checked)
 
-  if (failures > 0) then
-    write(*, '(a,i0,a)') 'REFUSAL-FAILURE: ', failures, ' refusal expectation(s) failed'
+  if (checker%failures > 0) then
+    write(*, '(a,i0,a)') 'REFUSAL-FAILURE: ', checker%failures, ' refusal expectation(s) failed'
     stop 1
   end if
 
@@ -348,7 +347,7 @@ contains
     real(ids_real), intent(in) :: control_value, cross_value
     character(len=96) :: dd_path
 
-    dd_path = refusal_rules(find_rule(id))%hli_path
+    dd_path = checker%rules(checker%find(id))%hli_path
     call expect(.not. skip_log_names(last_segment(trim(dd_path)), &
                                      redefined_refusal_reason, trim(dd_path)), &
                 'no unit-redefinition refusal is recorded for '//trim(dd_path))
@@ -362,7 +361,7 @@ contains
     character(len=*), intent(in) :: id, reason
     character(len=96) :: dd_path
 
-    dd_path = refusal_rules(find_rule(id))%hli_path
+    dd_path = checker%rules(checker%find(id))%hli_path
     call expect(skip_log_names(last_segment(trim(dd_path)), reason, trim(dd_path)), &
                 'the skip log names '//trim(dd_path)//' as refused')
   end subroutine check_refused_in_skip_log
@@ -385,45 +384,18 @@ contains
   subroutine check_rule(id, verdict)
     character(len=*), intent(in) :: id
     character(len=6), intent(in) :: verdict
-    integer :: idx
-    character(len=6) :: expected
 
-    idx = find_rule(id)
-    expected = expected_verdict_for_kind(refusal_rules(idx)%kind)
     rules_checked = rules_checked + 1
-    if (trim(verdict) /= trim(expected)) then
-      failures = failures + 1
-      write(*, '(a,a,a,a,a,a,a,a,a,a)') 'REFUSAL-FAILURE: rule ', trim(id), ' (', &
-        trim(kind_name(refusal_rules(idx)%kind)), ') path ', trim(refusal_rules(idx)%hli_path), &
-        ' verdict=', trim(verdict), ' expected=', trim(expected)
-      write(*, '(a,a)') '  source: ', trim(refusal_rules(idx)%source)
-    end if
+    call checker%check(id, verdict)
   end subroutine check_rule
 
-  function find_rule(id) result(idx)
-    character(len=*), intent(in) :: id
-    integer :: idx
-    integer :: i
-
-    idx = 0
-    do i = 1, refusal_rule_count
-      if (trim(refusal_rules(i)%id) == trim(id)) then
-        idx = i
-        return
-      end if
-    end do
-    error stop 'test_shim_refusal_rules: rule id not found in shim_rule_table: '//trim(id)
-  end function find_rule
 
   subroutine expect(condition, what)
     logical, intent(in) :: condition
     character(len=*), intent(in) :: what
 
     expectations = expectations + 1
-    if (.not. condition) then
-      write(*, '(a,a)') 'REFUSAL-FAILURE: ', what
-      failures = failures + 1
-    end if
+    if (.not. condition) call checker%fail(what)
   end subroutine expect
 
 end program test_shim_refusal_rules

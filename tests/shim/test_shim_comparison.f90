@@ -4,10 +4,12 @@
 program test_shim_comparison
   use ids_routines, only: ids_real, ids_int, ids_int_invalid
   use shim_comparison, only: verdict_real, verdict_integer, verdict_real_vector, color_for_verdict
+  use shim_comparison, only: verdict_real_vector_by_size
   implicit none
 
   integer :: failures, expectations
   real(ids_real) :: absent_real, real_values(2), flipped_values(2), other_values(2), short_values(1)
+  real(ids_real) :: empty_values(0)
   integer(ids_int) :: absent_integer
 
   failures = 0
@@ -48,7 +50,22 @@ program test_shim_comparison
   call expect(color_for_verdict('NOFLIP') == color_for_verdict('DIFF'), &
               'NOFLIP has mismatch severity')
 
-  call expect(expectations == 19, 'all synthetic verdict cases must run')
+  ! The trap verdict_real_vector_by_size exists to close.  Asserting presence
+  ! that was never checked -- `.true.` for a side the shim served nothing for --
+  ! makes two empty readings agree, because equal extents send all_near into a
+  ! loop that runs zero times and returns .true.
+  call expect(verdict_real_vector(.true., empty_values, .true., empty_values) == 'same', &
+              'hardcoded presence makes two unserved vectors agree')
+  call expect(verdict_real_vector_by_size(empty_values, empty_values) == '--', &
+              'size-derived presence calls two unserved vectors absent')
+  call expect(verdict_real_vector_by_size(real_values, empty_values) == 'only4', &
+              'size-derived presence calls an unserved right side only4')
+  call expect(verdict_real_vector_by_size(empty_values, real_values) == 'only3', &
+              'size-derived presence calls an unserved left side only3')
+  call expect(verdict_real_vector_by_size(real_values, real_values) == 'same', &
+              'size-derived presence still agrees on two served vectors')
+
+  call expect(expectations == 24, 'all synthetic verdict cases must run')
 
   if (failures > 0) then
     write(*, '(a,i0,a)') 'COMPARISON-FAILURE: ', failures, ' expectation(s) failed'

@@ -14,14 +14,15 @@
 program test_shim_structural_rules
   use ids_routines, only: ids_equilibrium, OPEN_PULSE, imas_open, imas_close, ids_get, ids_real
   use al_get_policy, only: PARTIAL_READ
-  use shim_comparison, only: verdict_real, verdict_real_vector
-  use shim_rule_table, only: structural_rules, structural_rule_count, expected_verdict_for_kind, kind_name
+  use shim_comparison, only: verdict_real, verdict_real_vector_by_size, verdict_real_matrix_by_size
+  use shim_rule_table, only: structural_rules
+  use shim_rule_check, only: rule_checker
   implicit none
 
   type(ids_equilibrium) :: eq_cross, eq_control
   character(len=512) :: fixture_root
   integer :: context, status_cross, status_control
-  integer :: failures, expectations
+  type(rule_checker) :: checker
 
   call get_command_argument(1, fixture_root)
   if (len_trim(fixture_root) == 0) error stop 'missing fixture root'
@@ -37,90 +38,90 @@ program test_shim_structural_rules
   if (status_control /= 0) error stop 'same-version control read did not succeed cleanly'
   if (status_cross /= 0 .and. status_cross /= PARTIAL_READ) error stop 'cross-version read failed outright'
 
-  failures = 0
-  expectations = 0
+  checker%rules = structural_rules
+  checker%marker = 'STRUCTURAL-FAILURE'
 
   ! -- identical --
-  call check('identical-vacuum-r0', &
+  call checker%check('identical-vacuum-r0', &
        verdict_real(eq_cross%vacuum_toroidal_field%r0, eq_control%vacuum_toroidal_field%r0))
-  call check('identical-time', &
-       verdict_real_vector(.true., eq_cross%time, .true., eq_control%time))
-  call check('identical-beta-pol', &
+  call checker%check('identical-time', &
+       verdict_real_vector_by_size(eq_cross%time, eq_control%time))
+  call checker%check('identical-beta-pol', &
        verdict_real(eq_cross%time_slice(1)%global_quantities%beta_pol, &
                     eq_control%time_slice(1)%global_quantities%beta_pol))
 
   ! -- renamed --
-  call check('rename-beta-normal', &
+  call checker%check('rename-beta-normal', &
        verdict_real(eq_cross%time_slice(1)%global_quantities%beta_tor_norm, &
                     eq_control%time_slice(1)%global_quantities%beta_tor_norm))
-  call check('rename-bpol-probe', &
+  call checker%check('rename-bpol-probe', &
        verdict_real(eq_cross%time_slice(1)%constraints%b_field_pol_probe(1)%measured, &
                     eq_control%time_slice(1)%constraints%b_field_pol_probe(1)%measured))
-  call check('rename-mse-polarisation-angle', &
+  call checker%check('rename-mse-polarisation-angle', &
        verdict_real(eq_cross%time_slice(1)%constraints%mse_polarization_angle(1)%measured, &
                     eq_control%time_slice(1)%constraints%mse_polarization_angle(1)%measured))
-  call check('rename-magnetisation-r', &
+  call checker%check('rename-magnetisation-r', &
        verdict_real(eq_cross%time_slice(1)%constraints%iron_core_segment(1)%magnetization_r%measured, &
                     eq_control%time_slice(1)%constraints%iron_core_segment(1)%magnetization_r%measured))
-  call check('rename-magnetisation-z', &
+  call checker%check('rename-magnetisation-z', &
        verdict_real(eq_cross%time_slice(1)%constraints%iron_core_segment(1)%magnetization_z%measured, &
                     eq_control%time_slice(1)%constraints%iron_core_segment(1)%magnetization_z%measured))
 
   ! -- moved (each rule combines a r/z pair into one verdict) --
-  call check('move-closest-wall-point', &
-       combine2(verdict_real(eq_cross%time_slice(1)%boundary%closest_wall_point%r, &
+  call checker%check('move-closest-wall-point', &
+       combine_pair('move-closest-wall-point', &
+                verdict_real(eq_cross%time_slice(1)%boundary%closest_wall_point%r, &
                               eq_control%time_slice(1)%boundary%closest_wall_point%r), &
                 verdict_real(eq_cross%time_slice(1)%boundary%closest_wall_point%z, &
                               eq_control%time_slice(1)%boundary%closest_wall_point%z)))
-  call check('move-dr-dz-zero-point', &
-       combine2(verdict_real(eq_cross%time_slice(1)%boundary%dr_dz_zero_point%r, &
+  call checker%check('move-dr-dz-zero-point', &
+       combine_pair('move-dr-dz-zero-point', &
+                verdict_real(eq_cross%time_slice(1)%boundary%dr_dz_zero_point%r, &
                               eq_control%time_slice(1)%boundary%dr_dz_zero_point%r), &
                 verdict_real(eq_cross%time_slice(1)%boundary%dr_dz_zero_point%z, &
                               eq_control%time_slice(1)%boundary%dr_dz_zero_point%z)))
-  call check('move-gap', &
-       combine2(verdict_real(eq_cross%time_slice(1)%boundary%gap(1)%r, &
+  call checker%check('move-gap', &
+       combine_pair('move-gap', &
+                verdict_real(eq_cross%time_slice(1)%boundary%gap(1)%r, &
                               eq_control%time_slice(1)%boundary%gap(1)%r), &
                 verdict_real(eq_cross%time_slice(1)%boundary%gap(1)%z, &
                               eq_control%time_slice(1)%boundary%gap(1)%z)))
 
   ! -- merged: the eight folds --
-  call check('fold-p2d-br', flat_2d_verdict(eq_cross%time_slice(1)%profiles_2d(1)%b_field_r, &
+  call checker%check('fold-p2d-br', verdict_real_matrix_by_size(eq_cross%time_slice(1)%profiles_2d(1)%b_field_r, &
                                              eq_control%time_slice(1)%profiles_2d(1)%b_field_r))
-  call check('fold-p2d-bz', flat_2d_verdict(eq_cross%time_slice(1)%profiles_2d(1)%b_field_z, &
+  call checker%check('fold-p2d-bz', verdict_real_matrix_by_size(eq_cross%time_slice(1)%profiles_2d(1)%b_field_z, &
                                              eq_control%time_slice(1)%profiles_2d(1)%b_field_z))
-  call check('fold-p2d-bphi', flat_2d_verdict(eq_cross%time_slice(1)%profiles_2d(1)%b_field_phi, &
+  call checker%check('fold-p2d-bphi', verdict_real_matrix_by_size(eq_cross%time_slice(1)%profiles_2d(1)%b_field_phi, &
                                                eq_control%time_slice(1)%profiles_2d(1)%b_field_phi))
-  call check('fold-axis-bphi', &
+  call checker%check('fold-axis-bphi', &
        verdict_real(eq_cross%time_slice(1)%global_quantities%magnetic_axis%b_field_phi, &
                     eq_control%time_slice(1)%global_quantities%magnetic_axis%b_field_phi))
-  call check('fold-p1d-baverage', &
-       verdict_real_vector(.true., eq_cross%time_slice(1)%profiles_1d%b_field_average, &
-                            .true., eq_control%time_slice(1)%profiles_1d%b_field_average))
-  call check('fold-p1d-bmax', &
-       verdict_real_vector(.true., eq_cross%time_slice(1)%profiles_1d%b_field_max, &
-                            .true., eq_control%time_slice(1)%profiles_1d%b_field_max))
-  call check('fold-p1d-bmin', &
-       verdict_real_vector(.true., eq_cross%time_slice(1)%profiles_1d%b_field_min, &
-                            .true., eq_control%time_slice(1)%profiles_1d%b_field_min))
-  call check('fold-energy-mhd', &
+  call checker%check('fold-p1d-baverage', &
+       verdict_real_vector_by_size(eq_cross%time_slice(1)%profiles_1d%b_field_average, &
+                                   eq_control%time_slice(1)%profiles_1d%b_field_average))
+  call checker%check('fold-p1d-bmax', &
+       verdict_real_vector_by_size(eq_cross%time_slice(1)%profiles_1d%b_field_max, &
+                                   eq_control%time_slice(1)%profiles_1d%b_field_max))
+  call checker%check('fold-p1d-bmin', &
+       verdict_real_vector_by_size(eq_cross%time_slice(1)%profiles_1d%b_field_min, &
+                                   eq_control%time_slice(1)%profiles_1d%b_field_min))
+  call checker%check('fold-energy-mhd', &
        verdict_real(eq_cross%time_slice(1)%global_quantities%energy_mhd, &
                     eq_control%time_slice(1)%global_quantities%energy_mhd))
 
   ! -- split: one DD3 source feeds two DD4 targets; both must agree --
-  call check('split-psi-axis', &
-       combine2(verdict_real(eq_cross%time_slice(1)%global_quantities%psi_axis, &
+  call checker%check('split-psi-axis', &
+       combine_pair('split-psi-axis', &
+                verdict_real(eq_cross%time_slice(1)%global_quantities%psi_axis, &
                               eq_control%time_slice(1)%global_quantities%psi_axis), &
                 verdict_real(eq_cross%time_slice(1)%global_quantities%psi_magnetic_axis, &
                               eq_control%time_slice(1)%global_quantities%psi_magnetic_axis)))
 
-  if (expectations /= structural_rule_count) then
-    write(*, '(a,i0,a,i0,a)') 'STRUCTURAL-FAILURE: only ', expectations, ' of ', structural_rule_count, &
-      ' rule table entries were checked'
-    failures = failures + 1
-  end if
+  call checker%assert_every_rule_checked(checker%expectations)
 
-  if (failures > 0) then
-    write(*, '(a,i0,a)') 'STRUCTURAL-FAILURE: ', failures, ' structural rule(s) failed'
+  if (checker%failures > 0) then
+    write(*, '(a,i0,a)') 'STRUCTURAL-FAILURE: ', checker%failures, ' structural rule(s) failed'
     stop 1
   end if
 
@@ -128,57 +129,27 @@ contains
 
   ! One rule can combine several leaf verdicts (e.g. an r/z pair); the rule
   ! fails if either does, and the first non-agreeing verdict is reported.
-  function combine2(first, second) result(combined)
+  !
+  ! What counts as agreeing is the rule's own expectation, looked up exactly as
+  ! check() looks it up.  Writing 'same' in here instead would be a second,
+  ! silent copy of the kind-to-verdict mapping: correct only for as long as
+  ! every kind reaching this function still expects agreement, and wrong with
+  ! no error the day expected_verdict_for_kind gives one of them something
+  ! else.  test_shim_right_only_rules derives it for the same reason.
+  function combine_pair(id, first, second) result(combined)
+    character(len=*), intent(in) :: id
     character(len=6), intent(in) :: first, second
-    character(len=6) :: combined
+    character(len=6) :: combined, expected
 
-    if (first == 'same' .and. second == 'same') then
-      combined = 'same'
-    else if (first /= 'same') then
+    expected = checker%expected_for(id)
+    if (trim(first) /= trim(expected)) then
       combined = first
     else
       combined = second
     end if
-  end function combine2
+  end function combine_pair
 
-  function flat_2d_verdict(left, right) result(verdict)
-    real(ids_real), intent(in) :: left(:,:), right(:,:)
-    character(len=6) :: verdict
 
-    verdict = verdict_real_vector(.true., reshape(left, [size(left)]), .true., reshape(right, [size(right)]))
-  end function flat_2d_verdict
 
-  function find_rule(id) result(idx)
-    character(len=*), intent(in) :: id
-    integer :: idx
-    integer :: i
-
-    idx = 0
-    do i = 1, structural_rule_count
-      if (trim(structural_rules(i)%id) == trim(id)) then
-        idx = i
-        return
-      end if
-    end do
-    error stop 'test_shim_structural_rules: rule id not found in shim_rule_table: '//trim(id)
-  end function find_rule
-
-  subroutine check(id, verdict)
-    character(len=*), intent(in) :: id
-    character(len=6), intent(in) :: verdict
-    integer :: idx
-    character(len=6) :: expected
-
-    idx = find_rule(id)
-    expected = expected_verdict_for_kind(structural_rules(idx)%kind)
-    expectations = expectations + 1
-    if (trim(verdict) /= trim(expected)) then
-      failures = failures + 1
-      write(*, '(a,a,a,a,a,a,a,a,a,a)') 'STRUCTURAL-FAILURE: rule ', trim(id), ' (', &
-        trim(kind_name(structural_rules(idx)%kind)), ') path ', trim(structural_rules(idx)%hli_path), &
-        ' verdict=', trim(verdict), ' expected=', trim(expected)
-      write(*, '(a,a)') '  source: ', trim(structural_rules(idx)%source)
-    end if
-  end subroutine check
 
 end program test_shim_structural_rules

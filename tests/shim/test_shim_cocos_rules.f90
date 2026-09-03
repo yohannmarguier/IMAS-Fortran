@@ -24,14 +24,15 @@ program test_shim_cocos_rules
   use ids_routines, only: ids_equilibrium, OPEN_PULSE, imas_open, imas_close, ids_get, ids_real
   use al_get_policy, only: PARTIAL_READ
   use ids_schemas_equilibrium, only: ids_equilibrium_constraints_0D_position
-  use shim_comparison, only: verdict_real, verdict_real_vector
-  use shim_rule_table, only: cocos_rules, cocos_rule_count, expected_verdict_for_kind, kind_name
+  use shim_comparison, only: verdict_real, verdict_real_vector_by_size, verdict_real_matrix_by_size
+  use shim_rule_table, only: cocos_rules
+  use shim_rule_check, only: rule_checker
   implicit none
 
   type(ids_equilibrium) :: eq_cross, eq_control
   character(len=512) :: fixture_root
   integer :: context, status_cross, status_control
-  integer :: failures, expectations
+  type(rule_checker) :: checker
 
   call get_command_argument(1, fixture_root)
   if (len_trim(fixture_root) == 0) error stop 'missing fixture root'
@@ -47,8 +48,8 @@ program test_shim_cocos_rules
   if (status_control /= 0) error stop 'same-version control read did not succeed cleanly'
   if (status_cross /= 0 .and. status_cross /= PARTIAL_READ) error stop 'cross-version read failed outright'
 
-  failures = 0
-  expectations = 0
+  checker%rules = cocos_rules
+  checker%marker = 'COCOS-FAILURE'
 
   call check('cocos-boundary-psi', &
        verdict_real(eq_cross%time_slice(1)%boundary%psi, eq_control%time_slice(1)%boundary%psi))
@@ -92,8 +93,8 @@ program test_shim_cocos_rules
                              eq_control%time_slice(1)%constraints%q))
 
   call check('cocos-ggd-psi-values', &
-       verdict_real_vector(.true., eq_cross%time_slice(1)%ggd(1)%psi(1)%values, &
-                            .true., eq_control%time_slice(1)%ggd(1)%psi(1)%values))
+       verdict_real_vector_by_size(eq_cross%time_slice(1)%ggd(1)%psi(1)%values, &
+                                   eq_control%time_slice(1)%ggd(1)%psi(1)%values))
 
   call check('cocos-gq-ip', &
        verdict_real(eq_cross%time_slice(1)%global_quantities%ip, &
@@ -115,48 +116,44 @@ program test_shim_cocos_rules
                     eq_control%time_slice(1)%global_quantities%v_external))
 
   call check('cocos-p1d-darea-dpsi', &
-       verdict_real_vector(.true., eq_cross%time_slice(1)%profiles_1d%darea_dpsi, &
-                            .true., eq_control%time_slice(1)%profiles_1d%darea_dpsi))
+       verdict_real_vector_by_size(eq_cross%time_slice(1)%profiles_1d%darea_dpsi, &
+                                   eq_control%time_slice(1)%profiles_1d%darea_dpsi))
   call check('cocos-p1d-dpressure-dpsi', &
-       verdict_real_vector(.true., eq_cross%time_slice(1)%profiles_1d%dpressure_dpsi, &
-                            .true., eq_control%time_slice(1)%profiles_1d%dpressure_dpsi))
+       verdict_real_vector_by_size(eq_cross%time_slice(1)%profiles_1d%dpressure_dpsi, &
+                                   eq_control%time_slice(1)%profiles_1d%dpressure_dpsi))
   call check('cocos-p1d-dpsi-drho-tor', &
-       verdict_real_vector(.true., eq_cross%time_slice(1)%profiles_1d%dpsi_drho_tor, &
-                            .true., eq_control%time_slice(1)%profiles_1d%dpsi_drho_tor))
+       verdict_real_vector_by_size(eq_cross%time_slice(1)%profiles_1d%dpsi_drho_tor, &
+                                   eq_control%time_slice(1)%profiles_1d%dpsi_drho_tor))
   call check('cocos-p1d-dvolume-dpsi', &
-       verdict_real_vector(.true., eq_cross%time_slice(1)%profiles_1d%dvolume_dpsi, &
-                            .true., eq_control%time_slice(1)%profiles_1d%dvolume_dpsi))
+       verdict_real_vector_by_size(eq_cross%time_slice(1)%profiles_1d%dvolume_dpsi, &
+                                   eq_control%time_slice(1)%profiles_1d%dvolume_dpsi))
   call check('cocos-p1d-f-df-dpsi', &
-       verdict_real_vector(.true., eq_cross%time_slice(1)%profiles_1d%f_df_dpsi, &
-                            .true., eq_control%time_slice(1)%profiles_1d%f_df_dpsi))
+       verdict_real_vector_by_size(eq_cross%time_slice(1)%profiles_1d%f_df_dpsi, &
+                                   eq_control%time_slice(1)%profiles_1d%f_df_dpsi))
   call check('cocos-p1d-j-parallel', &
-       verdict_real_vector(.true., eq_cross%time_slice(1)%profiles_1d%j_parallel, &
-                            .true., eq_control%time_slice(1)%profiles_1d%j_parallel))
+       verdict_real_vector_by_size(eq_cross%time_slice(1)%profiles_1d%j_parallel, &
+                                   eq_control%time_slice(1)%profiles_1d%j_parallel))
   call check('cocos-p1d-j-phi', &
-       verdict_real_vector(.true., eq_cross%time_slice(1)%profiles_1d%j_phi, &
-                            .true., eq_control%time_slice(1)%profiles_1d%j_phi))
+       verdict_real_vector_by_size(eq_cross%time_slice(1)%profiles_1d%j_phi, &
+                                   eq_control%time_slice(1)%profiles_1d%j_phi))
   call check('cocos-p1d-psi', &
-       verdict_real_vector(.true., eq_cross%time_slice(1)%profiles_1d%psi, &
-                            .true., eq_control%time_slice(1)%profiles_1d%psi))
+       verdict_real_vector_by_size(eq_cross%time_slice(1)%profiles_1d%psi, &
+                                   eq_control%time_slice(1)%profiles_1d%psi))
 
   call check('cocos-p2d-j-parallel', &
-       flat_2d_verdict(eq_cross%time_slice(1)%profiles_2d(1)%j_parallel, &
+       verdict_real_matrix_by_size(eq_cross%time_slice(1)%profiles_2d(1)%j_parallel, &
                         eq_control%time_slice(1)%profiles_2d(1)%j_parallel))
   call check('cocos-p2d-j-phi', &
-       flat_2d_verdict(eq_cross%time_slice(1)%profiles_2d(1)%j_phi, &
+       verdict_real_matrix_by_size(eq_cross%time_slice(1)%profiles_2d(1)%j_phi, &
                         eq_control%time_slice(1)%profiles_2d(1)%j_phi))
   call check('cocos-p2d-psi', &
-       flat_2d_verdict(eq_cross%time_slice(1)%profiles_2d(1)%psi, &
+       verdict_real_matrix_by_size(eq_cross%time_slice(1)%profiles_2d(1)%psi, &
                         eq_control%time_slice(1)%profiles_2d(1)%psi))
 
-  if (expectations /= cocos_rule_count) then
-    write(*, '(a,i0,a,i0,a)') 'COCOS-FAILURE: only ', expectations, ' of ', cocos_rule_count, &
-      ' rule table entries were checked'
-    failures = failures + 1
-  end if
+  call checker%assert_every_rule_checked(checker%expectations)
 
-  if (failures > 0) then
-    write(*, '(a,i0,a)') 'COCOS-FAILURE: ', failures, ' cocos rule(s) failed'
+  if (checker%failures > 0) then
+    write(*, '(a,i0,a)') 'COCOS-FAILURE: ', checker%failures, ' cocos rule(s) failed'
     stop 1
   end if
 
@@ -208,46 +205,20 @@ contains
     end if
   end function position_psi_verdict
 
-  function flat_2d_verdict(left, right) result(verdict)
-    real(ids_real), intent(in) :: left(:,:), right(:,:)
-    character(len=6) :: verdict
 
-    verdict = verdict_real_vector(.true., reshape(left, [size(left)]), .true., reshape(right, [size(right)]))
-  end function flat_2d_verdict
 
-  function find_rule(id) result(idx)
-    character(len=*), intent(in) :: id
-    integer :: idx
-    integer :: i
-
-    idx = 0
-    do i = 1, cocos_rule_count
-      if (trim(cocos_rules(i)%id) == trim(id)) then
-        idx = i
-        return
-      end if
-    end do
-    error stop 'test_shim_cocos_rules: rule id not found in shim_rule_table: '//trim(id)
-  end function find_rule
-
+  ! The one thing COCOS judges differently from the other rule programs: a
+  ! rule that failed because the sign flip stopped being applied says so.
+  ! NOFLIP is only reachable here, so the hint stays at this level rather than
+  ! in the shared checker.
   subroutine check(id, verdict)
     character(len=*), intent(in) :: id
     character(len=6), intent(in) :: verdict
-    integer :: idx
-    character(len=6) :: expected
 
-    idx = find_rule(id)
-    expected = expected_verdict_for_kind(cocos_rules(idx)%kind)
-    expectations = expectations + 1
-    if (trim(verdict) /= trim(expected)) then
-      failures = failures + 1
-      write(*, '(a,a,a,a,a,a,a,a,a,a)') 'COCOS-FAILURE: rule ', trim(id), ' (', &
-        trim(kind_name(cocos_rules(idx)%kind)), ') path ', trim(cocos_rules(idx)%hli_path), &
-        ' verdict=', trim(verdict), ' expected=', trim(expected)
-      write(*, '(a,a)') '  source: ', trim(cocos_rules(idx)%source)
-      if (trim(verdict) == 'NOFLIP') then
-        write(*, '(a)') '  the required COCOS sign flip did not happen'
-      end if
+    if (trim(verdict) == 'NOFLIP') then
+      call checker%check(id, verdict, 'the required COCOS sign flip did not happen')
+    else
+      call checker%check(id, verdict)
     end if
   end subroutine check
 
