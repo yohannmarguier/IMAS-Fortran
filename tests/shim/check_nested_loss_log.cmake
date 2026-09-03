@@ -53,10 +53,6 @@ set(_expected_records
   "read${_tab}LOSSY${_tab}time_slice/boundary/phi"
   "read${_tab}LOSSY${_tab}time_slice/boundary/phi_poloidal_current"
   "read${_tab}LOSSY${_tab}time_slice/contour_tree/edges"
-  "read${_tab}UNMAPPABLE${_tab}time_slice/constraints/x_point/chi_squared_r"
-  "read${_tab}UNMAPPABLE${_tab}time_slice/constraints/x_point/chi_squared_z"
-  "read${_tab}UNMAPPABLE${_tab}time_slice/constraints/strike_point/chi_squared_r"
-  "read${_tab}UNMAPPABLE${_tab}time_slice/constraints/strike_point/chi_squared_z"
   "read${_tab}LOSSY${_tab}time_slice/constraints/chi_squared_reduced"
   "read${_tab}LOSSY${_tab}time_slice/constraints/freedom_degrees_n"
   "read${_tab}LOSSY${_tab}time_slice/constraints/constraints_n"
@@ -83,6 +79,39 @@ foreach(_record IN LISTS _records)
   list(GET _columns 6 _path)
   list(APPEND _actual_records "${_operation}${_tab}${_fidelity}${_tab}${_path}")
 endforeach()
+# The four unit-redefined chi_squared_{r,z} paths are deliberately absent from
+# the expected set above, even though the shim emits them as UNMAPPABLE today.
+#
+# Listing them would make the defect the expected result: this test would pass
+# for exactly as long as the shim refuses those paths and go red the day it
+# starts serving them -- red on the fix, green on the bug.  It would also
+# contradict test_shim_refusal_rules, which asserts the same four paths agree
+# (issue #70) and stays red until they do; between them the suite would then
+# hold two opposite expectations of one defect, with no state of the shim that
+# satisfies both.
+#
+# Naming them here instead keeps the reason for the failure legible, and both
+# tests now fail on the defect and both pass once it is fixed.  See #72.
+set(_known_defect_records
+  "read${_tab}UNMAPPABLE${_tab}time_slice/constraints/x_point/chi_squared_r"
+  "read${_tab}UNMAPPABLE${_tab}time_slice/constraints/x_point/chi_squared_z"
+  "read${_tab}UNMAPPABLE${_tab}time_slice/constraints/strike_point/chi_squared_r"
+  "read${_tab}UNMAPPABLE${_tab}time_slice/constraints/strike_point/chi_squared_z"
+)
+set(_defect_hits)
+foreach(_record IN LISTS _known_defect_records)
+  if( "${_record}" IN_LIST _actual_records )
+    list(APPEND _defect_hits "${_record}")
+    list(REMOVE_ITEM _actual_records "${_record}")
+  endif()
+endforeach()
+if( _defect_hits )
+  list(JOIN _defect_hits "\n" _defect_display)
+  message(SEND_ERROR
+    "the shim still refuses the unit-redefined chi_squared paths, so it records "
+    "them as unmappable rather than serving them (issue #72):\n${_defect_display}")
+endif()
+
 list(SORT _expected_records)
 list(SORT _actual_records)
 if( NOT _actual_records STREQUAL _expected_records )
