@@ -83,6 +83,16 @@
 !     "also negated", since `contour_tree` has no DD3 source at all
 !     (`new-contour-tree`, right_only). Same reasoning as above.
 !
+! Note what this means, since 30 + these 2 = 32 and the coincidence invites
+! the conclusion that they are the missing two: a sign flip is a statement
+! about a conversion, and for these two paths there is no conversion to make
+! a statement about. The shim has no DD3 value to negate, so there is no
+! COCOS behaviour of the shim's to assert — only the DD 4.1.1 fixture's own
+! internal sign convention, which is the oracle's business and not this
+! suite's. Asserting them here would test the fixture, not the shim. They are
+! asserted as right_only rules, which is the whole of what the shim owes for
+! them, and the map's <cocos> block remains the only source for this table.
+!
 ! `global_quantities/psi_magnetic_axis` is both a cocos rule here and the
 ! split-psi-axis structural rule above: the map's own <flip> entry for it
 ! carries `note="target of split-psi-axis"`, and both are worth asserting
