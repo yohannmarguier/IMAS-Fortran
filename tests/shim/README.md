@@ -109,7 +109,7 @@ globs and refused at every seam. **That marking is itself the defect.** Both
 fixtures hold the same number for these paths by construction, so there is
 nothing a redefinition needs to apply and nothing to refuse. The assertion
 says the two sides agree and stays red until the shim serves them
-(tracked as [#72][i72]).
+(tracked as issue #72).
 
 Three artifacts in this repository describe the *current, defective* behaviour
 and read like the contract if taken at face value — the map's `unmappable`
@@ -159,12 +159,15 @@ holds a value and the cross-version read serves nothing. Instead the shim
 serves a value too, and it differs from the oracle's.
 
 **This one needs a maintainer's decision rather than a shim fix, because the
-suite currently contradicts itself about these five paths.** They are exactly
-the paths `check_nested_loss_log.cmake` expects the shim to report as `LOSSY` —
-that is, *served but degraded*. A rule table saying "DD 4 only" and a loss-log
-expectation saying "served, lossily" cannot both be satisfied. Either the
-rule table's `right_only` classification is wrong for them, or the loss-log
-expectation is. Resolve which before treating this red as a shim defect.
+suite currently contradicts itself about these five paths.**
+`check_nested_loss_log.cmake` expects the shim to report every one of them as
+`LOSSY` — that is, *served but degraded* — covering `time_slice/boundary/rho_tor`,
+the three `time_slice/constraints/*` scalars, and `convergence/result` through
+its `name`, `index` and `description` leaves. A rule table saying "DD 4 only"
+and a loss-log expectation saying "served, lossily" cannot both be satisfied.
+Either the rule table's `right_only` classification is wrong for them, or the
+loss-log expectation is. Resolve which before treating this red as a shim
+defect.
 
 ### 4. `al-fortran-test-shim-cocos-rules` — `contract-assertion`
 
@@ -263,7 +266,18 @@ ask for them:
 | `drop-boundary-secondary-separatrix` | `time_slice/boundary_secondary_separatrix` |
 | `drop-gap-identifier` | `time_slice/boundary_separatrix/gap/identifier` |
 | `drop-timeslice-ggd-grid` | `time_slice/ggd/grid` |
-| `drop-g11-cov` … `drop-g33-contra` (12 rules) | `time_slice/coordinate_system/g{11,12,13,22,23,33}_{co,contra}variant` |
+| `drop-g11-cov` | `time_slice/coordinate_system/g11_covariant` |
+| `drop-g11-contra` | `time_slice/coordinate_system/g11_contravariant` |
+| `drop-g12-cov` | `time_slice/coordinate_system/g12_covariant` |
+| `drop-g12-contra` | `time_slice/coordinate_system/g12_contravariant` |
+| `drop-g13-cov` | `time_slice/coordinate_system/g13_covariant` |
+| `drop-g13-contra` | `time_slice/coordinate_system/g13_contravariant` |
+| `drop-g22-cov` | `time_slice/coordinate_system/g22_covariant` |
+| `drop-g22-contra` | `time_slice/coordinate_system/g22_contravariant` |
+| `drop-g23-cov` | `time_slice/coordinate_system/g23_covariant` |
+| `drop-g23-contra` | `time_slice/coordinate_system/g23_contravariant` |
+| `drop-g33-cov` | `time_slice/coordinate_system/g33_covariant` |
+| `drop-g33-contra` | `time_slice/coordinate_system/g33_contravariant` |
 
 **The condition that lifts this boundary** is the two-version-library track:
 if `al-fortran` gains the ability to hold two Data Dictionary versions at once,
@@ -332,8 +346,14 @@ place where a shim change could quietly break a downstream test, so each should
 be promoted to a named surface rather than left as observed behaviour.
 
 1. **The loss log file.** The suite asserts its format marker
-   (`# imas-mvdd loss log format 1`), its five-line preamble, its column header
-   verbatim (`uri ids stored-dd hli-dd operation fidelity path`, tab-separated),
+   and its column header verbatim. Those are the **first and fifth lines of one
+   five-line preamble**, not seven lines: line 1 is
+   `# imas-mvdd loss log format 1`, lines 2–4 carry the write time, pid and HLI
+   DD version, and line 5 is the tab-separated header
+   `uri ids stored-dd hli-dd operation fidelity path`. (`check_nested_loss_log.cmake`
+   calls it a "four-line preamble" and then reads the header at index 4 —
+   counting the header separately. It reads the right line; the wording is what
+   differs, and pinning the count is part of this ask.) It also asserts
    the seven-column row shape, and the directory semantics of
    `IMAS_MVDD_LOSS_LOG_DIR` — one file per recording process, the directory
    must already exist, and an empty directory means no loss. The contract
@@ -377,4 +397,3 @@ it is where the decision belongs.
 
 [shim]: https://github.com/yohannmarguier/IMAS-Multiversion-DD-Loader
 [adr2]: ../../docs/adr/0002-shim-integration-test-suite.md
-[i72]: https://github.com/yohannmarguier/IMAS-Fortran/issues/72
