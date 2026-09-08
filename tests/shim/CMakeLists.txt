@@ -44,6 +44,14 @@ add_test( NAME al-fortran-test-shim-linkage
     -D "SHIM_LIBRARY_NAME=${AL_SHIM_LIBRARY_NAME}"
     -P "${CMAKE_CURRENT_SOURCE_DIR}/check_shim_linkage.cmake"
 )
+# Labelled like every other test here, so `ctest -L shim` does not silently
+# omit the one test that proves these tests reach the shim at all -- a run
+# that measured nothing would otherwise look like a run that found nothing.
+# It is a contract assertion: ADR 0001 requires the link, and a build that
+# bypasses the shim converts nothing while passing everything.
+set_tests_properties( al-fortran-test-shim-linkage PROPERTIES
+  LABELS "shim;contract-assertion"
+)
 
 # Each executable below compiles the suite's shared modules for itself, and
 # ALSetCompilerFlags gives this whole directory a single relative
