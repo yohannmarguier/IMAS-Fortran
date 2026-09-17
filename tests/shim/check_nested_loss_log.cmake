@@ -1,3 +1,7 @@
+cmake_minimum_required(VERSION 3.16)
+
+# Script mode does not inherit the project's policies: list parsing and
+# IN_LIST must behave the same under CMake 3 and CMake 4.
 # Run a cross-DD HLI read and inspect its Tier-1 loss-log file.  This stays at
 # the HLI boundary: direct imas_mvdd_context_loss_* calls are a shim-repository
 # concern (ADR 0002), while the file is the only loss channel this binding owns.
