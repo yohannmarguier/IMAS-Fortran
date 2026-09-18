@@ -85,6 +85,42 @@ function( al_shim_private_loss_log test_name out_var )
   set( ${out_var} "${_dir}" PARENT_SCOPE )
 endfunction()
 
+# This is deliberately an opt-in consumer scenario. It is configured only
+# against the shim repository's private graph-selected test package, so it
+# cannot change ordinary shim builds or make a production source-selection
+# promise. The test itself remains generated-HLI traffic: ids_put_slice and
+# ids_get are the public calls a Fortran client actually uses.
+option(AL_SHIM_GRAPH_RUNTIME_SCENARIO
+  "Register the focused graph-selected installed-shim scenario" OFF)
+
+if(AL_SHIM_GRAPH_RUNTIME_SCENARIO)
+  set(AL_SHIM_GRAPH_FIXTURE "${CMAKE_CURRENT_BINARY_DIR}/graph-runtime-fixture")
+  add_executable(al-fortran-test-shim-graph-runtime test_shim_graph_runtime.f90)
+  target_link_libraries(al-fortran-test-shim-graph-runtime PRIVATE al-fortran)
+  al_shim_private_module_dir(al-fortran-test-shim-graph-runtime)
+
+  add_test(NAME al-fortran-test-shim-graph-runtime-fixture
+    COMMAND ${CMAKE_COMMAND}
+      -D "SOURCE=${CMAKE_SOURCE_DIR}/imas-python-fixtures/fixtures/dd-3.39.0"
+      -D "DESTINATION=${AL_SHIM_GRAPH_FIXTURE}"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/copy_fixture.cmake"
+  )
+  set_tests_properties(al-fortran-test-shim-graph-runtime-fixture PROPERTIES
+    FIXTURES_SETUP al-fortran-test-shim-graph-runtime
+  )
+
+  add_test(NAME al-fortran-test-shim-graph-runtime
+    COMMAND al-fortran-test-shim-graph-runtime "${AL_SHIM_GRAPH_FIXTURE}"
+  )
+  al_shim_private_loss_log(al-fortran-test-shim-graph-runtime AL_SHIM_GRAPH_LOSS_LOG_DIR)
+  set_tests_properties(al-fortran-test-shim-graph-runtime PROPERTIES
+    FIXTURES_REQUIRED "al-fortran-test-shim-graph-runtime;al-fortran-test-shim-graph-runtime-loss-log"
+    ENVIRONMENT "IMAS_MVDD_HLI_DD_VERSION=4.1.1;IMAS_MVDD_LOSS_LOG_DIR=${AL_SHIM_GRAPH_LOSS_LOG_DIR};${AL_CORE_TEST_ENVIRONMENT}"
+    LABELS "shim;graph-runtime;contract-assertion"
+    FAIL_REGULAR_EXPRESSION "SCENARIO-FAILURE"
+  )
+endif()
+
 # The comparison oracle is tested before any pulse-based contract assertion uses
 # it.  It is deliberately self-contained in this registered suite rather than
 # sharing the playground's diagnostic-only table code.
